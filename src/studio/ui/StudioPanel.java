@@ -2059,26 +2059,19 @@ public class StudioPanel extends JPanel implements Observer,WindowListener {
     private void processK4Results(K.KBase r) throws c.K4Exception {
         if (r != null) {
             exportAction.setEnabled(true);
-
-            if (FlipTableModel.isTable(r)) {
-                QGrid grid = new QGrid(r);
+            KTableModel model = KTableModel.getModel(r);
+            if (model != null) {
+                boolean dict = model instanceof DictModel;
+                QGrid grid = new QGrid(model);
                 table = grid.getTable();
-
                 openInExcel.setEnabled(true);
-                //if(grid.getRowCount()<50000)
-                chartAction.setEnabled(true);
-                //else
-                //    chartAction.setEnabled(false);              
-
-                TabPanel frame = new TabPanel("Table [" + grid.getRowCount() + " rows] ",
-                                              getImage(Config.imageBase2 + "table.png"),
-                                              grid);
-                frame.setTitle(I18n.getString("Table")+" [" + grid.getRowCount() + " "+I18n.getString("rows")+"] ");
-//                frame.setBackground( Color.white);
-
+                chartAction.setEnabled(!dict);
+                TabPanel frame = new TabPanel( (dict ? "Dict" : "Table") + " [" + grid.getRowCount() + " rows] ",
+                        getImage(Config.imageBase2 + "table.png"),
+                        grid);
+//                frame.setTitle(I18n.getString("Table")+" [" + grid.getRowCount() + " "+I18n.getString("rows")+"] ");
                 tabbedPane.addTab(frame.getTitle(),frame.getIcon(),frame.getComponent());
-            }
-            else {
+            } else {
                 chartAction.setEnabled(false);
                 openInExcel.setEnabled(false);
                 LimitedWriter lm = new LimitedWriter(50000);

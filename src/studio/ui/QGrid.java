@@ -1,18 +1,12 @@
 package studio.ui;
 
-import studio.kdb.DictTableModel;
-import studio.kdb.K;
-import studio.kdb.FlipTableModel;
-import studio.kdb.K.Dict;
-import studio.kdb.K.Flip;
-import studio.kdb.TableHeaderRenderer;
-import studio.kdb.TableRowHeader;
+import studio.kdb.*;
+
 import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Component;
 import java.awt.Font;
 import java.awt.Point;
-import java.awt.Rectangle;
 import java.awt.Toolkit;
 import java.awt.datatransfer.StringSelection;
 import java.awt.event.ActionEvent;
@@ -33,13 +27,11 @@ import javax.swing.ToolTipManager;
 import javax.swing.UIManager;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
-import javax.swing.table.AbstractTableModel;
 import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.TableCellEditor;
 import javax.swing.table.TableCellRenderer;
 import javax.swing.table.TableColumn;
 import javax.swing.table.TableModel;
-import studio.kdb.Config;
 
 public class QGrid extends JPanel {
     private TableModel model;
@@ -144,13 +136,8 @@ public class QGrid extends JPanel {
         }
     };
 
-    public QGrid(K.KBase obj) {
-
-        if (obj instanceof K.Flip)
-            model = new FlipTableModel((K.Flip) obj);
-        else
-            model = new DictTableModel((K.Dict) obj);
-
+    public QGrid(TableModel model) {
+        this.model = model;
         table = new MYJTable(model);
 
         DefaultTableCellRenderer dhr = new TableHeaderRenderer();

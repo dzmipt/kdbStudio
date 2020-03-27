@@ -3,9 +3,30 @@ package studio.kdb;
 import javax.swing.table.AbstractTableModel;
 
 public abstract class KTableModel extends AbstractTableModel {
-    public abstract boolean isKey(int column);
 
+    public abstract boolean isKey(int column);
     public abstract K.KBaseVector getColumn(int col);
+    public abstract String getColumnName(int col) ;
+
+    public static KTableModel getModel(K.KBase obj) {
+        if (obj instanceof K.Flip) {
+            return new FlipTableModel((K.Flip) obj);
+        }
+
+        if (obj instanceof K.Dict) {
+            K.Dict d = (K.Dict) obj;
+
+            if ((d.x instanceof K.Flip) && (d.y instanceof K.Flip)) {
+                return new DictTableModel(d);
+            }
+
+            if ((d.x instanceof K.KBaseVector) && (d.y instanceof K.KBaseVector)) {
+                return new DictModel(d);
+            }
+        }
+        return null;
+    }
+
     protected int[] sortIndex = null;
     protected int sorted = 0;
     protected int sortedByColumn = -1;
