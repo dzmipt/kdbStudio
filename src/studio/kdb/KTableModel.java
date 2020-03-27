@@ -24,6 +24,10 @@ public abstract class KTableModel extends AbstractTableModel {
                 return new DictModel(d);
             }
         }
+
+        if (obj instanceof K.KBaseVector) {
+            return new ListModel((K.KBaseVector)obj);
+        }
         return null;
     }
 

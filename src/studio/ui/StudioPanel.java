@@ -22,6 +22,7 @@ import javax.swing.undo.UndoManager;
 import kx.c;
 import org.netbeans.editor.*;
 import org.netbeans.editor.Utilities;
+import studio.kdb.ListModel;
 import studio.qeditor.QKit;
 import org.netbeans.editor.ext.ExtKit;
 import org.netbeans.editor.ext.ExtSettingsInitializer;
@@ -2061,12 +2062,15 @@ public class StudioPanel extends JPanel implements Observer,WindowListener {
             exportAction.setEnabled(true);
             KTableModel model = KTableModel.getModel(r);
             if (model != null) {
-                boolean dict = model instanceof DictModel;
+                boolean dictModel = model instanceof DictModel;
+                boolean listModel = model instanceof ListModel;
+                boolean tableModel = ! (dictModel || listModel);
                 QGrid grid = new QGrid(model);
                 table = grid.getTable();
                 openInExcel.setEnabled(true);
-                chartAction.setEnabled(!dict);
-                TabPanel frame = new TabPanel( (dict ? "Dict" : "Table") + " [" + grid.getRowCount() + " rows] ",
+                chartAction.setEnabled(tableModel);
+                String title = tableModel ? "Table" : (dictModel ? "Dict" : "List");
+                TabPanel frame = new TabPanel( title + " [" + grid.getRowCount() + " rows] ",
                         getImage(Config.imageBase2 + "table.png"),
                         grid);
 //                frame.setTitle(I18n.getString("Table")+" [" + grid.getRowCount() + " "+I18n.getString("rows")+"] ");
