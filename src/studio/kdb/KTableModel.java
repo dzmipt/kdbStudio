@@ -10,9 +10,21 @@ public abstract class KTableModel extends AbstractTableModel {
     protected int sorted = 0;
     protected int sortedByColumn = -1;
 
-    public abstract void asc(int col);
+    public void asc(int col) {
+        sortIndex = null;
+        K.KBaseVector v = getColumn(col);
+        sortIndex = v.gradeUp();
+        sorted = 1;
+        sortedByColumn = col;
+    }
 
-    public abstract void desc(int col);
+    public void desc(int col) {
+        sortIndex = null;
+        K.KBaseVector v = getColumn(col);
+        sortIndex = v.gradeDown();
+        sorted = -1;
+        sortedByColumn = col;
+    }
 
     public int getSortByColumn() {
         return sortedByColumn;
@@ -31,4 +43,19 @@ public abstract class KTableModel extends AbstractTableModel {
         sorted = 0;
         sortedByColumn = -1;
     }
+
+    public Class getColumnClass(int col) {
+        return getColumn(col).getClass();
+    }
+
+    public Object getValueAt(int row,int col) {
+        row = (sortIndex == null) ? row : sortIndex[row];
+        K.KBaseVector v = getColumn(col);
+        return v.at(row);
+    }
+
+    public int getRowCount() {
+        return getColumn(0).getLength();
+    }
+
 }

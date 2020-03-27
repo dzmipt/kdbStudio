@@ -42,17 +42,11 @@ import javax.swing.table.TableModel;
 import studio.kdb.Config;
 
 public class QGrid extends JPanel {
-    private UserAction copyExcelFormatAction;
     private TableModel model;
     private JTable table;
-    private final WidthAdjuster wa;
 
     public JTable getTable() {
         return table;
-    }
-
-    public WidthAdjuster getWa() {
-        return wa;
     }
 
 
@@ -61,8 +55,6 @@ public class QGrid extends JPanel {
     public int getRowCount() {
         return model.getRowCount();
     }
-    //   public  QGrid(){super();}
-    public float factor = 1;
     private JPopupMenu popupMenu = new JPopupMenu();
 
     class MYJTable extends JTable {
@@ -153,7 +145,6 @@ public class QGrid extends JPanel {
     };
 
     public QGrid(K.KBase obj) {
-        super();
 
         if (obj instanceof K.Flip)
             model = new FlipTableModel((K.Flip) obj);
@@ -212,7 +203,7 @@ public class QGrid extends JPanel {
                                                     });
 
         }
-        wa = new WidthAdjuster(table);
+        WidthAdjuster wa = new WidthAdjuster(table);
         wa.resizeAllColumns();
 
         scrollPane.setWheelScrollingEnabled(true);
@@ -243,11 +234,11 @@ public class QGrid extends JPanel {
         setLayout(new BorderLayout());
         this.add(scrollPane,BorderLayout.CENTER);
 
-        copyExcelFormatAction = new UserAction("Copy (Excel format)",
-                                               Util.getImage(Config.imageBase2 + "copy.png"),
-                                               "Copy the selected cells to the clipboard using Excel format",
-                                               new Integer(KeyEvent.VK_E),
-                                               null) {
+        UserAction copyExcelFormatAction = new UserAction("Copy (Excel format)",
+                Util.getImage(Config.imageBase2 + "copy.png"),
+                "Copy the selected cells to the clipboard using Excel format",
+                new Integer(KeyEvent.VK_E),
+                null) {
             public void actionPerformed(ActionEvent e) {
                 StringBuffer sb = new StringBuffer();
                 int numcols = table.getSelectedColumnCount();
@@ -255,18 +246,18 @@ public class QGrid extends JPanel {
                 int[] rowsselected = table.getSelectedRows();
                 int[] colsselected = table.getSelectedColumns();
                 if (!((numrows - 1 == rowsselected[rowsselected.length - 1] - rowsselected[0] &&
-                    numrows == rowsselected.length) &&
-                    (numcols - 1 == colsselected[colsselected.length - 1] - colsselected[0] &&
-                    numcols == colsselected.length))) {
+                        numrows == rowsselected.length) &&
+                        (numcols - 1 == colsselected[colsselected.length - 1] - colsselected[0] &&
+                                numcols == colsselected.length))) {
                     JOptionPane.showMessageDialog(null,
-                                                  "Invalid Copy Selection",
-                                                  "Invalid Copy Selection",
-                                                  JOptionPane.ERROR_MESSAGE);
+                            "Invalid Copy Selection",
+                            "Invalid Copy Selection",
+                            JOptionPane.ERROR_MESSAGE);
                     return;
                 }
 
                 if (table.getSelectedRowCount() == table.getRowCount()) {
-                    for (int col = 0;col < numcols;col++) {
+                    for (int col = 0; col < numcols; col++) {
                         sb.append(table.getColumnName(colsselected[col]));
                         if (col < numcols - 1)
                             sb.append("\t");
@@ -274,15 +265,15 @@ public class QGrid extends JPanel {
                     sb.append(newline);
                 }
 
-                for (int row = 0;row < numrows;row++) {
+                for (int row = 0; row < numrows; row++) {
                     if (row > 0)
                         sb.append(newline);
-                    for (int col = 0;col < numcols;col++) {
+                    for (int col = 0; col < numcols; col++) {
                         boolean symColumn = table.getColumnClass(col) == K.KSymbolVector.class;
                         if (symColumn)
                             sb.append("\"");
 
-                        K.KBase b = (K.KBase) table.getValueAt(rowsselected[row],colsselected[col]);
+                        K.KBase b = (K.KBase) table.getValueAt(rowsselected[row], colsselected[col]);
                         if (!b.isNull())
                             sb.append(b.toString(false));
                         if (symColumn)
@@ -292,7 +283,7 @@ public class QGrid extends JPanel {
                     }
                 }
                 StringSelection ss = new StringSelection(sb.toString());
-                Toolkit.getDefaultToolkit().getSystemClipboard().setContents(ss,null);
+                Toolkit.getDefaultToolkit().getSystemClipboard().setContents(ss, null);
             }
         };
 
@@ -313,31 +304,5 @@ public class QGrid extends JPanel {
                                                       e.getX(),e.getY());
                                }
                            });
-    }
-    private boolean scrollToEnd = false;
-
-    public void append(K.KBase upd) {
-        int n = table.getRowCount();
-        if (model instanceof FlipTableModel) {
-            K.Flip flip=(Flip) upd;
-            ((FlipTableModel) model).append(flip);
-            ((AbstractTableModel) model).fireTableRowsInserted(n,table.getRowCount() - n);
-            if (scrollToEnd)
-                table.scrollRectToVisible(new Rectangle(0,
-                                                        table.getRowHeight() * (table.getRowCount()),
-                                                        100,
-                                                        table.getRowHeight()));
-
-        }else if (model instanceof DictTableModel) {
-            K.Dict dict=(Dict) upd;
-            ((DictTableModel) model).upsert(dict);
-            ((AbstractTableModel) model).fireTableRowsInserted(0,table.getRowCount());
-            if (scrollToEnd)
-                table.scrollRectToVisible(new Rectangle(0,
-                                                        table.getRowHeight() * (table.getRowCount()),
-                                                        100,
-                                                        table.getRowHeight()));
-
-        }
     }
 }
