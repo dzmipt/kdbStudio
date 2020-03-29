@@ -81,6 +81,7 @@ public class AuthenticationManager {
                                 addURL.setAccessible(true);
                                 ClassLoader cl = ClassLoader.getSystemClassLoader();
                                 addURL.invoke(cl,new Object[]{url});
+                                c = Class.forName(externalName);
                                 IAuthenticationMechanism am = (IAuthenticationMechanism) c.newInstance();
                                 classMap.put(am.getMechanismName(),c);
                             }
