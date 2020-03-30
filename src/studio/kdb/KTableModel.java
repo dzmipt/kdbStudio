@@ -25,7 +25,7 @@ public abstract class KTableModel extends AbstractTableModel {
             }
         }
 
-        if (obj instanceof K.KBaseVector) {
+        if ((obj instanceof K.KBaseVector) && obj.type != 10) {
             return new ListModel((K.KBaseVector)obj);
         }
         return null;

@@ -2,10 +2,6 @@ package studio.kdb;
 
 public class DictModel extends KTableModel {
 
-    public static boolean isDict(K.KBase obj) {
-        return obj instanceof K.Dict;
-    }
-
     private K.Dict dict;
 
     public DictModel(K.Dict dict) {
