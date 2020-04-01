@@ -6,6 +6,7 @@ import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.io.*;
 import java.util.*;
+import java.util.List;
 import javax.swing.*;
 import static javax.swing.JSplitPane.VERTICAL_SPLIT;
 import javax.swing.event.DocumentEvent;
@@ -1608,12 +1609,12 @@ public class StudioPanel extends JPanel implements Observer,WindowListener {
         if (toolbar != null) {
             toolbar.removeAll();
 
-            String[] names = Config.getInstance().getServerNames();
+            List<String> names = Config.getInstance().getServerNames();
 
-            if ((names != null) && (names.length > 0)) {
+            if (names.size() > 0) {
                 toolbar.add(new JLabel(I18n.getString("Server")));
 
-                JComboBox combo = new JComboBox(names) {
+                JComboBox combo = new JComboBox(names.toArray()) {
                     
                     public Dimension getMinimumSize() {
                         return getPreferredSize();
