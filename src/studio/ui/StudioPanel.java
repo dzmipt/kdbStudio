@@ -9,6 +9,9 @@ import java.util.*;
 import java.util.List;
 import javax.swing.*;
 import static javax.swing.JSplitPane.VERTICAL_SPLIT;
+import static studio.ui.EscapeDialog.DialogResult.ACCEPTED;
+import static studio.ui.EscapeDialog.DialogResult.CANCELLED;
+
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
 import javax.swing.event.UndoableEditEvent;
@@ -23,6 +26,7 @@ import javax.swing.undo.UndoManager;
 import kx.c;
 import org.netbeans.editor.*;
 import org.netbeans.editor.Utilities;
+import studio.core.Credentials;
 import studio.kdb.ListModel;
 import studio.qeditor.QKit;
 import org.netbeans.editor.ext.ExtKit;
@@ -82,6 +86,7 @@ public class StudioPanel extends JPanel implements Observer,WindowListener {
     private UserAction refreshAction;
     private UserAction aboutAction;
     private UserAction exitAction;
+    private UserAction settingsAction;
     private UserAction toggleDividerOrientationAction;
     private UserAction minMaxDividerAction;
     private UserAction editServerAction;
@@ -298,6 +303,7 @@ public class StudioPanel extends JPanel implements Observer,WindowListener {
 //        helpAction.setEnabled(true);
         aboutAction.setEnabled(true);
         exitAction.setEnabled(true);
+        settingsAction.setEnabled(true);
     }
 
     private String getFilename() {
@@ -1081,6 +1087,7 @@ public class StudioPanel extends JPanel implements Observer,WindowListener {
                 KeyStroke.getKeyStroke(KeyEvent.VK_L, menuShortcutKeyMask | Event.SHIFT_MASK) ) {
                         public void actionPerformed(ActionEvent e) {
                             ServerList serverList = new ServerList(frame, Config.getInstance().getServers(), server);
+                            serverList.alignAndShow();
                             Server selectedServer = serverList.getSelectedServer();
                             if (selectedServer.equals(server)) return;
 
@@ -1098,12 +1105,8 @@ public class StudioPanel extends JPanel implements Observer,WindowListener {
                 Server s = new Server(server);
 
                 EditServerForm f = new EditServerForm(frame,s);
-                f.setModal(true);
-                f.pack();
-                Util.centerChildOnParent(f,frame);
-                f.show();
-
-                if (f.getResult() == DialogResult.ACCEPTED) {
+                f.alignAndShow();
+                if (f.getResult() == ACCEPTED) {
                     if (stopAction.isEnabled())
                         stopAction.actionPerformed(e);
 
@@ -1129,12 +1132,8 @@ public class StudioPanel extends JPanel implements Observer,WindowListener {
                                          null) {
             public void actionPerformed(ActionEvent e) {
                 AddServerForm f = new AddServerForm(frame);
-                f.setModal(true);
-                f.pack();
-                Util.centerChildOnParent(f,frame);
-                f.show();
-
-                if (f.getResult() == DialogResult.ACCEPTED) {
+                f.alignAndShow();
+                if (f.getResult() == ACCEPTED) {
                     Server s = f.getServer();
                     Config.getInstance().addServer(s);
                     ConnectionPool.getInstance().purge(s);   //?
@@ -1311,6 +1310,17 @@ public class StudioPanel extends JPanel implements Observer,WindowListener {
             }
         };
 
+        settingsAction = new UserAction("Settings",
+                getImage(Config.imageBase2 + "blank.png"),
+                "Settings",
+                new Integer(KeyEvent.VK_S),
+                null) {
+
+            public void actionPerformed(ActionEvent e) {
+                settings();
+            }
+        };
+
         codeKxComAction = new UserAction("code.kx.com",
                                          Util.getImage(Config.imageBase2 + "text.png"),
                                          "Open code.kx.com",
@@ -1325,6 +1335,16 @@ public class StudioPanel extends JPanel implements Observer,WindowListener {
                     }
             }
         };
+    }
+
+    public void settings() {
+        SettingsDialog dialog = new SettingsDialog(frame);
+        dialog.alignAndShow();
+        if (dialog.getResult() == CANCELLED) return;
+
+        String auth = dialog.getDefaultAuthenticationMechanism();
+        Config.getInstance().setDefaultAuthMechanism(auth);
+        Config.getInstance().setDefaultCredentials(auth, new Credentials(dialog.getUser(), dialog.getPassword()));
     }
 
     public void about() {
@@ -1420,6 +1440,9 @@ public class StudioPanel extends JPanel implements Observer,WindowListener {
 
         menu.add(new JMenuItem(closeFileAction));
 
+        if (!MAC_OS_X) {
+            menu.add(new JMenuItem(settingsAction));
+        }
         menu.addSeparator();
 //        menu.add(new JMenuItem(importAction));
         menu.add(new JMenuItem(openInExcel));
@@ -1495,14 +1518,9 @@ public class StudioPanel extends JPanel implements Observer,WindowListener {
                                            clone.setName("Clone of " + clone.getName());
 
                                            EditServerForm f = new EditServerForm(frame,clone);
-                                           f.setModal(true);
-                                           f.pack();
-                                           Util.centerChildOnParent(f,frame);
-                                           //   f.setStartLocation(frame);
+                                           f.alignAndShow();
 
-                                           f.setVisible(true);
-
-                                           if (f.getResult() == DialogResult.ACCEPTED) {
+                                           if (f.getResult() == ACCEPTED) {
                                                clone = f.getServer();
                                                Config.getInstance().addServer(clone);
                                                //ebuildToolbar();
@@ -1919,8 +1937,9 @@ public class StudioPanel extends JPanel implements Observer,WindowListener {
             try {
                 // Generate and register the OSXAdapter, passing it a hash of all the methods we wish to
                 // use as delegates for various com.apple.eawt.ApplicationListener methods
-                OSXAdapter.setQuitHandler(new QuitHandler(this),QuitHandler.class.getDeclaredMethod("quit",(Class[]) null));
-                OSXAdapter.setAboutHandler(new AboutHandler(this),AboutHandler.class.getDeclaredMethod("about",(Class[]) null));
+                OSXAdapter.setQuitHandler(this, StudioPanel.class.getDeclaredMethod("quit",(Class[]) null));
+                OSXAdapter.setAboutHandler(this, StudioPanel.class.getDeclaredMethod("about",(Class[]) null));
+                OSXAdapter.setPreferencesHandler(this, StudioPanel.class.getDeclaredMethod("settings",(Class[]) null));
                 registeredForMaxOSXEvents = true;
             }
             catch (Exception e) {
