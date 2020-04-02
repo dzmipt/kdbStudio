@@ -98,6 +98,8 @@ public class StudioPanel extends JPanel implements Observer,WindowListener {
     public static java.util.List windowList = Collections.synchronizedList(new LinkedList());
     private int menuShortcutKeyMask = java.awt.Toolkit.getDefaultToolkit().getMenuShortcutKeyMask();
 
+    private final static int MAX_SERVERS_TO_CLONE = 20;
+
     public void refreshFrameTitle() {
         String s = (String) textArea.getDocument().getProperty("filename");
         if (s == null)
@@ -1506,10 +1508,12 @@ public class StudioPanel extends JPanel implements Observer,WindowListener {
         if (servers.length > 0) {
             JMenu subMenu = new JMenu(I18n.getString("Clone"));
             subMenu.setIcon(Util.getImage(Config.imageBase2 + "data_copy.png"));
-           
+
+            int count = MAX_SERVERS_TO_CLONE;
             for (int i = 0;i < servers.length;i++) {
                 final Server s = servers[i];
-
+                if (!s.equals(server) && count <= 0) continue;
+                count--;
                 JMenuItem item = new JMenuItem(s.getName());
                 item.addActionListener(new ActionListener() {
                                         
