@@ -110,9 +110,16 @@ public class Config {
         }
     }
 
+    // "".split(",") return {""}; we need to get zero length array
+    private String[] split(String str) {
+        str = str.trim();
+        if (str.length() == 0) return new String[0];
+        return str.split(",");
+    }
+
     public String[] getQKeywords() {
         String key = p.getProperty("qkeywords", "");
-        return key.split(",");
+        return split(key);
     }
 
     public String getLRUServer() {
@@ -145,7 +152,7 @@ public class Config {
 
     public String[] getMRUFiles() {
         String mru = p.getProperty("mrufiles", "");
-        return mru.split(",");
+        return split(mru);
     }
 
 
@@ -165,7 +172,7 @@ public class Config {
     }
 
     public List<String> getServerNames() {
-        return Arrays.asList(p.getProperty("Servers").split(","));
+        return Arrays.asList(split(p.getProperty("Servers")));
     }
 
     private void setServerNames(List<String> names) {
@@ -185,7 +192,7 @@ public class Config {
         String username = p.getProperty("server." + name + ".user");
         String password = p.getProperty("server." + name + ".password");
         String backgroundColor = p.getProperty("server." + name + ".backgroundColor", "FFFFFF");
-        String authenticationMechanism = p.getProperty("server." + name + ".authenticationMechanism", new DefaultAuthenticationMechanism().getMechanismName());
+        String authenticationMechanism = p.getProperty("server." + name + ".authenticationMechanism", DefaultAuthenticationMechanism.NAME);
         boolean useTLS = Boolean.parseBoolean(p.getProperty("server." + name + ".useTLS", "false"));
         Color c = new Color(Integer.parseInt(backgroundColor, 16));
         return new Server(name, host, port, username, password, c, authenticationMechanism, useTLS);
@@ -248,6 +255,15 @@ public class Config {
     public void setDefaultCredentials(String authenticationMechanism, Credentials credentials) {
         p.setProperty("auth." + authenticationMechanism + ".user", credentials.getUsername());
         p.setProperty("auth." + authenticationMechanism + ".password", credentials.getPassword());
+        save();
+    }
+
+    public String getDefaultAuthMechanism() {
+        return p.getProperty("auth", DefaultAuthenticationMechanism.NAME);
+    }
+
+    public void setDefaultAuthMechanism(String authMechanism) {
+        p.setProperty("auth", authMechanism);
         save();
     }
 }
