@@ -65,6 +65,10 @@ public class Config {
         save();
     }
 
+    public Color getDefaultBackgroundColor() {
+        return getColorForToken("BACKGROUND", Color.white);
+    }
+
     public synchronized NumberFormat getNumberFormat() {
         String key = p.getProperty("DecimalFormat", "#.#######");
 
