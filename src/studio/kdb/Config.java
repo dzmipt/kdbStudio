@@ -176,7 +176,7 @@ public class Config {
     }
 
     public List<String> getServerNames() {
-        return Arrays.asList(split(p.getProperty("Servers")));
+        return Arrays.asList(split(p.getProperty("Servers", "")));
     }
 
     private void setServerNames(List<String> names) {
@@ -220,6 +220,9 @@ public class Config {
 
     private void setServerDetails(Server server) {
         String name = server.getName();
+        if (name.trim().length() == 0) {
+            throw new IllegalArgumentException("Server name can't be empty");
+        }
         if (name.contains(",")) {
             throw new IllegalArgumentException("Server name can't contains ,");
         }
