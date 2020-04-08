@@ -1632,6 +1632,7 @@ public class StudioPanel extends JPanel implements Observer,WindowListener {
     private void selectConnectionString() {
         String connection = txtServer.getText().trim();
         if (connection.length() == 0) return;
+        if (server != null && server.getConnectionString(false).equals(connection)) return;
 
         try {
             setServer(Config.getInstance().getServerByConnectionString(connection));
@@ -1659,10 +1660,8 @@ public class StudioPanel extends JPanel implements Observer,WindowListener {
             txtServer.setText("");
             txtServer.setToolTipText("Select connection details");
         } else {
-            String connection = "`:" + server.getHost() + ":" + server.getPort();
-            txtServer.setText(connection);
-            connection += ":" + server.getUsername() + ":" + server.getPassword();
-            txtServer.setToolTipText(connection);
+            txtServer.setText(server.getConnectionString(false));
+            txtServer.setToolTipText(server.getConnectionString(true));
         }
     }
 
@@ -2172,7 +2171,6 @@ public class StudioPanel extends JPanel implements Observer,WindowListener {
                 try {
                     this.s = server;
                     c = ConnectionPool.getInstance().leaseConnection(s);
-                    ConnectionPool.getInstance().checkConnected(c);
                     c.setFrame(frame);
                     long startTime=System.currentTimeMillis();
                     c.k(new K.KCharacterVector(text));
@@ -2180,6 +2178,8 @@ public class StudioPanel extends JPanel implements Observer,WindowListener {
                     execTime=System.currentTimeMillis()-startTime;
                 }
                 catch (Throwable e) {
+                    System.err.println("Error occurred during query execution: " + e);
+                    e.printStackTrace(System.err);
                     exception = e;
                 }
 

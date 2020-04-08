@@ -148,12 +148,6 @@ public class Config {
         save();
     }
 
-    public int getOffset(Server server) {
-        if (server == null) return -1; // or an exception should be raised?
-
-        return Arrays.asList(getServers()).indexOf(server);
-    }
-
     public String[] getMRUFiles() {
         String mru = p.getProperty("mrufiles", "");
         return split(mru);
