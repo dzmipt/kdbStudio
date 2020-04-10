@@ -26,6 +26,9 @@ public class ServerList extends EscapeDialog {
     private Server[] servers;
     private java.util.List<String> filters = new ArrayList<>();
 
+    public final static int DEFAULT_WIDTH = 300;
+    public final static int DEFAULT_HEIGHT = 400;
+
     public ServerList(JFrame parent, Server[] servers, Server active) {
         super(parent, "Server List");
         initComponents();
@@ -115,7 +118,7 @@ public class ServerList extends EscapeDialog {
             }
         });
         add(filter, BorderLayout.NORTH);
-        setPreferredSize(new Dimension(300,400));
+        setPreferredSize(new Dimension(DEFAULT_WIDTH, DEFAULT_HEIGHT));
     }
 
 
