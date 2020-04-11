@@ -25,6 +25,9 @@ public class Config {
     private static String VERSION = "1.1";
 
     private Properties p = new Properties();
+    private Map<String, Server> servers = new HashMap<>();
+    private List<String> serverNames;
+
     private final static Config instance = new Config();
 
     private Config() {
@@ -100,6 +103,7 @@ public class Config {
             System.err.println("Cant't read configuration from file " + FILENAME);
             e.printStackTrace(System.err);
         }
+        initServers();
     }
 
 
@@ -170,22 +174,6 @@ public class Config {
         save();
     }
 
-    public List<String> getServerNames() {
-        return Arrays.asList(split(p.getProperty("Servers", "")));
-    }
-
-    private void setServerNames(List<String> names) {
-        p.setProperty("Servers", String.join(",",names));
-        save();
-    }
-
-    public Server[] getServers() {
-        return getServerNames().stream()
-                .map(name->getServer(name))
-                .toArray(Server[]::new);
-    }
-
-
     // Resolve or create a new server by connection string.
     // Accept possible various connectionString such as:
     // `:host:port:user:password
@@ -224,69 +212,6 @@ public class Config {
         }
 
         return new Server("", host, port, user, password, bgColor, auth, false);
-    }
-
-    public Server getServer(String name) {
-        String host = p.getProperty("server." + name + ".host");
-        int port = Integer.parseInt(p.getProperty("server." + name + ".port", "-1"));
-        String username = p.getProperty("server." + name + ".user");
-        String password = p.getProperty("server." + name + ".password");
-        String backgroundColor = p.getProperty("server." + name + ".backgroundColor", "FFFFFF");
-        String authenticationMechanism = p.getProperty("server." + name + ".authenticationMechanism", DefaultAuthenticationMechanism.NAME);
-        boolean useTLS = Boolean.parseBoolean(p.getProperty("server." + name + ".useTLS", "false"));
-        Color c = new Color(Integer.parseInt(backgroundColor, 16));
-        return new Server(name, host, port, username, password, c, authenticationMechanism, useTLS);
-
-    }
-
-    public void removeServer(Server server) {
-        String name = server.getName();
-        p.remove("server." + name + ".host");
-        p.remove("server." + name + ".port");
-        p.remove("server." + name + ".user");
-        p.remove("server." + name + ".password");
-        p.remove("server." + name + ".backgroundColor");
-        p.remove("server." + name + ".authenticationMechanism");
-        p.remove("server." + name + ".useTLS");
-
-        List<String> list = new ArrayList<>(getServerNames());
-        list.remove(name);
-        setServerNames(list);
-    }
-
-    private void setServerDetails(Server server) {
-        String name = server.getName();
-        if (name.trim().length() == 0) {
-            throw new IllegalArgumentException("Server name can't be empty");
-        }
-        if (name.contains(",")) {
-            throw new IllegalArgumentException("Server name can't contains ,");
-        }
-        p.setProperty("server." + name + ".host", server.getHost());
-        p.setProperty("server." + name + ".port", "" + server.getPort());
-        p.setProperty("server." + name + ".user", "" + server.getUsername());
-        p.setProperty("server." + name + ".password", "" + server.getPassword());
-        p.setProperty("server." + name + ".backgroundColor", "" + Integer.toHexString(server.getBackgroundColor().getRGB()).substring(2));
-        p.setProperty("server." + name + ".authenticationMechanism", server.getAuthenticationMechanism());
-        p.setProperty("server." + name + ".useTLS", "" + server.getUseTLS());
-    }
-
-    public void addServer(Server server) {
-        setServerDetails(server);
-
-        String name = server.getName();
-        List<String> list = Stream.of(getServers()).map(s->s.getName()).collect(Collectors.toList());
-        if (! list.contains(name)) {
-            list.add(name);
-        }
-        Collections.sort(list);
-        p.setProperty("Servers",String.join(",", list));
-        save();
-    }
-
-    public void setServers(Server[] servers) {
-        Stream.of(servers).forEach(server -> setServerDetails(server));
-        setServerNames(Stream.of(servers).map(s->s.getName()).collect(Collectors.toList()));
     }
 
     public Credentials getDefaultCredentials(String authenticationMechanism) {
@@ -340,6 +265,92 @@ public class Config {
         int x = (width - w) / 2;
         int y = (height - h) / 2;
         return new Rectangle(x,y,w,h);
+    }
+
+    private void initServers() {
+        serverNames = new ArrayList<>(Arrays.asList(split(p.getProperty("Servers", "")))); // make the list modifiable
+        initServerMap();
+    }
+
+    private Server initServerFromProperties(String name) {
+        String host = p.getProperty("server." + name + ".host");
+        int port = Integer.parseInt(p.getProperty("server." + name + ".port", "-1"));
+        String username = p.getProperty("server." + name + ".user");
+        String password = p.getProperty("server." + name + ".password");
+        String backgroundColor = p.getProperty("server." + name + ".backgroundColor", "FFFFFF");
+        String authenticationMechanism = p.getProperty("server." + name + ".authenticationMechanism", DefaultAuthenticationMechanism.NAME);
+        boolean useTLS = Boolean.parseBoolean(p.getProperty("server." + name + ".useTLS", "false"));
+        Color c = new Color(Integer.parseInt(backgroundColor, 16));
+        return new Server(name, host, port, username, password, c, authenticationMechanism, useTLS);
+    }
+
+    private void initServerMap() {
+        for(String name: serverNames) {
+            Server server = initServerFromProperties(name);
+            servers.put(name, server);
+        }
+    }
+
+    public List<String> getServerNames() {
+        return Collections.unmodifiableList(serverNames);
+    }
+
+    private void saveServerNames() {
+        p.setProperty("Servers", String.join(",",serverNames));
+        save();
+    }
+
+    public Server[] getServers() {
+        return servers.values().toArray(new Server[servers.size()]);
+    }
+
+    public Server getServer(String name) {
+        return servers.get(name);
+    }
+
+    public void removeServer(Server server) {
+        String name = server.getName();
+        p.remove("server." + name + ".host");
+        p.remove("server." + name + ".port");
+        p.remove("server." + name + ".user");
+        p.remove("server." + name + ".password");
+        p.remove("server." + name + ".backgroundColor");
+        p.remove("server." + name + ".authenticationMechanism");
+        p.remove("server." + name + ".useTLS");
+
+        serverNames.remove(name);
+        servers.remove(name);
+        saveServerNames();
+    }
+
+    private void setServerDetails(Server server) {
+        String name = server.getName();
+        if (name.trim().length() == 0) {
+            throw new IllegalArgumentException("Server name can't be empty");
+        }
+        if (name.contains(",")) {
+            throw new IllegalArgumentException("Server name can't contains ,");
+        }
+        p.setProperty("server." + name + ".host", server.getHost());
+        p.setProperty("server." + name + ".port", "" + server.getPort());
+        p.setProperty("server." + name + ".user", "" + server.getUsername());
+        p.setProperty("server." + name + ".password", "" + server.getPassword());
+        p.setProperty("server." + name + ".backgroundColor", "" + Integer.toHexString(server.getBackgroundColor().getRGB()).substring(2));
+        p.setProperty("server." + name + ".authenticationMechanism", server.getAuthenticationMechanism());
+        p.setProperty("server." + name + ".useTLS", "" + server.getUseTLS());
+    }
+
+    public void addServer(Server server) {
+        String name = server.getName();
+        if (servers.containsKey(name)) {
+            throw new IllegalArgumentException("Server with name " + name + " already exist");
+        }
+        setServerDetails(server);
+
+        servers.put(name, server);
+        serverNames.add(name);
+
+        saveServerNames();
     }
 
 }
