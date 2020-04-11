@@ -249,7 +249,7 @@ public class Config {
         p.remove("server." + name + ".authenticationMechanism");
         p.remove("server." + name + ".useTLS");
 
-        List<String> list = getServerNames();
+        List<String> list = new ArrayList<>(getServerNames());
         list.remove(name);
         setServerNames(list);
     }
