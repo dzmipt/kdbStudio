@@ -1,0 +1,144 @@
+package studio.kdb;
+
+import javax.swing.tree.DefaultMutableTreeNode;
+import java.util.Collections;
+
+public class ServerTreeNode extends DefaultMutableTreeNode {
+
+    public ServerTreeNode() {
+        this("");
+    }
+
+    public ServerTreeNode(Server server) {
+        super(server, false);
+    }
+
+    public ServerTreeNode(String folder) {
+        super(folder, true);
+    }
+
+    public ServerTreeNode copy() {
+        if (isFolder()) {
+            ServerTreeNode parent = new ServerTreeNode(getFolder());
+            for (ServerTreeNode child: childNodes()) {
+                parent.add(child.copy());
+            }
+            return parent;
+        } else {
+            return new ServerTreeNode(getServer());
+        }
+    }
+
+    public boolean isFolder() {
+        return allowsChildren;
+    }
+
+    public Server getServer() {
+        if (isFolder()) {
+            throw new IllegalArgumentException("This node is not server");
+        }
+        return (Server)userObject;
+    }
+
+    public String getFolder() {
+        if (!isFolder()) {
+            throw new IllegalArgumentException("This node is server");
+        }
+        return (String)userObject;
+    }
+
+    public ServerTreeNode add(Server server) {
+        return add(getChildCount(), server);
+    }
+
+    public ServerTreeNode add(String folder) {
+        return add(getChildCount(), folder);
+    }
+
+    public ServerTreeNode add(int index, Server server) {
+        if (!isFolder()) {
+            throw new IllegalArgumentException("Server node can be added only to folders");
+        }
+        ServerTreeNode serverTreeNode = new ServerTreeNode(server);
+        insert(serverTreeNode, index);
+        return serverTreeNode;
+    }
+
+    public ServerTreeNode add(int index, String folder) {
+        if (!isFolder()) {
+            throw new IllegalArgumentException("Folder node can be added only to folders");
+        }
+        ServerTreeNode serverTreeNode = new ServerTreeNode(folder);
+        insert(serverTreeNode, index);
+        return serverTreeNode;
+    }
+
+    // Remove direct child
+    public boolean remove(Server server) {
+        if (!isFolder()) {
+            throw new IllegalArgumentException("This is not folder");
+        }
+        int count = getChildCount();
+        for (int index=0; index<count; index++) {
+            ServerTreeNode treeNode = getChild(index);
+            if (treeNode.isFolder()) continue;
+            if (treeNode.getServer().equals(server)) {
+                remove(index);
+                return true;
+            }
+        }
+        return false;
+    }
+
+    public ServerTreeNode getChild(int index) {
+        return (ServerTreeNode) getChildAt(index);
+    }
+
+    public Iterable<ServerTreeNode> childNodes() {
+        if (children != null) return children;
+        return Collections.emptyList();
+    }
+
+    public ServerTreeNode findServerNode(Server server) {
+
+        if (isFolder()) {
+            for(ServerTreeNode child: childNodes()) {
+                ServerTreeNode node = child.findServerNode(server);
+                if (node != null) return node;
+            }
+        } else {
+            if (getServer().equals(server)) return this;
+        }
+
+        return null;
+    }
+
+    @Override
+    public int hashCode() {
+        return toString().hashCode();
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (! (obj instanceof ServerTreeNode)) return false;
+        ServerTreeNode that = (ServerTreeNode) obj;
+        if (isFolder()) {
+            if (! that.isFolder()) return false;
+            if (! getFolder().equals(that.getFolder())) return false;
+        } else {
+            if (that.isFolder()) return false;
+            if (! getServer().equals(that.getServer())) return false;
+        }
+
+        if (getParent() == null) {
+            return that.getParent() == null;
+        }
+
+        return getParent().equals(that.getParent());
+    }
+
+    @Override
+    public String toString() {
+        return isFolder() ? getFolder() : getServer().toString();
+    }
+}

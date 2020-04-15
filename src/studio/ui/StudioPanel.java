@@ -1104,17 +1104,15 @@ public class StudioPanel extends JPanel implements Observer,WindowListener {
                                 Rectangle bounds = Config.getInstance().getServerListBounds();
                                 bounds.translate(frame.getX(), frame.getY());
 
-                                serverList = new ServerList(frame, Config.getInstance().getServers(), server);
-
+                                serverList = new ServerList(frame);
                                 if (screenBounds != null && screenBounds.contains(bounds)) {
                                     serverList.setBounds(bounds);
-                                    serverList.setVisible(true);
                                 } else {
-                                    serverList.alignAndShow();
+                                    serverList.align();
                                 }
-                            } else {
-                                serverList.setVisible(true);
                             }
+                            serverList.updateServerTree(Config.getInstance().getServerTree(), server);
+                            serverList.setVisible(true);
 
                             Rectangle bounds = serverList.getBounds();
                             bounds.translate( -frame.getX(), -frame.getY());

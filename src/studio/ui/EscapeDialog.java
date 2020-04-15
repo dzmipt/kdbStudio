@@ -15,9 +15,13 @@ public abstract class EscapeDialog extends JDialog {
         initComponents();
     }
 
-    protected void alignAndShow() {
+    public void align() {
         pack();
         Util.centerChildOnParent(this, getParent());
+    }
+
+    public void alignAndShow() {
+        align();
         setVisible(true);
     }
 

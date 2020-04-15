@@ -14,6 +14,7 @@ public class Server {
     private String username = "";
     private String password = "";
     private boolean useTLS=false;
+    private ServerTreeNode folder = null;
 
     public Properties getAsProperties() {
         Properties p = new Properties();
@@ -144,7 +145,20 @@ public class Server {
 
     }
 
+    public String getDescription() {
+        return name + " (" + host + ":" + port + ")";
+    }
+
     public boolean getUseTLS(){
       return useTLS;
     }
+
+    public ServerTreeNode getFolder() {
+        return folder;
+    }
+
+    public void setFolder(ServerTreeNode folder) {
+        this.folder = folder;
+    }
+
 }

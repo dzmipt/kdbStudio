@@ -27,6 +27,7 @@ public class Config {
     private Properties p = new Properties();
     private Map<String, Server> servers = new HashMap<>();
     private List<String> serverNames;
+    private ServerTreeNode serverTree;
 
     private final static Config instance = new Config();
 
@@ -270,6 +271,7 @@ public class Config {
     private void initServers() {
         serverNames = new ArrayList<>(Arrays.asList(split(p.getProperty("Servers", "")))); // make the list modifiable
         initServerMap();
+        initServerTree();
     }
 
     private Server initServerFromProperties(String name) {
@@ -291,13 +293,60 @@ public class Config {
         }
     }
 
+    private void initServerTree() {
+        serverTree = new ServerTreeNode();
+        List<String> leftNames = new ArrayList<>(serverNames);
+        initServerTree("serverTree.", serverTree, leftNames);
+
+        for (String name: leftNames) {
+            Server server = servers.get(name);
+            server.setFolder(serverTree);
+            serverTree.add(server);
+        }
+    }
+
+    private void initServerTree(String keyPrefix, ServerTreeNode parent, List<String> leftNames) {
+        for (int index = 0; ; index++) {
+            String key = keyPrefix + index;
+            if (! p.containsKey(key)) break;
+
+            String value = p.getProperty(key);
+            Server server = servers.get(value);
+            if (server != null) {
+                server.setFolder(parent);
+                parent.add(server);
+                leftNames.remove(value);
+            } else {
+                ServerTreeNode node = parent.add(value);
+                initServerTree(key + ".", node, leftNames);
+            }
+        }
+    }
+
     public List<String> getServerNames() {
         return Collections.unmodifiableList(serverNames);
     }
 
-    private void saveServerNames() {
+    private void saveServers() {
         p.setProperty("Servers", String.join(",",serverNames));
+        p.entrySet().removeIf(e -> e.getKey().toString().startsWith("serverTree."));
+        setServerTree("serverTree.", serverTree);
+
         save();
+    }
+
+    private void setServerTree(String keyPrefix, ServerTreeNode node) {
+        int count = node.getChildCount();
+        for(int index = 0; index<count; index++) {
+            String key = keyPrefix + index;
+            ServerTreeNode child = node.getChild(index);
+            if (child.isFolder()) {
+                p.setProperty(key, child.getFolder());
+                setServerTree(key + ".", child);
+            } else {
+                p.setProperty(key, child.getServer().getName());
+            }
+        }
     }
 
     public Server[] getServers() {
@@ -306,6 +355,10 @@ public class Config {
 
     public Server getServer(String name) {
         return servers.get(name);
+    }
+
+    public ServerTreeNode getServerTree() {
+        return serverTree;
     }
 
     public void removeServer(Server server) {
@@ -320,11 +373,27 @@ public class Config {
 
         serverNames.remove(name);
         servers.remove(name);
-        saveServerNames();
+        ServerTreeNode folder = server.getFolder();
+        if (folder != null) {
+            folder.remove(server);
+        }
+
+        saveServers();
+    }
+
+    public void removeAllServers() {
+        p.entrySet().removeIf(e -> e.getKey().toString().startsWith("server."));
+        servers.clear();
+        serverNames.clear();
+        serverTree = new ServerTreeNode();
+        saveServers();
     }
 
     private void setServerDetails(Server server) {
         String name = server.getName();
+        if (servers.containsKey(name)) {
+            throw new IllegalArgumentException("Server with name " + name + " already exist");
+        }
         if (name.trim().length() == 0) {
             throw new IllegalArgumentException("Server name can't be empty");
         }
@@ -341,16 +410,33 @@ public class Config {
     }
 
     public void addServer(Server server) {
-        String name = server.getName();
-        if (servers.containsKey(name)) {
-            throw new IllegalArgumentException("Server with name " + name + " already exist");
+        addServers(server);
+    }
+
+    public void addServers(Server... newServers) {
+        Properties backup = new Properties();
+        backup.putAll(p);
+        try {
+            for (Server server : newServers) {
+                String name = server.getName();
+                setServerDetails(server);
+
+                servers.put(name, server);
+                serverNames.add(name);
+                ServerTreeNode folder = server.getFolder();
+                if (folder == null) {
+                    server.setFolder(serverTree);
+                    serverTree.add(server);
+                } else {
+                    folder.add(server);
+                }
+            }
+        } catch (IllegalArgumentException e) {
+            p = backup;
+            throw e;
         }
-        setServerDetails(server);
 
-        servers.put(name, server);
-        serverNames.add(name);
-
-        saveServerNames();
+        saveServers();
     }
 
 }
