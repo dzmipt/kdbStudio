@@ -17,9 +17,6 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 public class Config {
-    public static String imageBase = "/de/skelton/images/";
-    public static String imageBase2 = "/de/skelton/utils/";
-
     private static String PATH = System.getProperties().getProperty("user.home") + "/.studioforkdb/";
     private static String FILENAME = PATH + "studio.properties";
     private static String VERSION = "1.1";
