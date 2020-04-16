@@ -30,10 +30,7 @@ public class ServerForm extends EscapeDialog {
 
         logicalName.setText(s.getName());
         hostname.setText(s.getHost());
-        String u= s.getUsername();
-        if(u.trim().length()==0)
-            u=System.getProperty("user.name");
-        username.setText(u);
+        username.setText(s.getUsername());
         port.setText(""+s.getPort());
         password.setText(s.getPassword());
         jCheckBox2.setSelected(s.getUseTLS());
