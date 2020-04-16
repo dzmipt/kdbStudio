@@ -1692,7 +1692,7 @@ public class StudioPanel extends JPanel implements Observer,WindowListener {
     }
 
     private void toolbarAddServerSelection() {
-        List<String> names = Config.getInstance().getServerNames();
+        Collection<String> names = Config.getInstance().getServerNames();
         String name = server == null ? "" : server.getName();
         if (!names.contains(name)) {
             List<String> newNames = new ArrayList<>();

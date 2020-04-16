@@ -26,7 +26,7 @@ public class Config {
 
     private Properties p = new Properties();
     private Map<String, Server> servers = new HashMap<>();
-    private List<String> serverNames;
+    private Collection<String> serverNames;
     private ServerTreeNode serverTree;
 
     private final static Config instance = new Config();
@@ -269,7 +269,7 @@ public class Config {
     }
 
     private void initServers() {
-        serverNames = new ArrayList<>(Arrays.asList(split(p.getProperty("Servers", "")))); // make the list modifiable
+        serverNames = new LinkedHashSet<>(Arrays.asList(split(p.getProperty("Servers", "")))); // remove duplicates
         initServerMap();
         initServerTree();
     }
@@ -323,8 +323,8 @@ public class Config {
         }
     }
 
-    public List<String> getServerNames() {
-        return Collections.unmodifiableList(serverNames);
+    public Collection<String> getServerNames() {
+        return Collections.unmodifiableCollection(serverNames);
     }
 
     private void saveServers() {
