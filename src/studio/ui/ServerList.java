@@ -10,6 +10,7 @@ import javax.swing.event.DocumentListener;
 import javax.swing.event.TreeExpansionEvent;
 import javax.swing.event.TreeExpansionListener;
 import javax.swing.tree.DefaultTreeModel;
+import javax.swing.tree.TreeNode;
 import javax.swing.tree.TreePath;
 import javax.swing.tree.TreeSelectionModel;
 import java.awt.*;
@@ -32,7 +33,7 @@ public class ServerList extends EscapeDialog implements TreeExpansionListener  {
     private ServerTreeNode serverTree, root;
 
     private JPopupMenu popupMenu;
-    private UserAction selectAction, cancelAction, removeAction,
+    private UserAction selectAction, removeAction,
                         insertFolderAction, insertServerAction,
                         addServerBeforeAction, addServerAfterAction,
                         addFolderBeforeAction, addFolderAfterAction;
@@ -264,12 +265,10 @@ public class ServerList extends EscapeDialog implements TreeExpansionListener  {
     }
 
     private void initPopupMenu() {
-        selectAction = UserAction.create("Select", Util.CHECK_ICON, "Select the node",
+        selectAction = UserAction.create("Select", "Select the node",
                                                         KeyEvent.VK_S, (e) -> action());
-        cancelAction = UserAction.create("Cancel", Util.ERROR_ICON, "Cancel",
-                                                        KeyEvent.VK_C, (e) -> cancel());
         removeAction = UserAction.create("Remove", "Remove the node",
-                                    KeyEvent.VK_S, (e) -> {});
+                                    KeyEvent.VK_DELETE, (e) -> removeNode());
         insertServerAction = UserAction.create("Insert Server", "Insert server into the folder",
                                     KeyEvent.VK_N, (e) -> addNode(false, AddNodeLocation.INSERT));
         insertFolderAction = UserAction.create("Insert Folder", "Insert folder into the folder",
@@ -295,6 +294,29 @@ public class ServerList extends EscapeDialog implements TreeExpansionListener  {
         popupMenu.add(addServerAfterAction);
         popupMenu.add(new JSeparator());
         popupMenu.add(removeAction);
+    }
+
+    private void removeNode() {
+        ServerTreeNode selNode  = (ServerTreeNode) tree.getLastSelectedPathComponent();
+        if (selNode == null) return;
+        ServerTreeNode node = serverTree.findPath(selNode.getPath());
+        if (node == null) {
+            System.err.println("Ups... Something goes wrong");
+            return;
+        }
+
+        String message = "Are you sure you want to remove " + (node.isRoot() ? "folder" : "server") + ": " + node.fullPath();
+        int result = JOptionPane.showConfirmDialog(this, message, "Remove?", JOptionPane.YES_NO_OPTION, JOptionPane.WARNING_MESSAGE);
+        if (result != JOptionPane.YES_OPTION) return;
+
+        TreeNode[] path = ((ServerTreeNode)selNode.getParent()).getPath();
+        node.removeFromParent();
+        Config.getInstance().setServerTree(serverTree);
+        refreshServers();
+
+        TreePath treePath = new TreePath(path);
+        tree.scrollPathToVisible(treePath);
+        tree.setSelectionPath(treePath);
     }
 
     private enum AddNodeLocation {INSERT, BEFORE, AFTER};
