@@ -321,17 +321,22 @@ public class Config {
     private void initServerTree(String keyPrefix, ServerTreeNode parent, List<String> leftNames) {
         for (int index = 0; ; index++) {
             String key = keyPrefix + index;
-            if (! p.containsKey(key)) break;
-
-            String value = p.getProperty(key);
-            Server server = servers.get(value);
-            if (server != null) {
+            String folderKey = key + "folder";
+            if (p.containsKey(folderKey)) {
+                ServerTreeNode node = parent.add(p.getProperty(folderKey));
+                initServerTree(key + ".", node, leftNames);
+            } else if (p.containsKey(key)) {
+                String name = p.getProperty(key);
+                Server server = servers.get(name);
+                if (server == null) {
+                    System.err.println("Wrong config. Not found server: " + name);
+                    continue;
+                }
                 server.setFolder(parent);
                 parent.add(server);
-                leftNames.remove(value);
+                leftNames.remove(name);
             } else {
-                ServerTreeNode node = parent.add(value);
-                initServerTree(key + ".", node, leftNames);
+                break;
             }
         }
     }
@@ -363,7 +368,7 @@ public class Config {
             String key = keyPrefix + index;
             ServerTreeNode child = node.getChild(index);
             if (child.isFolder()) {
-                p.setProperty(key, child.getFolder());
+                p.setProperty(key + "folder", child.getFolder());
                 saveServerTree(key + ".", child);
             } else {
                 p.setProperty(key, child.getServer().getName());
@@ -444,16 +449,6 @@ public class Config {
 
     }
 
-    private void checkFolderDuplicate(ServerTreeNode node) {
-        int count = 0;
-        for(ServerTreeNode child: node.childNodes()) {
-            if (child.equals(node)) count++;
-        }
-        if (count>1) {
-            throw new IllegalArgumentException("Node " + node + " already exist");
-        }
-    }
-
     public void setServerTree(ServerTreeNode serverTree) {
         Properties backup = new Properties();
         backup.putAll(p);
@@ -463,8 +458,12 @@ public class Config {
 
             for(Enumeration e = serverTree.depthFirstEnumeration(); e.hasMoreElements();) {
                 ServerTreeNode node = (ServerTreeNode) e.nextElement();
+                if (node.isRoot()) continue;
+
                 if (node.isFolder()) {
-                    checkFolderDuplicate(node);
+                    if ( ((ServerTreeNode)node.getParent()).getChild(node.getFolder())!= node ) {
+                        throw new IllegalArgumentException("Duplicate folder is found: " + node.fullPath());
+                    }
                 } else {
                     Server server = node.getServer();
                     server.setFolder((ServerTreeNode) node.getParent());

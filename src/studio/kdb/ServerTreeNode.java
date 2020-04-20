@@ -3,6 +3,8 @@ package studio.kdb;
 import javax.swing.tree.DefaultMutableTreeNode;
 import javax.swing.tree.TreeNode;
 import java.util.Collections;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 public class ServerTreeNode extends DefaultMutableTreeNode {
 
@@ -91,6 +93,20 @@ public class ServerTreeNode extends DefaultMutableTreeNode {
         return false;
     }
 
+    public ServerTreeNode getChild(String folder) {
+        for(ServerTreeNode child: childNodes()) {
+            if (child.isFolder() && child.getFolder().equals(folder)) return child;
+        }
+        return null;
+    }
+
+    public ServerTreeNode getChild(Server server) {
+        for(ServerTreeNode child: childNodes()) {
+            if (!child.isFolder() && child.getServer().equals(server)) return child;
+        }
+        return null;
+    }
+
     public ServerTreeNode getChild(int index) {
         return (ServerTreeNode) getChildAt(index);
     }
@@ -120,7 +136,7 @@ public class ServerTreeNode extends DefaultMutableTreeNode {
     }
 
     private ServerTreeNode findPath(TreeNode[] nodes, int head) {
-        if (! this.equals(nodes[head])) return null;
+        if (! theSame( (ServerTreeNode)nodes[head])) return null;
         if (head == nodes.length-1) return this;
 
         for (ServerTreeNode child: childNodes()) {
@@ -130,15 +146,8 @@ public class ServerTreeNode extends DefaultMutableTreeNode {
         return null;
     }
 
-    @Override
-    public int hashCode() {
-        return toString().hashCode();
-    }
 
-    @Override
-    public boolean equals(Object obj) {
-        if (! (obj instanceof ServerTreeNode)) return false;
-        ServerTreeNode that = (ServerTreeNode) obj;
+    public boolean theSame(ServerTreeNode that) {
         if (isFolder()) {
             if (! that.isFolder()) return false;
             return getFolder().equals(that.getFolder());
@@ -151,5 +160,9 @@ public class ServerTreeNode extends DefaultMutableTreeNode {
     @Override
     public String toString() {
         return isFolder() ? getFolder() : getServer().toString();
+    }
+
+    public String fullPath() {
+        return Stream.of(getPath()).map(n->n.toString()).collect(Collectors.joining("/"));
     }
 }
