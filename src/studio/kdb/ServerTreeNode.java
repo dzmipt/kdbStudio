@@ -1,6 +1,7 @@
 package studio.kdb;
 
 import javax.swing.tree.DefaultMutableTreeNode;
+import javax.swing.tree.TreeNode;
 import java.util.Collections;
 
 public class ServerTreeNode extends DefaultMutableTreeNode {
@@ -99,8 +100,8 @@ public class ServerTreeNode extends DefaultMutableTreeNode {
         return Collections.emptyList();
     }
 
+    // Recursively find ServerTreeNode with passed Server
     public ServerTreeNode findServerNode(Server server) {
-
         if (isFolder()) {
             for(ServerTreeNode child: childNodes()) {
                 ServerTreeNode node = child.findServerNode(server);
@@ -110,6 +111,22 @@ public class ServerTreeNode extends DefaultMutableTreeNode {
             if (getServer().equals(server)) return this;
         }
 
+        return null;
+    }
+
+    // Find in current tree the path from potentially a different tree
+    public ServerTreeNode findPath(TreeNode[] nodes) {
+        return findPath(nodes, 0);
+    }
+
+    private ServerTreeNode findPath(TreeNode[] nodes, int head) {
+        if (! this.equals(nodes[head])) return null;
+        if (head == nodes.length-1) return this;
+
+        for (ServerTreeNode child: childNodes()) {
+            ServerTreeNode node = child.findPath(nodes, head+1);
+            if (node != null) return node;
+        }
         return null;
     }
 
@@ -124,17 +141,11 @@ public class ServerTreeNode extends DefaultMutableTreeNode {
         ServerTreeNode that = (ServerTreeNode) obj;
         if (isFolder()) {
             if (! that.isFolder()) return false;
-            if (! getFolder().equals(that.getFolder())) return false;
+            return getFolder().equals(that.getFolder());
         } else {
             if (that.isFolder()) return false;
-            if (! getServer().equals(that.getServer())) return false;
+            return getServer().equals(that.getServer());
         }
-
-        if (getParent() == null) {
-            return that.getParent() == null;
-        }
-
-        return getParent().equals(that.getParent());
     }
 
     @Override

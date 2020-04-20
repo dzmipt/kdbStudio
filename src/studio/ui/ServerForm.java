@@ -5,13 +5,12 @@ import studio.core.Credentials;
 import studio.kdb.Config;
 import studio.kdb.Server;
 import studio.core.AuthenticationManager;
-import java.awt.Color;
+
+import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
-import java.io.IOException;
-import java.lang.reflect.InvocationTargetException;
 import javax.swing.*;
 
 import static javax.swing.GroupLayout.Alignment.*;
@@ -22,7 +21,7 @@ import static javax.swing.LayoutStyle.ComponentPlacement.RELATED;
 public class ServerForm extends EscapeDialog {
     private Server s;
 
-    public ServerForm(JFrame frame,String title, Server server){
+    public ServerForm(Window frame, String title, Server server){
         super(frame, title);
         s=new Server(server);
 

@@ -16,7 +16,7 @@ public abstract class UserAction extends AbstractAction {
         putValue(ACCELERATOR_KEY,key);
     }
 
-    public UserAction create(String text, ImageIcon icon,
+    public static UserAction create(String text, ImageIcon icon,
                                String desc, int mnemonic,
                                KeyStroke key, ActionListener listener) {
         return new UserAction(text, icon, desc, mnemonic, key) {
@@ -27,19 +27,19 @@ public abstract class UserAction extends AbstractAction {
         };
     }
 
-    public UserAction create(String text, ImageIcon icon,
+    public static UserAction create(String text, ImageIcon icon,
                              String desc, int mnemonic,
                              ActionListener listener) {
         return create(text, icon, desc, mnemonic, null, listener);
     }
 
-    public UserAction create(String text,
+    public static UserAction create(String text,
                              String desc, int mnemonic,
                              KeyStroke key, ActionListener listener) {
         return create(text, Util.BLANK_ICON, desc, mnemonic, key, listener);
     }
 
-    public UserAction create(String text,
+    public static UserAction create(String text,
                              String desc, int mnemonic,
                              ActionListener listener) {
         return create(text, Util.BLANK_ICON, desc, mnemonic, null, listener);

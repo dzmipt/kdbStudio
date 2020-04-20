@@ -265,6 +265,22 @@ public class Config {
         return new Rectangle(x,y,w,h);
     }
 
+    public Collection<String> getServerNames() {
+        return Collections.unmodifiableCollection(serverNames);
+    }
+
+    public Server[] getServers() {
+        return servers.values().toArray(new Server[servers.size()]);
+    }
+
+    public Server getServer(String name) {
+        return servers.get(name);
+    }
+
+    public ServerTreeNode getServerTree() {
+        return serverTree;
+    }
+
     private void initServers() {
         serverNames = new LinkedHashSet<>(Arrays.asList(split(p.getProperty("Servers", "")))); // remove duplicates
         initServerMap();
@@ -320,83 +336,18 @@ public class Config {
         }
     }
 
-    public Collection<String> getServerNames() {
-        return Collections.unmodifiableCollection(serverNames);
-    }
-
-    private void saveServers() {
-        p.setProperty("Servers", String.join(",",serverNames));
+    private void saveAllServers() {
         p.entrySet().removeIf(e -> e.getKey().toString().startsWith("serverTree."));
-        setServerTree("serverTree.", serverTree);
+        p.entrySet().removeIf(e -> e.getKey().toString().startsWith("server."));
+        p.setProperty("Servers", String.join(",",serverNames));
+        saveServers();
+        saveServerTree("serverTree.", serverTree);
 
         save();
     }
 
-    private void setServerTree(String keyPrefix, ServerTreeNode node) {
-        int count = node.getChildCount();
-        for(int index = 0; index<count; index++) {
-            String key = keyPrefix + index;
-            ServerTreeNode child = node.getChild(index);
-            if (child.isFolder()) {
-                p.setProperty(key, child.getFolder());
-                setServerTree(key + ".", child);
-            } else {
-                p.setProperty(key, child.getServer().getName());
-            }
-        }
-    }
-
-    public Server[] getServers() {
-        return servers.values().toArray(new Server[servers.size()]);
-    }
-
-    public Server getServer(String name) {
-        return servers.get(name);
-    }
-
-    public ServerTreeNode getServerTree() {
-        return serverTree;
-    }
-
-    public void removeServer(Server server) {
+    private void saveServerDetails(Server server) {
         String name = server.getName();
-        p.remove("server." + name + ".host");
-        p.remove("server." + name + ".port");
-        p.remove("server." + name + ".user");
-        p.remove("server." + name + ".password");
-        p.remove("server." + name + ".backgroundColor");
-        p.remove("server." + name + ".authenticationMechanism");
-        p.remove("server." + name + ".useTLS");
-
-        serverNames.remove(name);
-        servers.remove(name);
-        ServerTreeNode folder = server.getFolder();
-        if (folder != null) {
-            folder.remove(server);
-        }
-
-        saveServers();
-    }
-
-    public void removeAllServers() {
-        p.entrySet().removeIf(e -> e.getKey().toString().startsWith("server."));
-        servers.clear();
-        serverNames.clear();
-        serverTree = new ServerTreeNode();
-        saveServers();
-    }
-
-    private void setServerDetails(Server server) {
-        String name = server.getName();
-        if (servers.containsKey(name)) {
-            throw new IllegalArgumentException("Server with name " + name + " already exist");
-        }
-        if (name.trim().length() == 0) {
-            throw new IllegalArgumentException("Server name can't be empty");
-        }
-        if (name.contains(",")) {
-            throw new IllegalArgumentException("Server name can't contains ,");
-        }
         p.setProperty("server." + name + ".host", server.getHost());
         p.setProperty("server." + name + ".port", "" + server.getPort());
         p.setProperty("server." + name + ".user", "" + server.getUsername());
@@ -405,6 +356,65 @@ public class Config {
         p.setProperty("server." + name + ".authenticationMechanism", server.getAuthenticationMechanism());
         p.setProperty("server." + name + ".useTLS", "" + server.getUseTLS());
     }
+
+    private void saveServerTree(String keyPrefix, ServerTreeNode node) {
+        int count = node.getChildCount();
+        for(int index = 0; index<count; index++) {
+            String key = keyPrefix + index;
+            ServerTreeNode child = node.getChild(index);
+            if (child.isFolder()) {
+                p.setProperty(key, child.getFolder());
+                saveServerTree(key + ".", child);
+            } else {
+                p.setProperty(key, child.getServer().getName());
+            }
+        }
+    }
+
+    private void saveServers() {
+        for(Server server:servers.values()) {
+            saveServerDetails(server);
+        }
+    }
+
+    public void removeServer(Server server) {
+        String name = server.getName();
+        serverNames.remove(name);
+        servers.remove(name);
+        ServerTreeNode folder = server.getFolder();
+        if (folder != null) {
+            folder.remove(server);
+        }
+
+        saveAllServers();
+    }
+
+    private void purgeAll() {
+        servers.clear();
+        serverNames.clear();
+        serverTree = new ServerTreeNode();
+    }
+
+    public void removeAllServers() {
+        purgeAll();
+        saveAllServers();
+    }
+
+    private void addServerInternal(Server server) {
+        String name = server.getName();
+        if (serverNames.contains(name)) {
+            throw new IllegalArgumentException("Server with name " + name + " already exist");
+        }
+        if (name.trim().length() == 0) {
+            throw new IllegalArgumentException("Server name can't be empty");
+        }
+        if (name.contains(",")) {
+            throw new IllegalArgumentException("Server name can't contains ,");
+        }
+        servers.put(name, server);
+        serverNames.add(name);
+    }
+
 
     public void addServer(Server server) {
         addServers(server);
@@ -415,11 +425,6 @@ public class Config {
         backup.putAll(p);
         try {
             for (Server server : newServers) {
-                String name = server.getName();
-                setServerDetails(server);
-
-                servers.put(name, server);
-                serverNames.add(name);
                 ServerTreeNode folder = server.getFolder();
                 if (folder == null) {
                     server.setFolder(serverTree);
@@ -427,13 +432,52 @@ public class Config {
                 } else {
                     folder.add(server);
                 }
+                addServerInternal(server);
             }
+
+            saveAllServers();
         } catch (IllegalArgumentException e) {
             p = backup;
+            initServers();
             throw e;
         }
 
-        saveServers();
+    }
+
+    private void checkFolderDuplicate(ServerTreeNode node) {
+        int count = 0;
+        for(ServerTreeNode child: node.childNodes()) {
+            if (child.equals(node)) count++;
+        }
+        if (count>1) {
+            throw new IllegalArgumentException("Node " + node + " already exist");
+        }
+    }
+
+    public void setServerTree(ServerTreeNode serverTree) {
+        Properties backup = new Properties();
+        backup.putAll(p);
+        try {
+            purgeAll();
+            this.serverTree = serverTree;
+
+            for(Enumeration e = serverTree.depthFirstEnumeration(); e.hasMoreElements();) {
+                ServerTreeNode node = (ServerTreeNode) e.nextElement();
+                if (node.isFolder()) {
+                    checkFolderDuplicate(node);
+                } else {
+                    Server server = node.getServer();
+                    server.setFolder((ServerTreeNode) node.getParent());
+                    addServerInternal(server);
+                }
+            }
+
+            saveAllServers();
+        } catch (IllegalArgumentException e) {
+            p = backup;
+            initServers();
+            throw e;
+        }
     }
 
 }

@@ -10,8 +10,8 @@ public abstract class EscapeDialog extends JDialog {
 
     private DialogResult result = DialogResult.CANCELLED;
 
-    public EscapeDialog(Frame owner,String title) {
-        super(owner,title, true);
+    public EscapeDialog(Window owner,String title) {
+        super(owner,title, ModalityType.APPLICATION_MODAL);
         initComponents();
     }
 
