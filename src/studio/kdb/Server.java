@@ -125,6 +125,11 @@ public class Server {
         return name;
     }
 
+    public String getFullName() {
+        if (folder == null) return name;
+        return folder.fullPath() + "/" + name;
+    }
+
     public String getHost() {
         return host;
     }
@@ -134,7 +139,7 @@ public class Server {
     }
 
     public String toString() {
-        return name;
+        return getFullName();
     }
 
     public String getConnectionString(boolean includeCreditional) {

@@ -163,6 +163,6 @@ public class ServerTreeNode extends DefaultMutableTreeNode {
     }
 
     public String fullPath() {
-        return Stream.of(getPath()).map(n->n.toString()).collect(Collectors.joining("/"));
+        return Stream.of(getPath()).skip(1).map(n->n.toString()).collect(Collectors.joining("/"));
     }
 }

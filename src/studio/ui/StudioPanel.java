@@ -1182,7 +1182,7 @@ public class StudioPanel extends JPanel implements Observer,WindowListener {
                                             null) {
             public void actionPerformed(ActionEvent e) {
                 int choice = JOptionPane.showOptionDialog(frame,
-                                                          "Remove server " + server.getName() + " from list?",
+                                                          "Remove server " + server.getFullName() + " from list?",
                                                           "Remove server?",
                                                           JOptionPane.YES_NO_CANCEL_OPTION,
                                                           JOptionPane.QUESTION_MESSAGE,
@@ -1607,7 +1607,7 @@ public class StudioPanel extends JPanel implements Observer,WindowListener {
                         t = filename.replace('\\','/');
 
                     if (r.server != null)
-                        t = t + "[" + r.server.getName() + "]";
+                        t = t + "[" + r.server.getFullName() + "]";
                     else
                         t = t + "[no server]";
                 }
@@ -1693,7 +1693,7 @@ public class StudioPanel extends JPanel implements Observer,WindowListener {
 
     private void toolbarAddServerSelection() {
         Collection<String> names = Config.getInstance().getServerNames();
-        String name = server == null ? "" : server.getName();
+        String name = server == null ? "" : server.getFullName();
         if (!names.contains(name)) {
             List<String> newNames = new ArrayList<>();
             newNames.add(name);

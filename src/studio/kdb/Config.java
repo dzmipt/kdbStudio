@@ -9,7 +9,6 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.*;
-import java.util.List;
 import java.text.NumberFormat;
 import java.text.DecimalFormat;
 import java.awt.*;
@@ -136,7 +135,7 @@ public class Config {
     public void setLRUServer(Server s) {
         if (s == null) return; // May be it should be an exception ?
 
-        p.put("lruServer", s.getName());
+        p.put("lruServer", s.getFullName());
         save();
     }
 
@@ -281,109 +280,86 @@ public class Config {
         return serverTree;
     }
 
-    private void initServers() {
-        serverNames = new LinkedHashSet<>(Arrays.asList(split(p.getProperty("Servers", "")))); // remove duplicates
-        initServerMap();
-        initServerTree();
-    }
-
-    private Server initServerFromProperties(String name) {
-        String host = p.getProperty("server." + name + ".host");
-        int port = Integer.parseInt(p.getProperty("server." + name + ".port", "-1"));
-        String username = p.getProperty("server." + name + ".user");
-        String password = p.getProperty("server." + name + ".password");
-        String backgroundColor = p.getProperty("server." + name + ".backgroundColor", "FFFFFF");
-        String authenticationMechanism = p.getProperty("server." + name + ".authenticationMechanism", DefaultAuthenticationMechanism.NAME);
-        boolean useTLS = Boolean.parseBoolean(p.getProperty("server." + name + ".useTLS", "false"));
+    private Server initServerFromProperties(int number) {
+        String host = p.getProperty("server." + number + ".host");
+        int port = Integer.parseInt(p.getProperty("server." + number + ".port", "-1"));
+        String username = p.getProperty("server." + number + ".user");
+        String password = p.getProperty("server." + number + ".password");
+        String backgroundColor = p.getProperty("server." + number + ".backgroundColor", "FFFFFF");
+        String authenticationMechanism = p.getProperty("server." + number + ".authenticationMechanism", DefaultAuthenticationMechanism.NAME);
+        boolean useTLS = Boolean.parseBoolean(p.getProperty("server." + number + ".useTLS", "false"));
         Color c = new Color(Integer.parseInt(backgroundColor, 16));
-        return new Server(name, host, port, username, password, c, authenticationMechanism, useTLS);
+        return new Server("", host, port, username, password, c, authenticationMechanism, useTLS);
     }
 
-    private void initServerMap() {
-        for(String name: serverNames) {
-            Server server = initServerFromProperties(name);
-            servers.put(name, server);
-        }
-    }
-
-    private void initServerTree() {
+    private void initServers() {
+        serverNames = new ArrayList<>();
         serverTree = new ServerTreeNode();
-        List<String> leftNames = new ArrayList<>(serverNames);
-        initServerTree("serverTree.", serverTree, leftNames);
-
-        for (String name: leftNames) {
-            Server server = servers.get(name);
-            server.setFolder(serverTree);
-            serverTree.add(server);
-        }
+        initServerTree("serverTree.", serverTree, 0);
     }
 
-    private void initServerTree(String keyPrefix, ServerTreeNode parent, List<String> leftNames) {
+    private int initServerTree(String keyPrefix, ServerTreeNode parent, int number) {
         for (int index = 0; ; index++) {
             String key = keyPrefix + index;
             String folderKey = key + "folder";
             if (p.containsKey(folderKey)) {
                 ServerTreeNode node = parent.add(p.getProperty(folderKey));
-                initServerTree(key + ".", node, leftNames);
+                number = initServerTree(key + ".", node, number);
             } else if (p.containsKey(key)) {
-                String name = p.getProperty(key);
-                Server server = servers.get(name);
-                if (server == null) {
-                    System.err.println("Wrong config. Not found server: " + name);
-                    continue;
-                }
+                Server server = initServerFromProperties(number);
                 server.setFolder(parent);
+                String name = p.getProperty(key);
+                server.setName(name);
+                String fullName = server.getFullName();
+                servers.put(fullName, server);
+                serverNames.add(fullName);
                 parent.add(server);
-                leftNames.remove(name);
+                number++;
             } else {
                 break;
             }
         }
+        return number;
     }
 
     private void saveAllServers() {
         p.entrySet().removeIf(e -> e.getKey().toString().startsWith("serverTree."));
         p.entrySet().removeIf(e -> e.getKey().toString().startsWith("server."));
-        p.setProperty("Servers", String.join(",",serverNames));
-        saveServers();
-        saveServerTree("serverTree.", serverTree);
+        saveServerTree("serverTree.", serverTree, 0);
 
         save();
     }
 
-    private void saveServerDetails(Server server) {
-        String name = server.getName();
-        p.setProperty("server." + name + ".host", server.getHost());
-        p.setProperty("server." + name + ".port", "" + server.getPort());
-        p.setProperty("server." + name + ".user", "" + server.getUsername());
-        p.setProperty("server." + name + ".password", "" + server.getPassword());
-        p.setProperty("server." + name + ".backgroundColor", "" + Integer.toHexString(server.getBackgroundColor().getRGB()).substring(2));
-        p.setProperty("server." + name + ".authenticationMechanism", server.getAuthenticationMechanism());
-        p.setProperty("server." + name + ".useTLS", "" + server.getUseTLS());
+    private void saveServerDetails(Server server, int number) {
+        p.setProperty("server." + number + ".host", server.getHost());
+        p.setProperty("server." + number + ".port", "" + server.getPort());
+        p.setProperty("server." + number + ".user", "" + server.getUsername());
+        p.setProperty("server." + number + ".password", "" + server.getPassword());
+        p.setProperty("server." + number + ".backgroundColor", "" + Integer.toHexString(server.getBackgroundColor().getRGB()).substring(2));
+        p.setProperty("server." + number + ".authenticationMechanism", server.getAuthenticationMechanism());
+        p.setProperty("server." + number + ".useTLS", "" + server.getUseTLS());
     }
 
-    private void saveServerTree(String keyPrefix, ServerTreeNode node) {
+    private int saveServerTree(String keyPrefix, ServerTreeNode node, int number) {
         int count = node.getChildCount();
         for(int index = 0; index<count; index++) {
             String key = keyPrefix + index;
             ServerTreeNode child = node.getChild(index);
             if (child.isFolder()) {
                 p.setProperty(key + "folder", child.getFolder());
-                saveServerTree(key + ".", child);
+                number = saveServerTree(key + ".", child, number);
             } else {
-                p.setProperty(key, child.getServer().getName());
+                Server server = child.getServer();
+                p.setProperty(key, server.getName());
+                saveServerDetails(server, number);
+                number++;
             }
         }
-    }
-
-    private void saveServers() {
-        for(Server server:servers.values()) {
-            saveServerDetails(server);
-        }
+        return number;
     }
 
     public void removeServer(Server server) {
-        String name = server.getName();
+        String name = server.getFullName();
         serverNames.remove(name);
         servers.remove(name);
         ServerTreeNode folder = server.getFolder();
@@ -407,8 +383,9 @@ public class Config {
 
     private void addServerInternal(Server server) {
         String name = server.getName();
-        if (serverNames.contains(name)) {
-            throw new IllegalArgumentException("Server with name " + name + " already exist");
+        String fullName = server.getFullName();
+        if (serverNames.contains(fullName)) {
+            throw new IllegalArgumentException("Server with full name " + fullName + " already exist");
         }
         if (name.trim().length() == 0) {
             throw new IllegalArgumentException("Server name can't be empty");
@@ -416,8 +393,8 @@ public class Config {
         if (name.contains(",")) {
             throw new IllegalArgumentException("Server name can't contains ,");
         }
-        servers.put(name, server);
-        serverNames.add(name);
+        servers.put(fullName, server);
+        serverNames.add(fullName);
     }
 
 
@@ -461,6 +438,13 @@ public class Config {
                 if (node.isRoot()) continue;
 
                 if (node.isFolder()) {
+                    String folder = node.getFolder();
+                    if (folder.trim().length()==0) {
+                        throw new IllegalArgumentException("Can't add folder with empty name");
+                    }
+                    if (folder.contains("/")) {
+                        throw new IllegalArgumentException("Folder can't contain /");
+                    }
                     if ( ((ServerTreeNode)node.getParent()).getChild(node.getFolder())!= node ) {
                         throw new IllegalArgumentException("Duplicate folder is found: " + node.fullPath());
                     }
