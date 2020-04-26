@@ -393,6 +393,9 @@ public class Config {
         if (name.contains(",")) {
             throw new IllegalArgumentException("Server name can't contains ,");
         }
+        if (name.contains("/")) {
+            throw new IllegalArgumentException("Server name can't contains /");
+        }
         servers.put(fullName, server);
         serverNames.add(fullName);
     }
