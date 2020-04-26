@@ -14,6 +14,7 @@ public class Server {
     private String username = "";
     private String password = "";
     private boolean useTLS=false;
+    private ServerTreeNode folder = null;
 
     public Properties getAsProperties() {
         Properties p = new Properties();
@@ -124,6 +125,13 @@ public class Server {
         return name;
     }
 
+    public String getFullName() {
+        if (folder == null) return name;
+        String path = folder.fullPath();
+        if (path.length() == 0) return name;
+        return path + "/" + name;
+    }
+
     public String getHost() {
         return host;
     }
@@ -133,7 +141,7 @@ public class Server {
     }
 
     public String toString() {
-        return name;
+        return getFullName();
     }
 
     public String getConnectionString(boolean includeCreditional) {
@@ -144,7 +152,20 @@ public class Server {
 
     }
 
+    public String getDescription() {
+        return name + " (" + host + ":" + port + ")";
+    }
+
     public boolean getUseTLS(){
       return useTLS;
     }
+
+    public ServerTreeNode getFolder() {
+        return folder;
+    }
+
+    public void setFolder(ServerTreeNode folder) {
+        this.folder = folder;
+    }
+
 }
