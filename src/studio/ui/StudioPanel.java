@@ -1542,7 +1542,7 @@ public class StudioPanel extends JPanel implements Observer,WindowListener {
                 final Server s = servers[i];
                 if (!s.equals(server) && count <= 0) continue;
                 count--;
-                JMenuItem item = new JMenuItem(s.getName());
+                JMenuItem item = new JMenuItem(s.getFullName());
                 item.addActionListener(new ActionListener() {
                                         
                                        public void actionPerformed(ActionEvent e) {
