@@ -127,7 +127,9 @@ public class Server {
 
     public String getFullName() {
         if (folder == null) return name;
-        return folder.fullPath() + "/" + name;
+        String path = folder.fullPath();
+        if (path.length() == 0) return name;
+        return path + "/" + name;
     }
 
     public String getHost() {
