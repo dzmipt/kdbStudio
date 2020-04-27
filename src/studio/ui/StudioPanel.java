@@ -1119,7 +1119,7 @@ public class StudioPanel extends JPanel implements Observer,WindowListener {
                             Config.getInstance().setServerListBounds(bounds);
 
                             Server selectedServer = serverList.getSelectedServer();
-                            if (selectedServer.equals(server)) return;
+                            if (selectedServer == null || selectedServer.equals(server)) return;
 
                             setServer(selectedServer);
                             rebuildToolbar();
