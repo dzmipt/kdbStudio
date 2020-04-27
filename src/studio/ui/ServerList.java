@@ -121,7 +121,7 @@ public class ServerList extends EscapeDialog implements TreeExpansionListener  {
     }
 
     private ServerTreeNode filter(ServerTreeNode parent, java.util.List<String> filters) {
-        String value = parent.isFolder() ? parent.getFolder() : parent.getServer().getName();
+        String value = parent.isFolder() ? parent.getFolder() : parent.getServer().getDescription();
         value = value.toLowerCase();
         java.util.List<String> left = new ArrayList<>();
         for(String filter:filters) {
