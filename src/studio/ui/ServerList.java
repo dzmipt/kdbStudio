@@ -70,7 +70,9 @@ public class ServerList extends EscapeDialog implements TreeExpansionListener  {
     }
 
     private void setRoot(ServerTreeNode newRoot) {
-        if (isListView()) {
+        if (newRoot == null) {
+            root = new ServerTreeNode();
+        } else if (isListView()) {
             root = new ServerTreeNode();
             for (Enumeration e = newRoot.depthFirstEnumeration(); e.hasMoreElements(); ) {
                 ServerTreeNode node = (ServerTreeNode) e.nextElement();
