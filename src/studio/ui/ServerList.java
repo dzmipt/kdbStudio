@@ -24,6 +24,8 @@ public class ServerList extends EscapeDialog implements TreeExpansionListener  {
     private JTree tree;
     private DefaultTreeModel treeModel;
     private JTextField filter;
+    private JToggleButton chkBoxTree;
+    private UserAction treeAction;
     private boolean ignoreExpansionListener = false;
     private java.util.Set<TreePath> expandedPath = new HashSet<>();
     private java.util.Set<TreePath> collapsedPath = new HashSet<>();
@@ -40,6 +42,8 @@ public class ServerList extends EscapeDialog implements TreeExpansionListener  {
 
     public final static int DEFAULT_WIDTH = 300;
     public final static int DEFAULT_HEIGHT = 400;
+
+    private final static int menuShortcutKeyMask = java.awt.Toolkit.getDefaultToolkit().getMenuShortcutKeyMask();
 
     public ServerList(JFrame parent) {
         super(parent, "Server List");
@@ -74,6 +78,8 @@ public class ServerList extends EscapeDialog implements TreeExpansionListener  {
     //Reload server tree
     private void refreshServers() {
         java.util.List<String> filters = getFilters();
+        chkBoxTree.setSelected(filters.size()>0);
+
         if (filters.size() > 0) {
             setRoot(filter(serverTree, filters));
             expandAll(); // expand all if we apply any filters
@@ -243,10 +249,27 @@ public class ServerList extends EscapeDialog implements TreeExpansionListener  {
                 refreshServers();
             }
         });
-        add(filter, BorderLayout.NORTH);
+
+        chkBoxTree = new JToggleButton(Util.TEXT_TREE_ICON);
+        chkBoxTree.setToolTipText("Toggle tree/list");
+        chkBoxTree.setSelectedIcon(Util.TEXT_ICON);
+        chkBoxTree.setFocusable(false);
+        chkBoxTree.addActionListener(e->handleTreeAction());
+        JToolBar toolbar = new JToolBar();
+        toolbar.setFloatable(false);
+        toolbar.add(chkBoxTree);
+        toolbar.addSeparator();
+        toolbar.add(new JLabel("Filter: "));
+        toolbar.add(filter);
+        filter.requestFocus();
+
+        add(toolbar, BorderLayout.NORTH);
         setPreferredSize(new Dimension(DEFAULT_WIDTH, DEFAULT_HEIGHT));
     }
 
+    private void handleTreeAction() {
+        System.out.println(chkBoxTree.isSelected());
+    }
 
     private void handlePopup(MouseEvent e) {
         int x = e.getX();
