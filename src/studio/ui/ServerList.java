@@ -16,6 +16,7 @@ import javax.swing.tree.TreeSelectionModel;
 import java.awt.*;
 import java.awt.event.*;
 import java.util.ArrayList;
+import java.util.Enumeration;
 import java.util.HashSet;
 import java.util.StringTokenizer;
 
@@ -24,8 +25,7 @@ public class ServerList extends EscapeDialog implements TreeExpansionListener  {
     private JTree tree;
     private DefaultTreeModel treeModel;
     private JTextField filter;
-    private JToggleButton chkBoxTree;
-    private UserAction treeAction;
+    private JToggleButton tglBtnBoxTree;
     private boolean ignoreExpansionListener = false;
     private java.util.Set<TreePath> expandedPath = new HashSet<>();
     private java.util.Set<TreePath> collapsedPath = new HashSet<>();
@@ -69,21 +69,40 @@ public class ServerList extends EscapeDialog implements TreeExpansionListener  {
         return filters;
     }
 
-    private void setRoot(ServerTreeNode root) {
-        this.root = root;
+    private void setRoot(ServerTreeNode newRoot) {
+        if (isListView()) {
+            root = new ServerTreeNode();
+            for (Enumeration e = newRoot.depthFirstEnumeration(); e.hasMoreElements(); ) {
+                ServerTreeNode node = (ServerTreeNode) e.nextElement();
+                if (node.isFolder()) continue;
+                root.add(node.getServer());
+            }
+        } else {
+            root = newRoot;
+        }
         treeModel.setRoot(root);
         treeModel.reload();
     }
 
+    // keep previous filters to switch between tree/list
+    private java.util.List<String> oldFilters = new ArrayList<>();
+
     //Reload server tree
     private void refreshServers() {
         java.util.List<String> filters = getFilters();
-        chkBoxTree.setSelected(filters.size()>0);
 
         if (filters.size() > 0) {
+            if (oldFilters.size() == 0) {
+                // Start filtering - switch to list view by default
+                tglBtnBoxTree.setSelected(true);
+            }
             setRoot(filter(serverTree, filters));
             expandAll(); // expand all if we apply any filters
         } else {
+            if (oldFilters.size() > 0) {
+                // Stop filtering - switch to tree view by default
+                tglBtnBoxTree.setSelected(false);
+            }
             ignoreExpansionListener = true;
             setRoot(serverTree);
             //restore expanded state which was the last time (potentially was changed during filtering)
@@ -110,6 +129,7 @@ public class ServerList extends EscapeDialog implements TreeExpansionListener  {
             ignoreExpansionListener = false;
         }
         tree.invalidate();
+        oldFilters = filters;
     }
 
 
@@ -127,7 +147,7 @@ public class ServerList extends EscapeDialog implements TreeExpansionListener  {
     }
 
     private ServerTreeNode filter(ServerTreeNode parent, java.util.List<String> filters) {
-        String value = parent.isFolder() ? parent.getFolder() : parent.getServer().getDescription();
+        String value = parent.isFolder() ? parent.getFolder() : parent.getServer().getDescription(false);
         value = value.toLowerCase();
         java.util.List<String> left = new ArrayList<>();
         for(String filter:filters) {
@@ -187,6 +207,10 @@ public class ServerList extends EscapeDialog implements TreeExpansionListener  {
         accept();
     }
 
+    private boolean isListView() {
+        return tglBtnBoxTree.isSelected();
+    }
+
     private void initComponents() {
         initPopupMenu();
         treeModel = new DefaultTreeModel(new ServerTreeNode(), true);
@@ -198,7 +222,7 @@ public class ServerList extends EscapeDialog implements TreeExpansionListener  {
                 if (node.isFolder()) {
                     value = node.getFolder();
                 } else {
-                    value = node.getServer().getDescription();
+                    value = node.getServer().getDescription( isListView() );
                 }
                 if (!node.isFolder() && node.getServer().equals(activeServer)) {
                     value = "<html><b>" + value + "</b></html>";
@@ -250,14 +274,14 @@ public class ServerList extends EscapeDialog implements TreeExpansionListener  {
             }
         });
 
-        chkBoxTree = new JToggleButton(Util.TEXT_TREE_ICON);
-        chkBoxTree.setToolTipText("Toggle tree/list");
-        chkBoxTree.setSelectedIcon(Util.TEXT_ICON);
-        chkBoxTree.setFocusable(false);
-        chkBoxTree.addActionListener(e->handleTreeAction());
+        tglBtnBoxTree = new JToggleButton(Util.TEXT_TREE_ICON);
+        tglBtnBoxTree.setToolTipText("Toggle tree/list");
+        tglBtnBoxTree.setSelectedIcon(Util.TEXT_ICON);
+        tglBtnBoxTree.setFocusable(false);
+        tglBtnBoxTree.addActionListener(e->refreshServers());
         JToolBar toolbar = new JToolBar();
         toolbar.setFloatable(false);
-        toolbar.add(chkBoxTree);
+        toolbar.add(tglBtnBoxTree);
         toolbar.addSeparator();
         toolbar.add(new JLabel("Filter: "));
         toolbar.add(filter);
@@ -265,10 +289,6 @@ public class ServerList extends EscapeDialog implements TreeExpansionListener  {
 
         add(toolbar, BorderLayout.NORTH);
         setPreferredSize(new Dimension(DEFAULT_WIDTH, DEFAULT_HEIGHT));
-    }
-
-    private void handleTreeAction() {
-        System.out.println(chkBoxTree.isSelected());
     }
 
     private void handlePopup(MouseEvent e) {
@@ -280,9 +300,20 @@ public class ServerList extends EscapeDialog implements TreeExpansionListener  {
         };
 
         tree.setSelectionPath(path);
-        boolean isFolder = ((ServerTreeNode)path.getLastPathComponent()).isFolder();
-        insertServerAction.setEnabled(isFolder);
-        insertFolderAction.setEnabled(isFolder);
+
+        if (isListView()) {
+            insertFolderAction.setEnabled(false);
+            addFolderBeforeAction.setEnabled(false);
+            addFolderAfterAction.setEnabled(false);
+            insertServerAction.setEnabled(false);
+            addServerBeforeAction.setEnabled(false);
+            addServerAfterAction.setEnabled(false);
+            removeAction.setEnabled(false);
+        } else {
+            boolean isFolder = ((ServerTreeNode) path.getLastPathComponent()).isFolder();
+            insertServerAction.setEnabled(isFolder);
+            insertFolderAction.setEnabled(isFolder);
+        }
 
         popupMenu.show(tree, x, y);
     }
