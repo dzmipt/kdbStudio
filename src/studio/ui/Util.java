@@ -2,6 +2,7 @@ package studio.ui;
 
 import javax.swing.*;
 import java.awt.*;
+import java.awt.event.KeyEvent;
 import java.net.URL;
 
 public class Util {
@@ -77,4 +78,15 @@ public class Util {
 
         child.setLocation(x,y);
     }
+
+    public static String getAcceleratorString(KeyStroke keyStroke) {
+        return KeyEvent.getKeyModifiersText(keyStroke.getModifiers()) +
+                KeyEvent.getKeyText(keyStroke.getKeyCode());
+    }
+
+    public static boolean checkKeyStroke(KeyEvent e, KeyStroke keyStroke) {
+        return e.getKeyCode() == keyStroke.getKeyCode() &&
+                ((e.getModifiers() & keyStroke.getModifiers()) == e.getModifiers());
+    }
+
 }

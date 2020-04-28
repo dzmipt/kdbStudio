@@ -44,6 +44,7 @@ public class ServerList extends EscapeDialog implements TreeExpansionListener  {
     public final static int DEFAULT_HEIGHT = 400;
 
     private final static int menuShortcutKeyMask = java.awt.Toolkit.getDefaultToolkit().getMenuShortcutKeyMask();
+    private final KeyStroke TREE_VIEW_KEYSTROKE = KeyStroke.getKeyStroke(KeyEvent.VK_T, menuShortcutKeyMask);
 
     public ServerList(JFrame parent) {
         super(parent, "Server List");
@@ -86,25 +87,14 @@ public class ServerList extends EscapeDialog implements TreeExpansionListener  {
         treeModel.reload();
     }
 
-    // keep previous filters to switch between tree/list
-    private java.util.List<String> oldFilters = new ArrayList<>();
-
     //Reload server tree
     private void refreshServers() {
         java.util.List<String> filters = getFilters();
 
         if (filters.size() > 0) {
-            if (oldFilters.size() == 0) {
-                // Start filtering - switch to list view by default
-                tglBtnBoxTree.setSelected(true);
-            }
             setRoot(filter(serverTree, filters));
             expandAll(); // expand all if we apply any filters
         } else {
-            if (oldFilters.size() > 0) {
-                // Stop filtering - switch to tree view by default
-                tglBtnBoxTree.setSelected(false);
-            }
             ignoreExpansionListener = true;
             setRoot(serverTree);
             //restore expanded state which was the last time (potentially was changed during filtering)
@@ -131,7 +121,6 @@ public class ServerList extends EscapeDialog implements TreeExpansionListener  {
             ignoreExpansionListener = false;
         }
         tree.invalidate();
-        oldFilters = filters;
     }
 
 
@@ -213,6 +202,15 @@ public class ServerList extends EscapeDialog implements TreeExpansionListener  {
         return tglBtnBoxTree.isSelected();
     }
 
+    private boolean checkTglBtnAccelerator(KeyEvent e) {
+        if (Util.checkKeyStroke(e, TREE_VIEW_KEYSTROKE)) {
+            tglBtnBoxTree.setSelected(!tglBtnBoxTree.isSelected());
+            refreshServers();
+            return true;
+        }
+        return false;
+    }
+
     private void initComponents() {
         initPopupMenu();
         treeModel = new DefaultTreeModel(new ServerTreeNode(), true);
@@ -256,6 +254,8 @@ public class ServerList extends EscapeDialog implements TreeExpansionListener  {
             public void keyPressed(KeyEvent e) {
                 if (e.getKeyCode() == KeyEvent.VK_ENTER) {
                     action();
+                } else {
+                    checkTglBtnAccelerator(e);
                 }
             }
         });
@@ -275,9 +275,22 @@ public class ServerList extends EscapeDialog implements TreeExpansionListener  {
                 refreshServers();
             }
         });
+        filter.addKeyListener(new KeyAdapter() {
+            @Override
+            public void keyPressed(KeyEvent e) {
+                if (checkTglBtnAccelerator(e)) return;
 
+                int keyCode = e.getKeyCode();
+                if (keyCode == KeyEvent.VK_DOWN ||
+                        keyCode == KeyEvent.VK_UP ||
+                        keyCode == KeyEvent.VK_PAGE_DOWN ||
+                        keyCode == KeyEvent.VK_PAGE_UP) {
+                    tree.requestFocusInWindow();
+                }
+            }
+        });
         tglBtnBoxTree = new JToggleButton(Util.TEXT_TREE_ICON);
-        tglBtnBoxTree.setToolTipText("Toggle tree/list");
+        tglBtnBoxTree.setToolTipText("Toggle tree/list " + Util.getAcceleratorString(TREE_VIEW_KEYSTROKE));
         tglBtnBoxTree.setSelectedIcon(Util.TEXT_ICON);
         tglBtnBoxTree.setFocusable(false);
         tglBtnBoxTree.addActionListener(e->refreshServers());
