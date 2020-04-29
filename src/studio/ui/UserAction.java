@@ -3,7 +3,6 @@ package studio.ui;
 import javax.swing.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.security.Key;
 
 public abstract class UserAction extends AbstractAction {
     public UserAction(String text,
