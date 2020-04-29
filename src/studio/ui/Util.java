@@ -84,9 +84,4 @@ public class Util {
                 KeyEvent.getKeyText(keyStroke.getKeyCode());
     }
 
-    public static boolean checkKeyStroke(KeyEvent e, KeyStroke keyStroke) {
-        return e.getKeyCode() == keyStroke.getKeyCode() &&
-                ((e.getModifiers() & keyStroke.getModifiers()) == e.getModifiers());
-    }
-
 }
