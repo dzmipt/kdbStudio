@@ -44,7 +44,6 @@ public class ServerList extends EscapeDialog implements TreeExpansionListener  {
     public final static int DEFAULT_HEIGHT = 400;
 
     private final static int menuShortcutKeyMask = java.awt.Toolkit.getDefaultToolkit().getMenuShortcutKeyMask();
-    private final KeyStroke TREE_VIEW_KEYSTROKE = KeyStroke.getKeyStroke(KeyEvent.VK_T, menuShortcutKeyMask);
 
     public ServerList(JFrame parent) {
         super(parent, "Server List");
@@ -190,7 +189,7 @@ public class ServerList extends EscapeDialog implements TreeExpansionListener  {
         collapsedPath.add(path);
     }
 
-    private void action() {
+    private void selectTreeNode() {
         ServerTreeNode node  = (ServerTreeNode) tree.getLastSelectedPathComponent();
         if (node == null) return; // no selection
         if (node.isFolder()) return;
@@ -202,13 +201,9 @@ public class ServerList extends EscapeDialog implements TreeExpansionListener  {
         return tglBtnBoxTree.isSelected();
     }
 
-    private boolean checkTglBtnAccelerator(KeyEvent e) {
-        if (Util.checkKeyStroke(e, TREE_VIEW_KEYSTROKE)) {
-            tglBtnBoxTree.setSelected(!tglBtnBoxTree.isSelected());
-            refreshServers();
-            return true;
-        }
-        return false;
+    private void toggleTreeListView() {
+        tglBtnBoxTree.setSelected(!tglBtnBoxTree.isSelected());
+        refreshServers();
     }
 
     private void initComponents() {
@@ -240,26 +235,14 @@ public class ServerList extends EscapeDialog implements TreeExpansionListener  {
                 if (e.isPopupTrigger()) {
                     handlePopup(e);
                 } else if (e.getClickCount() == 2) {
-                    action();
+                    selectTreeNode();
                 }
             }
-
             @Override
             public void mouseReleased(MouseEvent e) {
                 if (e.isPopupTrigger()) handlePopup(e);
             }
         });
-        tree.addKeyListener(new KeyAdapter() {
-            @Override
-            public void keyPressed(KeyEvent e) {
-                if (e.getKeyCode() == KeyEvent.VK_ENTER) {
-                    action();
-                } else {
-                    checkTglBtnAccelerator(e);
-                }
-            }
-        });
-        add(new JScrollPane(tree), BorderLayout.CENTER);
         filter = new JTextField();
         filter.getDocument().addDocumentListener(new DocumentListener() {
             @Override
@@ -275,22 +258,9 @@ public class ServerList extends EscapeDialog implements TreeExpansionListener  {
                 refreshServers();
             }
         });
-        filter.addKeyListener(new KeyAdapter() {
-            @Override
-            public void keyPressed(KeyEvent e) {
-                if (checkTglBtnAccelerator(e)) return;
-
-                int keyCode = e.getKeyCode();
-                if (keyCode == KeyEvent.VK_DOWN ||
-                        keyCode == KeyEvent.VK_UP ||
-                        keyCode == KeyEvent.VK_PAGE_DOWN ||
-                        keyCode == KeyEvent.VK_PAGE_UP) {
-                    tree.requestFocusInWindow();
-                }
-            }
-        });
+        KeyStroke treeViewKeyStroke = KeyStroke.getKeyStroke(KeyEvent.VK_T, menuShortcutKeyMask);
         tglBtnBoxTree = new JToggleButton(Util.TEXT_TREE_ICON);
-        tglBtnBoxTree.setToolTipText("Toggle tree/list " + Util.getAcceleratorString(TREE_VIEW_KEYSTROKE));
+        tglBtnBoxTree.setToolTipText("Toggle tree/list " + Util.getAcceleratorString(treeViewKeyStroke));
         tglBtnBoxTree.setSelectedIcon(Util.TEXT_ICON);
         tglBtnBoxTree.setFocusable(false);
         tglBtnBoxTree.addActionListener(e->refreshServers());
@@ -302,8 +272,29 @@ public class ServerList extends EscapeDialog implements TreeExpansionListener  {
         toolbar.add(filter);
         filter.requestFocus();
 
-        add(toolbar, BorderLayout.NORTH);
+        JPanel contentPane = new JPanel(new BorderLayout());
+        contentPane.add(toolbar, BorderLayout.NORTH);
+        contentPane.add(new JScrollPane(tree), BorderLayout.CENTER);
+        setContentPane(contentPane);
+
         setPreferredSize(new Dimension(DEFAULT_WIDTH, DEFAULT_HEIGHT));
+
+
+        UserAction toggleAction = UserAction.create("toggle", e-> toggleTreeListView());
+        UserAction focusTreeAction = UserAction.create("focus tree", e-> tree.requestFocusInWindow());
+        UserAction selectTreeNodeAction = UserAction.create("select tree node", e-> selectTreeNode());
+
+        contentPane.getActionMap().put(toggleAction.getText(), toggleAction);
+        tree.getActionMap().put(selectTreeNodeAction.getText(), selectTreeNodeAction);
+        filter.getActionMap().put(focusTreeAction.getText(), focusTreeAction);
+
+        contentPane.getInputMap(JComponent.WHEN_ANCESTOR_OF_FOCUSED_COMPONENT)
+                    .put(treeViewKeyStroke, toggleAction.getText());
+        tree.getInputMap().put(KeyStroke.getKeyStroke(KeyEvent.VK_ENTER, 0), selectTreeNodeAction.getText());
+        filter.getInputMap().put(KeyStroke.getKeyStroke(KeyEvent.VK_DOWN, 0), focusTreeAction.getText());
+        filter.getInputMap().put(KeyStroke.getKeyStroke(KeyEvent.VK_UP, 0), focusTreeAction.getText());
+        filter.getInputMap().put(KeyStroke.getKeyStroke(KeyEvent.VK_PAGE_DOWN, 0), focusTreeAction.getText());
+        filter.getInputMap().put(KeyStroke.getKeyStroke(KeyEvent.VK_PAGE_UP, 0), focusTreeAction.getText());
     }
 
     private void handlePopup(MouseEvent e) {
@@ -335,7 +326,7 @@ public class ServerList extends EscapeDialog implements TreeExpansionListener  {
 
     private void initPopupMenu() {
         selectAction = UserAction.create("Select", "Select the node",
-                                                        KeyEvent.VK_S, (e) -> action());
+                                                        KeyEvent.VK_S, (e) -> selectTreeNode());
         removeAction = UserAction.create("Remove", "Remove the node",
                                     KeyEvent.VK_DELETE, (e) -> removeNode());
         insertServerAction = UserAction.create("Insert Server", "Insert server into the folder",
