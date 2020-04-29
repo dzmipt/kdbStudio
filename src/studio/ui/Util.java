@@ -52,6 +52,8 @@ public class Util {
     public final static ImageIcon SORT_DESC_ICON = getImage(IMAGE_BASE + "sort_descending.png");
     public final static ImageIcon SORT_AZ_DESC_ICON = Util.getImage(IMAGE_BASE + "sort_az_descending.png");
 
+    public static boolean MAC_OS_X = (System.getProperty("os.name").toLowerCase().startsWith("mac os x"));
+
     public static ImageIcon getImage(String strFilename) {
         if (!strFilename.startsWith("/")) {
             strFilename = "/toolbarButtonGraphics/" + strFilename;
@@ -80,7 +82,7 @@ public class Util {
     }
 
     public static String getAcceleratorString(KeyStroke keyStroke) {
-        return KeyEvent.getKeyModifiersText(keyStroke.getModifiers()) +
+        return KeyEvent.getKeyModifiersText(keyStroke.getModifiers()) + (MAC_OS_X ? "": "+") +
                 KeyEvent.getKeyText(keyStroke.getKeyCode());
     }
 
