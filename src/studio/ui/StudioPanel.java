@@ -1376,6 +1376,28 @@ public class StudioPanel extends JPanel implements Observer,WindowListener {
         Config.getInstance().setDefaultAuthMechanism(auth);
         Config.getInstance().setDefaultCredentials(auth, new Credentials(dialog.getUser(), dialog.getPassword()));
         Config.getInstance().setShowServerComboBox(dialog.isShowServerComboBox());
+
+        String lfClass = dialog.getLookAndFeelClassName();
+        if (!lfClass.equals(UIManager.getLookAndFeel().getName())) {
+            try {
+                UIManager.setLookAndFeel(lfClass);
+                Config.getInstance().setLookAndFeel(lfClass);
+                windowList.forEach(obj-> {
+                    JFrame frame = null;
+                    if (obj instanceof JFrame) {
+                        frame = (JFrame) obj;
+                    } else if (obj instanceof StudioPanel) {
+                        frame = ((StudioPanel)obj).frame;
+                    }
+                    if (frame == null) return;
+                    SwingUtilities.updateComponentTreeUI(frame);
+                });
+            } catch (Exception e) {
+                System.err.println("Error on setting Look and Feel to " + lfClass);
+                e.printStackTrace(System.err);
+            }
+        }
+
         rebuildToolbar();
     }
 

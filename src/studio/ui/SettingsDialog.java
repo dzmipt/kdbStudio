@@ -6,6 +6,7 @@ import studio.kdb.Config;
 
 import javax.swing.*;
 import java.awt.*;
+import java.util.stream.Stream;
 
 import static javax.swing.GroupLayout.PREFERRED_SIZE;
 
@@ -14,6 +15,7 @@ public class SettingsDialog extends EscapeDialog {
     private JTextField txtUser;
     private JPasswordField txtPassword;
     private JCheckBox chBoxShowServerCombo;
+    private JComboBox comboBoxLookAndFeel;
     private JButton btnOk;
     private JButton btnCancel;
 
@@ -40,6 +42,16 @@ public class SettingsDialog extends EscapeDialog {
         return chBoxShowServerCombo.isSelected();
     }
 
+    public String getLookAndFeelClassName() {
+        String lfName = comboBoxLookAndFeel.getSelectedItem().toString();
+        UIManager.LookAndFeelInfo info =  Stream.of(UIManager.getInstalledLookAndFeels())
+                                                .filter(lf -> lf.getName().equals(lfName))
+                                                .findFirst()
+                                                .orElse(null);
+        if (info == null) return "";
+        return info.getClassName();
+    }
+
     private void refreshCredentials() {
         Credentials credentials = Config.getInstance().getDefaultCredentials(getDefaultAuthenticationMechanism());
 
@@ -63,6 +75,13 @@ public class SettingsDialog extends EscapeDialog {
         comboBoxAuthMechanism.getModel().setSelectedItem(Config.getInstance().getDefaultAuthMechanism());
         comboBoxAuthMechanism.addItemListener(e -> refreshCredentials());
 
+        JLabel lblLookAndFeel = new JLabel("Look and Feel:");
+        String[] lfs = Stream.of(UIManager.getInstalledLookAndFeels())
+                        .map(UIManager.LookAndFeelInfo::getName)
+                        .toArray(String[]::new);
+        String selectedLF = UIManager.getLookAndFeel().getName();
+        comboBoxLookAndFeel = new JComboBox(lfs);
+        comboBoxLookAndFeel.setSelectedItem(selectedLF);
         chBoxShowServerCombo = new JCheckBox("Show server drop down list in the toolbar");
         JLabel lblAuthMechanism = new JLabel("Authentication:");
         JLabel lblUser = new JLabel("  User:");
@@ -70,6 +89,7 @@ public class SettingsDialog extends EscapeDialog {
 
         Component glue = Box.createGlue();
         Component glue1 = Box.createGlue();
+        Component glue2 = Box.createGlue();
 
         btnOk = new JButton("OK");
         btnCancel = new JButton("Cancel");
@@ -86,6 +106,12 @@ public class SettingsDialog extends EscapeDialog {
 
         layout.setHorizontalGroup(
                 layout.createParallelGroup()
+                        .addGroup(
+                            layout.createSequentialGroup()
+                                        .addComponent(lblLookAndFeel)
+                                        .addComponent(comboBoxLookAndFeel)
+                                        .addComponent(glue2)
+                        )
                         .addComponent(chBoxShowServerCombo)
                         .addGroup(
                             layout.createSequentialGroup()
@@ -107,7 +133,12 @@ public class SettingsDialog extends EscapeDialog {
 
         layout.setVerticalGroup(
                 layout.createSequentialGroup()
-                    .addComponent(chBoxShowServerCombo)
+                    .addGroup(
+                        layout.createParallelGroup(GroupLayout.Alignment.BASELINE)
+                                .addComponent(lblLookAndFeel)
+                                .addComponent(comboBoxLookAndFeel)
+                                .addComponent(glue2)
+                    ).addComponent(chBoxShowServerCombo)
                     .addGroup(
                         layout.createParallelGroup(GroupLayout.Alignment.BASELINE)
                                 .addComponent(lblAuthMechanism)
