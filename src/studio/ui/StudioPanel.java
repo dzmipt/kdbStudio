@@ -1814,6 +1814,7 @@ public class StudioPanel extends JPanel implements Observer,WindowListener {
 
     private JToolBar createToolbar() {
         toolbar = new JToolBar();
+        toolbar.setLayout(new BoxLayout(toolbar, BoxLayout.X_AXIS));
         toolbar.setFloatable(false);
         rebuildToolbar();
         return toolbar;
