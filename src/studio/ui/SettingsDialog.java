@@ -6,7 +6,8 @@ import studio.kdb.Config;
 
 import javax.swing.*;
 import java.awt.*;
-import java.util.stream.Stream;
+import java.util.HashMap;
+import java.util.Map;
 
 import static javax.swing.GroupLayout.PREFERRED_SIZE;
 
@@ -43,13 +44,7 @@ public class SettingsDialog extends EscapeDialog {
     }
 
     public String getLookAndFeelClassName() {
-        String lfName = comboBoxLookAndFeel.getSelectedItem().toString();
-        UIManager.LookAndFeelInfo info =  Stream.of(UIManager.getInstalledLookAndFeels())
-                                                .filter(lf -> lf.getName().equals(lfName))
-                                                .findFirst()
-                                                .orElse(null);
-        if (info == null) return "";
-        return info.getClassName();
+        return ((CustomiszedLookAndFeelInfo)comboBoxLookAndFeel.getSelectedItem()).getClassName();
     }
 
     private void refreshCredentials() {
@@ -76,12 +71,14 @@ public class SettingsDialog extends EscapeDialog {
         comboBoxAuthMechanism.addItemListener(e -> refreshCredentials());
 
         JLabel lblLookAndFeel = new JLabel("Look and Feel:");
-        String[] lfs = Stream.of(UIManager.getInstalledLookAndFeels())
-                        .map(UIManager.LookAndFeelInfo::getName)
-                        .toArray(String[]::new);
-        String selectedLF = UIManager.getLookAndFeel().getName();
-        comboBoxLookAndFeel = new JComboBox(lfs);
-        comboBoxLookAndFeel.setSelectedItem(selectedLF);
+
+        LookAndFeels lookAndFeels = new LookAndFeels();
+        comboBoxLookAndFeel = new JComboBox(lookAndFeels.getLookAndFeels());
+        CustomiszedLookAndFeelInfo lf = lookAndFeels.getLookAndFeel(Config.getInstance().getLookAndFeel());
+        if (lf == null) {
+            lf = lookAndFeels.getLookAndFeel(UIManager.getLookAndFeel().getClass().getName());
+        }
+        comboBoxLookAndFeel.setSelectedItem(lf);
         chBoxShowServerCombo = new JCheckBox("Show server drop down list in the toolbar");
         JLabel lblAuthMechanism = new JLabel("Authentication:");
         JLabel lblUser = new JLabel("  User:");
@@ -160,4 +157,31 @@ public class SettingsDialog extends EscapeDialog {
         setContentPane(root);
     }
 
+    private static class LookAndFeels {
+        private Map<String, CustomiszedLookAndFeelInfo> mapLookAndFeels;
+
+        public LookAndFeels() {
+            mapLookAndFeels = new HashMap<>();
+            for (UIManager.LookAndFeelInfo lf: UIManager.getInstalledLookAndFeels()) {
+                mapLookAndFeels.put(lf.getClassName(), new CustomiszedLookAndFeelInfo(lf));
+            }
+        }
+        public CustomiszedLookAndFeelInfo[] getLookAndFeels() {
+            return mapLookAndFeels.values().toArray(new CustomiszedLookAndFeelInfo[0]);
+        }
+        public CustomiszedLookAndFeelInfo getLookAndFeel(String className) {
+            return mapLookAndFeels.get(className);
+        }
+    }
+
+    private static class CustomiszedLookAndFeelInfo extends UIManager.LookAndFeelInfo {
+        public CustomiszedLookAndFeelInfo(UIManager.LookAndFeelInfo lfInfo) {
+            super(lfInfo.getName(), lfInfo.getClassName());
+        }
+
+        @Override
+        public String toString() {
+            return getName();
+        }
+    }
 }

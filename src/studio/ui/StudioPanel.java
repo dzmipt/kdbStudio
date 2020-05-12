@@ -1378,24 +1378,9 @@ public class StudioPanel extends JPanel implements Observer,WindowListener {
         Config.getInstance().setShowServerComboBox(dialog.isShowServerComboBox());
 
         String lfClass = dialog.getLookAndFeelClassName();
-        if (!lfClass.equals(UIManager.getLookAndFeel().getName())) {
-            try {
-                UIManager.setLookAndFeel(lfClass);
-                Config.getInstance().setLookAndFeel(lfClass);
-                windowList.forEach(obj-> {
-                    JFrame frame = null;
-                    if (obj instanceof JFrame) {
-                        frame = (JFrame) obj;
-                    } else if (obj instanceof StudioPanel) {
-                        frame = ((StudioPanel)obj).frame;
-                    }
-                    if (frame == null) return;
-                    SwingUtilities.updateComponentTreeUI(frame);
-                });
-            } catch (Exception e) {
-                System.err.println("Error on setting Look and Feel to " + lfClass);
-                e.printStackTrace(System.err);
-            }
+        if (!lfClass.equals(UIManager.getLookAndFeel().getClass().getName())) {
+            Config.getInstance().setLookAndFeel(lfClass);
+            JOptionPane.showMessageDialog(frame, "Look and Feel was changed. New L&F will take effect on the next start up.", "Look and Feel Setting Changed", JOptionPane.INFORMATION_MESSAGE);
         }
 
         rebuildToolbar();
