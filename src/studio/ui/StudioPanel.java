@@ -2261,9 +2261,7 @@ public class StudioPanel extends JPanel implements Observer,WindowListener {
                             frame.setTitle("Error Details ");
 
                             tabbedPane.addTab(frame.getTitle(),frame.getIcon(),frame.getComponent());
-``                            tabbedPane.setSelectedIndex(tabbedPane.getTabCount()-1);
-
-                        //            tabbedPane.setSelectedComponent(resultsTabbedPane);
+                            tabbedPane.setSelectedIndex(tabbedPane.getTabCount()-1);
                         }
                         catch (java.lang.OutOfMemoryError ex) {
                             JOptionPane.showMessageDialog(frame,
