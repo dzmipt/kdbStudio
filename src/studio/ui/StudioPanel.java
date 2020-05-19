@@ -64,7 +64,6 @@ public class StudioPanel extends JPanel implements Observer,WindowListener {
     private JSplitPane splitpane;
     private JTabbedPane tabbedPane;
     private ServerList serverList;
-    private Font font = null;
     private UserAction arrangeAllAction;
     private UserAction closeFileAction;
     private UserAction newFileAction;
@@ -2159,19 +2158,13 @@ public class StudioPanel extends JPanel implements Observer,WindowListener {
                 catch (LimitedWriter.LimitException ex) {
                 }
 
-                JEditorPane pane = new JEditorPane("text/plain",lm.toString());
-                pane.setFont(font);
-
-//pane.setLineWrap( false);
-//pane.setWrapStyleWord( false);
-
-                JScrollPane scrollpane = new JScrollPane(pane,
-                                                         ScrollPaneConstants.VERTICAL_SCROLLBAR_AS_NEEDED,
-                                                         ScrollPaneConstants.HORIZONTAL_SCROLLBAR_AS_NEEDED);
+                JEditorPane textArea = new JEditorPane("text/q",lm.toString());
+                textArea.setEditable(false);
 
                 TabPanel frame = new TabPanel("Console View ",
-                                              Util.CONSOLE_ICON,
-                                              scrollpane);
+                        Util.CONSOLE_ICON,
+                        Utilities.getEditorUI(textArea).getExtComponent());
+
 
                 frame.setTitle(I18n.getString("ConsoleView"));
 
