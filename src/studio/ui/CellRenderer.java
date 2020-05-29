@@ -1,5 +1,6 @@
 package studio.ui;
 
+import studio.kdb.Config;
 import studio.kdb.K;
 import studio.kdb.KTableModel;
 import studio.kdb.LimitedWriter;
@@ -57,7 +58,7 @@ class CellRenderer extends DefaultTableCellRenderer {
 
         if (value instanceof K.KBase) {
             K.KBase kb = (K.KBase) value;
-            LimitedWriter w = new LimitedWriter(256);
+            LimitedWriter w = new LimitedWriter(Config.getInstance().getMaxCharsInTableCell());
 
             try {
                 kb.toString(w,kb instanceof K.KBaseVector);
@@ -67,7 +68,6 @@ class CellRenderer extends DefaultTableCellRenderer {
             }
             catch (LimitedWriter.LimitException ex) {
             }
-            ;
 
             setText(w.toString());
             setForeground(kb.isNull() ? nullColor : fgColor);

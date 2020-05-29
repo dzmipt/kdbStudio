@@ -1376,6 +1376,8 @@ public class StudioPanel extends JPanel implements Observer,WindowListener {
         Config.getInstance().setDefaultCredentials(auth, new Credentials(dialog.getUser(), dialog.getPassword()));
         Config.getInstance().setShowServerComboBox(dialog.isShowServerComboBox());
         Config.getInstance().setResultTabsCount(dialog.getResultTabsCount());
+        Config.getInstance().setMaxCharsInResult(dialog.getMaxCharsInResult());
+        Config.getInstance().setMaxCharsInTableCell(dialog.getMaxCharsInTableCell());
 
         String lfClass = dialog.getLookAndFeelClassName();
         if (!lfClass.equals(UIManager.getLookAndFeel().getClass().getName())) {
@@ -2147,7 +2149,7 @@ public class StudioPanel extends JPanel implements Observer,WindowListener {
             } else {
                 chartAction.setEnabled(false);
                 openInExcel.setEnabled(false);
-                LimitedWriter lm = new LimitedWriter(50000);
+                LimitedWriter lm = new LimitedWriter(Config.getInstance().getMaxCharsInResult());
                 try {
                   if(!(r instanceof K.UnaryPrimitive&&0==((K.UnaryPrimitive)r).getPrimitiveAsInt()))
                     r.toString(lm,true);
@@ -2281,6 +2283,7 @@ public class StudioPanel extends JPanel implements Observer,WindowListener {
                             processK4Results(r);
                         }
                         catch (Exception e) {
+                            e.printStackTrace(System.err);
                             JOptionPane.showMessageDialog(frame,
                                                           "\nAn unexpected error occurred whilst communicating with " + server.getHost() + ":" + server.getPort() + "\n\nError detail is\n\n" + e.getMessage() + "\n\n",
                                                           "Studio for kdb+",

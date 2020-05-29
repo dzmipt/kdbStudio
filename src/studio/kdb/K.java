@@ -1,5 +1,6 @@
 package studio.kdb;
 
+import java.io.CharArrayWriter;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.io.Writer;
@@ -2010,27 +2011,22 @@ public class K {
         }
 
         public String toString(boolean showType) {
+            CharArrayWriter w = new CharArrayWriter();
             try {
-                LimitedWriter lw = new LimitedWriter(256);
-                toString(lw, showType);
-                return lw.toString();
+                toString(w, showType);
             } catch (IOException e) {
-                StringBuilder sb = new StringBuilder(256);
-                if (getLength() == 1)
-                    sb.append(enlist);
-                sb.append('"').append((char[]) array).append('"');
-                return sb.toString();
+                e.printStackTrace(System.err);
             }
+            return w.toString();
         }
     }
 
     public static String decode(KBase obj, boolean showType) {
-        LimitedWriter w = new LimitedWriter(20000);
+        CharArrayWriter w = new CharArrayWriter();
         try {
             obj.toString(w, showType);
         } catch (IOException e) {
-            e.printStackTrace();
-        } catch (LimitedWriter.LimitException ex) {
+            e.printStackTrace(System.err);
         }
 
         return w.toString();
