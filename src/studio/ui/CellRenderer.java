@@ -21,7 +21,7 @@ class CellRenderer extends DefaultTableCellRenderer {
     private JTable table = null;
 
     private void initLabel(JTable table) {
-        setHorizontalAlignment(SwingConstants.RIGHT);
+        setHorizontalAlignment(SwingConstants.LEFT);
         setOpaque(true);
         int height = getPreferredSize().height;
 
