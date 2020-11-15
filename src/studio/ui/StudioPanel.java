@@ -76,12 +76,12 @@ public class StudioPanel extends JPanel implements Observer,WindowListener {
     private UserAction saveAsFileAction;
     private UserAction exportAction;
     private UserAction chartAction;
-    private ActionFactory.UndoAction undoAction;
-    private ActionFactory.RedoAction redoAction;
-    private BaseKit.CutAction cutAction;
-    private BaseKit.CopyAction copyAction;
-    private BaseKit.PasteAction pasteAction;
-    private BaseKit.SelectAllAction selectAllAction;
+    private Action undoAction;
+    private Action redoAction;
+    private Action cutAction;
+    private Action copyAction;
+    private Action pasteAction;
+    private Action selectAllAction;
     private Action findAction;
     private Action replaceAction;
     private UserAction stopAction;
@@ -167,73 +167,63 @@ public class StudioPanel extends JPanel implements Observer,WindowListener {
         Document doc = null;
         if (textArea == null) {
             textArea = new JEditorPane("text/q","");
-            Action[] actions = textArea.getActions();
 
-            for (int i = 0;i < actions.length;i++)
-                if (actions[i] instanceof BaseKit.CopyAction) {
-                    copyAction = (BaseKit.CopyAction) actions[i];
-                    copyAction.putValue(Action.SHORT_DESCRIPTION,"Copy the selected text to the clipboard");
-                    copyAction.putValue(Action.SMALL_ICON,Util.COPY_ICON);
-                    copyAction.putValue(Action.NAME,I18n.getString("Copy"));
-                    copyAction.putValue(Action.MNEMONIC_KEY,new Integer(KeyEvent.VK_C));
-                    copyAction.putValue(Action.ACCELERATOR_KEY,KeyStroke.getKeyStroke(KeyEvent.VK_C,menuShortcutKeyMask));
-                }
-                else if (actions[i] instanceof BaseKit.CutAction) {
-                    cutAction = (BaseKit.CutAction) actions[i];
-                    cutAction.putValue(Action.SHORT_DESCRIPTION,"Cut the selected text");
-                    cutAction.putValue(Action.SMALL_ICON,Util.CUT_ICON);
-                    cutAction.putValue(Action.NAME,I18n.getString("Cut"));
-                    cutAction.putValue(Action.MNEMONIC_KEY,new Integer(KeyEvent.VK_T));
-                    cutAction.putValue(Action.ACCELERATOR_KEY,KeyStroke.getKeyStroke(KeyEvent.VK_X,menuShortcutKeyMask));
-                }
-                else if (actions[i] instanceof BaseKit.PasteAction) {
-                    pasteAction = (BaseKit.PasteAction) actions[i];
-                    pasteAction.putValue(Action.SHORT_DESCRIPTION,"Paste text from the clipboard");
-                    pasteAction.putValue(Action.SMALL_ICON,Util.PASTE_ICON);
-                    pasteAction.putValue(Action.NAME,I18n.getString("Paste"));
-                    pasteAction.putValue(Action.MNEMONIC_KEY,new Integer(KeyEvent.VK_P));
-                    pasteAction.putValue(Action.ACCELERATOR_KEY,KeyStroke.getKeyStroke(KeyEvent.VK_V,menuShortcutKeyMask));
-                }
-                else if (actions[i] instanceof ExtKit.FindAction) {
-                    findAction = actions[i];
-                    findAction.putValue(Action.SHORT_DESCRIPTION,"Find text in the document");
-                    findAction.putValue(Action.SMALL_ICON,Util.FIND_ICON);
-                    findAction.putValue(Action.NAME,I18n.getString("Find"));
-                    findAction.putValue(Action.MNEMONIC_KEY,new Integer(KeyEvent.VK_F));
-                    findAction.putValue(Action.ACCELERATOR_KEY,KeyStroke.getKeyStroke(KeyEvent.VK_F,menuShortcutKeyMask));
-                }
-                else if (actions[i] instanceof ExtKit.ReplaceAction) {
-                    replaceAction = actions[i];
-                    replaceAction.putValue(Action.SHORT_DESCRIPTION,"Replace text in the document");
-                    replaceAction.putValue(Action.SMALL_ICON,Util.REPLACE_ICON);
-                    replaceAction.putValue(Action.NAME,I18n.getString("Replace"));
-                    replaceAction.putValue(Action.MNEMONIC_KEY,new Integer(KeyEvent.VK_R));
-                    replaceAction.putValue(Action.ACCELERATOR_KEY,KeyStroke.getKeyStroke(KeyEvent.VK_R,menuShortcutKeyMask));
-                }
-                else if (actions[i] instanceof BaseKit.SelectAllAction) {
-                    selectAllAction = (BaseKit.SelectAllAction) actions[i];
-                    selectAllAction.putValue(Action.SHORT_DESCRIPTION,"Select all text in the document");
-                    selectAllAction.putValue(Action.SMALL_ICON,null);
-                    selectAllAction.putValue(Action.NAME,I18n.getString("SelectAll"));
-                    selectAllAction.putValue(Action.MNEMONIC_KEY,new Integer(KeyEvent.VK_A));
-                    selectAllAction.putValue(Action.ACCELERATOR_KEY,KeyStroke.getKeyStroke(KeyEvent.VK_A,menuShortcutKeyMask));
-                }
-                else if (actions[i] instanceof ActionFactory.UndoAction) {
-                    undoAction = (ActionFactory.UndoAction) actions[i];
-                    undoAction.putValue(Action.SHORT_DESCRIPTION,"Undo the last change to the document");
-                    undoAction.putValue(Action.SMALL_ICON,Util.UNDO_ICON);
-                    undoAction.putValue(Action.NAME,I18n.getString("Undo"));
-                    undoAction.putValue(Action.MNEMONIC_KEY,new Integer(KeyEvent.VK_U));
-                    undoAction.putValue(Action.ACCELERATOR_KEY,KeyStroke.getKeyStroke(KeyEvent.VK_Z,menuShortcutKeyMask));
-                }
-                else if (actions[i] instanceof ActionFactory.RedoAction) {
-                    redoAction = (ActionFactory.RedoAction) actions[i];
-                    redoAction.putValue(Action.SHORT_DESCRIPTION,"Redo the last change to the document");
-                    redoAction.putValue(Action.SMALL_ICON,Util.REDO_ICON);
-                    redoAction.putValue(Action.NAME,I18n.getString("Redo"));
-                    redoAction.putValue(Action.MNEMONIC_KEY,new Integer(KeyEvent.VK_R));
-                    redoAction.putValue(Action.ACCELERATOR_KEY,KeyStroke.getKeyStroke(KeyEvent.VK_Y,menuShortcutKeyMask));
-                }
+            BaseKit baseKit = ((BaseKit)textArea.getUI().getEditorKit(textArea));
+            copyAction = baseKit.getActionByName(BaseKit.copyAction);
+            copyAction.putValue(Action.SHORT_DESCRIPTION,"Copy the selected text to the clipboard");
+            copyAction.putValue(Action.SMALL_ICON,Util.COPY_ICON);
+            copyAction.putValue(Action.NAME,I18n.getString("Copy"));
+            copyAction.putValue(Action.MNEMONIC_KEY,new Integer(KeyEvent.VK_C));
+            copyAction.putValue(Action.ACCELERATOR_KEY,KeyStroke.getKeyStroke(KeyEvent.VK_C,menuShortcutKeyMask));
+
+            cutAction = baseKit.getActionByName(BaseKit.cutAction);
+            cutAction.putValue(Action.SHORT_DESCRIPTION,"Cut the selected text");
+            cutAction.putValue(Action.SMALL_ICON,Util.CUT_ICON);
+            cutAction.putValue(Action.NAME,I18n.getString("Cut"));
+            cutAction.putValue(Action.MNEMONIC_KEY,new Integer(KeyEvent.VK_T));
+            cutAction.putValue(Action.ACCELERATOR_KEY,KeyStroke.getKeyStroke(KeyEvent.VK_X,menuShortcutKeyMask));
+
+            pasteAction = baseKit.getActionByName(BaseKit.pasteAction);
+            pasteAction.putValue(Action.SHORT_DESCRIPTION,"Paste text from the clipboard");
+            pasteAction.putValue(Action.SMALL_ICON,Util.PASTE_ICON);
+            pasteAction.putValue(Action.NAME,I18n.getString("Paste"));
+            pasteAction.putValue(Action.MNEMONIC_KEY,new Integer(KeyEvent.VK_P));
+            pasteAction.putValue(Action.ACCELERATOR_KEY,KeyStroke.getKeyStroke(KeyEvent.VK_V,menuShortcutKeyMask));
+
+            findAction = baseKit.getActionByName(ExtKit.findAction);
+            findAction.putValue(Action.SHORT_DESCRIPTION,"Find text in the document");
+            findAction.putValue(Action.SMALL_ICON,Util.FIND_ICON);
+            findAction.putValue(Action.NAME,I18n.getString("Find"));
+            findAction.putValue(Action.MNEMONIC_KEY,new Integer(KeyEvent.VK_F));
+            findAction.putValue(Action.ACCELERATOR_KEY,KeyStroke.getKeyStroke(KeyEvent.VK_F,menuShortcutKeyMask));
+
+            replaceAction = baseKit.getActionByName(ExtKit.replaceAction);
+            replaceAction.putValue(Action.SHORT_DESCRIPTION,"Replace text in the document");
+            replaceAction.putValue(Action.SMALL_ICON,Util.REPLACE_ICON);
+            replaceAction.putValue(Action.NAME,I18n.getString("Replace"));
+            replaceAction.putValue(Action.MNEMONIC_KEY,new Integer(KeyEvent.VK_R));
+            replaceAction.putValue(Action.ACCELERATOR_KEY,KeyStroke.getKeyStroke(KeyEvent.VK_R,menuShortcutKeyMask));
+
+            selectAllAction = baseKit.getActionByName(BaseKit.selectAllAction);
+            selectAllAction.putValue(Action.SHORT_DESCRIPTION,"Select all text in the document");
+            selectAllAction.putValue(Action.SMALL_ICON,null);
+            selectAllAction.putValue(Action.NAME,I18n.getString("SelectAll"));
+            selectAllAction.putValue(Action.MNEMONIC_KEY,new Integer(KeyEvent.VK_A));
+            selectAllAction.putValue(Action.ACCELERATOR_KEY,KeyStroke.getKeyStroke(KeyEvent.VK_A,menuShortcutKeyMask));
+
+            undoAction = baseKit.getActionByName(BaseKit.undoAction);
+            undoAction.putValue(Action.SHORT_DESCRIPTION,"Undo the last change to the document");
+            undoAction.putValue(Action.SMALL_ICON,Util.UNDO_ICON);
+            undoAction.putValue(Action.NAME,I18n.getString("Undo"));
+            undoAction.putValue(Action.MNEMONIC_KEY,new Integer(KeyEvent.VK_U));
+            undoAction.putValue(Action.ACCELERATOR_KEY,KeyStroke.getKeyStroke(KeyEvent.VK_Z,menuShortcutKeyMask));
+
+            redoAction = baseKit.getActionByName(BaseKit.redoAction);
+            redoAction.putValue(Action.SHORT_DESCRIPTION,"Redo the last change to the document");
+            redoAction.putValue(Action.SMALL_ICON,Util.REDO_ICON);
+            redoAction.putValue(Action.NAME,I18n.getString("Redo"));
+            redoAction.putValue(Action.MNEMONIC_KEY,new Integer(KeyEvent.VK_R));
+            redoAction.putValue(Action.ACCELERATOR_KEY,KeyStroke.getKeyStroke(KeyEvent.VK_Y,menuShortcutKeyMask));
 
             doc = textArea.getDocument();
             doc.putProperty("filename",null);
