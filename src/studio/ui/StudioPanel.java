@@ -46,9 +46,8 @@ public class StudioPanel extends JPanel implements Observer,WindowListener {
         Settings.addInitializer(new BaseSettingsInitializer(),Settings.CORE_LEVEL);
         Settings.addInitializer(new ExtSettingsInitializer(),Settings.CORE_LEVEL);
 
-        QKit editorKit = new QKit();
-        JEditorPane.registerEditorKitForContentType(editorKit.getContentType(),
-                                                    editorKit.getClass().getName());
+        JEditorPane.registerEditorKitForContentType(QKit.CONTENT_TYPE,QKit.class.getName());
+
         Settings.addInitializer(new QSettingsInitializer());
         Settings.reset();
     }
