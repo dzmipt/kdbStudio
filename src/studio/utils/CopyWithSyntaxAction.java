@@ -18,7 +18,7 @@ public class CopyWithSyntaxAction extends BaseAction {
     private String toHtml(String text) {
         return text.replaceAll("<", "&t;")
                    .replaceAll(">", "&gt;")
-                   .replaceAll("&", "$amp;")
+                   .replaceAll("\\&", "&amp;")
                    .replaceAll("\r\n", "<br/>")
                    .replaceAll("\n", "<br/>")
                    .replaceAll("\r", "<br/>");
