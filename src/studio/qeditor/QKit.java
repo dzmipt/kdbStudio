@@ -1,12 +1,14 @@
 package studio.qeditor;
 
+import javax.swing.*;
 import javax.swing.text.Document;
-import org.netbeans.editor.BaseDocument;
-import org.netbeans.editor.Syntax;
-import org.netbeans.editor.SyntaxSupport;
+import javax.swing.text.TextAction;
+
+import org.netbeans.editor.*;
 import org.netbeans.editor.ext.Completion;
 import org.netbeans.editor.ext.ExtEditorUI;
 import org.netbeans.editor.ext.ExtKit;
+import studio.utils.CopyWithSyntaxAction;
 
 
 public class QKit extends ExtKit {
@@ -27,5 +29,11 @@ public class QKit extends ExtKit {
 
     public Completion createCompletion(ExtEditorUI extEditorUI) {
         return new QCompletion(extEditorUI);
+    }
+
+    @Override
+    protected Action[] createActions() {
+        return TextAction.augmentList(super.createActions(),
+                new Action[] {new CopyWithSyntaxAction()});
     }
 }

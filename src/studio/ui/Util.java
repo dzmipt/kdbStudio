@@ -1,5 +1,7 @@
 package studio.ui;
 
+import studio.utils.Transferables;
+
 import javax.swing.*;
 import java.awt.*;
 import java.awt.datatransfer.StringSelection;
@@ -98,6 +100,13 @@ public class Util {
 
     public static void copyHtmlToClipboard(String html) {
         Toolkit.getDefaultToolkit().getSystemClipboard().setContents(new HtmlSelection(html.replace((char)0,' ')), null);
+    }
+
+    public static void copyToClipboard(String html, String plainText) {
+        Toolkit.getDefaultToolkit().getSystemClipboard().setContents(
+                new Transferables(
+                        new HtmlSelection(html.replace((char)0,' ')),
+                        new StringSelection(plainText.replace((char)0,' '))),null);
     }
 
 }
