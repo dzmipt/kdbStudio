@@ -8,7 +8,7 @@ import org.netbeans.editor.*;
 import org.netbeans.editor.ext.Completion;
 import org.netbeans.editor.ext.ExtEditorUI;
 import org.netbeans.editor.ext.ExtKit;
-import studio.utils.CopyWithSyntaxAction;
+import studio.utils.CopyCutWithSyntaxAction;
 
 
 public class QKit extends ExtKit {
@@ -34,6 +34,9 @@ public class QKit extends ExtKit {
     @Override
     protected Action[] createActions() {
         return TextAction.augmentList(super.createActions(),
-                new Action[] {new CopyWithSyntaxAction()});
+                new Action[] {
+                        new CopyCutWithSyntaxAction(CopyCutWithSyntaxAction.Mode.COPY),
+                        new CopyCutWithSyntaxAction(CopyCutWithSyntaxAction.Mode.CUT)
+                });
     }
 }

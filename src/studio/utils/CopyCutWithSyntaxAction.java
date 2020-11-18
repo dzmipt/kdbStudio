@@ -11,10 +11,14 @@ import javax.swing.text.JTextComponent;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 
-public class CopyWithSyntaxAction extends BaseAction {
+public class CopyCutWithSyntaxAction extends BaseAction {
 
-    public CopyWithSyntaxAction() {
-        super(DefaultEditorKit.copyAction, ABBREV_RESET | UNDO_MERGE_RESET | WORD_MATCH_RESET);
+    public enum Mode {COPY, CUT};
+    private Mode mode;
+
+    public CopyCutWithSyntaxAction(Mode mode) {
+        super(mode == Mode.COPY ? DefaultEditorKit.copyAction : DefaultEditorKit.cutAction, ABBREV_RESET | UNDO_MERGE_RESET | WORD_MATCH_RESET);
+        this.mode = mode;
     }
 
     private String toHtml(String text) {
@@ -109,6 +113,10 @@ public class CopyWithSyntaxAction extends BaseAction {
             htmlBuilder.append("</pre>");
 
             Util.copyToClipboard(htmlBuilder.toString(), textBuilder.toString());
+
+            if (mode == Mode.CUT) {
+                document.remove(start, end-start);
+            }
         } catch (BadLocationException e) {
             System.err.println("Exception is not expected " + e);
             e.printStackTrace(System.err);
