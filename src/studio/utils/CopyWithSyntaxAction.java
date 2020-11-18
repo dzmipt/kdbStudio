@@ -4,7 +4,9 @@ import org.netbeans.editor.*;
 import studio.ui.Util;
 
 import javax.swing.plaf.TextUI;
+import javax.swing.text.BadLocationException;
 import javax.swing.text.DefaultEditorKit;
+import javax.swing.text.Document;
 import javax.swing.text.JTextComponent;
 import java.awt.*;
 import java.awt.event.ActionEvent;
@@ -16,12 +18,9 @@ public class CopyWithSyntaxAction extends BaseAction {
     }
 
     private String toHtml(String text) {
-        return text.replaceAll("<", "&t;")
-                   .replaceAll(">", "&gt;")
-                   .replaceAll("\\&", "&amp;")
-                   .replaceAll("\r\n", "<br/>")
-                   .replaceAll("\n", "<br/>")
-                   .replaceAll("\r", "<br/>");
+        return text.replaceAll("&", "&amp;")
+                    .replaceAll("<", "&lt;")
+                   .replaceAll(">", "&gt;");
     }
 
     private void appendColor(StringBuilder builder, Color color) {
@@ -39,7 +38,7 @@ public class CopyWithSyntaxAction extends BaseAction {
 
         Font font = coloring.getFont();
         if (font != null) {
-            style.append("font-family: ").append(font.getFamily()).append(";");
+            style.append("font-family: ").append(font.getFamily()).append(", Courier;");
             if (font.isBold()) {
                 style.append("font-weight: bold;");
             }
@@ -79,34 +78,40 @@ public class CopyWithSyntaxAction extends BaseAction {
         int end = editor.getSelectionEnd();
         if (start == end) return;
 
-        EditorUI editorUI = ((BaseTextUI)textUI).getEditorUI();
-        BaseKit baseKit = (BaseKit) textUI.getEditorKit(editor);
-        Syntax syntax = baseKit.createSyntax(editor.getDocument());
-        String text = editor.getText();
-        syntax.load(null, text.toCharArray(), 0, text.length(), true, text.length());
+        try {
+            EditorUI editorUI = ((BaseTextUI) textUI).getEditorUI();
+            BaseKit baseKit = (BaseKit) textUI.getEditorKit(editor);
+            Syntax syntax = baseKit.createSyntax(editor.getDocument());
+            Document document = editor.getDocument();
+            String text = document.getText(0, document.getLength());
+            syntax.load(null, text.toCharArray(), 0, text.length(), true, text.length());
 
-        StringBuilder htmlBuilder = new StringBuilder("<pre>");
-        StringBuilder textBuilder = new StringBuilder();
-        int offset = 0;
-        while (offset < end) {
-            TokenID token = syntax.nextToken();
-            if (token == null) break;
-            int newOffset = syntax.getOffset();
+            StringBuilder htmlBuilder = new StringBuilder("<pre>");
+            StringBuilder textBuilder = new StringBuilder();
+            int offset = 0;
+            while (offset < end) {
+                TokenID token = syntax.nextToken();
+                if (token == null) break;
+                int newOffset = syntax.getOffset();
 
-            int left = Math.max(start, offset);
-            int right = Math.min(end, newOffset);
-            if (left < right) {
-                String tokenName = syntax.getTokenContextPath().getFullTokenName(token);
-                Coloring coloring = editorUI.getColoring(tokenName);
-                String tokenText = text.substring(left, right);
-                appendHtml(htmlBuilder, tokenText, token, coloring);
-                textBuilder.append(tokenText);
+                int left = Math.max(start, offset);
+                int right = Math.min(end, newOffset);
+                if (left < right) {
+                    String tokenName = syntax.getTokenContextPath().getFullTokenName(token);
+                    Coloring coloring = editorUI.getColoring(tokenName);
+                    String tokenText = text.substring(left, right);
+                    appendHtml(htmlBuilder, tokenText, token, coloring);
+                    textBuilder.append(tokenText);
+                }
+
+                offset = newOffset;
             }
+            htmlBuilder.append("</pre>");
 
-            offset = newOffset;
+            Util.copyToClipboard(htmlBuilder.toString(), textBuilder.toString());
+        } catch (BadLocationException e) {
+            System.err.println("Exception is not expected " + e);
+            e.printStackTrace(System.err);
         }
-        htmlBuilder.append("</pre>");
-
-        Util.copyToClipboard(htmlBuilder.toString(), textBuilder.toString());
     }
 }
