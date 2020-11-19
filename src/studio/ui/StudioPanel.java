@@ -1872,10 +1872,13 @@ public class StudioPanel extends JPanel implements Observer,WindowListener {
     }
 
     private void toggleDividerOrientation() {
-        if (splitpane.getOrientation() == JSplitPane.VERTICAL_SPLIT)
+        if (splitpane.getOrientation() == JSplitPane.VERTICAL_SPLIT) {
             splitpane.setOrientation(JSplitPane.HORIZONTAL_SPLIT);
-        else
+            tabbedPane.setTabPlacement(JTabbedPane.LEFT);
+        } else {
             splitpane.setOrientation(JSplitPane.VERTICAL_SPLIT);
+            tabbedPane.setTabPlacement(JTabbedPane.TOP);
+        }
 
         splitpane.setDividerLocation(0.5);
     }
@@ -1904,7 +1907,7 @@ public class StudioPanel extends JPanel implements Observer,WindowListener {
         menubar = createMenuBar();
         toolbar = createToolbar();
 
-        tabbedPane = new JTabbedPane();
+        tabbedPane = new JTabbedPane(JTabbedPane.TOP);
         splitpane.setBottomComponent(tabbedPane);
         splitpane.setOneTouchExpandable(true);
         splitpane.setOrientation(JSplitPane.VERTICAL_SPLIT);
