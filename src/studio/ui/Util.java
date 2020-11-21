@@ -55,13 +55,12 @@ public class Util {
     public final static ImageIcon SORT_DESC_ICON = getImage(IMAGE_BASE + "sort_descending.png");
     public final static ImageIcon SORT_AZ_DESC_ICON = Util.getImage(IMAGE_BASE + "sort_az_descending.png");
 
+    public final static ImageIcon COMMA_ICON = getImage("/comma.png");
+    public final static ImageIcon COMMA_CROSSED_ICON = getImage("/comma_crossed.png");
+
     public static boolean MAC_OS_X = (System.getProperty("os.name").toLowerCase().startsWith("mac os x"));
 
     public static ImageIcon getImage(String strFilename) {
-        if (!strFilename.startsWith("/")) {
-            strFilename = "/toolbarButtonGraphics/" + strFilename;
-        }
-
         URL url = Util.class.getResource(strFilename);
         if (url == null) return null;
 

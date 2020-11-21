@@ -16,7 +16,6 @@ repositories {
 
 dependencies {
     compile group: 'org.netbeans.api', name: 'org-openide-awt', version: 'RELEASE113'
-//    compile group: 'org.jfree', name: 'jfreechart', version: '1.0.13'
     compile group: 'org.jfree', name: 'jfreechart', version: '1.0.14'
     runtime files ('lib/images.jar')
     testImplementation 'org.junit.jupiter:junit-jupiter-api:5.3.1'
@@ -29,9 +28,10 @@ sourceSets {
             srcDirs 'src'
         }
         resources {
-            srcDir 'src'
+            srcDirs 'src','images'
             include 'studio*.properties'
             include 'org/netbeans/editor/Bundle*.properties'
+            include '*.png'
         }
     }
     test {

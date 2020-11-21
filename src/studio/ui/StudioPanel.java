@@ -99,7 +99,8 @@ public class StudioPanel extends JPanel implements Observer,WindowListener {
     private static int myScriptNumber;
     private JFrame frame;
     public static java.util.List windowList = Collections.synchronizedList(new LinkedList());
-    private int menuShortcutKeyMask = java.awt.Toolkit.getDefaultToolkit().getMenuShortcutKeyMask();
+
+    public final static int menuShortcutKeyMask = java.awt.Toolkit.getDefaultToolkit().getMenuShortcutKeyMask();
 
     private final static int MAX_SERVERS_TO_CLONE = 20;
 
@@ -2133,11 +2134,10 @@ public class StudioPanel extends JPanel implements Observer,WindowListener {
                 openInExcel.setEnabled(true);
                 chartAction.setEnabled(tableModel);
                 String title = tableModel ? "Table" : (dictModel ? "Dict" : "List");
-                TabPanel frame = new TabPanel( title + " [" + grid.getRowCount() + " rows] ",
+                TabPanel tab = new TabPanel( title + " [" + grid.getRowCount() + " rows] ",
                         Util.TABLE_ICON,
                         grid);
-//                frame.setTitle(I18n.getString("Table")+" [" + grid.getRowCount() + " "+I18n.getString("rows")+"] ");
-                tabbedPane.addTab(frame.getTitle(),frame.getIcon(),frame.getComponent());
+                tabbedPane.addTab(tab.getTitle(),tab.getIcon(),tab);
             } else {
                 chartAction.setEnabled(false);
                 openInExcel.setEnabled(false);
@@ -2149,14 +2149,10 @@ public class StudioPanel extends JPanel implements Observer,WindowListener {
                 JEditorPane textArea = new JEditorPane("text/q", text);
                 textArea.setEditable(false);
 
-                TabPanel frame = new TabPanel("Console View ",
+                TabPanel tab = new TabPanel(I18n.getString("ConsoleView"),
                         Util.CONSOLE_ICON,
                         Utilities.getEditorUI(textArea).getExtComponent());
-
-
-                frame.setTitle(I18n.getString("ConsoleView"));
-
-                tabbedPane.addTab(frame.getTitle(),frame.getIcon(),frame.getComponent());
+                tabbedPane.addTab(tab.getTitle(),tab.getIcon(),tab);
             }
         }
         else {
@@ -2237,12 +2233,10 @@ public class StudioPanel extends JPanel implements Observer,WindowListener {
 
                             JScrollPane scrollpane = new JScrollPane(pane);
 
-                            TabPanel frame = new TabPanel("Error Details ",
+                            TabPanel tab = new TabPanel("Error Details ",
                                                           Util.ERROR_SMALL_ICON,
                                                           scrollpane);
-                            frame.setTitle("Error Details ");
-
-                            tabbedPane.addTab(frame.getTitle(),frame.getIcon(),frame.getComponent());
+                            tabbedPane.addTab(tab.getTitle(),tab.getIcon(), tab);
                             tabbedPane.setSelectedIndex(tabbedPane.getTabCount()-1);
                         }
                         catch (java.lang.OutOfMemoryError ex) {
