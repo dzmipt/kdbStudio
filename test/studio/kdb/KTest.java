@@ -9,8 +9,8 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 public class KTest {
 
     private void check(K.KBase base, String expectedNoType, String expectedWithType) {
-        String actualNoType = base.toString(false);
-        String actualWithType = base.toString(true);
+        String actualNoType = base.toString(KFormatContext.NO_TYPE);
+        String actualWithType = base.toString(KFormatContext.DEFAULT);
         //uncomment below for easy debugging
 //        System.out.println("\"" + actualNoType + "\", \"" + actualWithType + "\"");
         assertEquals(expectedNoType, actualNoType, "Test to not show type");

@@ -17,7 +17,7 @@ public class FlipTableModel extends KTableModel {
     }
 
     public String getColumnName(int i) {
-        return flip.x.at(i).toString(false);
+        return ((K.KSymbol)flip.x.at(i)).s;
     }
 
     public K.KBaseVector getColumn(int col) {

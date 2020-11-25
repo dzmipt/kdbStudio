@@ -54,7 +54,6 @@ public class StudioPanel extends JPanel implements Observer,WindowListener {
 
     private JComboBox<String> comboServer;
     private JTextField txtServer;
-    private JTable table;
     private String exportFilename;
     private String lastQuery = null;
     private JMenuBar menubar;
@@ -350,7 +349,7 @@ public class StudioPanel extends JPanel implements Observer,WindowListener {
     }
 
     private void exportAsExcel(final String filename) {
-        new ExcelExporter().exportTableX(frame,table,new File(filename),false);
+        new ExcelExporter().exportTableX(frame,getSelectedTable(),new File(filename),false);
     }
 
     private void exportAsDelimited(final TableModel model,final String filename,final char delimiter) {
@@ -396,7 +395,7 @@ public class StudioPanel extends JPanel implements Observer,WindowListener {
 
                                 K.KBase o = (K.KBase) model.getValueAt(r - 1,col);
                                 if (!o.isNull())
-                                    fw.write(o.toString(false));
+                                    fw.write(o.toString(KFormatContext.NO_TYPE));
                             }
                             fw.write(lineSeparator);
 
@@ -488,7 +487,7 @@ public class StudioPanel extends JPanel implements Observer,WindowListener {
 
                                 K.KBase o = (K.KBase) model.getValueAt(r - 1,col);
                                 if (!o.isNull())
-                                    fw.write(o.toString(false));
+                                    fw.write(o.toString(KFormatContext.NO_TYPE));
 
                                 fw.write("</" + columns[col] + ">");
                             }
@@ -542,11 +541,11 @@ public class StudioPanel extends JPanel implements Observer,WindowListener {
     }
 
     private void exportAsTxt(String filename) {
-        exportAsDelimited(table.getModel(),filename,'\t');
+        exportAsDelimited(getSelectedTable().getModel(),filename,'\t');
     }
 
     private void exportAsCSV(String filename) {
-        exportAsDelimited(table.getModel(),filename,',');
+        exportAsDelimited(getSelectedTable().getModel(),filename,',');
     }
 
     private void export() {
@@ -560,7 +559,7 @@ public class StudioPanel extends JPanel implements Observer,WindowListener {
         FileFilter xmlFilter = null;
         FileFilter xlsFilter = null;
 
-        if (table != null) {
+        if (getSelectedTable() != null) {
             csvFilter =
                 new FileFilter() {
                     public String getDescription() {
@@ -629,7 +628,7 @@ public class StudioPanel extends JPanel implements Observer,WindowListener {
             File dir = new File(file.getPath());
             chooser.setCurrentDirectory(dir);
             chooser.ensureFileIsVisible(file);
-            if (table != null)
+            if (getSelectedTable() != null)
                 if (exportFilename.endsWith(".xls"))
                     chooser.setFileFilter(xlsFilter);
                 else if (exportFilename.endsWith(".csv"))
@@ -655,7 +654,7 @@ public class StudioPanel extends JPanel implements Observer,WindowListener {
 
                 exportFilename = dir + "/" + sf.getName();
 
-                if (table != null)
+                if (getSelectedTable() != null)
                     if (exportFilename.endsWith(".xls"))
                         exportAsExcel(exportFilename);
                     else if (exportFilename.endsWith(".csv"))
@@ -663,7 +662,7 @@ public class StudioPanel extends JPanel implements Observer,WindowListener {
                     else if (exportFilename.endsWith(".txt"))
                         exportAsTxt(exportFilename);
                     else if (exportFilename.endsWith(".xml"))
-                        exportAsXml(table.getModel(),exportFilename);
+                        exportAsXml(getSelectedTable().getModel(),exportFilename);
                     /*                    else if (exportFilename.endsWith(".res")) {
                     exportAsBin(exportFilename);
                     }
@@ -676,7 +675,7 @@ public class StudioPanel extends JPanel implements Observer,WindowListener {
                         else if (ff == txtFilter)
                             exportAsTxt(exportFilename);
                         else if (ff == xmlFilter)
-                            exportAsXml(table.getModel(),exportFilename);
+                            exportAsXml(getSelectedTable().getModel(),exportFilename);
                         /*else if( ff == binFilter){
                         exportAsBin(exportFilename);
                         }
@@ -1232,8 +1231,7 @@ public class StudioPanel extends JPanel implements Observer,WindowListener {
                                      new Integer(KeyEvent.VK_E),
                                      null) {
             public void actionPerformed(ActionEvent e) {
-                new LineChart((KTableModel) table.getModel());
-            //new PriceVolumeChart(table);
+                new LineChart((KTableModel) getSelectedTable().getModel());
             }
         };
 
@@ -1262,7 +1260,7 @@ public class StudioPanel extends JPanel implements Observer,WindowListener {
             public void actionPerformed(ActionEvent e) {
                 try {
                     File file = File.createTempFile("studioExport",".xls");
-                    new ExcelExporter().exportTableX(frame,table,file,true);
+                    new ExcelExporter().exportTableX(frame,getSelectedTable(),file,true);
                 }
                 catch (IOException ex) {
                     ex.printStackTrace();
@@ -2022,7 +2020,6 @@ public class StudioPanel extends JPanel implements Observer,WindowListener {
     }
 
     public void refreshQuery() {
-        table = null;
         executeK4Query(lastQuery);
     }
 
@@ -2035,8 +2032,6 @@ public class StudioPanel extends JPanel implements Observer,WindowListener {
     }
 
     private void executeQuery(String text) {
-        table = null;
-
         if (text == null) {
             JOptionPane.showMessageDialog(frame,
                                           "\nNo text available to submit to server.\n\n",
@@ -2121,42 +2116,32 @@ public class StudioPanel extends JPanel implements Observer,WindowListener {
         return text;
     }
 
+    private JTable getSelectedTable() {
+        TabPanel tab = (TabPanel) tabbedPane.getSelectedComponent();
+        if (tab == null) return null;
+        return tab.getTable();
+    }
+
     private void processK4Results(K.KBase r) throws c.K4Exception {
         if (r != null) {
+            TabPanel tab = new TabPanel(r);
+            tabbedPane.addTab(tab.getTitle(),tab.getIcon(),tab);
+
             exportAction.setEnabled(true);
-            KTableModel model = KTableModel.getModel(r);
+            KTableModel model = null;
+            if (tab.getTable() != null) {
+                model = (KTableModel) tab.getTable().getModel();
+            }
             if (model != null) {
                 boolean dictModel = model instanceof DictModel;
                 boolean listModel = model instanceof ListModel;
                 boolean tableModel = ! (dictModel || listModel);
-                QGrid grid = new QGrid(model);
-                table = grid.getTable();
                 openInExcel.setEnabled(true);
                 chartAction.setEnabled(tableModel);
-                String title = tableModel ? "Table" : (dictModel ? "Dict" : "List");
-                TabPanel tab = new TabPanel( title + " [" + grid.getRowCount() + " rows] ",
-                        Util.TABLE_ICON,
-                        grid);
-                tabbedPane.addTab(tab.getTitle(),tab.getIcon(),tab);
             } else {
                 chartAction.setEnabled(false);
                 openInExcel.setEnabled(false);
-                String text;
-                if ((r instanceof K.UnaryPrimitive&&0==((K.UnaryPrimitive)r).getPrimitiveAsInt())) text = "";
-                else {
-                    text = Util.limitString(r.toString(), Config.getInstance().getMaxCharsInResult());
-                }
-                JEditorPane textArea = new JEditorPane("text/q", text);
-                textArea.setEditable(false);
-
-                TabPanel tab = new TabPanel(I18n.getString("ConsoleView"),
-                        Util.CONSOLE_ICON,
-                        Utilities.getEditorUI(textArea).getExtComponent());
-                tabbedPane.addTab(tab.getTitle(),tab.getIcon(),tab);
             }
-        }
-        else {
-            // Log that execute was successful
         }
         tabbedPane.setSelectedIndex(tabbedPane.getTabCount()-1);
     }

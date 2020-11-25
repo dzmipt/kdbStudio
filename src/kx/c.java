@@ -675,7 +675,7 @@ public class c {
 
             if (b[0] == -128) {
                 j = 1;
-                throw new K4Exception(rs().toString(true));
+                throw new K4Exception(rs().toString());
             }
             return r();
         }

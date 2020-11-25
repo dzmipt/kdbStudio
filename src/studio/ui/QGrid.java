@@ -1,6 +1,7 @@
 package studio.ui;
 
 import studio.kdb.K;
+import studio.kdb.KFormatContext;
 import studio.kdb.TableHeaderRenderer;
 import studio.kdb.TableRowHeader;
 
@@ -9,15 +10,17 @@ import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 import javax.swing.table.*;
 import java.awt.*;
-import java.awt.datatransfer.StringSelection;
 import java.awt.event.ActionEvent;
 import java.awt.event.KeyEvent;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 
+//@TODO: Should it be really a JPanel? It looks it should be just a JTabel. And anyway any additional components could be added to TabPanel
 public class QGrid extends JPanel {
     private final TableModel model;
     private final JTable table;
+    private CellRenderer cellRenderer;
+    private KFormatContext formatContext = KFormatContext.DEFAULT;
 
     public JTable getTable() {
         return table;
@@ -37,24 +40,11 @@ public class QGrid extends JPanel {
             super(m);
         }
 
-        Color col = new Color(0xff, 0xff, 0xcc);
-        //Color col = UIManager.getColor("Table.selectionBackground").brighter();
-        Color bgSelCache = UIManager.getColor("Table.selectionBackground");
-        Color fgSelCache = UIManager.getColor("Table.selectionForeground");
-        Color bgCache = UIManager.getColor("Table.background");
-
         public Component prepareRenderer(TableCellRenderer renderer,
                                          int rowIndex,
                                          int vColIndex) {
-            Color bg = null;
-            //Color fg= UIManager.getColor("Table.foreground");;
-
             Component c = super.prepareRenderer(renderer, rowIndex, vColIndex);
             c.setFont(this.getFont());
-
-            if (isCellSelected(rowIndex, vColIndex))
-                bg = bgSelCache;
-
             return c;
         }
 
@@ -82,43 +72,18 @@ public class QGrid extends JPanel {
             super.setRowHeight(rowHeight);
         }
 
-        public float getZoom() {
-            return zoomFactor;
-        }
-
-        public void setZoom(float zoomFactor) {
-            if (this.zoomFactor == zoomFactor)
-                return;
-
-            if (originalFont == null)
-                originalFont = getFont();
-            if (originalRowHeight == 0)
-                originalRowHeight = getRowHeight();
-
-            float oldZoomFactor = this.zoomFactor;
-            this.zoomFactor = zoomFactor;
-            Font font = originalFont;
-            if (zoomFactor != 1.0) {
-                float scaledSize = originalFont.getSize2D() * zoomFactor;
-                font = originalFont.deriveFont(scaledSize);
-            }
-
-            super.setFont(font);
-            super.setRowHeight((int) Math.ceil(originalRowHeight * zoomFactor));
-            ((TableHeaderRenderer) getTableHeader().getDefaultRenderer()).setFont(font);
-
-            firePropertyChange("zoom", oldZoomFactor, zoomFactor);
-
-            WidthAdjuster wa = new WidthAdjuster(this);
-            wa.resizeAllColumns();
-            invalidate();
-        }
-
         public Component prepareEditor(TableCellEditor editor, int row, int column) {
             Component comp = super.prepareEditor(editor, row, column);
             comp.setFont(this.getFont());
             return comp;
         }
+    }
+
+
+    public void setFormatContext(KFormatContext formatContext) {
+        this.formatContext = formatContext;
+        cellRenderer.setFormatContext(formatContext);
+        table.repaint();
     }
 
     public QGrid(TableModel model) {
@@ -130,30 +95,20 @@ public class QGrid extends JPanel {
         table.setShowHorizontalLines(true);
 
         table.setDragEnabled(true);
-        // table.setRowSelectionAllowed(true);
-        // table.setColumnSelectionAllowed(false);
-        // table.setCellSelectionEnabled(true);
         table.setSelectionMode(ListSelectionModel.SINGLE_INTERVAL_SELECTION);
         table.setCellSelectionEnabled(true);
-
-        //     table.getInputMap().put(KeyStroke.getKeyStroke(KeyEvent.VK_C,Toolkit.getDefaultToolkit().getMenuShortcutKeyMask()),
-        //             TransferHandler.getCopyAction().getValue(Action.NAME));
 
         ToolTipManager.sharedInstance().unregisterComponent(table);
         ToolTipManager.sharedInstance().unregisterComponent(table.getTableHeader());
 
-        DefaultTableCellRenderer dcr = new CellRenderer(table);
-        //    dcr.setHorizontalAlignment(SwingConstants.RIGHT);
-        //    dcr.setVerticalAlignment(SwingConstants.CENTER);
+        cellRenderer = new CellRenderer(table);
 
         for (int i = 0; i < model.getColumnCount(); i++) {
             TableColumn col = table.getColumnModel().getColumn(i);
-            col.setCellRenderer(dcr);
+            col.setCellRenderer(cellRenderer);
         }
 
         table.setAutoResizeMode(JTable.AUTO_RESIZE_OFF);
-
-        // AutoFitTableColumns.autoResizeTable(table, true);
 
         table.getTableHeader().setReorderingAllowed(true);
         final JScrollPane scrollPane = new JScrollPane(table);
@@ -181,8 +136,6 @@ public class QGrid extends JPanel {
 
         scrollPane.setWheelScrollingEnabled(true);
         scrollPane.getViewport().setBackground(UIManager.getColor("Table.background"));
-        //      scrollPane.setBorder(null);
-//        scrollPane.setViewportBorder(null);
         JLabel rowCountLabel = new JLabel("");
         rowCountLabel.setHorizontalAlignment(SwingConstants.RIGHT);
         rowCountLabel.setVerticalAlignment(SwingConstants.CENTER);
@@ -245,7 +198,7 @@ public class QGrid extends JPanel {
 
                         K.KBase b = (K.KBase) table.getValueAt(rowsselected[row], colsselected[col]);
                         if (!b.isNull())
-                            sb.append(b.toString(false));
+                            sb.append(KFormatContext.NO_TYPE);
                         if (symColumn)
                             sb.append("\"");
                         if (col < numcols - 1)
@@ -295,7 +248,7 @@ public class QGrid extends JPanel {
                         K.KBase b = (K.KBase) table.getValueAt(rowsselected[row], colsselected[col]);
                         sb.append("<td>");
                         if (!b.isNull())
-                            sb.append(b.toString(false));
+                            sb.append(b.toString(KFormatContext.NO_TYPE));
                         sb.append("</td>");
                     }
                     sb.append("</tr>");
@@ -328,7 +281,10 @@ public class QGrid extends JPanel {
             public void mouseClicked(MouseEvent e) {
                 if (e.getClickCount() != 2) return;
                 K.KBase b = (K.KBase) table.getValueAt(table.getSelectedRow(), table.getSelectedColumn());
-                Util.copyTextToClipboard(b.toString(b instanceof K.KBaseVector));
+                //@TODO: we shouldn't duplicate the logic here.
+                KFormatContext formatContextForCell = new KFormatContext(formatContext);
+                formatContextForCell.setShowType(b instanceof K.KBaseVector);
+                Util.copyTextToClipboard(b.toString(formatContextForCell));
 
             }
         });

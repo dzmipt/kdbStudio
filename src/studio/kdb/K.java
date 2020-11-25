@@ -60,14 +60,14 @@ public class K {
         }
 
         public final String toString() {
-            return toString(true);
+            return toString(KFormatContext.DEFAULT);
         }
 
-        public final String toString(boolean showType) {
-            return format(null, showType).toString();
+        public final String toString(KFormatContext context) {
+            return format(null, context).toString();
         }
 
-        public StringBuilder format(StringBuilder builder, boolean showType) {
+        public StringBuilder format(StringBuilder builder, KFormatContext context) {
             if (builder == null) builder = new StringBuilder();
             return builder;
         }
@@ -90,8 +90,8 @@ public class K {
         }
 
         @Override
-        public StringBuilder format(StringBuilder builder, boolean showType) {
-            return super.format(builder, showType).append(o.toString(showType));
+        public StringBuilder format(StringBuilder builder, KFormatContext context) {
+            return super.format(builder, context).append(o.toString(context));
         }
     }
 
@@ -108,8 +108,8 @@ public class K {
         }
 
         @Override
-        public StringBuilder format(StringBuilder builder, boolean showType) {
-            return super.format(builder, showType).append(getPrimitive());
+        public StringBuilder format(StringBuilder builder, KFormatContext context) {
+            return super.format(builder, context).append(getPrimitive());
         }
 
     }
@@ -128,8 +128,8 @@ public class K {
 
         //@TODO: implement
         @Override
-        public StringBuilder format(StringBuilder builder, boolean showType) {
-            return super.format(builder, showType);
+        public StringBuilder format(StringBuilder builder, KFormatContext context) {
+            return super.format(builder, context);
         }
     }
 
@@ -140,8 +140,8 @@ public class K {
         }
 
         @Override
-        public StringBuilder format(StringBuilder builder, boolean showType) {
-            return super.format(builder, showType).append("\\:");
+        public StringBuilder format(StringBuilder builder, KFormatContext context) {
+            return super.format(builder, context).append("\\:");
         }
     }
 
@@ -152,8 +152,8 @@ public class K {
         }
 
         @Override
-        public StringBuilder format(StringBuilder builder, boolean showType) {
-            return super.format(builder, showType).append("/:");
+        public StringBuilder format(StringBuilder builder, KFormatContext context) {
+            return super.format(builder, context).append("/:");
         }
     }
 
@@ -164,8 +164,8 @@ public class K {
         }
 
         @Override
-        public StringBuilder format(StringBuilder builder, boolean showType) {
-            return super.format(builder, showType).append("':");
+        public StringBuilder format(StringBuilder builder, KFormatContext context) {
+            return super.format(builder, context).append("':");
         }
     }
 
@@ -176,8 +176,8 @@ public class K {
         }
 
         @Override
-        public StringBuilder format(StringBuilder builder, boolean showType) {
-            return super.format(builder, showType).append("'");
+        public StringBuilder format(StringBuilder builder, KFormatContext context) {
+            return super.format(builder, context).append("'");
         }
     }
 
@@ -188,8 +188,8 @@ public class K {
         }
 
         @Override
-        public StringBuilder format(StringBuilder builder, boolean showType) {
-            return super.format(builder, showType).append("/");
+        public StringBuilder format(StringBuilder builder, KFormatContext context) {
+            return super.format(builder, context).append("/");
         }
     }
 
@@ -201,8 +201,8 @@ public class K {
         }
 
         @Override
-        public StringBuilder format(StringBuilder builder, boolean showType) {
-            return super.format(builder, showType).append("\\");
+        public StringBuilder format(StringBuilder builder, KFormatContext context) {
+            return super.format(builder, context).append("\\");
         }
     }
 
@@ -219,8 +219,8 @@ public class K {
         }
 
         @Override
-        public StringBuilder format(StringBuilder builder, boolean showType) {
-            return super.format(builder, showType).append(body);
+        public StringBuilder format(StringBuilder builder, KFormatContext context) {
+            return super.format(builder, context).append(body);
         }
     }
 
@@ -260,14 +260,14 @@ public class K {
         }
 
         @Override
-        public StringBuilder format(StringBuilder builder, boolean showType) {
-            builder = super.format(builder, showType);
+        public StringBuilder format(StringBuilder builder, KFormatContext context) {
+            builder = super.format(builder, context);
             if (objs.getLength() == 0) return builder; // not sure if such is possible
-            objs.at(0).format(builder, showType);
+            objs.at(0).format(builder, context);
             builder.append("[");
             for (int i = 1; i < objs.getLength(); i++) {
                 if (i > 1) builder.append(";");
-                objs.at(i).format(builder, showType);
+                objs.at(i).format(builder, context);
             }
             builder.append("]");
             return builder;
@@ -287,8 +287,8 @@ public class K {
         }
 
         @Override
-        public StringBuilder format(StringBuilder builder, boolean showType) {
-            return super.format(builder, showType).append(charVal);
+        public StringBuilder format(StringBuilder builder, KFormatContext context) {
+            return super.format(builder, context).append(charVal);
         }
     }
 
@@ -301,8 +301,8 @@ public class K {
         }
 
         @Override
-        public StringBuilder format(StringBuilder builder, boolean showType) {
-            builder = super.format(builder, showType);
+        public StringBuilder format(StringBuilder builder, KFormatContext context) {
+            builder = super.format(builder, context);
             if (getPrimitiveAsInt() != -1) builder.append(getPrimitive());
             return builder;
         }
@@ -321,10 +321,10 @@ public class K {
         }
 
         @Override
-        public StringBuilder format(StringBuilder builder, boolean showType) {
-            return super.format(builder, showType)
+        public StringBuilder format(StringBuilder builder, KFormatContext context) {
+            return super.format(builder, context)
                         .append(b ? "1" : "0")
-                        .append(showType ? "b" : "");
+                        .append(context.showType() ? "b" : "");
         }
 
         public double toDouble() {
@@ -353,8 +353,8 @@ public class K {
         }
 
         @Override
-        public StringBuilder format(StringBuilder builder, boolean showType) {
-            return super.format(builder, showType)
+        public StringBuilder format(StringBuilder builder, KFormatContext context) {
+            return super.format(builder, context)
                         .append("0x")
                         .append(Integer.toHexString((b >> 4) & 0xf))
                         .append(Integer.toHexString(b & 0xf));
@@ -382,13 +382,13 @@ public class K {
         }
 
         @Override
-        public StringBuilder format(StringBuilder builder, boolean showType) {
-            builder = super.format(builder, showType);
+        public StringBuilder format(StringBuilder builder, KFormatContext context) {
+            builder = super.format(builder, context);
             if (isNull()) builder.append("0N");
             else if (s == Short.MAX_VALUE) builder.append("0W");
             else if (s == -Short.MAX_VALUE) builder.append("-0W");
-            else builder.append(s);
-            if (showType) builder.append("h");
+            else builder.append(context.getNumberFormat().format(s));
+            if (context.showType()) builder.append("h");
             return builder;
         }
     }
@@ -414,13 +414,13 @@ public class K {
         }
 
         @Override
-        public StringBuilder format(StringBuilder builder, boolean showType) {
-            builder = super.format(builder, showType);
+        public StringBuilder format(StringBuilder builder, KFormatContext context) {
+            builder = super.format(builder, context);
             if (isNull()) builder.append("0N");
             else if (i == Integer.MAX_VALUE) builder.append("0W");
             else if (i == -Integer.MAX_VALUE) builder.append("-0W");
-            else builder.append(i);
-            if (showType) builder.append("i");
+            else builder.append(context.getNumberFormat().format(i));
+            if (context.showType()) builder.append("i");
             return builder;
         }
     }
@@ -442,9 +442,9 @@ public class K {
         }
 
         @Override
-        public StringBuilder format(StringBuilder builder, boolean showType) {
-            builder = super.format(builder, showType);
-            if (showType) builder.append("`");
+        public StringBuilder format(StringBuilder builder, KFormatContext context) {
+            builder = super.format(builder, context);
+            if (context.showType()) builder.append("`");
             return builder.append(s);
         }
 
@@ -474,12 +474,12 @@ public class K {
         }
 
         @Override
-        public StringBuilder format(StringBuilder builder, boolean showType) {
-            builder = super.format(builder, showType);
+        public StringBuilder format(StringBuilder builder, KFormatContext context) {
+            builder = super.format(builder, context);
             if (isNull()) builder.append("0N");
             else if (j == Long.MAX_VALUE) builder.append("0W");
             else if (j == -Long.MAX_VALUE) builder.append("-0W");
-            else builder.append(j);
+            else builder.append(context.getNumberFormat().format(j));
             return builder;
         }
 
@@ -506,9 +506,9 @@ public class K {
         }
 
         @Override
-        public StringBuilder format(StringBuilder builder, boolean showType) {
-            builder = super.format(builder, showType);
-            if (showType) builder.append("\"").append(c).append("\"");
+        public StringBuilder format(StringBuilder builder, KFormatContext context) {
+            builder = super.format(builder, context);
+            if (context.showType()) builder.append("\"").append(c).append("\"");
             else builder.append(c);
             return builder;
         }
@@ -540,13 +540,13 @@ public class K {
         }
 
         @Override
-        public StringBuilder format(StringBuilder builder, boolean showType) {
-            builder = super.format(builder, showType);
+        public StringBuilder format(StringBuilder builder, KFormatContext context) {
+            builder = super.format(builder, context);
             if (isNull()) builder.append("0N");
             else if (f == Float.POSITIVE_INFINITY) builder.append("0w");
             else if (f == Float.NEGATIVE_INFINITY) builder.append("-0w");
-            else builder.append(Config.getInstance().getNumberFormat().format(f));
-            if (showType) builder.append("e");
+            else builder.append(context.getNumberFormat().format(f));
+            if (context.showType()) builder.append("e");
             return builder;
         }
 
@@ -578,13 +578,13 @@ public class K {
         }
 
         @Override
-        public StringBuilder format(StringBuilder builder, boolean showType) {
-            builder = super.format(builder, showType);
+        public StringBuilder format(StringBuilder builder, KFormatContext context) {
+            builder = super.format(builder, context);
             if (isNull()) builder.append("0n");
             else if (d == Double.POSITIVE_INFINITY) builder.append("0w");
             else if (d == Double.NEGATIVE_INFINITY) builder.append("-0w");
-            else builder.append(Config.getInstance().getNumberFormat().format(d));
-            if (showType) builder.append("f");
+            else builder.append(context.getNumberFormat().format(d));
+            if (context.showType()) builder.append("f");
             return builder;
         }
 
@@ -612,8 +612,8 @@ public class K {
         }
 
         @Override
-        public StringBuilder format(StringBuilder builder, boolean showType) {
-            builder = super.format(builder, showType);
+        public StringBuilder format(StringBuilder builder, KFormatContext context) {
+            builder = super.format(builder, context);
             if (isNull()) builder.append("0Nd");
             else if (date == Integer.MAX_VALUE) builder.append("0Wd");
             else if (date == -Integer.MAX_VALUE) builder.append("-0Wd");
@@ -645,8 +645,8 @@ public class K {
         }
 
         @Override
-        public StringBuilder format(StringBuilder builder, boolean showType) {
-            return super.format(builder, showType).append(uuid);
+        public StringBuilder format(StringBuilder builder, KFormatContext context) {
+            return super.format(builder, context).append(uuid);
         }
     }
 
@@ -667,8 +667,8 @@ public class K {
         }
 
         @Override
-        public StringBuilder format(StringBuilder builder, boolean showType) {
-            builder = super.format(builder, showType);
+        public StringBuilder format(StringBuilder builder, KFormatContext context) {
+            builder = super.format(builder, context);
             if (isNull()) builder.append("0Nt");
             else if (time == Integer.MAX_VALUE) builder.append("0Wt");
             else if (time == -Integer.MAX_VALUE) builder.append("-0Wt");
@@ -698,13 +698,13 @@ public class K {
         }
 
         @Override
-        public StringBuilder format(StringBuilder builder, boolean showType) {
-            builder = super.format(builder, showType);
+        public StringBuilder format(StringBuilder builder, KFormatContext context) {
+            builder = super.format(builder, context);
             if (isNull()) builder.append("0N");
             else if (time == Double.POSITIVE_INFINITY) builder.append("0w");
             else if (time == Double.NEGATIVE_INFINITY) builder.append("-0w");
             else builder.append(sd("yyyy.MM.dd HH:mm:ss.SSS", toTimestamp()));
-            if (showType) builder.append("z");
+            if (context.showType()) builder.append("z");
             return builder;
         }
 
@@ -731,8 +731,8 @@ public class K {
         }
 
         @Override
-        public StringBuilder format(StringBuilder builder, boolean showType) {
-            builder = super.format(builder, showType);
+        public StringBuilder format(StringBuilder builder, KFormatContext context) {
+            builder = super.format(builder, context);
             if (isNull()) builder.append("0Np");
             else if (time == Long.MAX_VALUE) builder.append("0Wp");
             else if (time == -Long.MAX_VALUE) builder.append("-0Wp");
@@ -777,14 +777,14 @@ public class K {
         }
 
         @Override
-        public StringBuilder format(StringBuilder builder, boolean showType) {
-            builder = super.format(builder, showType);
+        public StringBuilder format(StringBuilder builder, KFormatContext context) {
+            builder = super.format(builder, context);
             boolean useBrackets = attr != 0 || x instanceof Flip;
             if (useBrackets) builder.append("(");
-            x.format(builder, showType);
+            x.format(builder, context);
             if (useBrackets) builder.append(")");
             builder.append("!");
-            y.format(builder, showType);
+            y.format(builder, context);
             return builder;
         }
     }
@@ -804,15 +804,15 @@ public class K {
         }
 
         @Override
-        public StringBuilder format(StringBuilder builder, boolean showType) {
-            builder =  super.format(builder, showType);
+        public StringBuilder format(StringBuilder builder, KFormatContext context) {
+            builder =  super.format(builder, context);
             boolean usebracket = x.getLength() == 1;
             builder.append(flip);
             if (usebracket) builder.append("(");
-            x.format(builder, showType);
+            x.format(builder, context);
             if (usebracket) builder.append(")");
             builder.append("!");
-            y.format(builder, showType);
+            y.format(builder, context);
             return builder;
         }
     }
@@ -834,8 +834,8 @@ public class K {
         }
 
         @Override
-        public StringBuilder format(StringBuilder builder, boolean showType) {
-            builder = super.format(builder, showType);
+        public StringBuilder format(StringBuilder builder, KFormatContext context) {
+            builder = super.format(builder, context);
             if (isNull()) builder.append("0N");
             else if (i == Integer.MAX_VALUE) builder.append("0W");
             else if (i == -Integer.MAX_VALUE) builder.append("-0W");
@@ -845,7 +845,7 @@ public class K {
                 builder.append(i2(y / 100)).append(i2(y % 100))
                         .append(".").append(i2(1 + m % 12));
             }
-            if (showType) builder.append("m");
+            if (context.showType()) builder.append("m");
             return builder;
         }
 
@@ -874,8 +874,8 @@ public class K {
         }
 
         @Override
-        public StringBuilder format(StringBuilder builder, boolean showType) {
-            builder = super.format(builder, showType);
+        public StringBuilder format(StringBuilder builder, KFormatContext context) {
+            builder = super.format(builder, context);
             if (isNull()) builder.append("0Nu");
             else if (i == Integer.MAX_VALUE) builder.append("0Wu");
             else if (i == -Integer.MAX_VALUE) builder.append("-0Wu");
@@ -907,8 +907,8 @@ public class K {
         }
 
         @Override
-        public StringBuilder format(StringBuilder builder, boolean showType) {
-            builder = super.format(builder, showType);
+        public StringBuilder format(StringBuilder builder, KFormatContext context) {
+            builder = super.format(builder, context);
             if (isNull()) builder.append("0Nv");
             else if (i == Integer.MAX_VALUE) builder.append("0Wv");
             else if (i == -Integer.MAX_VALUE) builder.append("-0Wv");
@@ -947,8 +947,8 @@ public class K {
         }
 
         @Override
-        public StringBuilder format(StringBuilder builder, boolean showType) {
-            builder = super.format(builder, showType);
+        public StringBuilder format(StringBuilder builder, KFormatContext context) {
+            builder = super.format(builder, context);
             if (isNull()) builder.append("0Nn");
             else if (j == Long.MAX_VALUE) builder.append("0Wn");
             else if (j == -Long.MAX_VALUE) builder.append("-0Wn");
@@ -979,6 +979,7 @@ public class K {
         return i2Formatter.format(i);
     }
 
+    //@TODO: Implement as generic to avoid casting calling at method
     public static abstract class KBaseVector extends KBase {
         protected Object array;
         private int length;
@@ -1023,24 +1024,25 @@ public class K {
         private final static String[] sAttr = new String[]{"", "`s#", "`u#", "`p#", "`g#"};
 
         //default implementation
-        protected StringBuilder formatVector(StringBuilder builder, boolean showType) {
+        protected StringBuilder formatVector(StringBuilder builder, KFormatContext context) {
             if (getLength() == 0) builder.append("`").append(typeName).append("$()");
             else {
                 if (getLength() == 1) builder.append(enlist);
+                KFormatContext childContext = context.showType() ? new KFormatContext(context).setShowType(false) : context;
                 for (int i = 0; i < getLength(); i++) {
                     if (i > 0) builder.append(" ");
-                    at(i).format(builder, false);
+                    at(i).format(builder, childContext);
                 }
-                if (showType) builder.append(typeChar);
+                if (context.showType()) builder.append(typeChar);
             }
             return builder;
         }
 
         @Override
-        public final StringBuilder format(StringBuilder builder, boolean showType) {
-            builder = super.format(builder, showType);
-            if (showType && attr <= sAttr.length) builder.append(sAttr[attr]);
-            return formatVector(builder, showType);
+        public final StringBuilder format(StringBuilder builder, KFormatContext context) {
+            builder = super.format(builder, context);
+            if (context.showType() && attr <= sAttr.length) builder.append(sAttr[attr]);
+            return formatVector(builder, context);
         }
     }
 
@@ -1089,12 +1091,12 @@ public class K {
         }
 
         @Override
-        protected StringBuilder formatVector(StringBuilder builder, boolean showType) {
+        protected StringBuilder formatVector(StringBuilder builder, KFormatContext context) {
             if (getLength() == 1) builder.append(enlist);
             else builder.append("(");
             for (int i = 0; i < getLength(); i++) {
                 if (i > 0) builder.append(";");
-                at(i).format(builder, showType);
+                at(i).format(builder, context);
             }
             if (getLength() != 1) builder.append(")");
             return builder;
@@ -1321,7 +1323,7 @@ public class K {
         }
 
         @Override
-        protected StringBuilder formatVector(StringBuilder builder, boolean showType) {
+        protected StringBuilder formatVector(StringBuilder builder, KFormatContext context) {
             if (getLength() == 0) builder.append("`boolean$()");
             else {
                 if (getLength() == 1) builder.append(enlist);
@@ -1356,7 +1358,7 @@ public class K {
         }
 
         @Override
-        protected StringBuilder formatVector(StringBuilder builder, boolean showType) {
+        protected StringBuilder formatVector(StringBuilder builder, KFormatContext context) {
             if (getLength() == 0) builder.append("`byte$()");
             else {
                 if (getLength() == 1) builder.append(enlist);
@@ -1386,7 +1388,7 @@ public class K {
         }
 
         @Override
-        protected StringBuilder formatVector(StringBuilder builder, boolean showType) {
+        protected StringBuilder formatVector(StringBuilder builder, KFormatContext context) {
             if (getLength() == 0) builder.append("`symbol$()");
             else {
                 if (getLength() == 1) builder.append(enlist);
@@ -1426,13 +1428,13 @@ public class K {
         }
 
         @Override
-        protected StringBuilder formatVector(StringBuilder builder, boolean showType) {
+        protected StringBuilder formatVector(StringBuilder builder, KFormatContext context) {
             if (getLength() == 1) builder.append(enlist);
 
-            if (showType) builder.append("\"");
+            if (context.showType()) builder.append("\"");
             for (int i = 0; i < getLength(); i++)
                 builder.append(Array.getChar(array, i));
-            if (showType) builder.append("\"");
+            if (context.showType()) builder.append("\"");
             return builder;
         }
     }

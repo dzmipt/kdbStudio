@@ -2,47 +2,44 @@ package studio.ui;
 
 import studio.kdb.Config;
 import studio.kdb.K;
+import studio.kdb.KFormatContext;
 import studio.kdb.KTableModel;
 import java.awt.Color;
 import java.awt.Component;
-import java.beans.PropertyChangeEvent;
-import java.beans.PropertyChangeListener;
 import javax.swing.*;
 import javax.swing.table.DefaultTableCellRenderer;
 
 class CellRenderer extends DefaultTableCellRenderer {
-    private static Color keyColor = new Color(220,255,220);
-    private static Color altColor = new Color(220,220,255);
-    private static Color nullColor = new Color(255,150,150);
-    private static Color selColor = UIManager.getColor("Table.selectionBackground");
-    private Color fgColor;
+    private static final Color keyColor = new Color(220,255,220);
+    private static final Color altColor = new Color(220,220,255);
+    private static final Color nullColor = new Color(255,150,150);
+    private static final Color selColor = UIManager.getColor("Table.selectionBackground");
+    private static final Color fgColor = UIManager.getColor("Table.foreground");
     private JTable table = null;
+
+    private KFormatContext formatContextWithType, formatContextNoType;
 
     private void initLabel(JTable table) {
         setHorizontalAlignment(SwingConstants.LEFT);
         setOpaque(true);
-        int height = getPreferredSize().height;
-
-    //    label.setFont(table.getTableHeader().getFont());
-    //    label.setBackground(table.getTableHeader().getBackground());
-    //    label.setForeground(table.getTableHeader().getForeground());
-    // label.setBounds(1,1,1,1);
     }
 
     public CellRenderer(JTable t) {
-        super();
+        setFormatContext(KFormatContext.DEFAULT);
         table = t;
-        table.addPropertyChangeListener(new PropertyChangeListener() {
-                                        public void propertyChange(PropertyChangeEvent propertyChangeEvent) {
-                                            if ("zoom".equals(propertyChangeEvent.getPropertyName()))
-                                                setFont(table.getFont());
-                                        }
-                                    });
+        table.addPropertyChangeListener(propertyChangeEvent -> {
+            if ("zoom".equals(propertyChangeEvent.getPropertyName()))
+                setFont(table.getFont());
+        });
 
         initLabel(t);
         setFont(UIManager.getFont("Table.font"));
         setBackground(UIManager.getColor("Table.background"));
-        fgColor = UIManager.getColor("Table.foreground");
+    }
+
+    public void setFormatContext(KFormatContext formatContext) {
+        formatContextWithType = new KFormatContext(formatContext).setShowType(true);
+        formatContextNoType = new KFormatContext(formatContext).setShowType(false);
     }
 
     public Component getTableCellRendererComponent(JTable table,
@@ -51,20 +48,11 @@ class CellRenderer extends DefaultTableCellRenderer {
                                                    boolean hasFocus,
                                                    int row,
                                                    int column) {
-        //setText(TypeFormatter.format(value));
-        //setText(value.toString());
-
-        if (value instanceof K.KBase) {
-            K.KBase kb = (K.KBase) value;
-            String text = kb.toString(kb instanceof K.KBaseVector);
-            text = Util.limitString(text, Config.getInstance().getMaxCharsInTableCell());
-            setText(text);
-            setForeground(kb.isNull() ? nullColor : fgColor);
-        }
-        else {
-            // setText(value.toString());
-            // setForeground(UIManager.getColor("Table.foreground"));
-        }
+        K.KBase kb = (K.KBase) value;
+        String text = kb.toString(kb instanceof K.KBaseVector ? formatContextWithType : formatContextNoType);
+        text = Util.limitString(text, Config.getInstance().getMaxCharsInTableCell());
+        setText(text);
+        setForeground(kb.isNull() ? nullColor : fgColor);
 
         if (!isSelected) {
             KTableModel ktm = (KTableModel) table.getModel();
@@ -80,33 +68,6 @@ class CellRenderer extends DefaultTableCellRenderer {
             setForeground(UIManager.getColor("Table.selectionForeground"));
             setBackground(selColor);
         }
-        /*
-        int availableWidth= table.getColumnModel().getColumn(column).getWidth();
-        availableWidth -= table.getIntercellSpacing().getWidth();
-        Insets borderInsets = getBorder().getBorderInsets((Component)this);
-        availableWidth -= (borderInsets.left + borderInsets.right);
-        String cellText = getText();
-        FontMetrics fm = getFontMetrics( getFont() );
-
-        if (fm.stringWidth(cellText) > availableWidth)
-        {
-        String dots= "...";
-        int textWidth = fm.stringWidth( dots );
-        int nChars = cellText.length() - 1;
-        for (; nChars > 0; nChars--)
-        {
-        textWidth += fm.charWidth(cellText.charAt(nChars));
-
-        if (textWidth > availableWidth)
-        {
-        break;
-        }
-        }
-
-        setText( dots + cellText.substring(nChars + 1));
-        }
-         **/
-
         return this;
     }
 }

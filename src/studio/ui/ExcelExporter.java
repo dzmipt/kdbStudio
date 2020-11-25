@@ -1,6 +1,8 @@
 package studio.ui;
 
 import studio.kdb.K;
+import studio.kdb.KFormatContext;
+
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileOutputStream;
@@ -136,7 +138,7 @@ class ExcelExporter {
                             K.KBase b = (K.KBase) model.getValueAt(i, j);
                             if (!b.isNull()) {
                                 if (table.getColumnClass(j) == K.KSymbolVector.class) {
-                                    writer.write("<ss:Cell><ss:Data ss:Type=\"String\">" + escape(b.toString(false)));
+                                    writer.write("<ss:Cell><ss:Data ss:Type=\"String\">" + escape(((K.KSymbol)b).s));
                                 } else if (table.getColumnClass(j) == K.KDateVector.class) {
                                     writer.write("<ss:Cell ss:StyleID=\"date\"><ss:Data ss:Type=\"DateTime\">" +
                                             sd("yyyy-MM-dd", ((K.KDate) b).toDate()));
@@ -170,7 +172,7 @@ class ExcelExporter {
                                 } else if (table.getColumnClass(j) == K.KCharacterVector.class) {
                                     writer.write("<ss:Cell><ss:Data ss:Type=\"String\">" + escape(new String(new char[]{((K.KCharacter) b).c})));
                                 } else {
-                                    writer.write("<ss:Cell><ss:Data ss:Type=\"String\">" + escape(b.toString(false)));
+                                    writer.write("<ss:Cell><ss:Data ss:Type=\"String\">" + escape(b.toString(KFormatContext.NO_TYPE)));
                                 }
                             } else {
                                 writer.write("<ss:Cell><ss:Data ss:Type=\"String\">");

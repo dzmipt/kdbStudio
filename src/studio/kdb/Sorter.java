@@ -237,7 +237,7 @@ public class Sorter {
             K.KBase[] generalList = (K.KBase[]) data;
             String[] list = new String[generalList.length];
             for (int index = 0; index < generalList.length; index++) {
-                list[index] = generalList[index].toString(false);
+                list[index] = generalList[index].toString(KFormatContext.NO_TYPE);
             }
             sort(list,0, length-1, permutation, scratch);
         }

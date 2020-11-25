@@ -26,7 +26,7 @@ public class DictTableModel extends KTableModel {
             col -= ((K.Flip) dict.x).x.getLength();
             v = ((K.Flip) dict.y).x;
         }
-        return v.at(col).toString(false);
+        return ((K.KSymbol)v.at(col)).s;
     }
 
     public K.KBaseVector getColumn(int col) {
