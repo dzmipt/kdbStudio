@@ -9,8 +9,6 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.*;
-import java.text.NumberFormat;
-import java.text.DecimalFormat;
 import java.awt.*;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -70,12 +68,6 @@ public class Config {
 
     public Color getDefaultBackgroundColor() {
         return getColorForToken("BACKGROUND", Color.white);
-    }
-
-    public synchronized NumberFormat getNumberFormat() {
-        String key = p.getProperty("DecimalFormat", "#.#######");
-
-        return new DecimalFormat(key);
     }
 
     public static Config getInstance() {
