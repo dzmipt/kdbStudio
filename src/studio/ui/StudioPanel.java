@@ -2122,29 +2122,28 @@ public class StudioPanel extends JPanel implements Observer,WindowListener {
         return tab.getTable();
     }
 
-    private void processK4Results(K.KBase r) throws c.K4Exception {
-        if (r != null) {
-            TabPanel tab = new TabPanel(r);
-            tabbedPane.addTab(tab.getTitle(),tab.getIcon(),tab);
+    private void processK4Results(K.KBase r) {
+        if (r == null) return;
+        TabPanel tab = new TabPanel(r);
+        tab.addInto(tabbedPane);
 
-            exportAction.setEnabled(true);
-            KTableModel model = null;
-            if (tab.getTable() != null) {
-                model = (KTableModel) tab.getTable().getModel();
-            }
-            if (model != null) {
-                boolean dictModel = model instanceof DictModel;
-                boolean listModel = model instanceof ListModel;
-                boolean tableModel = ! (dictModel || listModel);
-                openInExcel.setEnabled(true);
-                chartAction.setEnabled(tableModel);
-            } else {
-                chartAction.setEnabled(false);
-                openInExcel.setEnabled(false);
-            }
+        exportAction.setEnabled(true);
+        KTableModel model = null;
+        if (tab.getTable() != null) {
+            model = (KTableModel) tab.getTable().getModel();
         }
-        tabbedPane.setSelectedIndex(tabbedPane.getTabCount()-1);
+        if (model != null) {
+            boolean dictModel = model instanceof DictModel;
+            boolean listModel = model instanceof ListModel;
+            boolean tableModel = ! (dictModel || listModel);
+            openInExcel.setEnabled(true);
+            chartAction.setEnabled(tableModel);
+        } else {
+            chartAction.setEnabled(false);
+            openInExcel.setEnabled(false);
+        }
     }
+
     Server server = null;
 
       public void executeK4Query(final String text) {
@@ -2221,8 +2220,7 @@ public class StudioPanel extends JPanel implements Observer,WindowListener {
                             TabPanel tab = new TabPanel("Error Details ",
                                                           Util.ERROR_SMALL_ICON,
                                                           scrollpane);
-                            tabbedPane.addTab(tab.getTitle(),tab.getIcon(), tab);
-                            tabbedPane.setSelectedIndex(tabbedPane.getTabCount()-1);
+                            tab.addInto(tabbedPane);
                         }
                         catch (java.lang.OutOfMemoryError ex) {
                             JOptionPane.showMessageDialog(frame,
