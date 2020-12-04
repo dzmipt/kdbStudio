@@ -94,6 +94,7 @@ public class StudioPanel extends JPanel implements Observer,WindowListener {
     private UserAction editServerAction;
     private UserAction addServerAction;
     private UserAction removeServerAction;
+    private UserAction toggleCommaFormatAction;
     private static int scriptNumber = 0;
     private static int myScriptNumber;
     private JFrame frame;
@@ -166,6 +167,10 @@ public class StudioPanel extends JPanel implements Observer,WindowListener {
         Document doc = null;
         if (textArea == null) {
             textArea = new JEditorPane("text/q","");
+
+            textArea.getInputMap().put(toggleCommaFormatAction.getKeyStroke(), toggleCommaFormatAction.getText());
+            textArea.getActionMap().put(toggleCommaFormatAction.getText(), toggleCommaFormatAction);
+
 
             BaseKit baseKit = ((BaseKit)textArea.getUI().getEditorKit(textArea));
             copyAction = baseKit.getActionByName(BaseKit.copyAction);
@@ -1304,6 +1309,16 @@ public class StudioPanel extends JPanel implements Observer,WindowListener {
             }
         };
 
+        toggleCommaFormatAction = UserAction.create("Toggle Comma Format",
+                                                    Util.COMMA_ICON,
+                                                    "Add/remove thousands separator in selected result",
+                                                    KeyEvent.VK_F,
+                                                    KeyStroke.getKeyStroke(KeyEvent.VK_J, menuShortcutKeyMask),
+                                                            (event) -> {
+                                                                TabPanel tab = (TabPanel) tabbedPane.getSelectedComponent();
+                                                                if (tab != null) tab.toggleCommaFormatting();
+                                                            });
+
         aboutAction = new UserAction(I18n.getString("About"),
                                      Util.ABOUT_ICON,
                                      "About Studio for kdb+",
@@ -1576,6 +1591,7 @@ public class StudioPanel extends JPanel implements Observer,WindowListener {
         menu.add(new JMenuItem(executeAction));
         menu.add(new JMenuItem(stopAction));
         menu.add(new JMenuItem(refreshAction));
+        menu.add(new JMenuItem(toggleCommaFormatAction));
         menubar.add(menu);
 
         menu = new JMenu(I18n.getString("Window"));

@@ -111,6 +111,11 @@ public class TabPanel extends JPanel {
         }
     }
 
+    public void toggleCommaFormatting() {
+        if (tglBtnComma == null) return;
+        tglBtnComma.doClick();
+    }
+
     public JTable getTable() {
         if (grid == null) return null;
         return grid.getTable();
