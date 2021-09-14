@@ -25,10 +25,22 @@ import java.util.stream.Stream;
 public class Config {
     private static final Logger log = LogManager.getLogger();
 
+    public enum FontKind {
+        EDITOR,
+        TABLE,
+        ;
+
+        String property() {
+            if (this == EDITOR)
+                return "font";
+            return name().toLowerCase() + "font";
+        }
+    }
+
     private enum ConfigType { STRING, INT, DOUBLE, BOOLEAN, FONT, BOUNDS}
 
-    private static final Map<String,? super Object> defaultValues = new HashMap();
-    private static final Map<String, ConfigType> configTypes = new HashMap();
+    private static final Map<String,? super Object> defaultValues = new HashMap<>();
+    private static final Map<String, ConfigType> configTypes = new HashMap<>();
 
     //@TODO migrate all other keys under such approach
     public static final String AUTO_SAVE = configDefault("isAutoSave", ConfigType.BOOLEAN, false);
@@ -214,24 +226,26 @@ public class Config {
         save();
     }
 
-    public Font getFont() {
-        String name = p.getProperty("font.name", "Monospaced");
-        int  size = Integer.parseInt(p.getProperty("font.size","14"));
+    public Font getFont(FontKind kind) {
+        String name = p.getProperty(kind.property() + ".name", "Monospaced");
+        int size = 14;
+        try {
+            size = Integer.parseInt(p.getProperty(kind.property() + ".size", Integer.toString(size)));
+        } catch (NumberFormatException e) {
+            log.error("Failed to read {}.size {}", kind.property(), e.getMessage());
+        }
 
-        Font f = new Font(name, Font.PLAIN, size);
-        setFont(f);
+        return new Font(name, Font.PLAIN, size);
+    }
 
-        return f;
+    public void setFont(FontKind kind, Font f) {
+        p.setProperty(kind.property() + ".name", f.getFontName());
+        p.setProperty(kind.property() + ".size", Integer.toString(f.getSize()));
+        save();
     }
 
     public String getEncoding() {
         return p.getProperty("encoding", "UTF-8");
-    }
-
-    public void setFont(Font f) {
-        p.setProperty("font.name", f.getFamily());
-        p.setProperty("font.size", "" + f.getSize());
-        save();
     }
 
     public Color getColorForToken(String tokenType, Color defaultColor) {
@@ -708,7 +722,7 @@ public class Config {
             purgeAll();
             this.serverTree = serverTree;
 
-            for(Enumeration e = serverTree.depthFirstEnumeration(); e.hasMoreElements();) {
+            for(Enumeration<TreeNode> e = serverTree.depthFirstEnumeration(); e.hasMoreElements();) {
                 ServerTreeNode node = (ServerTreeNode) e.nextElement();
                 if (node.isRoot()) continue;
 

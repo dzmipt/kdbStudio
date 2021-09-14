@@ -16,13 +16,33 @@ import java.util.Map;
 import static javax.swing.GroupLayout.PREFERRED_SIZE;
 
 public class SettingsDialog extends EscapeDialog {
+    private static class FontBox {
+        final JLabel nameLabel;
+        final JTextField nameTextField;
+        final JLabel sizeLabel;
+        final JSpinner sizeSpinner;
+
+        FontBox(String qual, Font current) {
+            nameLabel = new JLabel(qual + " font");
+            nameTextField = new JTextField(current.getName());
+            sizeLabel = new JLabel(qual + " font size ");
+            SpinnerNumberModel model = new SpinnerNumberModel(current.getSize(), 6, 72, 1);
+            sizeSpinner = new JSpinner(model);
+        }
+
+        Font getFont() {
+            return new Font(nameTextField.getText(), Font.PLAIN, (int)sizeSpinner.getValue());
+        }
+    }
+    private JComboBox<CustomiszedLookAndFeelInfo> comboBoxLookAndFeel;
+    private FontBox editorFont;
+    private FontBox tableFont;
     private JComboBox<String> comboBoxAuthMechanism;
     private JTextField txtUser;
     private JPasswordField txtPassword;
     private JCheckBox chBoxShowServerCombo;
     private JCheckBox chBoxAutoSave;
     private JCheckBox chBoxSaveOnExit;
-    private JComboBox<CustomiszedLookAndFeelInfo> comboBoxLookAndFeel;
     private JFormattedTextField txtTabsCount;
     private JFormattedTextField txtMaxCharsInResult;
     private JFormattedTextField txtMaxCharsInTableCell;
@@ -91,6 +111,14 @@ public class SettingsDialog extends EscapeDialog {
         return chBoxSaveOnExit.isSelected();
     }
 
+    public Font getEditorFont() {
+        return editorFont.getFont();
+    }
+
+    public Font getTableFont() {
+        return tableFont.getFont();
+    }
+
     private void refreshCredentials() {
         Credentials credentials = Config.getInstance().getDefaultCredentials(getDefaultAuthenticationMechanism());
 
@@ -109,7 +137,7 @@ public class SettingsDialog extends EscapeDialog {
 
         txtUser = new JTextField();
         txtPassword = new JPasswordField();
-        comboBoxAuthMechanism = new JComboBox(AuthenticationManager.getInstance().getAuthenticationMechanisms());
+        comboBoxAuthMechanism = new JComboBox<>(AuthenticationManager.getInstance().getAuthenticationMechanisms());
         comboBoxAuthMechanism.getModel().setSelectedItem(Config.getInstance().getDefaultAuthMechanism());
         comboBoxAuthMechanism.addItemListener(e -> refreshCredentials());
         refreshCredentials();
@@ -117,7 +145,7 @@ public class SettingsDialog extends EscapeDialog {
         JLabel lblLookAndFeel = new JLabel("Look and Feel:");
 
         LookAndFeels lookAndFeels = new LookAndFeels();
-        comboBoxLookAndFeel = new JComboBox(lookAndFeels.getLookAndFeels());
+        comboBoxLookAndFeel = new JComboBox<>(lookAndFeels.getLookAndFeels());
         CustomiszedLookAndFeelInfo lf = lookAndFeels.getLookAndFeel(Config.getInstance().getLookAndFeel());
         if (lf == null) {
             lf = lookAndFeels.getLookAndFeel(UIManager.getLookAndFeel().getClass().getName());
@@ -167,6 +195,9 @@ public class SettingsDialog extends EscapeDialog {
         JLabel lblUser = new JLabel("  User:");
         JLabel lblPassword = new JLabel("  Password:");
 
+        editorFont = new FontBox("Editor", Config.getInstance().getFont(Config.FontKind.EDITOR));
+        tableFont = new FontBox("Table", Config.getInstance().getFont(Config.FontKind.TABLE));
+
         Component glue = Box.createGlue();
         Component glue1 = Box.createGlue();
         Component glue2 = Box.createGlue();
@@ -191,8 +222,19 @@ public class SettingsDialog extends EscapeDialog {
                                         .addComponent(lblLookAndFeel)
                                         .addComponent(comboBoxLookAndFeel)
                                         .addComponent(glue2)
-                        )
-                        .addGroup(
+                        ).addGroup(
+                            layout.createSequentialGroup()
+                                        .addComponent(editorFont.nameLabel)
+                                        .addComponent(editorFont.nameTextField)
+                                        .addComponent(editorFont.sizeLabel)
+                                        .addComponent(editorFont.sizeSpinner)
+                        ).addGroup(
+                            layout.createSequentialGroup()
+                                        .addComponent(tableFont.nameLabel)
+                                        .addComponent(tableFont.nameTextField)
+                                        .addComponent(tableFont.sizeLabel)
+                                        .addComponent(tableFont.sizeSpinner)
+                        ).addGroup(
                             layout.createSequentialGroup()
                                         .addComponent(lblResultTabsCount)
                                         .addComponent(txtTabsCount)
@@ -243,6 +285,18 @@ public class SettingsDialog extends EscapeDialog {
                         layout.createParallelGroup(GroupLayout.Alignment.BASELINE)
                                 .addComponent(lblLookAndFeel)
                                 .addComponent(comboBoxLookAndFeel)
+                    ).addGroup(
+                        layout.createParallelGroup(GroupLayout.Alignment.BASELINE)
+                                .addComponent(editorFont.nameLabel)
+                                .addComponent(editorFont.nameTextField)
+                                .addComponent(editorFont.sizeLabel)
+                                .addComponent(editorFont.sizeSpinner)
+                    ).addGroup(
+                        layout.createParallelGroup(GroupLayout.Alignment.BASELINE)
+                                .addComponent(tableFont.nameLabel)
+                                .addComponent(tableFont.nameTextField)
+                                .addComponent(tableFont.sizeLabel)
+                                .addComponent(tableFont.sizeSpinner)
                                 .addComponent(glue2)
                     ).addGroup(
                         layout.createParallelGroup(GroupLayout.Alignment.BASELINE)

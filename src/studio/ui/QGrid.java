@@ -35,47 +35,26 @@ public class QGrid extends JPanel {
     static class MYJTable extends JTable {
         public MYJTable(TableModel m) {
             super(m);
+            Font tableFont = Config.getInstance().getFont(Config.FontKind.TABLE);
+            setFont(tableFont);
+            setRowHeight(getFontMetrics(tableFont).getHeight());
+            updateUI();
         }
 
-        public Component prepareRenderer(TableCellRenderer renderer,
-                                         int rowIndex,
-                                         int vColIndex) {
-            Component c = super.prepareRenderer(renderer, rowIndex, vColIndex);
+        @Override
+        public Component prepareRenderer(TableCellRenderer renderer, int row, int column) {
+            Component c = super.prepareRenderer(renderer, row, column);
             c.setFont(this.getFont());
             return c;
         }
 
-        private Font originalFont;
-        private int originalRowHeight;
-        private float zoomFactor = 1.0f;
-
-        public void setFont(Font font) {
-            originalFont = font;
-            // When setFont() is first called, zoomFactor is 0.
-            if (zoomFactor != 0.0 && zoomFactor != 1.0) {
-                float scaledSize = originalFont.getSize2D() * zoomFactor;
-                font = originalFont.deriveFont(scaledSize);
-            }
-
-            super.setFont(font);
-        }
-
-        public void setRowHeight(int rowHeight) {
-            originalRowHeight = rowHeight;
-            // When setRowHeight() is first called, zoomFactor is 0.
-            if (zoomFactor != 0.0 && zoomFactor != 1.0)
-                rowHeight = (int) Math.ceil(originalRowHeight * zoomFactor);
-
-            super.setRowHeight(rowHeight);
-        }
-
+        @Override
         public Component prepareEditor(TableCellEditor editor, int row, int column) {
             Component comp = super.prepareEditor(editor, row, column);
             comp.setFont(this.getFont());
             return comp;
         }
     }
-
 
     public void setFormatContext(KFormatContext formatContext) {
         this.formatContext = formatContext;

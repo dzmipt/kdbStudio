@@ -147,12 +147,12 @@ public class Server {
         return getFullName();
     }
 
-    public String getConnectionString(boolean includeCreditional) {
-        String connection = "`:" + host + ":" + port;
-        if (!includeCreditional) return connection;
+    public String getConnectionString() {
+        return "`:" + host + ":" + port;
+    }
 
-        return connection + ":" + username + ":" + password;
-
+    public String getConnectionStringWithPwd() {
+        return "`:" + host + ":" + port + ":" + username + ":" + password;
     }
 
     public String getDescription(boolean fullName) {

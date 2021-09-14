@@ -161,7 +161,7 @@ public class Workspace {
             } else {
                 serverFullName = server.getFullName();
             }
-            serverConnection = server.getConnectionString(true);
+            serverConnection = server.getConnectionStringWithPwd();
             serverAuth = server.getAuthenticationMechanism();
             return this;
         }
