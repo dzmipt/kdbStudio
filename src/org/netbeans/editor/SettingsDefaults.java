@@ -1,11 +1,11 @@
 /*
  *                 Sun Public License Notice
- * 
+ *
  * The contents of this file are subject to the Sun Public License
  * Version 1.0 (the "License"). You may not use this file except in
  * compliance with the License. A copy of the License is available at
  * http://www.sun.com/
- * 
+ *
  * The Original Code is NetBeans. The Initial Developer of the Original
  * Code is Sun Microsystems, Inc. Portions Copyright 1997-2003 Sun
  * Microsystems, Inc. All Rights Reserved.
@@ -44,17 +44,15 @@ public class SettingsDefaults {
     public static final Coloring emptyColoring = new Coloring(null, null, null);
 
     // Default coloring
-    private static int defaultFontSize ; // =24; // Fix of #33249
     public static Font defaultFont;
 
     static {
         //Font systemDefaultFont = Config.getInstance().getFont();
-        defaultFont = Config.getInstance().getFont();
-        defaultFontSize = defaultFont.getSize();
+        defaultFont = Config.getInstance().getFont(Config.FontKind.EDITOR);
     }
 
     // public static Font defaultFont = new Font( "Monospaced", Font.PLAIN, defaultFontSize); // NOI18N
-   // public static Font defaultFont = new Font( "Monospaced", Font.PLAIN, defaultFontSize); // NOI18N    
+   // public static Font defaultFont = new Font( "Monospaced", Font.PLAIN, defaultFontSize); // NOI18N
     public static final Color defaultForeColor = Color.black;
     public static Color defaultBackColor;
     public static Coloring defaultColoring;
@@ -154,7 +152,7 @@ public class SettingsDefaults {
     public static final Map defaultAbbrevMap = new HashMap();
 
     public static final Map defaultMacroMap = new HashMap();
-    
+
     public static final Boolean defaultStatusBarVisible = Boolean.TRUE;
 
     public static final Boolean defaultLineNumberVisible = Boolean.TRUE;

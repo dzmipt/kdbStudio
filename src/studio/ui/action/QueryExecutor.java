@@ -127,7 +127,7 @@ public class QueryExecutor implements ProgressCallback {
         @Override
         protected QueryResult doInBackground() {
             QueryResult result = new QueryResult(server, queryText);
-            queryLog.info("#{}: query {}({})\n{}",queryIndex, server.getFullName(), server.getConnectionString(false), queryText);
+            queryLog.info("#{}: query {}({})\n{}",queryIndex, server.getFullName(), server.getConnectionString(), queryText);
             long startTime = System.currentTimeMillis();
             try {
                 c = ConnectionPool.getInstance().leaseConnection(server);
