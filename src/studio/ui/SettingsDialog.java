@@ -6,6 +6,9 @@ import studio.kdb.Config;
 
 import javax.swing.*;
 import javax.swing.text.NumberFormatter;
+
+import org.jfree.chart.ui.FontChooserPanel;
+
 import java.awt.*;
 import java.math.RoundingMode;
 import java.text.DecimalFormat;
@@ -17,21 +20,36 @@ import static javax.swing.GroupLayout.PREFERRED_SIZE;
 
 public class SettingsDialog extends EscapeDialog {
     private static class FontBox {
-        final JLabel nameLabel;
-        final JTextField nameTextField;
-        final JLabel sizeLabel;
-        final JSpinner sizeSpinner;
+        final JLabel label;
+        final JButton button;
+        final String qualifier;
+        Font currentFont;
 
-        FontBox(String qual, Font current) {
-            nameLabel = new JLabel(qual + " font");
-            nameTextField = new JTextField(current.getName());
-            sizeLabel = new JLabel(qual + " font size ");
-            SpinnerNumberModel model = new SpinnerNumberModel(current.getSize(), 6, 72, 1);
-            sizeSpinner = new JSpinner(model);
+        FontBox(String qualifier, Font currentFont) {
+            this.qualifier = qualifier;
+            this.currentFont = currentFont;
+            this.label = new JLabel();
+            this.button = new JButton("Change");
+            this.button.addActionListener(a -> {
+                FontChooserPanel panel = new FontChooserPanel(currentFont);
+                int result = JOptionPane.showConfirmDialog(button, panel,
+                        "Font Selection", JOptionPane.OK_CANCEL_OPTION,
+                        JOptionPane.PLAIN_MESSAGE);
+
+                if (result == JOptionPane.OK_OPTION) {
+                    this.currentFont = panel.getSelectedFont();
+                    update();
+                }
+            });
+            update();
+        }
+
+        void update() {
+            label.setText(String.format("%s font: %s, %d", qualifier, currentFont.getName(), currentFont.getSize()));
         }
 
         Font getFont() {
-            return new Font(nameTextField.getText(), Font.PLAIN, (int)sizeSpinner.getValue());
+            return currentFont;
         }
     }
     private JComboBox<CustomiszedLookAndFeelInfo> comboBoxLookAndFeel;
@@ -224,16 +242,12 @@ public class SettingsDialog extends EscapeDialog {
                                         .addComponent(glue2)
                         ).addGroup(
                             layout.createSequentialGroup()
-                                        .addComponent(editorFont.nameLabel)
-                                        .addComponent(editorFont.nameTextField)
-                                        .addComponent(editorFont.sizeLabel)
-                                        .addComponent(editorFont.sizeSpinner)
+                                        .addComponent(editorFont.label)
+                                        .addComponent(editorFont.button)
                         ).addGroup(
                             layout.createSequentialGroup()
-                                        .addComponent(tableFont.nameLabel)
-                                        .addComponent(tableFont.nameTextField)
-                                        .addComponent(tableFont.sizeLabel)
-                                        .addComponent(tableFont.sizeSpinner)
+                                        .addComponent(tableFont.label)
+                                        .addComponent(tableFont.button)
                         ).addGroup(
                             layout.createSequentialGroup()
                                         .addComponent(lblResultTabsCount)
@@ -287,16 +301,12 @@ public class SettingsDialog extends EscapeDialog {
                                 .addComponent(comboBoxLookAndFeel)
                     ).addGroup(
                         layout.createParallelGroup(GroupLayout.Alignment.BASELINE)
-                                .addComponent(editorFont.nameLabel)
-                                .addComponent(editorFont.nameTextField)
-                                .addComponent(editorFont.sizeLabel)
-                                .addComponent(editorFont.sizeSpinner)
+                                .addComponent(editorFont.label)
+                                .addComponent(editorFont.button)
                     ).addGroup(
                         layout.createParallelGroup(GroupLayout.Alignment.BASELINE)
-                                .addComponent(tableFont.nameLabel)
-                                .addComponent(tableFont.nameTextField)
-                                .addComponent(tableFont.sizeLabel)
-                                .addComponent(tableFont.sizeSpinner)
+                                .addComponent(tableFont.label)
+                                .addComponent(tableFont.button)
                                 .addComponent(glue2)
                     ).addGroup(
                         layout.createParallelGroup(GroupLayout.Alignment.BASELINE)
