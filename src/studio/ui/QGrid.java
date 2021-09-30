@@ -32,30 +32,6 @@ public class QGrid extends JPanel {
     private final UserAction copyExcelFormatAction;
     private final UserAction copyHtmlFormatAction;
 
-    static class MYJTable extends JTable {
-        public MYJTable(TableModel m) {
-            super(m);
-            Font tableFont = Config.getInstance().getFont(Config.FontKind.TABLE);
-            setFont(tableFont);
-            setRowHeight(getFontMetrics(tableFont).getHeight());
-            updateUI();
-        }
-
-        @Override
-        public Component prepareRenderer(TableCellRenderer renderer, int row, int column) {
-            Component c = super.prepareRenderer(renderer, row, column);
-            c.setFont(this.getFont());
-            return c;
-        }
-
-        @Override
-        public Component prepareEditor(TableCellEditor editor, int row, int column) {
-            Component comp = super.prepareEditor(editor, row, column);
-            comp.setFont(this.getFont());
-            return comp;
-        }
-    }
-
     public void setFormatContext(KFormatContext formatContext) {
         this.formatContext = formatContext;
         cellRenderer.setFormatContext(formatContext);
@@ -65,7 +41,8 @@ public class QGrid extends JPanel {
     public QGrid(StudioPanel panel, KTableModel model) {
         this.panel = panel;
         this.model = model;
-        table = new MYJTable(model);
+        table = new JTable(model);
+        table.setRowHeight(getFontMetrics(table.getFont()).getHeight());
 
         DefaultTableCellRenderer dhr = new TableHeaderRenderer();
         table.getTableHeader().setDefaultRenderer(dhr);

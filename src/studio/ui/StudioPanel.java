@@ -973,6 +973,8 @@ public class StudioPanel extends JPanel implements Observer,WindowListener {
         Config.getInstance().setBoolean(Config.AUTO_SAVE, dialog.isAutoSave());
         Config.getInstance().setFont(Config.FontKind.EDITOR, dialog.getEditorFont());
         Config.getInstance().setFont(Config.FontKind.TABLE, dialog.getTableFont());
+        UIManager.put("Table.font", dialog.getTableFont());
+        UIManager.put("TableHeader.font", dialog.getTableFont());
 
         String lfClass = dialog.getLookAndFeelClassName();
         if (!lfClass.equals(UIManager.getLookAndFeel().getClass().getName())) {

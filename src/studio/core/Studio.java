@@ -15,6 +15,7 @@ import studio.kdb.Config;
 import studio.kdb.Lm;
 import studio.kdb.Server;
 import studio.kdb.Workspace;
+import studio.kdb.Config.FontKind;
 import studio.ui.StudioPanel;
 import studio.ui.action.WorkspaceSaver;
 
@@ -44,7 +45,7 @@ public class Studio {
         initLogger();
         TimeZone.setDefault(TimeZone.getTimeZone("GMT"));
 
-        if(System.getProperty("os.name","").contains("OS X")){ 
+        if(System.getProperty("os.name","").contains("OS X")){
             System.setProperty("apple.laf.useScreenMenuBar","true");
             //     System.setProperty("apple.awt.brushMetalLook", "true");
             System.setProperty("apple.awt.showGrowBox","true");
@@ -65,7 +66,8 @@ public class Studio {
 
         studio.ui.I18n.setLocale(Locale.getDefault());
 
-        UIManager.put("Table.font",new javax.swing.plaf.FontUIResource("Monospaced",Font.PLAIN,UIManager.getFont("Table.font").getSize()));
+        UIManager.put("Table.font", Config.getInstance().getFont(FontKind.TABLE));
+        UIManager.put("TableHeader.font", Config.getInstance().getFont(FontKind.TABLE));
         System.setProperty("awt.useSystemAAFontSettings","on");
         System.setProperty("swing.aatext", "true");
 
