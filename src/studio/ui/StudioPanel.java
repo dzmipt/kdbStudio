@@ -1407,8 +1407,10 @@ public class StudioPanel extends JPanel implements Observer,WindowListener {
             toolbar.add(saveFileAction);
             toolbar.add(saveAsFileAction);
             toolbar.addSeparator();
+
             toolbar.add(openInExcel);
             toolbar.addSeparator();
+
             toolbar.add(exportAction);
             toolbar.addSeparator();
 
@@ -1419,16 +1421,10 @@ public class StudioPanel extends JPanel implements Observer,WindowListener {
             toolbar.add(redoAction);
             toolbar.addSeparator();
 
-            toolbar.add(cutAction);
-            toolbar.add(copyAction);
-            toolbar.add(pasteAction);
-
-            toolbar.addSeparator();
             toolbar.add(findAction);
-
             toolbar.add(replaceAction);
-
             toolbar.addSeparator();
+
             toolbar.add(codeKxComAction);
 
             for (int j = 0;j < toolbar.getComponentCount();j++) {
