@@ -7,7 +7,6 @@ import java.beans.PropertyChangeListener;
 import java.io.*;
 import java.util.*;
 import java.util.List;
-import java.util.stream.Stream;
 import javax.swing.*;
 import static javax.swing.JSplitPane.VERTICAL_SPLIT;
 import static studio.ui.EscapeDialog.DialogResult.ACCEPTED;
@@ -85,7 +84,61 @@ public class StudioPanel extends JPanel implements Observer,WindowListener {
 
     private static boolean loading = false;
 
+    private static class NavigationHistory<T> {
+        private List<T> history = new ArrayList<>();
+        private int index = 0;
+        private T selectedItem = null;
+
+        public void addSelectedItem(T item) {
+            if (item.equals(getSelectedItem()))
+                return;
+            while (history.size() > index + 1) {
+                history.remove(history.size() - 1);
+            }
+            history.add(item);
+            index = history.size() - 1;
+            setSelectedItem();
+        }
+
+        public void removeSelectedItem() {
+            if (!history.isEmpty()) {
+                history.remove(index);
+            }
+        }
+
+        private void setSelectedItem() {
+            selectedItem = history.get(index);
+        }
+
+        public T getSelectedItem() {
+            return selectedItem;
+        }
+
+        public boolean hasPreviousItem() {
+            return index != 0;
+        }
+
+        public void setPreviousItem() {
+            if (!hasPreviousItem())
+                return;
+            index--;
+            setSelectedItem();
+        }
+
+        public boolean hasNextItem() {
+            return index + 1 < history.size();
+        }
+
+        public void setNextItem() {
+            if (!hasNextItem())
+                return;
+            index++;
+            setSelectedItem();
+        }
+    }
+
     private JComboBox<String> comboServer;
+    private NavigationHistory<Server> serverNavigateHistory = new NavigationHistory<>();
     private JTextField txtServer;
     private String exportFilename;
     private String lastQuery = null;
@@ -102,6 +155,8 @@ public class StudioPanel extends JPanel implements Observer,WindowListener {
     private UserAction openFileAction;
     private UserAction openInExcel;
     private UserAction codeKxComAction;
+    private UserAction prevServerAction;
+    private UserAction nextServerAction;
     private UserAction serverListAction;
     private UserAction serverHistoryAction;
     private UserAction newWindowAction;
@@ -561,7 +616,7 @@ public class StudioPanel extends JPanel implements Observer,WindowListener {
         if (filename == null)
             return;
 
-        Vector v = new Vector();
+        List<String> v = new ArrayList<>();
         v.add(filename);
         String[] mru = Config.getInstance().getMRUFiles();
         for (int i = 0;i < mru.length;i++)
@@ -741,8 +796,14 @@ public class StudioPanel extends JPanel implements Observer,WindowListener {
         }
     }
 
-    private void setServer(Server server) {
-        if (server == null) return;
+    private void setServer(Server server, boolean addToNavigationHistory) {
+        if (server == null)
+            return;
+
+        if (addToNavigationHistory)
+            serverNavigateHistory.addSelectedItem(server);
+        prevServerAction.setEnabled(serverNavigateHistory.hasPreviousItem());
+        nextServerAction.setEnabled(serverNavigateHistory.hasNextItem());
         editor.setServer(server);
 
         if (!loading) {
@@ -788,6 +849,20 @@ public class StudioPanel extends JPanel implements Observer,WindowListener {
         serverListAction = UserAction.create(I18n.getString("ServerList"), Util.TEXT_TREE_ICON, "Show server list",
                 KeyEvent.VK_L, KeyStroke.getKeyStroke(KeyEvent.VK_L, menuShortcutKeyMask | InputEvent.SHIFT_MASK),
                 e -> showServerList(false));
+        prevServerAction = UserAction.create("Previous server", Util.BACK_ICON, "Previous server", 0,
+                e -> {
+                    serverNavigateHistory.setPreviousItem();
+                    comboServer.setSelectedItem(serverNavigateHistory.getSelectedItem());
+                    setServer(serverNavigateHistory.getSelectedItem(), false);
+                });
+        prevServerAction.setEnabled(false);
+        nextServerAction = UserAction.create("Next server", Util.FORWARD_ICON, "Next server", 0,
+                e -> {
+                    serverNavigateHistory.setNextItem();
+                    comboServer.setSelectedItem(serverNavigateHistory.getSelectedItem());
+                    setServer(serverNavigateHistory.getSelectedItem(), false);
+                });
+        nextServerAction.setEnabled(false);
 
         serverHistoryAction = UserAction.create("Server History", null, "Recent selected servers", KeyEvent.VK_R,
                 KeyStroke.getKeyStroke(KeyEvent.VK_R, menuShortcutKeyMask | InputEvent.SHIFT_MASK),
@@ -811,7 +886,7 @@ public class StudioPanel extends JPanel implements Observer,WindowListener {
 
                         s = f.getServer();
                         Config.getInstance().addServer(s);
-                        setServer(s);
+                        setServer(s, false);
                         rebuildAll();
                     }
                 });
@@ -825,7 +900,7 @@ public class StudioPanel extends JPanel implements Observer,WindowListener {
                         Server s = f.getServer();
                         Config.getInstance().addServer(s);
                         ConnectionPool.getInstance().purge(s);   //?
-                        setServer(s);
+                        setServer(s, true);
                         rebuildAll();
                     }
                 });
@@ -843,11 +918,14 @@ public class StudioPanel extends JPanel implements Observer,WindowListener {
 
                     if (choice == 0) {
                         Config.getInstance().removeServer(editor.getServer());
+                        serverNavigateHistory.removeSelectedItem();
 
                         Server[] servers = Config.getInstance().getServers();
 
-                        if (servers.length > 0)
-                            setServer(servers[0]);
+
+                        if (servers.length > 0) {
+                            setServer(servers[0], true);
+                        }
 
                         rebuildAll();
                     }
@@ -1205,7 +1283,7 @@ public class StudioPanel extends JPanel implements Observer,WindowListener {
                             clone = f.getServer();
                             Config.getInstance().addServer(clone);
                             //ebuildToolbar();
-                            setServer(clone);
+                            setServer(clone, true);
                             ConnectionPool.getInstance().purge(clone); //?
                             rebuildAll();
                         }
@@ -1292,7 +1370,7 @@ public class StudioPanel extends JPanel implements Observer,WindowListener {
         int state = f.getExtendedState();
         state = state & ~Frame.ICONIFIED;
         f.setExtendedState(state);
-        f.show();
+        f.setVisible(true);
     }
 
     private void selectConnectionString() {
@@ -1302,7 +1380,7 @@ public class StudioPanel extends JPanel implements Observer,WindowListener {
         if (server != null && server.getConnectionString().equals(connection)) return;
 
         try {
-            setServer(Config.getInstance().getServerByConnectionString(connection));
+            setServer(Config.getInstance().getServerByConnectionString(connection), true);
 
             rebuildToolbar();
             toolbar.validate();
@@ -1327,16 +1405,17 @@ public class StudioPanel extends JPanel implements Observer,WindowListener {
         Server selectedServer = serverList.getSelectedServer();
         if (selectedServer == null || selectedServer.equals(editor.getServer())) return;
 
-        setServer(selectedServer);
+        setServer(selectedServer, true);
         rebuildToolbar();
     }
 
 
     private void selectServerName() {
         String selection = comboServer.getSelectedItem().toString();
-        if(! Config.getInstance().getServerNames().contains(selection)) return;
+        if (!Config.getInstance().getServerNames().contains(selection))
+            return;
 
-        setServer(Config.getInstance().getServer(selection));
+        setServer(Config.getInstance().getServer(selection), true);
         rebuildToolbar();
         toolbar.validate();
         toolbar.repaint();
@@ -1386,6 +1465,8 @@ public class StudioPanel extends JPanel implements Observer,WindowListener {
 
         toolbar.add(new JLabel(I18n.getString("Server")));
         toolbar.add(comboServer);
+        toolbar.add(prevServerAction);
+        toolbar.add(nextServerAction);
         toolbar.add(txtServer);
         toolbar.add(serverListAction);
         toolbar.addSeparator();
@@ -1551,7 +1632,7 @@ public class StudioPanel extends JPanel implements Observer,WindowListener {
         component.putClientProperty(EditorTab.class, editor);
         tabbedEditors.add(component);
         tabbedEditors.setSelectedIndex(tabbedEditors.getTabCount()-1);
-        setServer(server);
+        setServer(server, loading);
 
         if (filename != null) {
             loadFile(filename);
@@ -1569,7 +1650,7 @@ public class StudioPanel extends JPanel implements Observer,WindowListener {
         if ( tabbedEditors.getSelectedIndex() == -1) return;
         editor = getEditor(tabbedEditors.getSelectedIndex());
         editor.setPanel(this);
-        setServer(editor.getServer());
+        setServer(editor.getServer(), false);
         lastQuery = null;
         refreshTitle();
         refreshActionState();
@@ -1927,7 +2008,7 @@ public class StudioPanel extends JPanel implements Observer,WindowListener {
                 String filename = editor.getFilename();
                 boolean modified = editor.isModified();
                 if (modified && Config.getInstance().getBoolean(Config.AUTO_SAVE)) {
-                    panel.saveFileOnDisk(editor);
+                    StudioPanel.saveFileOnDisk(editor);
                 }
 
                 String content = editor.getTextArea().getText();

@@ -3,7 +3,6 @@ package studio.ui;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import studio.kdb.Config;
-import studio.kdb.K;
 import studio.kdb.Server;
 import studio.kdb.ServerTreeNode;
 
@@ -108,7 +107,7 @@ public class ServerList extends EscapeDialog implements TreeExpansionListener  {
             root = new ServerTreeNode();
         } else if (isListView()) {
             root = new ServerTreeNode();
-            for (Enumeration e = newRoot.depthFirstEnumeration(); e.hasMoreElements(); ) {
+            for (Enumeration<TreeNode> e = newRoot.depthFirstEnumeration(); e.hasMoreElements(); ) {
                 ServerTreeNode node = (ServerTreeNode) e.nextElement();
                 if (node.isFolder()) continue;
                 root.add(node.getServer());
@@ -317,7 +316,7 @@ public class ServerList extends EscapeDialog implements TreeExpansionListener  {
         toolbar.add(filter);
         filter.requestFocus();
 
-        serverHistoryList = new JList();
+        serverHistoryList = new JList<String>();
         serverHistoryList.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
         serverHistoryList.addMouseListener(new MouseAdapter() {
             @Override

@@ -58,6 +58,9 @@ public class Util {
     public final static ImageIcon COMMA_ICON = getImage("/comma.png");
     public final static ImageIcon COMMA_CROSSED_ICON = getImage("/comma_crossed.png");
 
+    public final static ImageIcon BACK_ICON = getImage("/go-previous.png");
+    public final static ImageIcon FORWARD_ICON = getImage("/go-next.png");
+
     public final static ImageIcon UPLOAD_ICON = getImage("/upload.png");
 
     public final static ImageIcon ASC_ICON = getImage("/asc.png");
