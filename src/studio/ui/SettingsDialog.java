@@ -45,7 +45,14 @@ public class SettingsDialog extends EscapeDialog {
         }
 
         void update() {
-            label.setText(String.format("%s font: %s, %d", qualifier, currentFont.getName(), currentFont.getSize()));
+            StringBuilder style = new StringBuilder();
+            if ((currentFont.getStyle() & Font.BOLD) != 0)
+                style.append(", Bold");
+            if ((currentFont.getStyle() & Font.ITALIC) != 0)
+                style.append(", Italic");
+            label.setText(
+                    String.format("%s font: %s%s, %d", qualifier, currentFont.getFamily(), style,
+                            currentFont.getSize()));
         }
 
         Font getFont() {

@@ -229,18 +229,21 @@ public class Config {
     public Font getFont(FontKind kind) {
         String name = p.getProperty(kind.property() + ".name", "Monospaced");
         int size = 14;
+        int style = Font.PLAIN;
         try {
             size = Integer.parseInt(p.getProperty(kind.property() + ".size", Integer.toString(size)));
+            style = Integer.parseInt(p.getProperty(kind.property() + ".style", Integer.toString(style)));
         } catch (NumberFormatException e) {
-            log.error("Failed to read {}.size {}", kind.property(), e.getMessage());
+            log.error("Failed to read {} size or style: {}", kind.property(), e.getMessage());
         }
 
-        return new Font(name, Font.PLAIN, size);
+        return new Font(name, style, size);
     }
 
     public void setFont(FontKind kind, Font f) {
         p.setProperty(kind.property() + ".name", f.getFontName());
         p.setProperty(kind.property() + ".size", Integer.toString(f.getSize()));
+        p.setProperty(kind.property() + ".style", Integer.toString(f.getStyle()));
         save();
     }
 
