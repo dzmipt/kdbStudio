@@ -42,7 +42,6 @@ public class QGrid extends JPanel {
         this.panel = panel;
         this.model = model;
         table = new JTable(model);
-        table.setRowHeight(getFontMetrics(table.getFont()).getHeight());
 
         DefaultTableCellRenderer dhr = new TableHeaderRenderer();
         table.getTableHeader().setDefaultRenderer(dhr);
@@ -67,6 +66,8 @@ public class QGrid extends JPanel {
         table.getTableHeader().setReorderingAllowed(true);
         final JScrollPane scrollPane = new JScrollPane(table);
 
+        table.setFont(UIManager.getFont("Table.font"));
+        table.setRowHeight(getFontMetrics(table.getFont()).getHeight());
         TableRowHeader trh = new TableRowHeader(table);
         scrollPane.setRowHeaderView(trh);
 
@@ -108,7 +109,6 @@ public class QGrid extends JPanel {
         rowCountLabel.setBackground(UIManager.getColor("TableHeader.background"));
         rowCountLabel.setForeground(UIManager.getColor("TableHeader.foreground"));
         scrollPane.setCorner(JScrollPane.UPPER_RIGHT_CORNER, rowCountLabel);
-
 
         setLayout(new BorderLayout());
         this.add(scrollPane, BorderLayout.CENTER);
