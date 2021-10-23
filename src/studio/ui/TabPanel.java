@@ -22,11 +22,13 @@ public class TabPanel extends JPanel {
     private QGrid grid = null;
     private KFormatContext formatContext = new KFormatContext(KFormatContext.DEFAULT);
     private ResultType type;
+    private Boolean locked;
 
     public TabPanel(StudioPanel panel, QueryResult queryResult) {
         this.panel = panel;
         this.queryResult = queryResult;
         this.result = queryResult.getResult();
+        this.locked = false;
         initComponents();
     }
 
@@ -161,6 +163,14 @@ public class TabPanel extends JPanel {
 
     public boolean isTable() {
         return grid != null;
+    }
+
+    public Boolean isLocked() {
+        return locked;
+    }
+
+    public void setLocked(Boolean locked) {
+        this.locked = locked;
     }
 
     public enum ResultType {

@@ -1927,7 +1927,15 @@ public class StudioPanel extends JPanel implements Observer,WindowListener {
             JTabbedPane tabbedPane = panel.tabbedPane;
             TabPanel tab = new TabPanel(panel, queryResult);
             if(tabbedPane.getTabCount()>= Config.getInstance().getResultTabsCount()) {
-                tabbedPane.remove(0);
+                int toRemove = 0;
+                for (int i=0; i<tabbedPane.getTabCount(); i++) {
+                    TabPanel et = (TabPanel) tabbedPane.getComponent(i);
+                    if (!et.isLocked()) {
+                        toRemove = i;
+                        break;
+                    }
+                }
+                tabbedPane.remove(toRemove);
             }
             tab.addInto(tabbedPane);
             tab.setToolTipText(editor.getServer().getConnectionString());

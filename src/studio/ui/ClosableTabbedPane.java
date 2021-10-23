@@ -67,6 +67,13 @@ public class ClosableTabbedPane {
                     }
                 });
 
+        TabPanel panel = (TabPanel)tabbedPane.getComponent(index);
+        Boolean locked = panel.isLocked();
+        String lockText = locked?"Unlock":"Lock";
+        UserAction toggleLockAction = UserAction.create(lockText, lockText, 0, e-> {
+            panel.setLocked(!panel.isLocked());
+        });
+
         closeOthersAction.setEnabled(tabbedPane.getTabCount() > 1);
         closeRightsAction.setEnabled(tabbedPane.getTabCount() > index+1);
 
@@ -74,6 +81,7 @@ public class ClosableTabbedPane {
         popup.add(closeAction);
         popup.add(closeOthersAction);
         popup.add(closeRightsAction);
+        popup.add(toggleLockAction);
         return popup;
     }
 
