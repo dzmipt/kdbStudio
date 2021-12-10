@@ -98,6 +98,21 @@ public class Studio {
         }
     }
 
+    private static void initTaskbarIcon() {
+        if (System.getProperty("java.version").startsWith("1.")) return; // we are running Java 8
+
+        try {
+            // We are using reflection to keep supporting Java 8. The code is equivalent to
+            // Taskbar.getTaskbar().setIconImage(Util.LOGO_ICON.getImage());
+
+            Class taskbarClass = Class.forName("java.awt.Taskbar");
+            Object taskbar = taskbarClass.getDeclaredMethod("getTaskbar").invoke(taskbarClass);
+            taskbarClass.getDeclaredMethod("setIconImage", Image.class).invoke(taskbar, Util.LOGO_ICON.getImage());
+        } catch (Exception e) {
+            log.error("Failed to set Taskbar icon", e);
+        }
+    }
+
 
     private static Server getInitServer() {
         List<Server> serverHistory = Config.getInstance().getServerHistory();
@@ -108,6 +123,7 @@ public class Studio {
     private static void init(String[] args) {
         log.info("Start Studio with args {}", Arrays.asList(args));
         registerForMacOSMenu();
+        initTaskbarIcon();
         FileWatcher.start();
 
         if (args.length > 0) {
