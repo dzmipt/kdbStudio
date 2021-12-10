@@ -1,25 +1,5 @@
 package studio.ui;
 
-import java.awt.*;
-import java.awt.event.*;
-import java.beans.PropertyChangeEvent;
-import java.beans.PropertyChangeListener;
-import java.io.*;
-import java.util.*;
-import java.util.List;
-import javax.swing.*;
-import static javax.swing.JSplitPane.VERTICAL_SPLIT;
-import static studio.ui.EscapeDialog.DialogResult.ACCEPTED;
-import static studio.ui.EscapeDialog.DialogResult.CANCELLED;
-
-import javax.swing.event.DocumentEvent;
-import javax.swing.event.DocumentListener;
-import javax.swing.filechooser.FileFilter;
-import javax.swing.filechooser.FileNameExtensionFilter;
-import javax.swing.plaf.basic.BasicSplitPaneUI;
-import javax.swing.table.TableModel;
-import javax.swing.text.*;
-
 import kx.c;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -27,6 +7,7 @@ import org.fife.ui.rsyntaxtextarea.RSyntaxTextArea;
 import org.fife.ui.rsyntaxtextarea.RSyntaxTextAreaEditorKit;
 import studio.core.AuthenticationManager;
 import studio.core.Credentials;
+import studio.core.Studio;
 import studio.kdb.*;
 import studio.ui.action.QPadImport;
 import studio.ui.action.QueryResult;
@@ -38,7 +19,32 @@ import studio.ui.rstextarea.FindReplaceAction;
 import studio.ui.rstextarea.RSTextAreaFactory;
 import studio.utils.*;
 
-public class StudioPanel extends JPanel implements Observer,WindowListener {
+import javax.swing.FocusManager;
+import javax.swing.*;
+import javax.swing.event.DocumentEvent;
+import javax.swing.event.DocumentListener;
+import javax.swing.filechooser.FileFilter;
+import javax.swing.filechooser.FileNameExtensionFilter;
+import javax.swing.plaf.basic.BasicSplitPaneUI;
+import javax.swing.table.TableModel;
+import javax.swing.text.BadLocationException;
+import javax.swing.text.JTextComponent;
+import java.awt.*;
+import java.awt.event.*;
+import java.beans.PropertyChangeEvent;
+import java.beans.PropertyChangeListener;
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.util.List;
+import java.util.*;
+
+import static javax.swing.JSplitPane.VERTICAL_SPLIT;
+import static studio.ui.EscapeDialog.DialogResult.ACCEPTED;
+import static studio.ui.EscapeDialog.DialogResult.CANCELLED;
+
+public class StudioPanel extends JPanel implements WindowListener {
 
     private static final Logger log = LogManager.getLogger();
     private static final Action editorUndoAction;
@@ -572,7 +578,7 @@ public class StudioPanel extends JPanel implements Observer,WindowListener {
         return false;
     }
 
-    private boolean saveAsFile(EditorTab editor) {
+    private static boolean saveAsFile(EditorTab editor) {
         JFileChooser chooser = new JFileChooser();
         chooser.setDialogType(JFileChooser.SAVE_DIALOG);
         chooser.setDialogTitle("Save script as");
@@ -604,7 +610,8 @@ public class StudioPanel extends JPanel implements Observer,WindowListener {
             chooser.setSelectedFile(file);
         }
 
-        int option = chooser.showSaveDialog(this);
+        StudioPanel activePanel = getActivePanel();
+        int option = chooser.showSaveDialog(activePanel);
         if (option != JFileChooser.APPROVE_OPTION) return false;
         File sf = chooser.getSelectedFile();
         filename = sf.getAbsolutePath();
@@ -616,7 +623,7 @@ public class StudioPanel extends JPanel implements Observer,WindowListener {
         }
 
         if (new File(filename).exists()) {
-            int choice = StudioOptionPane.showYesNoDialog(frame,
+            int choice = StudioOptionPane.showYesNoDialog(activePanel,
                     filename + " already exists.\nOverwrite?",
                     "Overwrite?");
 
@@ -628,7 +635,7 @@ public class StudioPanel extends JPanel implements Observer,WindowListener {
         return editor.saveFileOnDisk(false);
     }
 
-    private boolean saveEditor(EditorTab editor) {
+    private static boolean saveEditor(EditorTab editor) {
         if (editor.getFilename() == null) {
             return saveAsFile(editor);
         } else {
@@ -909,13 +916,12 @@ public class StudioPanel extends JPanel implements Observer,WindowListener {
         for(StudioPanel panel: allPanels) {
             if (window == panel.frame) return panel;
         }
-        return null;
+        return allPanels.get(0);
     }
 
-    public void settings() {
+    public static void settings() {
         StudioPanel activePanel = getActivePanel();
-        JFrame ownerFrame = activePanel == null ? frame : activePanel.frame;
-        SettingsDialog dialog = new SettingsDialog(ownerFrame);
+        SettingsDialog dialog = new SettingsDialog(activePanel.frame);
         dialog.alignAndShow();
         if (dialog.getResult() == CANCELLED) return;
         //@TODO Need rework - we are reading from Config inside SettingDialog; while saving happens outside
@@ -954,11 +960,11 @@ public class StudioPanel extends JPanel implements Observer,WindowListener {
         String lfClass = dialog.getLookAndFeelClassName();
         if (!lfClass.equals(UIManager.getLookAndFeel().getClass().getName())) {
             CONFIG.setLookAndFeel(lfClass);
-            StudioOptionPane.showMessage(frame, "Look and Feel was changed. " +
+            StudioOptionPane.showMessage(activePanel.frame, "Look and Feel was changed. " +
                     "New L&F will take effect on the next start up.", "Look and Feel Setting Changed");
         }
 
-        rebuildToolbar();
+        activePanel.rebuildToolbar();
     }
 
     private void toggleWordWrap() {
@@ -995,15 +1001,16 @@ public class StudioPanel extends JPanel implements Observer,WindowListener {
         return allPanels.toArray(new StudioPanel[0]);
     }
 
-    public void about() {
-        HelpDialog help = new HelpDialog(frame);
-        Util.centerChildOnParent(help,frame);
+    public static void about() {
+        StudioPanel activePanel = getActivePanel();
+        HelpDialog help = new HelpDialog(activePanel.frame);
+        Util.centerChildOnParent(help,activePanel.frame);
         // help.setTitle("About Studio for kdb+");
         help.pack();
         help.setVisible(true);
     }
 
-    public boolean quit() {
+    public static boolean quit() {
         WorkspaceSaver.setEnabled(false);
         try {
             if (CONFIG.getBoolean(Config.SAVE_ON_EXIT)) {
@@ -1028,7 +1035,9 @@ public class StudioPanel extends JPanel implements Observer,WindowListener {
                 }
             }
         } finally {
-            frame.toFront();
+            if (allPanels.size() > 0) {
+                getActivePanel().frame.toFront();
+            }
             WorkspaceSaver.setEnabled(true);
         }
         WorkspaceSaver.save(getWorkspace());
@@ -1048,7 +1057,7 @@ public class StudioPanel extends JPanel implements Observer,WindowListener {
         return true;
     }
 
-    private boolean checkAndSaveTab(EditorTab editor) {
+    private static boolean checkAndSaveTab(EditorTab editor) {
         if (! editor.isModified()) return true;
 
         int choice = StudioOptionPane.showYesNoCancelDialog(editor.getPane(),
@@ -1127,7 +1136,7 @@ public class StudioPanel extends JPanel implements Observer,WindowListener {
         menu.add(new JMenuItem(closeTabAction));
         menu.add(new JMenuItem(closeFileAction));
 
-        if (! Util.MAC_OS_X) {
+        if (!Studio.hasMacOSSystemMenu()) {
             menu.add(new JMenuItem(settingsAction));
         }
         menu.addSeparator();
@@ -1160,7 +1169,7 @@ public class StudioPanel extends JPanel implements Observer,WindowListener {
             }
         }
 
-        if (! Util.MAC_OS_X) {
+        if (!Studio.hasMacOSSystemMenu()) {
             menu.addSeparator();
             menu.add(new JMenuItem(exitAction));
         }
@@ -1301,7 +1310,7 @@ public class StudioPanel extends JPanel implements Observer,WindowListener {
         menu = new JMenu(I18n.getString("Help"));
         menu.setMnemonic(KeyEvent.VK_H);
         menu.add(new JMenuItem(codeKxComAction));
-        if (! Util.MAC_OS_X)
+        if (!Studio.hasMacOSSystemMenu())
             menu.add(new JMenuItem(aboutAction));
         menubar.add(menu);
 
@@ -1568,7 +1577,6 @@ public class StudioPanel extends JPanel implements Observer,WindowListener {
     }
 
     public StudioPanel() {
-        registerForMacOSXEvents();
         initActions();
         serverHistory = new HistoricalList<>(CONFIG.getServerHistoryDepth(),
                 CONFIG.getServerHistory());
@@ -1662,28 +1670,6 @@ public class StudioPanel extends JPanel implements Observer,WindowListener {
             }
         });
         dividerLastPosition=splitpane.getDividerLocation();
-    }
-
-    public void update(Observable obs,Object obj) {
-    }
-    private static boolean registeredForMaxOSXEvents = false;
-
-    public void registerForMacOSXEvents() {
-        if (registeredForMaxOSXEvents)
-            return;
-
-        if (Util.MAC_OS_X)
-            try {
-                // Generate and register the OSXAdapter, passing it a hash of all the methods we wish to
-                // use as delegates for various com.apple.eawt.ApplicationListener methods
-                OSXAdapter.setQuitHandler(this, StudioPanel.class.getDeclaredMethod("quit"));
-                OSXAdapter.setAboutHandler(this, StudioPanel.class.getDeclaredMethod("about"));
-                OSXAdapter.setPreferencesHandler(this, StudioPanel.class.getDeclaredMethod("settings"));
-                registeredForMaxOSXEvents = true;
-            }
-            catch (Exception e) {
-                log.error("Failed to set MacOS handlers", e);
-            }
     }
 
     private static Server getServer(Workspace.Tab tab) {
