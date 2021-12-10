@@ -73,6 +73,8 @@ public class Util {
     public static boolean MAC_OS_X = (System.getProperty("os.name").toLowerCase().startsWith("mac os x"));
     public static boolean WINDOWS = (System.getProperty("os.name").toLowerCase().contains("win"));
 
+    public static boolean Java8Minus = System.getProperty("java.version").startsWith("1.");
+
     public static ImageIcon getImage(String strFilename) {
         URL url = Util.class.getResource(strFilename);
         if (url == null) return null;

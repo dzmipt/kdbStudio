@@ -1,3 +1,4 @@
+* Add support for MacOS Preferences/About/Quit native menu in Java 9+
 * Monitoring file changes on disk to reloaded into editor
 
 `dz2.0` 2021.12.01

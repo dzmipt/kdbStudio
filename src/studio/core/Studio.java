@@ -17,6 +17,7 @@ import javax.swing.*;
 import java.awt.*;
 import java.io.IOException;
 import java.io.PrintStream;
+import java.lang.reflect.Proxy;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Locale;
@@ -83,23 +84,62 @@ public class Studio {
         return macOSSystemMenu;
     }
 
+    private static void registerForMacOSMenuJava8() throws Exception {
+        // Generate and register the OSXAdapter, passing it a hash of all the methods we wish to
+        // use as delegates for various com.apple.eawt.ApplicationListener methods
+        OSXAdapter.setQuitHandler(StudioPanel.class, StudioPanel.class.getDeclaredMethod("quit"));
+        OSXAdapter.setAboutHandler(StudioPanel.class, StudioPanel.class.getDeclaredMethod("about"));
+        OSXAdapter.setPreferencesHandler(StudioPanel.class, StudioPanel.class.getDeclaredMethod("settings"));
+    }
+
+    private static void registerForMacOSMenuJava9() throws Exception {
+        // Using reflection to be compilable on Java8
+
+        Class settingsClass = Class.forName("java.awt.desktop.PreferencesHandler");
+        Class quitClass = Class.forName("java.awt.desktop.QuitHandler");
+        Class aboutClass = Class.forName("java.awt.desktop.AboutHandler");
+
+        Object handler = Proxy.newProxyInstance(Studio.class.getClassLoader(), new Class[]{settingsClass, quitClass, aboutClass},
+                (o, method, objects) -> {
+                    String name = method.getName();
+                    if (name.equals("handlePreferences")) StudioPanel.settings();
+                    else if (name.equals("handleAbout")) StudioPanel.about();
+                    else if (name.equals("handleQuitRequestWith")) {
+                        StudioPanel.quit();
+                        try {
+                            Class quiteResponseClass = Class.forName("java.awt.desktop.QuitResponse");
+                            quiteResponseClass.getDeclaredMethod("cancelQuit").invoke(objects[1]);
+                        } catch (Exception e) {
+                            log.error("Error in cancelQuit()", e);
+                        }
+                    }
+                    return null;
+                }
+        );
+
+        Class desktopClass = Class.forName("java.awt.Desktop");
+        Object desktop = desktopClass.getMethod("getDesktop").invoke(desktopClass);
+
+        desktopClass.getMethod("setPreferencesHandler", settingsClass).invoke(desktop, handler);
+        desktopClass.getMethod("setQuitHandler", quitClass).invoke(desktop, handler);
+        desktopClass.getMethod("setAboutHandler", aboutClass).invoke(desktop, handler);
+    }
+
     private static void registerForMacOSMenu() {
         if (!Util.MAC_OS_X) return;
+
         try {
-            // Generate and register the OSXAdapter, passing it a hash of all the methods we wish to
-            // use as delegates for various com.apple.eawt.ApplicationListener methods
-            OSXAdapter.setQuitHandler(StudioPanel.class, StudioPanel.class.getDeclaredMethod("quit"));
-            OSXAdapter.setAboutHandler(StudioPanel.class, StudioPanel.class.getDeclaredMethod("about"));
-            OSXAdapter.setPreferencesHandler(StudioPanel.class, StudioPanel.class.getDeclaredMethod("settings"));
+            if (Util.Java8Minus) registerForMacOSMenuJava8();
+            else registerForMacOSMenuJava9();
+
             macOSSystemMenu = true;
-        }
-        catch (Exception e) {
+        } catch (Exception e) {
             log.error("Failed to set MacOS handlers", e);
         }
     }
 
     private static void initTaskbarIcon() {
-        if (System.getProperty("java.version").startsWith("1.")) return; // we are running Java 8
+        if (Util.Java8Minus) return; // we are running Java 8
 
         try {
             // We are using reflection to keep supporting Java 8. The code is equivalent to
