@@ -1,3 +1,6 @@
+`dz2.0.1` 2021.12.23
+-----
+* Upgraded log4j to the latest version
 * Add support for MacOS Preferences/About/Quit native menu in Java 9+
 * Monitoring file changes on disk to reloaded into editor
 

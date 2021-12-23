@@ -10,7 +10,7 @@ apply plugin: 'signing'
 
 group = "com.github.dzmipt"
 archivesBaseName = "kdbStudio"
-version = "dz2.0"
+version = "dz2.0.1"
 
 compileJava {
     sourceCompatibility = JavaVersion.VERSION_1_8
