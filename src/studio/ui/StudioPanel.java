@@ -1763,7 +1763,6 @@ public class StudioPanel extends JPanel implements WindowListener {
     public static void queryExecutionComplete(EditorTab editor, QueryResult queryResult) {
         JTextComponent textArea = editor.getTextArea();
         textArea.setCursor(textCursor);
-
         Throwable error = queryResult.getError();
         if (queryResult.isComplete()) {
             long execTime = queryResult.getExecutionTime();
@@ -1773,7 +1772,25 @@ public class StudioPanel extends JPanel implements WindowListener {
         }
 
         StudioPanel panel = editor.getPanel();
-        if (error != null && ! (error instanceof c.K4Exception)) {
+        if (error == null || error instanceof c.K4AccessException) {
+            try {
+                if (queryResult.isComplete()) {
+                    JTabbedPane tabbedPane = panel.tabbedPane;
+                    TabPanel tab = new TabPanel(panel, queryResult);
+                    if (tabbedPane.getTabCount() >= CONFIG.getResultTabsCount()) {
+                        tabbedPane.remove(0);
+                    }
+                    tab.addInto(tabbedPane);
+                    tab.setToolTipText(editor.getServer().getConnectionString());
+                }
+                error = null;
+            } catch (Throwable exc) {
+                error = new RuntimeException("Error during result rendering", exc);
+                log.error("Error during result rendering", exc);
+            }
+        }
+
+        if (error != null) {
             String message = error.getMessage();
             if ((message == null) || (message.length() == 0))
                 message = "No message with exception. Exception is " + error;
@@ -1782,15 +1799,8 @@ public class StudioPanel extends JPanel implements WindowListener {
                             editor.getServer().getConnectionString() +
                             "\n\nError detail is\n\n" + message + "\n\n",
                     "Studio for kdb+");
-        } else if (queryResult.isComplete()) {
-            JTabbedPane tabbedPane = panel.tabbedPane;
-            TabPanel tab = new TabPanel(panel, queryResult);
-            if(tabbedPane.getTabCount()>= CONFIG.getResultTabsCount()) {
-                tabbedPane.remove(0);
-            }
-            tab.addInto(tabbedPane);
-            tab.setToolTipText(editor.getServer().getConnectionString());
         }
+
         panel.refreshActionState();
     }
 
