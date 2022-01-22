@@ -1772,7 +1772,7 @@ public class StudioPanel extends JPanel implements WindowListener {
         }
 
         StudioPanel panel = editor.getPanel();
-        if (error == null || error instanceof c.K4AccessException) {
+        if (error == null || error instanceof c.K4Exception) {
             try {
                 if (queryResult.isComplete()) {
                     JTabbedPane tabbedPane = panel.tabbedPane;
