@@ -4,7 +4,10 @@ import studio.kdb.K;
 import studio.kdb.KFormatContext;
 
 import javax.swing.table.TableModel;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.LinkedHashSet;
+import java.util.List;
+import java.util.Set;
 import java.util.regex.Pattern;
 
 public class TableConnExtractor {
@@ -13,7 +16,9 @@ public class TableConnExtractor {
     private String[] portWords = new String[0];
     private String[] connWords = new String[0];
 
-    private static final String hostRegex = "[a-zA-Z0-9][a-zA-Z0-9\\-]*(\\.[a-zA-Z0-9][a-zA-Z0-9\\-]*)*";
+    //@TODO: The regexp can't be supported.
+    private static final String hostRegex = "(([a-zA-Z0-9][a-zA-Z0-9\\-]*((\\.[a-zA-Z0-9][a-zA-Z0-9\\-]*)*\\.[a-zA-Z][a-zA-Z0-9]*)?)|" +
+                                            "([0-9]{1,3}(\\.[0-9]{1,3}){3,3}))";
     private static final String portRegex = "[0-9]{1,5}";
 
     private static final Pattern connectionPattern = Pattern.compile("`?:?" + hostRegex + ":" + portRegex + "(:[^:]*(:[^:]*)?)?");

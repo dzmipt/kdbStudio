@@ -21,6 +21,9 @@ public class TableConnExtractorTest {
                         {"1.2.3.4","1234","abc","xyz"},
                         {"server.com","port","$something","$something"},
                         {"server.com","aHost:1050","$something","$something"},
+                        {"host","not-a-port", "2022.01.22D16:50:20.310411000", "handle"},
+                        {"1.2.3.4.5","1234","$something","$something"},
+                        {"1111.2.3.4","1234","$something","$something"}
                 }
             ), new String[] {"aHost","aPort","Connection","Handle"});
 
@@ -84,6 +87,13 @@ public class TableConnExtractorTest {
         assertArrayEquals(new String[0], extractor1.getConnections(table, 5, 0));
         assertArrayEquals(new String[0], extractor2.getConnections(table, 5, 0));
 
+    }
+
+    @Test
+    public void testWrongServerNames() {
+        assertArrayEquals(new String[0], extractor1.getConnections(table, 6, 2));
+        assertArrayEquals(new String[0], extractor1.getConnections(table, 7, 0));
+        assertArrayEquals(new String[0], extractor1.getConnections(table, 8, 0));
     }
 
 }
