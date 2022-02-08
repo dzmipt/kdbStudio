@@ -2,14 +2,13 @@ package studio.ui.chart;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.jfree.chart.ChartPanel;
-import org.jfree.chart.JFreeChart;
-import org.jfree.chart.StandardChartTheme;
-import org.jfree.chart.axis.DateAxis;
+import org.jfree.chart.*;
 import org.jfree.chart.axis.NumberAxis;
 import org.jfree.chart.axis.ValueAxis;
 import org.jfree.chart.labels.StandardXYToolTipGenerator;
 import org.jfree.chart.labels.XYToolTipGenerator;
+import org.jfree.chart.panel.CrosshairOverlay;
+import org.jfree.chart.plot.Crosshair;
 import org.jfree.chart.plot.DatasetRenderingOrder;
 import org.jfree.chart.plot.XYPlot;
 import org.jfree.chart.renderer.AbstractRenderer;
@@ -17,7 +16,7 @@ import org.jfree.chart.renderer.xy.StandardXYBarPainter;
 import org.jfree.chart.renderer.xy.XYItemRenderer;
 import org.jfree.chart.renderer.xy.XYLineAndShapeRenderer;
 import org.jfree.chart.title.TextTitle;
-import org.jfree.data.time.*;
+import org.jfree.chart.ui.RectangleEdge;
 import org.jfree.data.xy.IntervalXYDataset;
 import org.jfree.data.xy.XYSeries;
 import org.jfree.data.xy.XYSeriesCollection;
@@ -34,6 +33,9 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ComponentEvent;
 import java.awt.event.ComponentListener;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
+import java.awt.geom.Rectangle2D;
 import java.util.List;
 import java.util.*;
 
@@ -55,23 +57,16 @@ public class Chart implements ComponentListener {
 
     private List<Integer> yIndex;
 
-    private interface KBase2RegularTimePeriod {
-        RegularTimePeriod convert(K.KBase value);
-    }
-
-    private final static Set<Class> domainKClass = new HashSet<>();
-    private final static Set<Class> rangeKClass = new HashSet<>();
-    private final static Map<Class, KBase2RegularTimePeriod> regularTimePeriodConverters = new HashMap<>();
+    private final static Set<Class> supportedClasses = new HashSet<>();
 
     static {
-        List<Class> classes = Arrays.asList(
+        supportedClasses.addAll(Arrays.asList(
             K.KIntVector.class,
             K.KDoubleVector.class,
             K.KFloatVector.class,
             K.KShortVector.class,
             K.KLongVector.class,
 
-            //@TODO: it's better to show temporal types as doubles rather not shown them at all
             K.KDateVector.class,
             K.KTimeVector.class,
             K.KTimestampVector.class,
@@ -79,19 +74,7 @@ public class Chart implements ComponentListener {
             K.KDatetimeVector.class,
             K.KMonthVector.class,
             K.KSecondVector.class,
-            K.KMinuteVector.class);
-
-        rangeKClass.addAll(classes);
-        domainKClass.addAll(classes);
-
-        regularTimePeriodConverters.put(K.KDateVector.class, v -> new Day(((K.KDate)v).toDate()));
-        regularTimePeriodConverters.put(K.KTimeVector.class, v -> new Millisecond(((K.KTime)v).toTime()));
-        regularTimePeriodConverters.put(K.KTimestampVector.class, v -> new Millisecond(((K.KTimestamp)v).toTimestamp()));
-        regularTimePeriodConverters.put(K.KTimespanVector.class, v -> new Millisecond(((K.KTimespan)v).toTime()));
-        regularTimePeriodConverters.put(K.KDatetimeVector.class, v -> new Millisecond(((K.KDatetime)v).toTimestamp()));
-        regularTimePeriodConverters.put(K.KMonthVector.class, v -> new Month(((K.Month)v).toDate()));
-        regularTimePeriodConverters.put(K.KSecondVector.class, v -> new Second(((K.Second)v).toDate()));
-        regularTimePeriodConverters.put(K.KMinuteVector.class, v -> new Minute(((K.Minute)v).toDate()));
+            K.KMinuteVector.class) );
     }
 
     private static StandardChartTheme currentTheme = new StandardChartTheme("JFree");
@@ -111,8 +94,10 @@ public class Chart implements ComponentListener {
         for (int index = 0; index<table.getColumnCount(); index++) {
             names.add(table.getColumnName(index));
             Class clazz = table.getColumnClass(index);
-            if (domainKClass.contains(clazz)) xIndex.add(index);
-            if (rangeKClass.contains(clazz)) yIndex.add(index);
+            if (supportedClasses.contains(clazz)) {
+                xIndex.add(index);
+                yIndex.add(index);
+            }
         }
 
         if (xIndex.size() == 0 || yIndex.size() ==0) {
@@ -132,7 +117,7 @@ public class Chart implements ComponentListener {
         WindowsAppUserMode.setChartId();
         try {
             frame = new JFrame();
-            updateTitle(null);
+            updateTitle();
             frame.setContentPane(contentPane);
             frame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
             frame.setIconImage(Util.CHART_BIG_ICON.getImage());
@@ -147,18 +132,31 @@ public class Chart implements ComponentListener {
         }
     }
 
-    private void updateTitle(JFreeChart chart) {
-        String title = "Studio for kdb+ [chart]";
-        if (chart != null) {
-            TextTitle chartTitle = chart.getTitle();
-            if (chartTitle != null && chartTitle.isVisible()) {
-                String text = chartTitle.getText();
-                if (text != null && ! text.trim().equals("")) {
-                    title = text.trim();
-                }
-            }
+    private String getChartTitle() {
+        if (chartPanel == null) {
+            return null;
+        }
+        JFreeChart chart = chartPanel.getChart();
+        if (chart == null) {
+            return null;
         }
 
+        String title = null;
+        TextTitle chartTitle = chart.getTitle();
+        if (chartTitle != null && chartTitle.isVisible()) {
+            String text = chartTitle.getText();
+            if (text != null && ! text.trim().equals("")) {
+                title = text.trim();
+            }
+        }
+        return title;
+    }
+
+    private void updateTitle() {
+        String title = getChartTitle();
+        if (title == null) {
+            title = "Studio for kdb+ [chart]";
+        }
         if (! title.equals(frame.getTitle())) {
             frame.setTitle(title);
         }
@@ -198,6 +196,7 @@ public class Chart implements ComponentListener {
     }
 
     void createPlot() {
+        String title = getChartTitle();
         if (chartPanel !=null ) {
             contentPane.remove(chartPanel);
             chartPanel = null;
@@ -205,8 +204,58 @@ public class Chart implements ComponentListener {
 
         JFreeChart chart = createChart();
         if (chart != null) {
-            chart.addChangeListener(e -> updateTitle(chart) );
+            chart.addChangeListener(e -> updateTitle() );
+            if (title != null) {
+                chart.setTitle(title);
+            }
+
             chartPanel = new ChartPanel(chart);
+            CrosshairOverlay crosshairOverlay = new CrosshairOverlay();
+            Crosshair xCrosshair = new Crosshair(Double.NaN, Color.GRAY, new BasicStroke(0.5f));
+            xCrosshair.setLabelVisible(true);
+            xCrosshair.setLabelGenerator(new KCrosshairLabelGenerator(chart, true));
+            Crosshair yCrosshair = new Crosshair(Double.NaN, Color.GRAY, new BasicStroke(0.5f));
+            yCrosshair.setLabelVisible(true);
+            yCrosshair.setLabelGenerator(new KCrosshairLabelGenerator(chart, false));
+
+            chartPanel.addMouseListener(new MouseAdapter() {
+                @Override
+                public void mouseEntered(MouseEvent e) {
+                    xCrosshair.setVisible(true);
+                    yCrosshair.setVisible(true);
+                }
+
+                @Override
+                public void mouseExited(MouseEvent e) {
+                    xCrosshair.setVisible(false);
+                    yCrosshair.setVisible(false);
+                }
+            });
+
+            crosshairOverlay.addDomainCrosshair(xCrosshair);
+            crosshairOverlay.addRangeCrosshair(yCrosshair);
+            chartPanel.addOverlay(crosshairOverlay);
+            chartPanel.addChartMouseListener(new ChartMouseListener() {
+                @Override
+                public void chartMouseClicked(ChartMouseEvent event) {
+                }
+
+                @Override
+                public void chartMouseMoved(ChartMouseEvent event) {
+                    Rectangle2D dataArea = chartPanel.getScreenDataArea();
+                    JFreeChart chart = event.getChart();
+                    XYPlot plot = (XYPlot) chart.getPlot();
+                    ValueAxis xAxis = plot.getDomainAxis();
+                    double x = xAxis.java2DToValue(event.getTrigger().getX(), dataArea,
+                            RectangleEdge.BOTTOM);
+                    double y = plot.getRangeAxis().java2DToValue(event.getTrigger().getY(), dataArea, RectangleEdge.LEFT);
+                    xCrosshair.setValue(x);
+                    yCrosshair.setValue(y);
+                }
+            });
+
+
+
             chartPanel.setPreferredSize(new java.awt.Dimension(500, 270));
             chartPanel.setMouseWheelEnabled(true);
             chartPanel.setMouseZoomable(true, true);
@@ -218,35 +267,35 @@ public class Chart implements ComponentListener {
     }
 
     private JFreeChart createChart() {
-        NumberAxis yAxis = new NumberAxis("");
-        yAxis.setAutoRangeIncludesZero(false);
+        int xIndex = pnlConfig.getDomainIndex();
 
-        XYPlot plot = new XYPlot(null, null, yAxis, null);
+        Class xClazz = table.getColumnClass(xIndex);
+        NumberAxis xAxis = new NumberAxis("");
+        xAxis.setNumberFormatOverride(new KFormat(xClazz));
+        xAxis.setAutoRangeIncludesZero(false);
+
+        Class yClazz = null;
+        XYPlot plot = new XYPlot(null, xAxis, null, null);
+        plot.setDomainPannable(true);
+        plot.setRangePannable(true);
         plot.setDatasetRenderingOrder(DatasetRenderingOrder.FORWARD);
-        ValueAxis xAxis = null;
         int datasetIndex = 0;
         for (int index = 0; index<yIndex.size(); index++) {
             if (! pnlConfig.isSeriesEnables(index)) continue;
 
-            IntervalXYDataset dataset = getDateset(yIndex.get(index));
-            boolean timeSeries = dataset instanceof TimeSeriesCollection;
+            if (yClazz == null) {
+                yClazz = table.getColumnClass(yIndex.get(index));
+                NumberAxis yAxis = new NumberAxis("");
+                yAxis.setNumberFormatOverride(new KFormat(yClazz));
+                yAxis.setAutoRangeIncludesZero(false);
 
-            if (xAxis == null) {
-                if (timeSeries) {
-                    xAxis = new DateAxis("");
-                    xAxis.setLowerMargin(0.02);  // reduce the default margins
-                    xAxis.setUpperMargin(0.02);
-                } else {
-                    NumberAxis axis = new NumberAxis("");
-                    axis.setAutoRangeIncludesZero(false);
-                    xAxis = axis;
-                }
-                plot.setDomainAxis(xAxis);
+                plot.setRangeAxis(yAxis);
             }
 
-            XYToolTipGenerator toolTipGenerator = timeSeries ? StandardXYToolTipGenerator.getTimeSeriesInstance() :
-                                                                new StandardXYToolTipGenerator();
+            IntervalXYDataset dataset = getDateset(yIndex.get(index));
 
+            XYToolTipGenerator toolTipGenerator = new StandardXYToolTipGenerator(StandardXYToolTipGenerator.DEFAULT_TOOL_TIP_FORMAT,
+                    new KFormat(xClazz), new KFormat(yClazz));
             XYItemRenderer renderer;
 
             ChartType chartType = pnlConfig.getChartType(index);
@@ -267,7 +316,7 @@ public class Chart implements ComponentListener {
             plot.setDataset(datasetIndex, dataset);
             datasetIndex++;
         }
-        if (xAxis == null) return null;
+        if (yClazz == null) return null;
 
         JFreeChart chart = new JFreeChart("", JFreeChart.DEFAULT_TITLE_FONT,
                 plot, false);
@@ -278,40 +327,20 @@ public class Chart implements ComponentListener {
     private IntervalXYDataset getDateset(int col) {
         int xIndex = pnlConfig.getDomainIndex();
 
-        Class xClazz = table.getColumnClass(xIndex);
-        KBase2RegularTimePeriod converter = regularTimePeriodConverters.get(xClazz);
-        if (converter == null) {
-            XYSeriesCollection collection = new XYSeriesCollection();
-            collection.setAutoWidth(true);
-            XYSeries series = new XYSeries(table.getColumnName(col));
-            for (int row = 0; row < table.getRowCount(); row++) {
-                K.KBase xValue = (K.KBase)table.getValueAt(row, xIndex);
-                K.KBase yValue = (K.KBase)table.getValueAt(row, col);
-                if (xValue.isNull() || yValue.isNull()) continue;
+        XYSeriesCollection collection = new XYSeriesCollection();
+        collection.setAutoWidth(true);
+        XYSeries series = new XYSeries(table.getColumnName(col));
+        for (int row = 0; row < table.getRowCount(); row++) {
+            K.KBase xValue = (K.KBase)table.getValueAt(row, xIndex);
+            K.KBase yValue = (K.KBase)table.getValueAt(row, col);
+            if (xValue.isNull() || yValue.isNull()) continue;
 
-                double x = ((ToDouble)xValue).toDouble();
-                double y = ((ToDouble)yValue).toDouble();
-                series.add(x, y);
-            }
-            collection.addSeries(series);
-            return collection;
-        } else {
-            TimeSeriesCollection collection = new TimeSeriesCollection();
-            TimeSeries series = new TimeSeries(table.getColumnName(col));
-            for (int row = 0; row < table.getRowCount(); row++) {
-                K.KBase xValue = (K.KBase) table.getValueAt(row, xIndex);
-                if (xValue.isNull()) continue;
-
-                RegularTimePeriod period = converter.convert(xValue);
-                K.KBase value = (K.KBase) table.getValueAt(row, col);
-                if (value.isNull()) continue;
-
-                series.addOrUpdate(period, ((ToDouble)value).toDouble());
-            }
-            collection.addSeries(series);
-
-            return collection;
+            double x = ((ToDouble)xValue).toDouble();
+            double y = ((ToDouble)yValue).toDouble();
+            series.add(x, y);
         }
+        collection.addSeries(series);
+        return collection;
     }
 }
 
