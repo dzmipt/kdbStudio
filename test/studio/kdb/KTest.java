@@ -2,6 +2,7 @@ package studio.kdb;
 
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
+
 import java.util.Calendar;
 import java.util.UUID;
 
@@ -251,14 +252,14 @@ public class KTest {
     @Test
     public void testMinuteToString() throws Exception {
         //@ToDo Fix me
-        check(new K.Minute(-12345), "-205:-45", "-205:-45");
+        check(new K.Minute(-12345), "-205:45", "-205:45");
 
         check(new K.Minute(123456), "2057:36", "2057:36");
         check(new K.Minute(-Integer.MAX_VALUE), "-0Wu", "-0Wu");
         check(new K.Minute(Integer. MAX_VALUE), "0Wu", "0Wu");
         check(new K.Minute(Integer.MIN_VALUE), "0Nu", "0Nu");
 
-        check(new K.KMinuteVector(-10, 10, 3), "00:-10 00:10 00:03", "00:-10 00:10 00:03");
+        check(new K.KMinuteVector(-10, 10, 3), "-00:10 00:10 00:03", "-00:10 00:10 00:03");
         check(new K.KMinuteVector(), "`minute$()", "`minute$()");
         check(new K.KMinuteVector(0), "enlist 00:00", "enlist 00:00");
         check(new K.KMinuteVector(5, Integer.MIN_VALUE, Integer.MAX_VALUE, -Integer.MAX_VALUE), "00:05 0Nu 0Wu -0Wu", "00:05 0Nu 0Wu -0Wu");
@@ -267,14 +268,14 @@ public class KTest {
     @Test
     public void testSecondToString() throws Exception {
         //@ToDo Fix me
-        check(new K.Second(-12345), "-03:-25:-45", "-03:-25:-45");
+        check(new K.Second(-12345), "-03:25:45", "-03:25:45");
 
         check(new K.Second(123456), "34:17:36", "34:17:36");
         check(new K.Second(-Integer.MAX_VALUE), "-0Wv", "-0Wv");
         check(new K.Second(Integer. MAX_VALUE), "0Wv", "0Wv");
         check(new K.Second(Integer.MIN_VALUE), "0Nv", "0Nv");
 
-        check(new K.KSecondVector(-10, 10, 3), "00:00:-10 00:00:10 00:00:03", "00:00:-10 00:00:10 00:00:03");
+        check(new K.KSecondVector(-10, 10, 3), "-00:00:10 00:00:10 00:00:03", "-00:00:10 00:00:10 00:00:03");
         check(new K.KSecondVector(), "`second$()", "`second$()");
         check(new K.KSecondVector(0), "enlist 00:00:00", "enlist 00:00:00");
         check(new K.KSecondVector(5, Integer.MIN_VALUE, Integer.MAX_VALUE, -Integer.MAX_VALUE), "00:00:05 0Nv 0Wv -0Wv", "00:00:05 0Nv 0Wv -0Wv");
