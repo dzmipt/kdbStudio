@@ -31,10 +31,7 @@ import studio.utils.WindowsAppUserMode;
 import javax.swing.Timer;
 import javax.swing.*;
 import java.awt.*;
-import java.awt.event.ComponentEvent;
-import java.awt.event.ComponentListener;
-import java.awt.event.MouseAdapter;
-import java.awt.event.MouseEvent;
+import java.awt.event.*;
 import java.awt.geom.Rectangle2D;
 import java.util.List;
 import java.util.*;
@@ -106,9 +103,14 @@ public class Chart implements ComponentListener {
             return;
         }
 
+        int modifier = Util.MAC_OS_X ? KeyEvent.ALT_MASK : KeyEvent.CTRL_MASK;
+
+        JLabel lbl = new JLabel("  Use mouse wheel or select a rectangle to zoom. Hold " + KeyEvent.getKeyModifiersText(modifier) + " to move the chart.");
+
         contentPane = new JPanel(new BorderLayout());
         pnlConfig = new ChartConfigPanel(this, names, xIndex, yIndex);
         contentPane.add(pnlConfig, BorderLayout.EAST);
+        contentPane.add(lbl, BorderLayout.SOUTH);
 
         createPlot();
 
