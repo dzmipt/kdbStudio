@@ -2,13 +2,11 @@ package studio.ui.chart;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.jfree.chart.*;
+import org.jfree.chart.JFreeChart;
+import org.jfree.chart.StandardChartTheme;
 import org.jfree.chart.axis.NumberAxis;
-import org.jfree.chart.axis.ValueAxis;
 import org.jfree.chart.labels.StandardXYToolTipGenerator;
 import org.jfree.chart.labels.XYToolTipGenerator;
-import org.jfree.chart.panel.CrosshairOverlay;
-import org.jfree.chart.plot.Crosshair;
 import org.jfree.chart.plot.DatasetRenderingOrder;
 import org.jfree.chart.plot.XYPlot;
 import org.jfree.chart.renderer.AbstractRenderer;
@@ -16,7 +14,6 @@ import org.jfree.chart.renderer.xy.StandardXYBarPainter;
 import org.jfree.chart.renderer.xy.XYItemRenderer;
 import org.jfree.chart.renderer.xy.XYLineAndShapeRenderer;
 import org.jfree.chart.title.TextTitle;
-import org.jfree.chart.ui.RectangleEdge;
 import org.jfree.data.xy.IntervalXYDataset;
 import org.jfree.data.xy.XYSeries;
 import org.jfree.data.xy.XYSeriesCollection;
@@ -31,8 +28,9 @@ import studio.utils.WindowsAppUserMode;
 import javax.swing.Timer;
 import javax.swing.*;
 import java.awt.*;
-import java.awt.event.*;
-import java.awt.geom.Rectangle2D;
+import java.awt.event.ComponentEvent;
+import java.awt.event.ComponentListener;
+import java.awt.event.KeyEvent;
 import java.util.List;
 import java.util.*;
 
@@ -212,55 +210,6 @@ public class Chart implements ComponentListener {
             }
 
             chartPanel = new ChartPanel(chart);
-            CrosshairOverlay crosshairOverlay = new CrosshairOverlay();
-            Crosshair xCrosshair = new Crosshair(Double.NaN, Color.GRAY, new BasicStroke(0.5f));
-            xCrosshair.setLabelVisible(true);
-            xCrosshair.setLabelGenerator(new KCrosshairLabelGenerator(chart, true));
-            Crosshair yCrosshair = new Crosshair(Double.NaN, Color.GRAY, new BasicStroke(0.5f));
-            yCrosshair.setLabelVisible(true);
-            yCrosshair.setLabelGenerator(new KCrosshairLabelGenerator(chart, false));
-
-            chartPanel.addMouseListener(new MouseAdapter() {
-                @Override
-                public void mouseEntered(MouseEvent e) {
-                    xCrosshair.setVisible(true);
-                    yCrosshair.setVisible(true);
-                }
-
-                @Override
-                public void mouseExited(MouseEvent e) {
-                    xCrosshair.setVisible(false);
-                    yCrosshair.setVisible(false);
-                }
-            });
-
-            crosshairOverlay.addDomainCrosshair(xCrosshair);
-            crosshairOverlay.addRangeCrosshair(yCrosshair);
-            chartPanel.addOverlay(crosshairOverlay);
-            chartPanel.addChartMouseListener(new ChartMouseListener() {
-                @Override
-                public void chartMouseClicked(ChartMouseEvent event) {
-                }
-
-                @Override
-                public void chartMouseMoved(ChartMouseEvent event) {
-                    Rectangle2D dataArea = chartPanel.getScreenDataArea();
-                    JFreeChart chart = event.getChart();
-                    XYPlot plot = (XYPlot) chart.getPlot();
-                    ValueAxis xAxis = plot.getDomainAxis();
-                    double x = xAxis.java2DToValue(event.getTrigger().getX(), dataArea,
-                            RectangleEdge.BOTTOM);
-                    double y = plot.getRangeAxis().java2DToValue(event.getTrigger().getY(), dataArea, RectangleEdge.LEFT);
-                    xCrosshair.setValue(x);
-                    yCrosshair.setValue(y);
-                }
-            });
-
-
-
-            chartPanel.setPreferredSize(new java.awt.Dimension(500, 270));
-            chartPanel.setMouseWheelEnabled(true);
-            chartPanel.setMouseZoomable(true, true);
             contentPane.add(chartPanel, BorderLayout.CENTER);
         }
 
