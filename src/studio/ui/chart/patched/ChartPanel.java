@@ -1,3 +1,9 @@
+/*
+This version is taken from jfreechart:1.5.3 with changing some private fields and methods
+to protected to be able to extend behaviour of the class.
+There are no changes in logic; no fields and methods added or removed.
+ */
+
 /* ===========================================================
  * JFreeChart : a free chart library for the Java(tm) platform
  * ===========================================================
@@ -249,16 +255,16 @@ public class ChartPanel extends JPanel implements ChartChangeListener,
      * click).  This is a point on the screen, not the chart (which may have
      * been scaled up or down to fit the panel).
      */
-    private Point2D zoomPoint = null;
+    protected Point2D zoomPoint = null;
 
     /** The zoom rectangle (selected by the user with the mouse). */
-    private transient Rectangle2D zoomRectangle = null;
+    protected transient Rectangle2D zoomRectangle = null;
 
     /** Controls if the zoom rectangle is drawn as an outline or filled. */
     private boolean fillZoomRectangle = true;
 
     /** The minimum distance required to drag the mouse to trigger a zoom. */
-    private int zoomTriggerDistance;
+    protected int zoomTriggerDistance;
 
     /** A flag that controls whether or not horizontal tracing is enabled. */
     private boolean horizontalAxisTrace = false;
@@ -359,15 +365,15 @@ public class ChartPanel extends JPanel implements ChartChangeListener,
      * Temporary storage for the width and height of the chart
      * drawing area during panning.
      */
-    private double panW, panH;
+    protected double panW, panH;
 
     /** The last mouse position during panning. */
-    private Point panLast;
+    protected Point panLast;
 
     /**
      * The mask for mouse events to trigger panning.
      */
-    private int panMask = InputEvent.CTRL_MASK;
+    protected int panMask = InputEvent.CTRL_MASK;
 
     /**
      * A list of overlays for the panel.
@@ -513,6 +519,7 @@ public class ChartPanel extends JPanel implements ChartChangeListener,
                       int maximumDrawHeight, boolean useBuffer, boolean properties,
                       boolean copy, boolean save, boolean print, boolean zoom,
                       boolean tooltips) {
+
         setChart(chart);
         this.chartMouseListeners = new EventListenerList();
         this.info = new ChartRenderingInfo();
@@ -1657,7 +1664,7 @@ public class ChartPanel extends JPanel implements ChartChangeListener,
      *
      * @return A point within the rectangle.
      */
-    private Point2D getPointInRectangle(int x, int y, Rectangle2D area) {
+    protected Point2D getPointInRectangle(int x, int y, Rectangle2D area) {
         double xx = Math.max(area.getMinX(), Math.min(x, area.getMaxX()));
         double yy = Math.max(area.getMinY(), Math.min(y, area.getMaxY()));
         return new Point2D.Double(xx, yy);
@@ -1732,24 +1739,11 @@ public class ChartPanel extends JPanel implements ChartChangeListener,
                 (int) this.zoomPoint.getX(), (int) this.zoomPoint.getY());
         if (hZoom && vZoom) {
             // selected rectangle shouldn't extend outside the data area...
-/*            double xmax = Math.min(e.getX(), scaledDataArea.getMaxX());
+            double xmax = Math.min(e.getX(), scaledDataArea.getMaxX());
             double ymax = Math.min(e.getY(), scaledDataArea.getMaxY());
             this.zoomRectangle = new Rectangle2D.Double(
                     this.zoomPoint.getX(), this.zoomPoint.getY(),
                     xmax - this.zoomPoint.getX(), ymax - this.zoomPoint.getY());
-*/
-
-            double x = Math.min(e.getX(), scaledDataArea.getMaxX());
-            x = Math.max(x, scaledDataArea.getMinX());
-            double y = Math.min(e.getY(), scaledDataArea.getMaxY());
-            y = Math.max(y, scaledDataArea.getMinY());
-
-            double x0 = Math.min(x, zoomPoint.getX());
-            double x1 = Math.max(x, zoomPoint.getX());
-            double y0 = Math.min(y, zoomPoint.getY());
-            double y1 = Math.max(y, zoomPoint.getY());
-            this.zoomRectangle = new Rectangle2D.Double(x0, y0, x1-x0, y1-y0);
-
         }
         else if (hZoom) {
             double xmax = Math.min(e.getX(), scaledDataArea.getMaxX());
@@ -1810,11 +1804,11 @@ public class ChartPanel extends JPanel implements ChartChangeListener,
             boolean zoomTrigger2 = vZoom && Math.abs(e.getY()
                     - this.zoomPoint.getY()) >= this.zoomTriggerDistance;
             if (zoomTrigger1 || zoomTrigger2) {
-                /*if ((hZoom && (e.getX() < this.zoomPoint.getX()))
+                if ((hZoom && (e.getX() < this.zoomPoint.getX()))
                         || (vZoom && (e.getY() < this.zoomPoint.getY()))) {
                     restoreAutoBounds();
                 }
-                else*/ {
+                else {
                     double x, y, w, h;
                     Rectangle2D screenDataArea = getScreenDataArea(
                             (int) this.zoomPoint.getX(),
@@ -1847,8 +1841,7 @@ public class ChartPanel extends JPanel implements ChartChangeListener,
                                 maxY - this.zoomPoint.getY());
                     }
                     Rectangle2D zoomArea = new Rectangle2D.Double(x, y, w, h);
-//                    zoom(zoomArea);
-                    zoom(zoomRectangle);
+                    zoom(zoomArea);
                 }
                 this.zoomPoint = null;
                 this.zoomRectangle = null;
@@ -2374,7 +2367,7 @@ public class ChartPanel extends JPanel implements ChartChangeListener,
      * @param g2 the graphics device.
      * @param xor  use XOR for drawing?
      */
-    private void drawZoomRectangle(Graphics2D g2, boolean xor) {
+    protected void drawZoomRectangle(Graphics2D g2, boolean xor) {
         if (this.zoomRectangle != null) {
             if (xor) {
                 // Set XOR mode to draw the zoom rectangle

@@ -1,3 +1,8 @@
+/*
+This version is taken from jfreechart:1.5.3 without any change.
+This is needed to extract and patch ChartPanel.
+ */
+
 /* ===========================================================
  * JFreeChart : a free chart library for the Java(tm) platform
  * ===========================================================

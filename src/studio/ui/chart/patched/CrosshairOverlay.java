@@ -1,3 +1,8 @@
+/*
+This version is taken from jfreechart:1.5.3 without any change.
+This is needed to extract and patch ChartPanel.
+ */
+
 /* ===========================================================
  * JFreeChart : a free chart library for the Java(tm) platform
  * ===========================================================
@@ -218,7 +223,7 @@ public class CrosshairOverlay extends AbstractOverlay implements Overlay,
     public void paintOverlay(Graphics2D g2, ChartPanel chartPanel) {
         Shape savedClip = g2.getClip();
         Rectangle2D dataArea = chartPanel.getScreenDataArea();
-//        g2.clip(dataArea);
+        g2.clip(dataArea);
         JFreeChart chart = chartPanel.getChart();
         XYPlot plot = (XYPlot) chart.getPlot();
         ValueAxis xAxis = plot.getDomainAxis();
