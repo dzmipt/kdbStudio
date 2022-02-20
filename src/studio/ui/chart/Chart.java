@@ -22,6 +22,7 @@ import studio.kdb.K;
 import studio.kdb.KTableModel;
 import studio.kdb.ToDouble;
 import studio.ui.StudioOptionPane;
+import studio.ui.Toolbar;
 import studio.ui.Util;
 import studio.utils.WindowsAppUserMode;
 
@@ -109,7 +110,7 @@ public class Chart implements ComponentListener {
         chartPanel = createChartPanel();
         pnlConfig = new ChartConfigPanel(this, names, xIndex, yIndex);
 
-        JToolBar toolbar = new JToolBar();
+        JToolBar toolbar = new Toolbar();
         toolbar.setLayout(new BoxLayout(toolbar, BoxLayout.X_AXIS));
         toolbar.setFloatable(false);
         toolbar.add(chartPanel.getCopyAction());

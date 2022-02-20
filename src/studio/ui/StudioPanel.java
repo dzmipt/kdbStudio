@@ -1504,7 +1504,7 @@ public class StudioPanel extends JPanel implements WindowListener {
         splitpane.setTopComponent(tabbedEditors);
         splitpane.setDividerLocation(0.5);
 
-        toolbar = new JToolBar();
+        toolbar = new Toolbar();
         toolbar.setLayout(new BoxLayout(toolbar, BoxLayout.X_AXIS));
         toolbar.setFloatable(false);
 
