@@ -48,8 +48,12 @@ public class ChartPanel extends studio.ui.chart.patched.ChartPanel {
         int meta = java.awt.Toolkit.getDefaultToolkit().getMenuShortcutKeyMask();
         copyAction = addAccelerator(copyItem, KeyStroke.getKeyStroke(KeyEvent.VK_C, meta));
         copyAction.putValue(Action.SMALL_ICON, Util.COPY_ICON);
+        copyAction.putValue(Action.SHORT_DESCRIPTION, "Copy the chart");
+
         saveAction = addAccelerator(pngItem, KeyStroke.getKeyStroke(KeyEvent.VK_S, meta));
         saveAction.putValue(Action.SMALL_ICON, Util.SAVE_AS_ICON);
+        saveAction.putValue(Action.SHORT_DESCRIPTION, "Save the chart");
+
         propertiesAction = addAccelerator(propertiesItem, KeyStroke.getKeyStroke(KeyEvent.VK_ENTER, KeyEvent.ALT_MASK));
         zoomInAction = addAccelerator(zoomInBothMenuItem, KeyStroke.getKeyStroke(KeyEvent.VK_PLUS, meta),
                                                           KeyStroke.getKeyStroke(KeyEvent.VK_EQUALS, meta));
