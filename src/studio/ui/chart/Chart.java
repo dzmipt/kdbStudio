@@ -102,15 +102,28 @@ public class Chart implements ComponentListener {
         }
 
         int modifier = Util.MAC_OS_X ? KeyEvent.ALT_MASK : KeyEvent.CTRL_MASK;
+        JLabel lbl = new JLabel("  Use mouse wheel or select a rectangle to zoom. " +
+                "Hold " + KeyEvent.getKeyModifiersText(modifier) + " to move the chart. " +
+                "ESC - to restore scale");
 
-        JLabel lbl = new JLabel("  Use mouse wheel or select a rectangle to zoom. Hold " + KeyEvent.getKeyModifiersText(modifier) + " to move the chart.");
+        chartPanel = createChartPanel();
+        pnlConfig = new ChartConfigPanel(this, names, xIndex, yIndex);
+
+        JToolBar toolbar = new JToolBar();
+        toolbar.setLayout(new BoxLayout(toolbar, BoxLayout.X_AXIS));
+        toolbar.setFloatable(false);
+        toolbar.add(chartPanel.getCopyAction());
+        toolbar.add(chartPanel.getSaveAction());
+
+        JPanel rightPanel = new JPanel(new BorderLayout());
+        rightPanel.add(pnlConfig, BorderLayout.CENTER);
+        rightPanel.add(toolbar, BorderLayout.NORTH);
 
         contentPane = new JPanel(new BorderLayout());
-        pnlConfig = new ChartConfigPanel(this, names, xIndex, yIndex);
-        contentPane.add(pnlConfig, BorderLayout.EAST);
+        contentPane.add(rightPanel, BorderLayout.EAST);
         contentPane.add(lbl, BorderLayout.SOUTH);
-
-        createPlot();
+        contentPane.add(chartPanel, BorderLayout.CENTER);
+        refreshPlot();
 
         configUpdateTimer = new Timer(CONFIG_UPDATE_DELAY, e -> saveFrameBounds());
 
@@ -130,6 +143,14 @@ public class Chart implements ComponentListener {
         } finally {
             WindowsAppUserMode.setMainId();
         }
+    }
+
+    private ChartPanel createChartPanel() {
+        XYPlot plot = new XYPlot(null, null, null, null);
+        JFreeChart chart = new JFreeChart("", JFreeChart.DEFAULT_TITLE_FONT, plot, false);
+        chart.addChangeListener(e -> updateTitle() );
+        currentTheme.apply(chart);
+        return new ChartPanel(chart);
     }
 
     private String getChartTitle() {
@@ -153,6 +174,9 @@ public class Chart implements ComponentListener {
     }
 
     private void updateTitle() {
+        if (frame == null) {
+            return;
+        }
         String title = getChartTitle();
         if (title == null) {
             title = "Studio for kdb+ [chart]";
@@ -195,38 +219,24 @@ public class Chart implements ComponentListener {
         updateFrameBounds();
     }
 
-    void createPlot() {
-        String title = getChartTitle();
-        if (chartPanel !=null ) {
-            contentPane.remove(chartPanel);
-            chartPanel = null;
+    public void refreshPlot() {
+        JFreeChart chart = chartPanel.getChart();
+        XYPlot plot = chart.getXYPlot();
+        int count = plot.getDatasetCount();
+        for (int i=0; i<count; i++) {
+            plot.setDataset(i, null);
+            plot.setRenderer(i, null);
         }
 
-        JFreeChart chart = createChart();
-        if (chart != null) {
-            chart.addChangeListener(e -> updateTitle() );
-            if (title != null) {
-                chart.setTitle(title);
-            }
-
-            chartPanel = new ChartPanel(chart);
-            contentPane.add(chartPanel, BorderLayout.CENTER);
-        }
-
-        contentPane.revalidate();
-        contentPane.repaint();
-    }
-
-    private JFreeChart createChart() {
         int xIndex = pnlConfig.getDomainIndex();
 
         Class xClazz = table.getColumnClass(xIndex);
         NumberAxis xAxis = new NumberAxis("");
         xAxis.setNumberFormatOverride(new KFormat(xClazz));
         xAxis.setAutoRangeIncludesZero(false);
+        plot.setDomainAxis(xAxis);
 
         Class yClazz = null;
-        XYPlot plot = new XYPlot(null, xAxis, null, null);
         plot.setDomainPannable(true);
         plot.setRangePannable(true);
         plot.setDatasetRenderingOrder(DatasetRenderingOrder.FORWARD);
@@ -267,12 +277,9 @@ public class Chart implements ComponentListener {
             plot.setDataset(datasetIndex, dataset);
             datasetIndex++;
         }
-        if (yClazz == null) return null;
 
-        JFreeChart chart = new JFreeChart("", JFreeChart.DEFAULT_TITLE_FONT,
-                plot, false);
-        currentTheme.apply(chart);
-        return chart;
+        contentPane.revalidate();
+        contentPane.repaint();
     }
 
     private IntervalXYDataset getDateset(int col) {

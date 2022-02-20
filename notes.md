@@ -1,4 +1,8 @@
-* Chart: display mouse cursor coordinates
+* Improvements in charting: 
+    * display mouse cursor coordinates
+    * drag for zoom can be done in any direction
+    * chart can be moved
+    * shortcuts for copy, save, etc.
 
 `dz2.0.1` 2021.12.23
 -----

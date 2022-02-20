@@ -1,6 +1,7 @@
 /*
 This version is taken from jfreechart:1.5.3 with changing some private fields and methods
 to protected to be able to extend behaviour of the class.
+Extracting pop-up menu items to add accelerator in the child class.
 There are no changes in logic; no fields and methods added or removed.
  */
 
@@ -279,7 +280,7 @@ public class ChartPanel extends JPanel implements ChartChangeListener,
     private transient Line2D horizontalTraceLine;
 
     /** Menu item for zooming in on a chart (both axes). */
-    private JMenuItem zoomInBothMenuItem;
+    protected JMenuItem zoomInBothMenuItem;
 
     /** Menu item for zooming in on a chart (domain axis). */
     private JMenuItem zoomInDomainMenuItem;
@@ -288,7 +289,7 @@ public class ChartPanel extends JPanel implements ChartChangeListener,
     private JMenuItem zoomInRangeMenuItem;
 
     /** Menu item for zooming out on a chart. */
-    private JMenuItem zoomOutBothMenuItem;
+    protected JMenuItem zoomOutBothMenuItem;
 
     /** Menu item for zooming out on a chart (domain axis). */
     private JMenuItem zoomOutDomainMenuItem;
@@ -297,13 +298,22 @@ public class ChartPanel extends JPanel implements ChartChangeListener,
     private JMenuItem zoomOutRangeMenuItem;
 
     /** Menu item for resetting the zoom (both axes). */
-    private JMenuItem zoomResetBothMenuItem;
+    protected JMenuItem zoomResetBothMenuItem;
 
     /** Menu item for resetting the zoom (domain axis only). */
     private JMenuItem zoomResetDomainMenuItem;
 
     /** Menu item for resetting the zoom (range axis only). */
     private JMenuItem zoomResetRangeMenuItem;
+
+    /** Menu item for changing properties of the chart. */
+    protected JMenuItem propertiesItem;
+
+    /** Menu item for copy the char to sysmtem clipboard. */
+    protected JMenuItem copyItem;
+
+    /** Menu item for saving the chart as PNG. */
+    protected JMenuItem pngItem;
 
     /**
      * The default directory for saving charts to file.
@@ -2855,7 +2865,7 @@ public class ChartPanel extends JPanel implements ChartChangeListener,
         boolean separator = false;
 
         if (properties) {
-            JMenuItem propertiesItem = new JMenuItem(
+            propertiesItem = new JMenuItem(
                     localizationResources.getString("Properties..."));
             propertiesItem.setActionCommand(PROPERTIES_COMMAND);
             propertiesItem.addActionListener(this);
@@ -2867,7 +2877,7 @@ public class ChartPanel extends JPanel implements ChartChangeListener,
             if (separator) {
                 result.addSeparator();
             }
-            JMenuItem copyItem = new JMenuItem(
+            copyItem = new JMenuItem(
                     localizationResources.getString("Copy"));
             copyItem.setActionCommand(COPY_COMMAND);
             copyItem.addActionListener(this);
@@ -2881,7 +2891,7 @@ public class ChartPanel extends JPanel implements ChartChangeListener,
             }
             JMenu saveSubMenu = new JMenu(localizationResources.getString(
                     "Save_as"));
-            JMenuItem pngItem = new JMenuItem(localizationResources.getString(
+            pngItem = new JMenuItem(localizationResources.getString(
                     "PNG..."));
             pngItem.setActionCommand("SAVE_AS_PNG");
             pngItem.addActionListener(this);

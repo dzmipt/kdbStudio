@@ -5,6 +5,8 @@ import org.jfree.chart.JFreeChart;
 import org.jfree.chart.axis.ValueAxis;
 import org.jfree.chart.plot.*;
 import org.jfree.chart.ui.RectangleEdge;
+import studio.ui.UserAction;
+import studio.ui.Util;
 import studio.ui.chart.patched.CrosshairOverlay;
 
 import javax.swing.*;
@@ -18,6 +20,13 @@ public class ChartPanel extends studio.ui.chart.patched.ChartPanel {
 
     private final Crosshair xCrosshair;
     private final Crosshair yCrosshair;
+
+    private final Action copyAction;
+    private final Action saveAction;
+    private final Action propertiesAction;
+    private final Action resetZoomAction;
+    private final Action zoomInAction;
+    private final Action zoomOutAction;
 
     public ChartPanel(JFreeChart chart) {
         super(chart);
@@ -36,16 +45,51 @@ public class ChartPanel extends studio.ui.chart.patched.ChartPanel {
         setMouseWheelEnabled(true);
         setMouseZoomable(true, true);
 
-        String key = "ESCAPE";
-        getActionMap().put(key, new AbstractAction() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                processEsc();
+        int meta = java.awt.Toolkit.getDefaultToolkit().getMenuShortcutKeyMask();
+        copyAction = addAccelerator(copyItem, KeyStroke.getKeyStroke(KeyEvent.VK_C, meta));
+        copyAction.putValue(Action.SMALL_ICON, Util.COPY_ICON);
+        saveAction = addAccelerator(pngItem, KeyStroke.getKeyStroke(KeyEvent.VK_S, meta));
+        saveAction.putValue(Action.SMALL_ICON, Util.SAVE_AS_ICON);
+        propertiesAction = addAccelerator(propertiesItem, KeyStroke.getKeyStroke(KeyEvent.VK_ENTER, KeyEvent.ALT_MASK));
+        zoomInAction = addAccelerator(zoomInBothMenuItem, KeyStroke.getKeyStroke(KeyEvent.VK_PLUS, meta),
+                                                          KeyStroke.getKeyStroke(KeyEvent.VK_EQUALS, meta));
+        zoomOutAction = addAccelerator(zoomOutBothMenuItem, KeyStroke.getKeyStroke(KeyEvent.VK_MINUS, meta));
+        resetZoomAction = addAccelerator(zoomResetBothMenuItem, KeyStroke.getKeyStroke(KeyEvent.VK_ESCAPE, 0));
+    }
+
+    private Action addAccelerator(JMenuItem menuItem, KeyStroke... keyStrokes) {
+        menuItem.setAccelerator(keyStrokes[0]);
+        UserAction action = UserAction.create(menuItem.getText(), menuItem.getToolTipText(), 0, keyStrokes[0], this);
+        action.putValue(Action.ACTION_COMMAND_KEY, menuItem.getActionCommand());
+
+        for (KeyStroke keyStroke: keyStrokes) {
+            String key = menuItem.getText() + " - " + keyStroke;
+            getActionMap().put(key, action);
+            getInputMap(WHEN_IN_FOCUSED_WINDOW).put(keyStroke, key);
+        }
+        return action;
+    }
+
+    public Action getCopyAction() {
+        return copyAction;
+    }
+
+    public Action getSaveAction() {
+        return saveAction;
+    }
+
+    @Override
+    public void actionPerformed(ActionEvent event) {
+        if (event.getActionCommand().equals(ZOOM_RESET_BOTH_COMMAND)) {
+            if (zoomRectangle != null) {
+                zoomPoint = null;
+                zoomRectangle = null;
+                repaint();
+                return;
             }
-        });
+        }
 
-        getInputMap(WHEN_IN_FOCUSED_WINDOW).put(KeyStroke.getKeyStroke(KeyEvent.VK_ESCAPE, 0), key);
-
+        super.actionPerformed(event);
     }
 
     private void processEsc() {

@@ -6,7 +6,10 @@ import javax.swing.*;
 import javax.swing.border.Border;
 import javax.swing.border.EtchedBorder;
 import java.awt.*;
-import java.awt.event.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
 import java.util.List;
 
 public class ChartConfigPanel extends Box implements ActionListener {
@@ -219,7 +222,7 @@ public class ChartConfigPanel extends Box implements ActionListener {
     public void actionPerformed(ActionEvent e) {
         pnlLagend.repaint();
         validateState();
-        chart.createPlot();
+        chart.refreshPlot();
     }
 
     private void validateState() {
