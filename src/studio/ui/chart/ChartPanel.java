@@ -51,7 +51,7 @@ public class ChartPanel extends studio.ui.chart.patched.ChartPanel {
         copyAction.putValue(Action.SHORT_DESCRIPTION, "Copy the chart");
 
         saveAction = addAccelerator(pngItem, KeyStroke.getKeyStroke(KeyEvent.VK_S, meta));
-        saveAction.putValue(Action.SMALL_ICON, Util.SAVE_AS_ICON);
+        saveAction.putValue(Action.SMALL_ICON, Util.DISKS_ICON);
         saveAction.putValue(Action.SHORT_DESCRIPTION, "Save the chart");
 
         propertiesAction = addAccelerator(propertiesItem, KeyStroke.getKeyStroke(KeyEvent.VK_ENTER, KeyEvent.ALT_MASK));
