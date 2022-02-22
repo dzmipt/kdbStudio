@@ -56,8 +56,10 @@ public class ChartPanel extends studio.ui.chart.patched.ChartPanel {
 
         propertiesAction = addAccelerator(propertiesItem, KeyStroke.getKeyStroke(KeyEvent.VK_ENTER, KeyEvent.ALT_MASK));
         zoomInAction = addAccelerator(zoomInBothMenuItem, KeyStroke.getKeyStroke(KeyEvent.VK_PLUS, meta),
-                                                          KeyStroke.getKeyStroke(KeyEvent.VK_EQUALS, meta));
-        zoomOutAction = addAccelerator(zoomOutBothMenuItem, KeyStroke.getKeyStroke(KeyEvent.VK_MINUS, meta));
+                                                          KeyStroke.getKeyStroke(KeyEvent.VK_EQUALS, meta),
+                                                          KeyStroke.getKeyStroke(KeyEvent.VK_ADD, meta));
+        zoomOutAction = addAccelerator(zoomOutBothMenuItem, KeyStroke.getKeyStroke(KeyEvent.VK_MINUS, meta),
+                                                            KeyStroke.getKeyStroke(KeyEvent.VK_SUBTRACT, meta));
         resetZoomAction = addAccelerator(zoomResetBothMenuItem, KeyStroke.getKeyStroke(KeyEvent.VK_ESCAPE, 0));
     }
 
@@ -85,6 +87,10 @@ public class ChartPanel extends studio.ui.chart.patched.ChartPanel {
     @Override
     public void actionPerformed(ActionEvent event) {
         if (event.getActionCommand().equals(ZOOM_RESET_BOTH_COMMAND)) {
+            JPopupMenu popup = getPopupMenu();
+            if (popup != null && popup.isShowing()) {
+                return;
+            }
             if (zoomRectangle != null) {
                 zoomPoint = null;
                 zoomRectangle = null;
@@ -94,16 +100,6 @@ public class ChartPanel extends studio.ui.chart.patched.ChartPanel {
         }
 
         super.actionPerformed(event);
-    }
-
-    private void processEsc() {
-        if (zoomRectangle != null) {
-            zoomPoint = null;
-            zoomRectangle = null;
-            repaint();
-        } else {
-            restoreAutoBounds();
-        }
     }
 
     @Override
