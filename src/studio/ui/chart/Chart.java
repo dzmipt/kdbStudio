@@ -279,6 +279,7 @@ public class Chart implements ComponentListener {
             datasetIndex++;
         }
 
+        chartPanel.setVisible(yClazz!=null);
         contentPane.revalidate();
         contentPane.repaint();
     }
