@@ -29,9 +29,7 @@ import studio.utils.WindowsAppUserMode;
 import javax.swing.Timer;
 import javax.swing.*;
 import java.awt.*;
-import java.awt.event.ComponentEvent;
-import java.awt.event.ComponentListener;
-import java.awt.event.KeyEvent;
+import java.awt.event.*;
 import java.util.List;
 import java.util.*;
 
@@ -52,6 +50,12 @@ public class Chart implements ComponentListener {
     private ChartConfigPanel pnlConfig;
 
     private List<Integer> yIndex;
+
+    private final String defaultTitle;
+
+    private static int chartIndex = 0;
+    private static final List<Chart> charts = new ArrayList<>();
+
 
     private final static Set<Class> supportedClasses = new HashSet<>();
 
@@ -80,6 +84,8 @@ public class Chart implements ComponentListener {
 
     public Chart(KTableModel table) {
         this.table = table;
+        chartIndex++;
+        defaultTitle = "Studio for kdb+ [chart"+ chartIndex +"]";
         initComponents();
     }
 
@@ -130,10 +136,17 @@ public class Chart implements ComponentListener {
 
         WindowsAppUserMode.setChartId();
         try {
+            charts.add(this);
             frame = new JFrame();
             updateTitle();
             frame.setContentPane(contentPane);
             frame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+            frame.addWindowListener(new WindowAdapter() {
+                @Override
+                public void windowClosed(WindowEvent e) {
+                    charts.remove(Chart.this);
+                }
+            });
             frame.setIconImage(Util.CHART_BIG_ICON.getImage());
 
             frame.setBounds(config.getBounds(Config.CHART_BOUNDS));
@@ -155,22 +168,24 @@ public class Chart implements ComponentListener {
     }
 
     private String getChartTitle() {
-        if (chartPanel == null) {
-            return null;
-        }
-        JFreeChart chart = chartPanel.getChart();
-        if (chart == null) {
-            return null;
-        }
-
         String title = null;
-        TextTitle chartTitle = chart.getTitle();
-        if (chartTitle != null && chartTitle.isVisible()) {
-            String text = chartTitle.getText();
-            if (text != null && ! text.trim().equals("")) {
-                title = text.trim();
+
+        if (chartPanel != null && chartPanel.getChart() != null) {
+            JFreeChart chart = chartPanel.getChart();
+
+            TextTitle chartTitle = chart.getTitle();
+            if (chartTitle != null && chartTitle.isVisible()) {
+                String text = chartTitle.getText();
+                if (text != null && !text.trim().equals("")) {
+                    title = text.trim();
+                }
             }
         }
+
+        if (title == null || title.trim().equals("")) {
+            return defaultTitle;
+        }
+
         return title;
     }
 
@@ -179,9 +194,6 @@ public class Chart implements ComponentListener {
             return;
         }
         String title = getChartTitle();
-        if (title == null) {
-            title = "Studio for kdb+ [chart]";
-        }
         if (! title.equals(frame.getTitle())) {
             frame.setTitle(title);
         }
