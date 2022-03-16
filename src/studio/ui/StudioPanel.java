@@ -18,6 +18,7 @@ import studio.ui.dndtabbedpane.DraggableTabbedPane;
 import studio.ui.rstextarea.FindReplaceAction;
 import studio.ui.rstextarea.RSTextAreaFactory;
 import studio.utils.*;
+import studio.utils.log4j.EnvConfig;
 
 import javax.swing.FocusManager;
 import javax.swing.*;
@@ -153,7 +154,7 @@ public class StudioPanel extends JPanel implements WindowListener {
 
         if (! loading) {
             Server server = editor.getServer();
-            String env = Config.getEnvironment();
+            String env = EnvConfig.getEnvironment();
             String frameTitle = editor.getTitle() + (editor.isModified() ? " (not saved) " : "") + (server != null ? " @" + server.toString() : "") + " Studio for kdb+ " + Lm.version + (env == null ? "" : " [" + env + "]");
             if (!frameTitle.equals(frame.getTitle())) {
                 frame.setTitle(frameTitle);

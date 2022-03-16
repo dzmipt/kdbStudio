@@ -1,8 +1,8 @@
 package studio.ui;
 
-import studio.kdb.Config;
 import studio.kdb.Lm;
 import studio.utils.BrowserLaunch;
+import studio.utils.log4j.EnvConfig;
 
 import javax.swing.*;
 import javax.swing.event.HyperlinkEvent;
@@ -10,13 +10,11 @@ import javax.swing.event.HyperlinkListener;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.text.SimpleDateFormat;
-import java.util.TimeZone;
 
 public class HelpDialog extends JDialog {
     public HelpDialog(JFrame parent) {
         super(parent, "Studio for kdb+");
-        String env = Config.getEnvironment();
+        String env = EnvConfig.getEnvironment();
         final JEditorPane jep = new JEditorPane("text/html",
                 "<html><head><title>Studio for kdb+</title></head><body><h1>Studio for kdb+</h1>"
                         + "<p>"

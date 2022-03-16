@@ -10,6 +10,7 @@ import studio.utils.HistoricalList;
 import studio.utils.LineEnding;
 import studio.utils.QConnection;
 import studio.utils.TableConnExtractor;
+import studio.utils.log4j.EnvConfig;
 
 import javax.swing.tree.TreeNode;
 import java.awt.*;
@@ -19,7 +20,6 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
 import java.util.*;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -102,7 +102,6 @@ public class Config {
     private static final String PATH = System.getProperties().getProperty("user.home") + "/.studioforkdb";
     private static final String CONFIG_FILENAME = "studio.properties";
     private static final String WORKSPACE_FILENAME = "workspace.properties";
-    private static String environment = null;
 
     private static final String VERSION13 = "1.3";
     private static final String VERSION12 = "1.2";
@@ -111,8 +110,7 @@ public class Config {
     private static final String VERSION = VERSION13;
 
 
-    private String env;
-    private String filename;
+    private final String filename;
     private Properties p = new Properties();
     private Map<String, Server> servers;
     private Collection<String> serverNames;
@@ -125,43 +123,46 @@ public class Config {
 
     private TableConnExtractor tableConnExtractor;
 
-    private final static Map<String, Config> instances = new ConcurrentHashMap<>();
+    private final static Config instance = new Config();
 
     public enum ExecAllOption {Execute, Ask, Ignore}
 
-    private Config(String env, String filename, Properties properties) {
-        this.env = env;
+    private Config(String filename, Properties properties) {
         this.filename = filename;
         init(filename, properties);
     }
 
-    private Config(String env, String filename) {
-        this(env, filename, null);
+    protected Config(String filename) {
+        this(filename, null);
     }
 
-    private static String getConfigFilename(String env, String filename) {
-        return PATH + (env == null ? "" : "/" + env) + "/" + filename;
+    private static void copyConfig(String configFileName) throws IOException {
+        Path src = Paths.get(EnvConfig.getFilepath(null, configFileName));
+        Path target = Paths.get(EnvConfig.getFilepath(configFileName));
+        if (Files.exists(src)) {
+            log.info("Copying from {} to {}", src, target);
+            Files.copy(src, target);
+        }
+    }
+
+    private Config() {
+        filename = EnvConfig.getFilepath(CONFIG_FILENAME);
+
+        String env = EnvConfig.getEnvironment();
+        if (env != null && ! Files.exists(Paths.get(filename))) {
+            log.info("Config for environment {} is not found. Copying from default location: {}", env, EnvConfig.getBaseFolder(null));
+            try {
+                copyConfig(CONFIG_FILENAME);
+                copyConfig(WORKSPACE_FILENAME);
+            } catch (IOException e) {
+                log.error("Error during copying configs", e);
+            }
+        }
+        init(filename, null);
     }
 
     private String getWorkspaceFilename() {
-        return getConfigFilename(env, WORKSPACE_FILENAME);
-    }
-
-    public synchronized static String getEnvironment() {
-        return environment;
-    }
-
-    public synchronized static void setEnvironment(String env) {
-        Config.environment = env;
-        String configFileName = getConfigFilename(env, CONFIG_FILENAME);
-
-        if (! Files.exists(Paths.get(configFileName))) {
-            log.info("Config for environment {} is not found. Copying from default...", env);
-            Config defaultConfig = Config.getByEnvironment(null);
-            Config config = new Config(env, configFileName, defaultConfig.p);
-            config.save();
-            config.saveWorkspace(defaultConfig.loadWorkspace());
-        }
+        return EnvConfig.getFilepath(WORKSPACE_FILENAME);
     }
 
 	public Workspace loadWorkspace() {
@@ -280,19 +281,7 @@ public class Config {
     }
 
     public static Config getInstance() {
-        return getByEnvironment(environment);
-    }
-
-    public static Config getByEnvironment(String env) {
-        return getInstance(env, getConfigFilename(env, CONFIG_FILENAME));
-    }
-
-    public static Config getByFilename(String filename) {
-        return getInstance(environment, filename);
-    }
-
-    private static Config getInstance(String env, String filename) {
-        return instances.computeIfAbsent(filename, name -> new Config(env, name));
+        return instance;
     }
 
     private void init(String filename, Properties properties) {

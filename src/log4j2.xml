@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<Configuration status="warn">
+<Configuration status="warn" packages="studio.utils.log4j">
     <Properties>
-        <!-- Reference to the folder with Config properties - see Config class  -->
-        <Property name="baseFolder">${sys:user.home}/.studioforkdb${sys:log4j.studio.envSuffix:-}/log</Property>
+        <!-- studiobase lookup plugin is defined in studio.utils.log4j.EnvConfig -->
+        <Property name="baseFolder">${studiobase:log}</Property>
     </Properties>
 
     <Appenders>

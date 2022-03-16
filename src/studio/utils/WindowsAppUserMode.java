@@ -5,16 +5,16 @@ import com.sun.jna.NativeLong;
 import com.sun.jna.WString;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import studio.kdb.Config;
 import studio.kdb.Lm;
 import studio.ui.Util;
+import studio.utils.log4j.EnvConfig;
 
 public class WindowsAppUserMode {
     private static final Logger log = LogManager.getLogger();
 
     private final static boolean initialized = init();
 
-    private final static String mainID = "kdbStudioAppID" + Config.getEnvironment() + Lm.version;
+    private final static String mainID = "kdbStudioAppID" + EnvConfig.getEnvironment() + Lm.version;
     private final static String chartID = mainID + "Chart";
 
     private static boolean init() {
