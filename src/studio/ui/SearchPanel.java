@@ -140,7 +140,7 @@ public class SearchPanel extends JPanel {
             }
         }
 
-        int pos = textArea.getCaretPosition();
+        int pos = context.getSearchForward() ? textArea.getSelectionEnd() : textArea.getSelectionStart();
         textArea.setSelectionStart(pos);
         textArea.setSelectionEnd(pos);
         SearchResult result;
