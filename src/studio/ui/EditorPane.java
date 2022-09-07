@@ -6,6 +6,7 @@ import studio.kdb.Config;
 import studio.ui.rstextarea.RSTextAreaFactory;
 
 import javax.swing.*;
+import javax.swing.text.PlainDocument;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.KeyAdapter;
@@ -66,6 +67,10 @@ public class EditorPane extends JPanel {
 
         Font font = Config.getInstance().getFont(Config.FONT_EDITOR);
         textArea.setFont(font);
+
+        textArea.getDocument().putProperty(PlainDocument.tabSizeAttribute, Config.getInstance().getInt(Config.EDITOR_TAB_SIZE));
+        textArea.setTabsEmulated(Config.getInstance().getBoolean(Config.EDITOR_TAB_EMULATED));
+
         RTextScrollPane scrollPane = new RTextScrollPane(textArea);
         scrollPane.getGutter().setLineNumberFont(font);
 

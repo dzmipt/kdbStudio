@@ -15,6 +15,7 @@ import studio.ui.action.WorkspaceSaver;
 import studio.ui.chart.Chart;
 import studio.ui.dndtabbedpane.DragEvent;
 import studio.ui.dndtabbedpane.DraggableTabbedPane;
+import studio.ui.rstextarea.ConvertTabsToSpacesAction;
 import studio.ui.rstextarea.FindReplaceAction;
 import studio.ui.rstextarea.RSTextAreaFactory;
 import studio.utils.*;
@@ -56,6 +57,7 @@ public class StudioPanel extends JPanel implements WindowListener {
     private static final Action editorSelectAllAction;
     private static final Action editorFindAction;
     private static final Action editorReplaceAction;
+    private static final Action editorConvertTabsToSpacesAction;
 
     static {
         // Action name will be used for text in menu items. Kit's actions have internal names.
@@ -68,6 +70,7 @@ public class StudioPanel extends JPanel implements WindowListener {
         editorRedoAction = RSTextAreaFactory.getAction(RSyntaxTextAreaEditorKit.rtaRedoAction);
         editorFindAction = RSTextAreaFactory.getAction(FindReplaceAction.findAction);
         editorReplaceAction = RSTextAreaFactory.getAction(FindReplaceAction.replaceAction);
+        editorConvertTabsToSpacesAction = RSTextAreaFactory.getAction(ConvertTabsToSpacesAction.action);
     }
 
 
@@ -107,6 +110,7 @@ public class StudioPanel extends JPanel implements WindowListener {
     private Action selectAllAction;
     private Action findAction;
     private Action replaceAction;
+    private Action convertTabsToSpacesAction;
     private UserAction stopAction;
     private UserAction executeAction;
     private UserAction executeCurrentLineAction;
@@ -775,6 +779,8 @@ public class StudioPanel extends JPanel implements WindowListener {
         replaceAction = UserAction.create(I18n.getString("Replace"), Util.REPLACE_ICON, "Replace text in the document",
                 KeyEvent.VK_R, KeyStroke.getKeyStroke(KeyEvent.VK_R,menuShortcutKeyMask), editorReplaceAction);
 
+        convertTabsToSpacesAction = UserAction.create("Convert tabs to spaces", editorConvertTabsToSpacesAction);
+
         selectAllAction = UserAction.create(I18n.getString("SelectAll"), "Select all text in the document",
                 KeyEvent.VK_A, KeyStroke.getKeyStroke(KeyEvent.VK_A,menuShortcutKeyMask), editorSelectAllAction);
 
@@ -1098,6 +1104,7 @@ public class StudioPanel extends JPanel implements WindowListener {
         menu.addSeparator();
         menu.add(new JMenuItem(findAction));
         menu.add(new JMenuItem(replaceAction));
+        menu.add(new JMenuItem(convertTabsToSpacesAction));
 //        menu.addSeparator();
 //        menu.add(new JMenuItem(editFontAction));
         menubar.add(menu);
