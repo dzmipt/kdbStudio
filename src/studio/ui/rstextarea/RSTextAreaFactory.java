@@ -38,6 +38,7 @@ public class RSTextAreaFactory {
         actions.add(new FindReplaceAction(false));
         actions.add(new FindReplaceAction(true));
         actions.add(new HideSearchPanelAction());
+        actions.add(new ConvertTabsToSpacesAction());
 
         actionMap = new ActionMapUIResource();
         for (Action a : actions) {
