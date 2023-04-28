@@ -14,7 +14,9 @@ import studio.ui.action.WorkspaceSaver;
 import studio.utils.*;
 
 import javax.swing.*;
+import javax.swing.text.DefaultEditorKit;
 import java.awt.*;
+import java.awt.event.KeyEvent;
 import java.io.IOException;
 import java.io.PrintStream;
 import java.lang.reflect.Proxy;
@@ -62,6 +64,24 @@ public class Studio {
         }
 
         studio.ui.I18n.setLocale(Locale.getDefault());
+
+        if (Util.MAC_OS_X) {
+            InputMap im = (InputMap) UIManager.get("TextField.focusInputMap");
+            im.put(KeyStroke.getKeyStroke(KeyEvent.VK_C, KeyEvent.META_DOWN_MASK), DefaultEditorKit.copyAction);
+            im.put(KeyStroke.getKeyStroke(KeyEvent.VK_V, KeyEvent.META_DOWN_MASK), DefaultEditorKit.pasteAction);
+            im.put(KeyStroke.getKeyStroke(KeyEvent.VK_X, KeyEvent.META_DOWN_MASK), DefaultEditorKit.cutAction);
+            im.put(KeyStroke.getKeyStroke(KeyEvent.VK_A, KeyEvent.META_DOWN_MASK), DefaultEditorKit.selectAllAction);
+
+            im = (InputMap) UIManager.get("TextPane.focusInputMap");
+            im.put(KeyStroke.getKeyStroke(KeyEvent.VK_C, KeyEvent.META_DOWN_MASK), DefaultEditorKit.copyAction);
+            im.put(KeyStroke.getKeyStroke(KeyEvent.VK_V, KeyEvent.META_DOWN_MASK), DefaultEditorKit.pasteAction);
+            im.put(KeyStroke.getKeyStroke(KeyEvent.VK_X, KeyEvent.META_DOWN_MASK), DefaultEditorKit.cutAction);
+            im.put(KeyStroke.getKeyStroke(KeyEvent.VK_A, KeyEvent.META_DOWN_MASK), DefaultEditorKit.selectAllAction);
+
+            im = (InputMap) UIManager.get("Table.ancestorInputMap");
+            im.put(KeyStroke.getKeyStroke(KeyEvent.VK_C, KeyEvent.META_DOWN_MASK), "copy");
+
+        }
 
         UIManager.put("Table.font",new javax.swing.plaf.FontUIResource("Monospaced",Font.PLAIN,UIManager.getFont("Table.font").getSize()));
         System.setProperty("awt.useSystemAAFontSettings","on");

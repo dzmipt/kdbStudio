@@ -4,25 +4,28 @@ import studio.kdb.Config;
 import studio.kdb.K;
 import studio.kdb.KFormatContext;
 import studio.kdb.KTableModel;
-import java.awt.Color;
-import java.awt.Component;
+
 import javax.swing.*;
 import javax.swing.table.DefaultTableCellRenderer;
+import java.awt.*;
 
 class CellRenderer extends DefaultTableCellRenderer {
     private static final Color keyColor = new Color(220,255,220);
     private static final Color altColor = new Color(220,220,255);
     private static final Color nullColor = new Color(255,150,150);
-    private static final Color selColor = UIManager.getColor("Table.selectionBackground");
+
+    private static final Color bgColor = UIManager.getColor("Table.background");
+
+    private static final Color selBgColor = UIManager.getColor("Table.selectionBackground");
+    private static final Color defaultBgColor = new Color(145, 79, 206);
+    private static final Color selColor = selBgColor == null ? defaultBgColor : selBgColor;
+
+    private static final Color selFgColor = UIManager.getColor("Table.selectionForeground");
+
     private static final Color fgColor = UIManager.getColor("Table.foreground");
     private JTable table = null;
 
     private KFormatContext formatContextWithType, formatContextNoType;
-
-    private void initLabel(JTable table) {
-        setHorizontalAlignment(SwingConstants.LEFT);
-        setOpaque(true);
-    }
 
     public CellRenderer(JTable t) {
         setFormatContext(KFormatContext.DEFAULT);
@@ -32,7 +35,8 @@ class CellRenderer extends DefaultTableCellRenderer {
                 setFont(table.getFont());
         });
 
-        initLabel(t);
+        setHorizontalAlignment(SwingConstants.LEFT);
+        setOpaque(true);
         setFont(UIManager.getFont("Table.font"));
         setBackground(UIManager.getColor("Table.background"));
     }
@@ -64,9 +68,9 @@ class CellRenderer extends DefaultTableCellRenderer {
                 else if (row % 2 == 0)
                     setBackground(altColor);
                 else
-                    setBackground(UIManager.getColor("Table.background"));
+                    setBackground(bgColor);
             } else {
-                setForeground(UIManager.getColor("Table.selectionForeground"));
+                setForeground(selFgColor);
                 setBackground(selColor);
             }
         }
