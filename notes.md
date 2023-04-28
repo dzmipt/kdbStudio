@@ -3,7 +3,7 @@
     * drag for zoom can be done in any direction
     * chart can be moved
     * shortcuts for copy, save, etc.
-* KDBSTUDIO_CONFIG_HOME environment variable overrides location of Studio home with configs and logs
+* KDBSTUDIO\_CONFIG\_HOME environment variable overrides location of Studio home with configs and logs
 * Action to convert tabs to spaces
 
 `dz2.0.1` 2021.12.23
