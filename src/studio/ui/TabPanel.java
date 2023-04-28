@@ -21,6 +21,7 @@ public class TabPanel extends JPanel {
     private QGrid grid = null;
     private KFormatContext formatContext = new KFormatContext(KFormatContext.DEFAULT);
     private ResultType type;
+    private boolean pinned = false;
 
     public TabPanel(StudioPanel panel, QueryResult queryResult) {
         this.panel = panel;
@@ -109,15 +110,26 @@ public class TabPanel extends JPanel {
     }
 
     public void addInto(JTabbedPane tabbedPane) {
-        String title = type.title;
-        if (isTable()) {
-            title = title + " [" + grid.getRowCount() + " rows] ";
-        }
+        putClientProperty(JTabbedPane.class, tabbedPane);
+        String title = makeTitle();
         tabbedPane.addTab(title, type.icon, this);
         int tabIndex = tabbedPane.getTabCount() - 1;
         tabbedPane.setSelectedIndex(tabIndex);
         tabbedPane.setToolTipTextAt(tabIndex, "Executed at server: " + queryResult.getServer().getDescription(true));
         updateToolbarLocation(tabbedPane);
+    }
+
+    public String makeTitle() {
+        String title = (isPinned() ? "\u2191 " : "") + type.title;
+        if (isTable()) {
+            title = title + " [" + grid.getRowCount() + " rows] ";
+        }
+        return title;
+    }
+
+    public void updateTitle() {
+        JTabbedPane parentPane = (JTabbedPane)getClientProperty(JTabbedPane.class);
+        parentPane.setTitleAt(parentPane.indexOfComponent(this), makeTitle());
     }
 
     public void updateToolbarLocation(JTabbedPane tabbedPane) {
@@ -165,6 +177,15 @@ public class TabPanel extends JPanel {
 
     public boolean isTable() {
         return grid != null;
+    }
+
+    public boolean isPinned() {
+        return pinned;
+    }
+
+    public void setPinned(boolean pinned) {
+        this.pinned = pinned;
+        updateTitle();
     }
 
     public enum ResultType {

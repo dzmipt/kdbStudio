@@ -5,10 +5,15 @@ import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 
 public class ClosableTabbedPane {
+
     public interface CloseTabAction {
-        boolean close(int index);
+        boolean close(int index, boolean force);
     }
 
+    public interface PinTabAction extends CloseTabAction {
+        boolean isPinned(int index);
+        void setPinned(int index, boolean pinned);
+    }
 
     public static void makeCloseable(JTabbedPane tabbedPane, CloseTabAction closeTabAction) {
         tabbedPane.addMouseListener(new MouseAdapter() {
@@ -22,7 +27,7 @@ public class ClosableTabbedPane {
                 if (checkPopup(tabIndex, e)) return;
 
                 if (SwingUtilities.isMiddleMouseButton(e)) {
-                    closeTabAction.close(tabIndex);
+                    closeTabAction.close(tabIndex, true);
                 }
             }
 
@@ -46,24 +51,26 @@ public class ClosableTabbedPane {
 
     }
 
-    private static JPopupMenu createTabbedPopupMenu(JTabbedPane tabbedPane, CloseTabAction closeTabAction, int index) {
+    private static JPopupMenu createTabbedPopupMenu(JTabbedPane tabbedPane, CloseTabAction closeTabAction, int index) {        
         UserAction closeAction = UserAction.create("Close", "Close current tab",
-                0, e-> closeTabAction.close(index) );
+                0, e-> closeTabAction.close(index, true) );
 
         UserAction closeOthersAction = UserAction.create("Close other tabs", "Close other tabs",
                 0, e -> {
-                    for (int count = index; count>0; count--) {
-                        if (! closeTabAction.close(0)) return;
+                    int rightTab = tabbedPane.getTabCount();
+                    while(--rightTab > index) {
+                        if (!closeTabAction.close(rightTab, false)) return;
                     }
-                    while (tabbedPane.getTabCount() > 1) {
-                        if (! closeTabAction.close(1)) return;
-                    }
+                    for (int leftTab = index-1; leftTab >= 0; leftTab--) {
+                        if (!closeTabAction.close(leftTab, false)) return;
+                    }                    
                 });
 
         UserAction closeRightsAction = UserAction.create("Close tabs to the right", "Close tabs to the right",
                 0, e -> {
-                    while (tabbedPane.getTabCount() > index+1) {
-                        if (! closeTabAction.close(index+1)) return;
+                    int rightTab = tabbedPane.getTabCount();
+                    while(--rightTab > index) {
+                        if (!closeTabAction.close(rightTab, false)) return;
                     }
                 });
 
@@ -71,6 +78,28 @@ public class ClosableTabbedPane {
         closeRightsAction.setEnabled(tabbedPane.getTabCount() > index+1);
 
         JPopupMenu popup = new JPopupMenu();
+
+        if (closeTabAction instanceof PinTabAction) {
+            PinTabAction pinTabAction = (PinTabAction)closeTabAction;
+
+            UserAction pinAction = UserAction.create("Pin", "Pin current tab",
+                    0, e -> {
+                        pinTabAction.setPinned(index, true);
+                    });
+
+            UserAction unpinAction = UserAction.create("Unpin", "Unpin current tab",
+                    0, e -> {
+                        pinTabAction.setPinned(index, false);
+                    });
+
+            if (pinTabAction.isPinned(index)) {
+                popup.add(unpinAction);
+            } else {
+                popup.add(pinAction);
+            }
+            popup.addSeparator();
+        }
+
         popup.add(closeAction);
         popup.add(closeOthersAction);
         popup.add(closeRightsAction);

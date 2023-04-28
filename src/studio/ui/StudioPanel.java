@@ -1493,7 +1493,7 @@ public class StudioPanel extends JPanel implements WindowListener {
 
         tabbedEditors = new DraggableTabbedPane("Editor");
         removeFocusChangeKeysForWindows(tabbedEditors);
-        ClosableTabbedPane.makeCloseable(tabbedEditors, index -> {
+        ClosableTabbedPane.makeCloseable(tabbedEditors, (index, force) -> {
             tabbedEditors.setSelectedIndex(index);
             return closeTab();
         });
@@ -1518,9 +1518,24 @@ public class StudioPanel extends JPanel implements WindowListener {
 
 
         tabbedPane = new DraggableTabbedPane("Result", JTabbedPane.TOP);
-        ClosableTabbedPane.makeCloseable(tabbedPane, index -> {
-            tabbedPane.removeTabAt(index);
-            return true;
+        ClosableTabbedPane.makeCloseable(tabbedPane, new ClosableTabbedPane.PinTabAction() {
+            @Override
+            public boolean close(int index, boolean force) {
+                if (force || !isPinned(index)) {
+                    tabbedPane.removeTabAt(index);
+                }
+                return true;
+            }
+            @Override
+            public boolean isPinned(int index) {
+                TabPanel panel = (TabPanel)tabbedPane.getComponentAt(index);
+                return panel.isPinned();
+            }
+            @Override
+            public void setPinned(int index, boolean pinned) {
+                TabPanel panel = (TabPanel)tabbedPane.getComponentAt(index);
+                panel.setPinned(pinned);
+            }
         });
         tabbedPane.addChangeListener(e->refreshActionState());
         tabbedPane.putClientProperty(StudioPanel.class, this);
@@ -1784,10 +1799,16 @@ public class StudioPanel extends JPanel implements WindowListener {
             try {
                 if (queryResult.isComplete()) {
                     JTabbedPane tabbedPane = panel.tabbedPane;
-                    TabPanel tab = new TabPanel(panel, queryResult);
                     if (tabbedPane.getTabCount() >= CONFIG.getResultTabsCount()) {
-                        tabbedPane.remove(0);
+                        for (int index = 0; index < tabbedPane.getTabCount(); index++) {
+                            TabPanel tab = (TabPanel)tabbedPane.getComponentAt(index);
+                            if (!tab.isPinned()) {
+                                tabbedPane.removeTabAt(index);
+                                break;
+                            }
+                        }
                     }
+                    TabPanel tab = new TabPanel(panel, queryResult);
                     tab.addInto(tabbedPane);
                     tab.setToolTipText(editor.getServer().getConnectionString());
                 }
