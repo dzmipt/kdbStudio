@@ -1,11 +1,11 @@
+* Pinning result tabs
+* Action to convert tabs to spaces
+* KDBSTUDIO\_CONFIG\_HOME environment variable overrides location of Studio home with configs and logs
 * Improvements in charting: 
     * display mouse cursor coordinates
     * drag for zoom can be done in any direction
     * chart can be moved
     * shortcuts for copy, save, etc.
-* KDBSTUDIO\_CONFIG\_HOME environment variable overrides location of Studio home with configs and logs
-* Action to convert tabs to spaces
-* Pinning result tabs
 
 `dz2.0.1` 2021.12.23
 -----
