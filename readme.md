@@ -86,4 +86,4 @@ of a license from Icon Experience.
 [Apache]:https://www.apache.org/
 [RSyntaxTextArea]:http://bobbylight.github.io/RSyntaxTextArea/
 [JNA]:https://github.com/java-native-access/jna
-[Font Chooser]:https://gitlab.com/dheid/fontchooser
+[Font Chooser]:https://github.com/dheid/fontchooser
