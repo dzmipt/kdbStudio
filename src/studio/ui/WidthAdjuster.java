@@ -1,11 +1,17 @@
 package studio.ui;
 
-import studio.kdb.*;
-import java.awt.*;
-import java.awt.event.*;
-import java.util.Arrays;
+import studio.kdb.Config;
+import studio.kdb.KTableModel;
+
 import javax.swing.*;
-import javax.swing.table.*;
+import javax.swing.table.JTableHeader;
+import javax.swing.table.TableCellRenderer;
+import javax.swing.table.TableColumn;
+import javax.swing.table.TableColumnModel;
+import java.awt.*;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
+import java.util.Arrays;
 
 public class WidthAdjuster extends MouseAdapter {
 
@@ -24,9 +30,16 @@ public class WidthAdjuster extends MouseAdapter {
         int colCount = table.getColumnCount();
         limitWidthState = new boolean[colCount];
         Arrays.fill(limitWidthState, true);
-        int charWidth = SwingUtilities.computeStringWidth(table.getFontMetrics(UIManager.getFont("Table.font")), "x");
+        revalidate();
+    }
+
+    public void revalidate() {
+        int charWidth = SwingUtilities.computeStringWidth(table.getFontMetrics(table.getFont()), "x");
         gap =  (int) Math.round(charWidth * Config.getInstance().getDouble(Config.CELL_RIGHT_PADDING));
         cellMaxWidth = charWidth * Config.getInstance().getInt(Config.CELL_MAX_WIDTH);
+
+        for (int i = 0;i < table.getColumnCount();i++)
+            resize(i, limitWidthState[i]);
     }
 
     public void mousePressed(MouseEvent evt) {

@@ -6,7 +6,6 @@ import org.apache.logging.log4j.Logger;
 import org.fife.ui.rsyntaxtextarea.RSyntaxTextArea;
 import org.fife.ui.rsyntaxtextarea.RSyntaxTextAreaEditorKit;
 import studio.core.AuthenticationManager;
-import studio.core.Credentials;
 import studio.core.Studio;
 import studio.kdb.*;
 import studio.ui.action.QPadImport;
@@ -816,7 +815,7 @@ public class StudioPanel extends JPanel implements WindowListener {
                 e -> toggleWordWrap());
     }
 
-    private static StudioPanel getActivePanel() {
+    public static StudioPanel getActivePanel() {
         Window window = FocusManager.getCurrentManager().getActiveWindow();
         for(StudioPanel panel: allPanels) {
             if (window == panel.frame) return panel;
@@ -829,46 +828,8 @@ public class StudioPanel extends JPanel implements WindowListener {
         SettingsDialog dialog = new SettingsDialog(activePanel.frame);
         dialog.alignAndShow();
         if (dialog.getResult() == CANCELLED) return;
-        //@TODO Need rework - we are reading from Config inside SettingDialog; while saving happens outside
-        String auth = dialog.getDefaultAuthenticationMechanism();
-        CONFIG.setDefaultAuthMechanism(auth);
-        CONFIG.setDefaultCredentials(auth, new Credentials(dialog.getUser(), dialog.getPassword()));
-        CONFIG.setShowServerComboBox(dialog.isShowServerComboBox());
-        CONFIG.setResultTabsCount(dialog.getResultTabsCount());
-        CONFIG.setMaxCharsInResult(dialog.getMaxCharsInResult());
-        CONFIG.setMaxCharsInTableCell(dialog.getMaxCharsInTableCell());
-        CONFIG.setDouble(Config.CELL_RIGHT_PADDING, dialog.getCellRightPadding());
-        CONFIG.setInt(Config.CELL_MAX_WIDTH, dialog.getCellMaxWidth());
-        CONFIG.setExecAllOption(dialog.getExecAllOption());
-        CONFIG.setBoolean(Config.SAVE_ON_EXIT, dialog.isSaveOnExit());
-        CONFIG.setBoolean(Config.AUTO_SAVE, dialog.isAutoSave());
-        CONFIG.setEnum(Config.DEFAULT_LINE_ENDING, dialog.getDefaultLineEnding());
 
-        int maxFractionDigits = dialog.getMaxFractionDigits();
-        CONFIG.setInt(Config.MAX_FRACTION_DIGITS, maxFractionDigits);
-        //Looks like a hack??
-        KFormatContext.setMaxFractionDigits(maxFractionDigits);
-
-        boolean changedEditor = CONFIG.setBoolean(Config.RSTA_ANIMATE_BRACKET_MATCHING, dialog.isAnimateBracketMatching());
-        changedEditor |= CONFIG.setBoolean(Config.RSTA_HIGHLIGHT_CURRENT_LINE, dialog.isHighlightCurrentLine());
-        changedEditor |= CONFIG.setBoolean(Config.RSTA_WORD_WRAP, dialog.isWordWrap());
-
-        if (changedEditor) {
-            refreshEditorsSettings();
-        }
-
-        boolean changedResult = CONFIG.setInt(Config.EMULATED_DOUBLE_CLICK_TIMEOUT, dialog.getEmulatedDoubleClickTimeout());
-        if (changedResult) {
-            refreshResultSettings();
-        }
-
-        String lfClass = dialog.getLookAndFeelClassName();
-        if (!lfClass.equals(UIManager.getLookAndFeel().getClass().getName())) {
-            CONFIG.setLookAndFeel(lfClass);
-            StudioOptionPane.showMessage(activePanel.frame, "Look and Feel was changed. " +
-                    "New L&F will take effect on the next start up.", "Look and Feel Setting Changed");
-        }
-
+        dialog.saveSettings();
         activePanel.rebuildToolbar();
     }
 
@@ -880,7 +841,7 @@ public class StudioPanel extends JPanel implements WindowListener {
         rebuildAll();
     }
 
-    private static void refreshEditorsSettings() {
+    public static void refreshEditorsSettings() {
         for (StudioPanel panel: allPanels) {
             int count = panel.tabbedEditors.getTabCount();
             for (int index=0; index<count; index++) {
@@ -888,16 +849,19 @@ public class StudioPanel extends JPanel implements WindowListener {
                 editor.setHighlightCurrentLine(CONFIG.getBoolean(Config.RSTA_HIGHLIGHT_CURRENT_LINE));
                 editor.setAnimateBracketMatching(CONFIG.getBoolean(Config.RSTA_ANIMATE_BRACKET_MATCHING));
                 editor.setLineWrap(CONFIG.getBoolean(Config.RSTA_WORD_WRAP));
+                editor.setFont(CONFIG.getFont(Config.FONT_EDITOR));
             }
         }
     }
 
-    private static void refreshResultSettings() {
+    public static void refreshResultSettings() {
         long doubleClickTimeout = CONFIG.getInt(Config.EMULATED_DOUBLE_CLICK_TIMEOUT);
         for (StudioPanel panel: allPanels) {
             int count = panel.tabbedPane.getTabCount();
             for (int index=0; index<count; index++) {
-                panel.getResultPane(index).setDoubleClickTimeout(doubleClickTimeout);
+                TabPanel tabPanel = panel.getResultPane(index);
+                tabPanel.setDoubleClickTimeout(doubleClickTimeout);
+                tabPanel.setFont(CONFIG.getFont(Config.FONT_TABLE));
             }
         }
     }

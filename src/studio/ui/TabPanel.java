@@ -1,7 +1,7 @@
 package studio.ui;
 
-import studio.kdb.*;
 import studio.kdb.ListModel;
+import studio.kdb.*;
 import studio.ui.action.QueryResult;
 
 import javax.swing.*;
@@ -105,8 +105,14 @@ public class TabPanel extends JPanel {
             type = ResultType.ERROR;
         }
 
+        setFont(Config.getInstance().getFont(Config.FONT_TABLE));
+
         setLayout(new BorderLayout());
         add(component, BorderLayout.CENTER);
+    }
+
+    public void setFont(Font font) {
+        if (grid != null) grid.setFont(font);
     }
 
     public void addInto(JTabbedPane tabbedPane) {

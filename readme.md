@@ -41,6 +41,7 @@ Studio for kdb+ uses the following open source projects:
 * [Txtmark] - Java markdown processor - to convert notes.md to HTML during build
 * [Apache] - POI for Excel export
 * [JNA] - Java Native Access
+* [Font Chooser] - a library to select font
 
 Installation
 --------------
@@ -85,3 +86,4 @@ of a license from Icon Experience.
 [Apache]:https://www.apache.org/
 [RSyntaxTextArea]:http://bobbylight.github.io/RSyntaxTextArea/
 [JNA]:https://github.com/java-native-access/jna
+[Font Chooser]:https://gitlab.com/dheid/fontchooser

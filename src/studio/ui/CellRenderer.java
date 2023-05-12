@@ -37,7 +37,7 @@ class CellRenderer extends DefaultTableCellRenderer {
 
         setHorizontalAlignment(SwingConstants.LEFT);
         setOpaque(true);
-        setFont(UIManager.getFont("Table.font"));
+        setFont(table.getFont());
         setBackground(UIManager.getColor("Table.background"));
     }
 

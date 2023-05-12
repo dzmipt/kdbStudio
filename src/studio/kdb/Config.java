@@ -77,7 +77,7 @@ public class Config {
     public static final String COLOR_BACKGROUND = configDefault("token.BACKGROUND", ConfigType.COLOR, Color.WHITE);
 
     public static final String FONT_EDITOR = configDefault("font", ConfigType.FONT, new Font("Monospaced", Font.PLAIN, 14));
-    public static final String FONT_TABLE = configDefault("fontTable", ConfigType.FONT, new Font("Monospaced", Font.PLAIN, 14));
+    public static final String FONT_TABLE = configDefault("fontTable", ConfigType.FONT, new Font("SansSerif", Font.PLAIN, 12));
 
     public static final String EDITOR_TAB_SIZE = configDefault("editorTabSize", ConfigType.INT, 5); // 5 is a default value for RSyntaxTextArea
     public static final String EDITOR_TAB_EMULATED = configDefault("editorTabEmulated", ConfigType.BOOLEAN, false);
@@ -1078,12 +1078,12 @@ public class Config {
             return false;
         }
         p.setProperty(key + ".name", value.getName());
-        setInt(key + ".size", value.getSize());
+        p.setProperty(key + ".size", "" + value.getSize());
 
         int style = value.getStyle();
         if (style < 0 || style > 3) style = 0; // Not sure if it is posible
         FontStyle fontStyle = FontStyle.values()[style];
-        setEnum(key + ".style", fontStyle);
+        p.setProperty(key + ".style", fontStyle.name());
 
         save();
         return true;

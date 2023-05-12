@@ -169,8 +169,6 @@ public class Studio {
             im.put(KeyStroke.getKeyStroke(KeyEvent.VK_C, KeyEvent.META_DOWN_MASK), "copy");
 
         }
-
-        UIManager.put("Table.font",new javax.swing.plaf.FontUIResource("Monospaced",Font.PLAIN,UIManager.getFont("Table.font").getSize()));
     }
 
     //Executed on the Event Dispatcher Thread

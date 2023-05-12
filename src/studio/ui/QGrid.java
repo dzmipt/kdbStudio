@@ -6,7 +6,10 @@ import studio.ui.action.CopyTableSelectionAction;
 import javax.swing.*;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
-import javax.swing.table.*;
+import javax.swing.table.TableCellEditor;
+import javax.swing.table.TableCellRenderer;
+import javax.swing.table.TableColumn;
+import javax.swing.table.TableModel;
 import java.awt.*;
 import java.awt.event.InputEvent;
 import java.awt.event.KeyEvent;
@@ -18,6 +21,10 @@ public class QGrid extends JPanel {
     private StudioPanel panel;
     private final TableModel model;
     private final JTable table;
+    private WidthAdjuster widthAdjuster;
+    private TableRowHeader tableRowHeader;
+    private TableHeaderRenderer tableHeaderRenderer;
+    private JScrollPane scrollPane;
     private CellRenderer cellRenderer;
     private KFormatContext formatContext = KFormatContext.DEFAULT;
 
@@ -93,8 +100,8 @@ public class QGrid extends JPanel {
 
         table = new MYJTable(model);
 
-        DefaultTableCellRenderer dhr = new TableHeaderRenderer();
-        table.getTableHeader().setDefaultRenderer(dhr);
+        tableHeaderRenderer = new TableHeaderRenderer();
+        table.getTableHeader().setDefaultRenderer(tableHeaderRenderer);
         table.setShowHorizontalLines(true);
 
         table.setDragEnabled(true);
@@ -114,10 +121,10 @@ public class QGrid extends JPanel {
         table.setAutoResizeMode(JTable.AUTO_RESIZE_OFF);
         table.setShowVerticalLines(true);
         table.getTableHeader().setReorderingAllowed(true);
-        final JScrollPane scrollPane = new JScrollPane(table);
+        scrollPane = new JScrollPane(table);
 
-        TableRowHeader trh = new TableRowHeader(table);
-        scrollPane.setRowHeaderView(trh);
+        tableRowHeader = new TableRowHeader(table);
+        scrollPane.setRowHeaderView(tableRowHeader);
 
         scrollPane.getRowHeader().addChangeListener(new ChangeListener() {
             public void stateChanged(ChangeEvent ev) {
@@ -132,8 +139,7 @@ public class QGrid extends JPanel {
             final JViewport main = scrollPane.getViewport();
         });
 
-        WidthAdjuster wa = new WidthAdjuster(table, scrollPane);
-        wa.resizeAllColumns(true);
+        widthAdjuster = new WidthAdjuster(table, scrollPane);
 
         scrollPane.setWheelScrollingEnabled(true);
         scrollPane.getViewport().setBackground(UIManager.getColor("Table.background"));
@@ -228,6 +234,25 @@ public class QGrid extends JPanel {
                 Util.copyTextToClipboard(b.toString(formatContextForCell));
             }
         });
+    }
+
+    public void setFont(Font font) {
+        super.setFont(font);
+        if (table == null) return;
+
+        table.setFont(font);
+        tableHeaderRenderer.setFont(font);
+        cellRenderer.setFont(font);
+        int rowHeight = getFontMetrics(font).getHeight();
+        table.setRowHeight(rowHeight);
+
+        tableRowHeader.setFont(font);
+        ((JComponent)tableRowHeader.getCellRenderer()).setFont(font);
+        tableRowHeader.setFixedCellHeight(rowHeight);
+        widthAdjuster.revalidate();
+
+        revalidate();
+        repaint();
     }
 
     public void setDoubleClickTimeout(long doubleClickTimeout) {

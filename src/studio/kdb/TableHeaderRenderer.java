@@ -1,13 +1,11 @@
 package studio.kdb;
 
-import javax.swing.border.Border;
-
 import studio.ui.SorterDrawer;
 
-import java.awt.*;
 import javax.swing.*;
-
+import javax.swing.border.Border;
 import javax.swing.table.DefaultTableCellRenderer;
+import java.awt.*;
 
 public class TableHeaderRenderer extends DefaultTableCellRenderer {
 
@@ -23,14 +21,14 @@ public class TableHeaderRenderer extends DefaultTableCellRenderer {
         // add gap for sorter icon
         setBorder(BorderFactory.createCompoundBorder(border, BorderFactory.createEmptyBorder(5,2,1,0)));
 
-        setFont(UIManager.getFont("TableHeader.font"));
+        setFont(Config.getInstance().getFont(Config.FONT_TABLE));
         setBackground(UIManager.getColor("TableHeader.background"));
         setForeground(UIManager.getColor("TableHeader.foreground"));
     }
 
     public void setFont(Font f) {
         super.setFont(f);
-        invalidate();
+        revalidate();
     }
 
     private boolean asc = false;

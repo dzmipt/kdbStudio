@@ -1,12 +1,11 @@
 package studio.kdb;
 
-import java.awt.Component;
-import java.awt.Insets;
+import javax.swing.*;
+import javax.swing.event.MouseInputAdapter;
+import java.awt.*;
 import java.awt.event.MouseEvent;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
-import javax.swing.*;
-import javax.swing.event.MouseInputAdapter;
 
 public class TableRowHeader extends JList {
     private JTable table;
@@ -21,7 +20,6 @@ public class TableRowHeader extends JList {
     }
 
     public TableRowHeader(final JTable table) {
-        //  super();
         this.table = table;
         table.addPropertyChangeListener(new PropertyChangeListener() {
                                         public void propertyChange(PropertyChangeEvent propertyChangeEvent) {
@@ -39,8 +37,6 @@ public class TableRowHeader extends JList {
         setFont(table.getFont());
         recalcWidth();
 
-        //setPreferredSize(new Dimension(w+width,table.getRowHeight()));
-// setPreferredSize(new Dimension(width, 0));
         setFocusable(false);
         setModel(new TableListModel());
         setOpaque(false);
@@ -118,26 +114,17 @@ public class TableRowHeader extends JList {
                         UIManager.getBorder("TableHeader.cellBorder"),
                         BorderFactory.createEmptyBorder(0,0,0,5)
                       ));
-            //setFont(UIManager.getFont("Table.font"));
             setFont(table.getFont());
             setBackground(UIManager.getColor("TableHeader.background"));
             setForeground(UIManager.getColor("TableHeader.foreground"));
         }
 
+        public void setFont(Font font) {
+            super.setFont(font);
+        }
         public Component getListCellRendererComponent(JList list,Object value,int index,boolean isSelected,boolean cellHasFocus) {
             setText((value == null) ? "" : value.toString());
             return this;
         }
-        /*        public void updateUI()
-        {
-        super.updateUI();
-        setBorder(UIManager.getBorder("TableHeader.cellBorder"));
-        setFont(UIManager.getFont("Table.font"));
-        setBackground(UIManager.getColor("TableHeader.background"));
-        setForeground(UIManager.getColor("TableHeader.foreground"));
-
-        //setHeight(getFontMetrics(getFont()).getHeight());
-        }
-         **/
     }
 }
