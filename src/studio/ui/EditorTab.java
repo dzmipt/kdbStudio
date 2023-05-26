@@ -44,7 +44,7 @@ public class EditorTab implements FileWatcher.Listener {
     private void init() {
         if (editorPane != null) throw new IllegalStateException("The EditorTab has been already initialized");
 
-        editorPane = new EditorPane(true);
+        editorPane = new EditorPane(true, panel.getEditorSearchPanel());
         JTextComponent textArea = editorPane.getTextArea();
 
         textArea.putClientProperty(QueryExecutor.class, new QueryExecutor(this));

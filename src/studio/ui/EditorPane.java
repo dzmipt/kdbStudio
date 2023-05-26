@@ -4,6 +4,7 @@ import org.fife.ui.rsyntaxtextarea.RSyntaxTextArea;
 import org.fife.ui.rtextarea.RTextScrollPane;
 import studio.kdb.Config;
 import studio.ui.rstextarea.RSTextAreaFactory;
+import studio.ui.search.SearchPanel;
 
 import javax.swing.*;
 import javax.swing.text.PlainDocument;
@@ -15,12 +16,11 @@ import java.awt.event.KeyEvent;
 public class EditorPane extends JPanel {
 
     private final RSyntaxTextArea textArea;
+    private final SearchPanel searchPanel;
     private final MinSizeLabel lblRowCol;
     private final MinSizeLabel lblInsStatus;
     private final JLabel lblStatus;
     private final Box statusBar;
-
-    private final SearchPanel searchPanel;
 
     private Timer tempStatusTimer = new Timer(3000, this::tempStatusTimerAction);
     private String oldStatus = "";
@@ -29,8 +29,10 @@ public class EditorPane extends JPanel {
     private final int xGap;
 
 
-    public EditorPane(boolean editable) {
+    public EditorPane(boolean editable, SearchPanel searchPanel) {
         super(new BorderLayout());
+        this.searchPanel = searchPanel;
+
         FontMetrics fm = getFontMetrics(UIManager.getFont("Label.font"));
         yGap = Math.round(0.1f * fm.getHeight());
         xGap = Math.round(0.25f * SwingUtilities.computeStringWidth(fm, "x"));
@@ -74,10 +76,8 @@ public class EditorPane extends JPanel {
         RTextScrollPane scrollPane = new RTextScrollPane(textArea);
         scrollPane.getGutter().setLineNumberFont(font);
 
-        searchPanel = new SearchPanel(this);
         hideSearchPanel();
 
-        add(searchPanel, BorderLayout.NORTH);
         add(scrollPane, BorderLayout.CENTER);
         add(statusBar, BorderLayout.SOUTH);
     }

@@ -17,6 +17,7 @@ import studio.ui.dndtabbedpane.DraggableTabbedPane;
 import studio.ui.rstextarea.ConvertTabsToSpacesAction;
 import studio.ui.rstextarea.FindReplaceAction;
 import studio.ui.rstextarea.RSTextAreaFactory;
+import studio.ui.search.SearchPanel;
 import studio.utils.*;
 import studio.utils.log4j.EnvConfig;
 
@@ -84,6 +85,8 @@ public class StudioPanel extends JPanel implements WindowListener {
     private EditorTab editor;
     private JSplitPane splitpane;
     private DraggableTabbedPane tabbedPane;
+    private SearchPanel editorSearchPanel;
+    private SearchPanel resultSearchPanel;
     private ServerList serverList;
     private UserAction arrangeAllAction;
     private UserAction closeFileAction;
@@ -1473,12 +1476,20 @@ public class StudioPanel extends JPanel implements WindowListener {
             }
         });
         tabbedEditors.addDragCompleteListener(success -> closeIfEmpty() );
-        splitpane.setTopComponent(tabbedEditors);
+
+        JPanel topPanel = new JPanel(new BorderLayout());
+        topPanel.add(tabbedEditors, BorderLayout.CENTER);
+
+        editorSearchPanel = new SearchPanel( () -> getEditor(tabbedEditors.getSelectedIndex()).getPane() );
+        topPanel.add(editorSearchPanel, BorderLayout.NORTH);
+
+        splitpane.setTopComponent(topPanel);
         splitpane.setDividerLocation(0.5);
 
         toolbar = new Toolbar();
         toolbar.setLayout(new BoxLayout(toolbar, BoxLayout.X_AXIS));
         toolbar.setFloatable(false);
+        toolbar.setBorder(BorderFactory.createEmptyBorder(0,2,0,1));
 
 
         tabbedPane = new DraggableTabbedPane("Result", JTabbedPane.TOP);
@@ -1505,7 +1516,14 @@ public class StudioPanel extends JPanel implements WindowListener {
         tabbedPane.putClientProperty(StudioPanel.class, this);
         tabbedPane.addDragListener( evt -> resultTabDragged(evt));
 
-        splitpane.setBottomComponent(tabbedPane);
+        JPanel bottomPanel = new JPanel(new BorderLayout());
+        bottomPanel.add(tabbedPane, BorderLayout.CENTER);
+
+        resultSearchPanel = new SearchPanel(() -> getResultPane(tabbedPane.getSelectedIndex()).getEditor());
+        bottomPanel.add(resultSearchPanel, BorderLayout.NORTH);
+
+        splitpane.setBottomComponent(bottomPanel);
+
         splitpane.setOneTouchExpandable(true);
         splitpane.setOrientation(JSplitPane.VERTICAL_SPLIT);
         try {
@@ -1555,6 +1573,14 @@ public class StudioPanel extends JPanel implements WindowListener {
             }
         });
         dividerLastPosition=splitpane.getDividerLocation();
+    }
+
+    public SearchPanel getEditorSearchPanel() {
+        return editorSearchPanel;
+    }
+
+    public SearchPanel getResultSearchPanel() {
+        return resultSearchPanel;
     }
 
     private static Server getServer(Workspace.Tab tab) {

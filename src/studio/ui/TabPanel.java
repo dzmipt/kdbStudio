@@ -18,6 +18,7 @@ public class TabPanel extends JPanel {
     private QueryResult queryResult;
     private K.KBase result;
     private JTextComponent textArea = null;
+    private EditorPane editor = null;
     private QGrid grid = null;
     private KFormatContext formatContext = new KFormatContext(KFormatContext.DEFAULT);
     private ResultType type;
@@ -66,7 +67,7 @@ public class TabPanel extends JPanel {
                     type = ResultType.TABLE;
                 }
             } else {
-                EditorPane editor = new EditorPane(false);
+                editor = new EditorPane(false, panel.getResultSearchPanel());
                 textArea = editor.getTextArea();
                 component = editor;
                 type = ResultType.TEXT;
@@ -179,6 +180,10 @@ public class TabPanel extends JPanel {
     public JTable getTable() {
         if (grid == null) return null;
         return grid.getTable();
+    }
+
+    public EditorPane getEditor() {
+        return editor;
     }
 
     public boolean isTable() {

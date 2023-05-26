@@ -1,9 +1,13 @@
-package studio.ui;
+package studio.ui.search;
 
 import org.fife.ui.rsyntaxtextarea.RSyntaxTextArea;
 import org.fife.ui.rtextarea.SearchContext;
 import org.fife.ui.rtextarea.SearchEngine;
 import org.fife.ui.rtextarea.SearchResult;
+import studio.ui.EditorPane;
+import studio.ui.GroupLayoutSimple;
+import studio.ui.UserAction;
+import studio.ui.Util;
 
 import javax.swing.*;
 import javax.swing.border.Border;
@@ -23,8 +27,7 @@ public class SearchPanel extends JPanel {
     private JTextField txtFind;
     private JTextField txtReplace;
 
-    private final RSyntaxTextArea textArea;
-    private final EditorPane editorPane;
+    private final EditorPaneLocator editorPaneLocator;
 
     private enum SearchAction {Find, Replace, ReplaceAll};
 
@@ -43,9 +46,8 @@ public class SearchPanel extends JPanel {
         return button;
     }
 
-    public SearchPanel(EditorPane editorPane) {
-        this.editorPane = editorPane;
-        this.textArea = editorPane.getTextArea();
+    public SearchPanel(EditorPaneLocator editorPaneLocator) {
+        this.editorPaneLocator = editorPaneLocator;
 
         tglWholeWord = getButton(Util.SEARCH_WHOLE_WORD_SHADED_ICON, Util.SEARCH_WHOLE_WORD_ICON,"Whole word");
         tglRegex = getButton(Util.SEARCH_REGEX_SHADED_ICON, Util.SEARCH_REGEX_ICON, "Regular expression");
@@ -99,6 +101,13 @@ public class SearchPanel extends JPanel {
                         .addLine(btnReplace, btnReplaceAll)
 
         );
+
+        setBorder(BorderFactory.createCompoundBorder(
+                BorderFactory.createEmptyBorder(3,2,1,1),
+                BorderFactory.createRaisedSoftBevelBorder()
+        ));
+
+        setVisible(false);
     }
 
     public void setReplaceVisible(boolean visible) {
@@ -131,6 +140,11 @@ public class SearchPanel extends JPanel {
     }
 
     private void doSearch(SearchContext context, SearchAction action) {
+        EditorPane editorPane = editorPaneLocator.getEditorPane();
+        if (editorPane == null) return;
+
+        RSyntaxTextArea textArea = editorPane.getTextArea();
+
         if (context.isRegularExpression()) {
             try {
                 Pattern.compile(context.getSearchFor());
@@ -197,6 +211,8 @@ public class SearchPanel extends JPanel {
     }
 
     private void close() {
+        EditorPane editorPane = editorPaneLocator.getEditorPane();
+        if (editorPane == null) return;
         editorPane.hideSearchPanel();
         editorPane.getTextArea().requestFocus();
     }
