@@ -167,6 +167,7 @@ public class Studio {
 
             im = (InputMap) UIManager.get("Table.ancestorInputMap");
             im.put(KeyStroke.getKeyStroke(KeyEvent.VK_C, KeyEvent.META_DOWN_MASK), "copy");
+            im.put(KeyStroke.getKeyStroke(KeyEvent.VK_A, KeyEvent.META_DOWN_MASK), "selectAll");
 
         }
     }
