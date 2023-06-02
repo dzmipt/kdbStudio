@@ -66,7 +66,7 @@ public class EditorTab implements FileWatcher.Listener {
             doc.insertString(0, content.getContent(),null);
             textArea.setCaretPosition(Math.min(caretPosition, doc.getLength()));
             setLineEnding(content.getLineEnding());
-            setModified(content.hasMixedLineEnding());
+            setModified(content.isModified());
             modifiedTimeOnDisk = readModifiedTime();
             StudioPanel.rebuildAll();
         }

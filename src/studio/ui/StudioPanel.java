@@ -78,7 +78,6 @@ public class StudioPanel extends JPanel implements WindowListener {
 
     private JComboBox<String> comboServer;
     private JTextField txtServer;
-    private String exportFilename;
     private String lastQuery = null;
     private JToolBar toolbar;
     private DraggableTabbedPane tabbedEditors;
@@ -853,6 +852,9 @@ public class StudioPanel extends JPanel implements WindowListener {
                 editor.setAnimateBracketMatching(CONFIG.getBoolean(Config.RSTA_ANIMATE_BRACKET_MATCHING));
                 editor.setLineWrap(CONFIG.getBoolean(Config.RSTA_WORD_WRAP));
                 editor.setFont(CONFIG.getFont(Config.FONT_EDITOR));
+
+                editor.setTabSize(CONFIG.getInt(Config.EDITOR_TAB_SIZE));
+                editor.setTabsEmulated(CONFIG.getBoolean(Config.EDITOR_TAB_EMULATED));
             }
         }
     }

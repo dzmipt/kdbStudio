@@ -1,6 +1,6 @@
+* Tab emulation with spaces
 * Added font selection for editor and result table
 * Pinning result tabs
-* Action to convert tabs to spaces
 * KDBSTUDIO\_CONFIG\_HOME environment variable overrides location of Studio home with configs and logs
 * Improvements in charting: 
     * display mouse cursor coordinates

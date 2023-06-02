@@ -36,6 +36,9 @@ public class SettingsDialog extends EscapeDialog {
     private JFormattedTextField txtEmulateDoubleClickTimeout;
     private JComboBox<Config.ExecAllOption> comboBoxExecAll;
     private JComboBox<LineEnding> comboBoxLineEnding;
+    private JCheckBox chBoxEmulateTab;
+    private JFormattedTextField txtEmulatedTabSize;
+    private JCheckBox chBoxReplaceTabOnOpen;
     private JButton btnOk;
     private JButton btnCancel;
 
@@ -165,10 +168,18 @@ public class SettingsDialog extends EscapeDialog {
         chBoxRTSAWordWrap = new JCheckBox("Word wrap");
         chBoxRTSAWordWrap.setSelected(CONFIG.getBoolean(Config.RSTA_WORD_WRAP));
 
-        comboBoxLookAndFeel.setSelectedItem(lf);
-        JLabel lblResultTabsCount = new JLabel("Result tabs count");
         NumberFormatter formatter = new NumberFormatter();
         formatter.setMinimum(1);
+
+        chBoxEmulateTab = new JCheckBox("Emulate tab with spaces");
+        chBoxEmulateTab.setSelected(CONFIG.getBoolean(Config.EDITOR_TAB_EMULATED));
+        txtEmulatedTabSize = new JFormattedTextField(formatter);
+        txtEmulatedTabSize.setValue(CONFIG.getInt(Config.EDITOR_TAB_SIZE));
+        chBoxReplaceTabOnOpen = new JCheckBox("Automatically replace tabs on file load");
+        chBoxReplaceTabOnOpen.setSelected(CONFIG.getBoolean(Config.AUTO_REPLACE_TAB_ON_OPEN));
+
+        comboBoxLookAndFeel.setSelectedItem(lf);
+        JLabel lblResultTabsCount = new JLabel("Result tabs count");
         txtTabsCount = new JFormattedTextField(formatter);
         txtTabsCount.setValue(CONFIG.getResultTabsCount());
         chBoxShowServerCombo = new JCheckBox("Show server drop down list in the toolbar");
@@ -250,6 +261,7 @@ public class SettingsDialog extends EscapeDialog {
         layout.setStacks(
                 new GroupLayoutSimple.Stack()
                         .addLineAndGlue(chBoxRTSAAnimateBracketMatching, chBoxRTSAHighlightCurrentLine, chBoxRTSAWordWrap)
+                        .addLineAndGlue(chBoxEmulateTab, txtEmulatedTabSize, chBoxReplaceTabOnOpen)
                         .addLineAndGlue(lblDefaultLineEnding, comboBoxLineEnding)
                         .addLineAndGlue(lblExecAll, comboBoxExecAll)
         );
@@ -315,6 +327,9 @@ public class SettingsDialog extends EscapeDialog {
         changedEditor |= CONFIG.setBoolean(Config.RSTA_HIGHLIGHT_CURRENT_LINE, isHighlightCurrentLine());
         changedEditor |= CONFIG.setBoolean(Config.RSTA_WORD_WRAP, isWordWrap());
         changedEditor |= editorFontSelection.saveSettings();
+        changedEditor |= CONFIG.setBoolean(Config.EDITOR_TAB_EMULATED, chBoxEmulateTab.isSelected());
+        changedEditor |= CONFIG.setInt(Config.EDITOR_TAB_SIZE, (Integer)txtEmulatedTabSize.getValue());
+        changedEditor |= CONFIG.setBoolean(Config.AUTO_REPLACE_TAB_ON_OPEN, chBoxReplaceTabOnOpen.isSelected());;
 
         if (changedEditor) {
             StudioPanel.refreshEditorsSettings();

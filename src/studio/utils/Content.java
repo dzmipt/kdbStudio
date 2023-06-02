@@ -6,6 +6,7 @@ public class Content {
     private final String content;
     private LineEnding lineEnding = Config.getInstance().getEnum(Config.DEFAULT_LINE_ENDING);
     private boolean mixedLineEnding;
+    private boolean tabsReplaced = false;
 
     public static Content getEmpty() {
         return new Content("");
@@ -19,6 +20,16 @@ public class Content {
     }
 
     public Content(String text) {
+        boolean shouldReplaceTabs = Config.getInstance().getBoolean(Config.AUTO_REPLACE_TAB_ON_OPEN);
+        char[] tab;
+        if (shouldReplaceTabs) {
+            int count = Config.getInstance().getInt(Config.EDITOR_TAB_SIZE);
+            tab = new char[count];
+            for (int i=0; i<count; tab[i++]=' ');
+        } else {
+            tab = new char[] {'\t'};
+        }
+
         StringBuilder builder = new StringBuilder();
         int unixEndings = 0;
         int winEndings = 0;
@@ -46,7 +57,13 @@ public class Content {
                     if (ch == '\n') {
                         unixEndings++;
                     }
-                    builder.append(ch);
+
+                    if (ch == '\t') {
+                        tabsReplaced |= shouldReplaceTabs;
+                        builder.append(tab);
+                    } else {
+                        builder.append(ch);
+                    }
                 }
             }
             index++;
@@ -84,8 +101,8 @@ public class Content {
         return mixedLineEnding;
     }
 
-    public String getText() {
-        return  convert(content, lineEnding);
+    public boolean isModified() {
+        return mixedLineEnding | tabsReplaced;
     }
 
     public static String convert(String unixText, LineEnding lineEnding) {

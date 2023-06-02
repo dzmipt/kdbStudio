@@ -81,6 +81,7 @@ public class Config {
 
     public static final String EDITOR_TAB_SIZE = configDefault("editorTabSize", ConfigType.INT, 5); // 5 is a default value for RSyntaxTextArea
     public static final String EDITOR_TAB_EMULATED = configDefault("editorTabEmulated", ConfigType.BOOLEAN, false);
+    public static final String AUTO_REPLACE_TAB_ON_OPEN = configDefault("autoReplaceTabOnOpen", ConfigType.BOOLEAN, false);
 
     public static final String MAX_FRACTION_DIGITS = configDefault("maxFractionDigits", ConfigType.INT, 7);
     public static final String EMULATED_DOUBLE_CLICK_TIMEOUT = configDefault("emulatedDoubleClickTimeout", ConfigType.INT, 500);
