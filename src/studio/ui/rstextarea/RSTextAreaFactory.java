@@ -103,6 +103,9 @@ public class RSTextAreaFactory {
         textArea.setSyntaxScheme(RSToken.getDefaulSyntaxScheme());
         textArea.setHyperlinksEnabled(false);
 
+        textArea.setTabsEmulated(Config.getInstance().getBoolean(Config.EDITOR_TAB_EMULATED));
+        textArea.setTabSize(Config.getInstance().getInt(Config.EDITOR_TAB_SIZE));
+
         return textArea;
     }
 
