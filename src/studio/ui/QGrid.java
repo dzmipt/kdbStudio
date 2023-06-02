@@ -11,13 +11,10 @@ import javax.swing.table.TableCellRenderer;
 import javax.swing.table.TableColumn;
 import javax.swing.table.TableModel;
 import java.awt.*;
-import java.awt.event.InputEvent;
-import java.awt.event.KeyEvent;
-import java.awt.event.MouseAdapter;
-import java.awt.event.MouseEvent;
+import java.awt.event.*;
 
 //@TODO: Should it be really a JPanel? It looks it should be just a JTabel. And anyway any additional components could be added to TabPanel
-public class QGrid extends JPanel {
+public class QGrid extends JPanel implements MouseWheelListener {
     private StudioPanel panel;
     private final TableModel model;
     private final JTable table;
@@ -122,6 +119,7 @@ public class QGrid extends JPanel {
         table.setShowVerticalLines(true);
         table.getTableHeader().setReorderingAllowed(true);
         scrollPane = new JScrollPane(table);
+        scrollPane.addMouseWheelListener(this);
 
         tableRowHeader = new TableRowHeader(table);
         scrollPane.setRowHeaderView(tableRowHeader);
@@ -234,6 +232,19 @@ public class QGrid extends JPanel {
                 Util.copyTextToClipboard(b.toString(formatContextForCell));
             }
         });
+    }
+
+    @Override
+    public void mouseWheelMoved(MouseWheelEvent e) {
+        if ((e.getModifiers() & StudioPanel.menuShortcutKeyMask) == 0) return;
+
+        Font font = Config.getInstance().getFont(Config.FONT_TABLE);
+        int newFontSize = font.getSize() + e.getWheelRotation();
+        if (newFontSize < 6) return;
+        font = font.deriveFont((float) newFontSize);
+
+        Config.getInstance().setFont(Config.FONT_TABLE, font);
+        StudioPanel.refreshResultSettings();
     }
 
     public void setFont(Font font) {
