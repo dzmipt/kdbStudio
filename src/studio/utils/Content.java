@@ -65,7 +65,7 @@ public class Content {
 
         mixedLineEnding = count > 1;
 
-        if (count>0) { // if no ending of line; lineEding will be null
+        if (count>0) { // if no ending of line; lineEnding will leave default
             if (unixEndings >= winEndings && unixEndings >= macEndings)  lineEnding = LineEnding.Unix;
             else if (winEndings >= unixEndings && winEndings >= macEndings) lineEnding = LineEnding.Windows;
             else lineEnding = LineEnding.MacOS9;
