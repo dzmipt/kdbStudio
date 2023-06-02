@@ -12,7 +12,6 @@ import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
-import java.awt.event.MouseWheelListener;
 
 public class EditorPane extends JPanel {
 
@@ -71,22 +70,17 @@ public class EditorPane extends JPanel {
         RTextScrollPane scrollPane = new RTextScrollPane(textArea);
         textArea.setGutter(scrollPane.getGutter());
 
-        final MouseWheelListener[] listeners = scrollPane.getMouseWheelListeners();
+        scrollPane.addMouseWheelListener(e -> {
+            if ((e.getModifiers() & StudioPanel.menuShortcutKeyMask) == 0) return;
 
-        textArea.addMouseWheelListener(e -> {
-            if ((e.getModifiers() & StudioPanel.menuShortcutKeyMask) > 0) {
+            Font font = Config.getInstance().getFont(Config.FONT_EDITOR);
+            int newFontSize = font.getSize() + e.getWheelRotation();
+            if (newFontSize < 6) return;
+            font = font.deriveFont((float) newFontSize);
 
-                Font font = Config.getInstance().getFont(Config.FONT_EDITOR);
-                int newFontSize = font.getSize() + e.getWheelRotation();
-                if (newFontSize < 6) return;
-                font = font.deriveFont((float) newFontSize);
-
-                Config.getInstance().setFont(Config.FONT_EDITOR, font);
-                StudioPanel.refreshEditorsSettings();
-                StudioPanel.refreshResultSettings();
-            } else {
-                for (MouseWheelListener l:listeners) l.mouseWheelMoved(e);
-            }
+            Config.getInstance().setFont(Config.FONT_EDITOR, font);
+            StudioPanel.refreshEditorsSettings();
+            StudioPanel.refreshResultSettings();
         });
 
         Font font = Config.getInstance().getFont(Config.FONT_EDITOR);
