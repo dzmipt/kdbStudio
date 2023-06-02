@@ -9,11 +9,9 @@ import studio.ui.search.SearchPanel;
 
 import javax.swing.*;
 import java.awt.*;
-import java.awt.event.ActionEvent;
-import java.awt.event.KeyAdapter;
-import java.awt.event.KeyEvent;
+import java.awt.event.*;
 
-public class EditorPane extends JPanel {
+public class EditorPane extends JPanel implements MouseWheelListener {
 
     private final StudioRSyntaxTextArea textArea;
     private final SearchPanel searchPanel;
@@ -70,18 +68,7 @@ public class EditorPane extends JPanel {
         RTextScrollPane scrollPane = new RTextScrollPane(textArea);
         textArea.setGutter(scrollPane.getGutter());
 
-        scrollPane.addMouseWheelListener(e -> {
-            if ((e.getModifiers() & StudioPanel.menuShortcutKeyMask) == 0) return;
-
-            Font font = Config.getInstance().getFont(Config.FONT_EDITOR);
-            int newFontSize = font.getSize() + e.getWheelRotation();
-            if (newFontSize < 6) return;
-            font = font.deriveFont((float) newFontSize);
-
-            Config.getInstance().setFont(Config.FONT_EDITOR, font);
-            StudioPanel.refreshEditorsSettings();
-            StudioPanel.refreshResultSettings();
-        });
+        scrollPane.addMouseWheelListener(this);
 
         Font font = Config.getInstance().getFont(Config.FONT_EDITOR);
         textArea.setFont(font);
@@ -90,6 +77,20 @@ public class EditorPane extends JPanel {
 
         add(scrollPane, BorderLayout.CENTER);
         add(statusBar, BorderLayout.SOUTH);
+    }
+
+    @Override
+    public void mouseWheelMoved(MouseWheelEvent e) {
+        if ((e.getModifiers() & StudioPanel.menuShortcutKeyMask) == 0) return;
+
+        Font font = Config.getInstance().getFont(Config.FONT_EDITOR);
+        int newFontSize = font.getSize() + e.getWheelRotation();
+        if (newFontSize < 6) return;
+        font = font.deriveFont((float) newFontSize);
+
+        Config.getInstance().setFont(Config.FONT_EDITOR, font);
+        StudioPanel.refreshEditorsSettings();
+        StudioPanel.refreshResultSettings();
     }
 
     public void hideSearchPanel() {
