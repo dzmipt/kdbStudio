@@ -4,6 +4,7 @@ import org.fife.ui.rsyntaxtextarea.RSyntaxTextArea;
 import org.fife.ui.rtextarea.RTextScrollPane;
 import studio.kdb.Config;
 import studio.ui.rstextarea.RSTextAreaFactory;
+import studio.ui.rstextarea.StudioRSyntaxTextArea;
 import studio.ui.search.SearchPanel;
 
 import javax.swing.*;
@@ -11,10 +12,11 @@ import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
+import java.awt.event.MouseWheelListener;
 
 public class EditorPane extends JPanel {
 
-    private final RSyntaxTextArea textArea;
+    private final StudioRSyntaxTextArea textArea;
     private final SearchPanel searchPanel;
     private final MinSizeLabel lblRowCol;
     private final MinSizeLabel lblInsStatus;
@@ -66,11 +68,29 @@ public class EditorPane extends JPanel {
         statusBar.add(lblRowCol);
         statusBar.setVisible(editable);
 
+        RTextScrollPane scrollPane = new RTextScrollPane(textArea);
+        textArea.setGutter(scrollPane.getGutter());
+
+        final MouseWheelListener[] listeners = scrollPane.getMouseWheelListeners();
+
+        textArea.addMouseWheelListener(e -> {
+            if ((e.getModifiers() & StudioPanel.menuShortcutKeyMask) > 0) {
+
+                Font font = Config.getInstance().getFont(Config.FONT_EDITOR);
+                int newFontSize = font.getSize() + e.getWheelRotation();
+                if (newFontSize < 6) return;
+                font = font.deriveFont((float) newFontSize);
+
+                Config.getInstance().setFont(Config.FONT_EDITOR, font);
+                StudioPanel.refreshEditorsSettings();
+                StudioPanel.refreshResultSettings();
+            } else {
+                for (MouseWheelListener l:listeners) l.mouseWheelMoved(e);
+            }
+        });
+
         Font font = Config.getInstance().getFont(Config.FONT_EDITOR);
         textArea.setFont(font);
-
-        RTextScrollPane scrollPane = new RTextScrollPane(textArea);
-        scrollPane.getGutter().setLineNumberFont(font);
 
         hideSearchPanel();
 

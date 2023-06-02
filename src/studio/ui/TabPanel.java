@@ -106,14 +106,18 @@ public class TabPanel extends JPanel {
             type = ResultType.ERROR;
         }
 
-        setFont(Config.getInstance().getFont(Config.FONT_TABLE));
-
+        refreshFont();
         setLayout(new BorderLayout());
         add(component, BorderLayout.CENTER);
     }
 
-    public void setFont(Font font) {
-        if (grid != null) grid.setFont(font);
+    public void refreshFont() {
+        if (grid != null) {
+            grid.setFont(Config.getInstance().getFont(Config.FONT_TABLE));
+        }
+        if (editor != null) {
+            editor.getTextArea().setFont(Config.getInstance().getFont(Config.FONT_EDITOR));
+        }
     }
 
     public void addInto(JTabbedPane tabbedPane) {

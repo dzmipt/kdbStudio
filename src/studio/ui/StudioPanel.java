@@ -866,7 +866,7 @@ public class StudioPanel extends JPanel implements WindowListener {
             for (int index=0; index<count; index++) {
                 TabPanel tabPanel = panel.getResultPane(index);
                 tabPanel.setDoubleClickTimeout(doubleClickTimeout);
-                tabPanel.setFont(CONFIG.getFont(Config.FONT_TABLE));
+                tabPanel.refreshFont();
             }
         }
     }
