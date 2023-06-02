@@ -52,30 +52,6 @@ public class QGrid extends JPanel implements MouseWheelListener {
             return c;
         }
 
-        private Font originalFont;
-        private int originalRowHeight;
-        private float zoomFactor = 1.0f;
-
-        public void setFont(Font font) {
-            originalFont = font;
-            // When setFont() is first called, zoomFactor is 0.
-            if (zoomFactor != 0.0 && zoomFactor != 1.0) {
-                float scaledSize = originalFont.getSize2D() * zoomFactor;
-                font = originalFont.deriveFont(scaledSize);
-            }
-
-            super.setFont(font);
-        }
-
-        public void setRowHeight(int rowHeight) {
-            originalRowHeight = rowHeight;
-            // When setRowHeight() is first called, zoomFactor is 0.
-            if (zoomFactor != 0.0 && zoomFactor != 1.0)
-                rowHeight = (int) Math.ceil(originalRowHeight * zoomFactor);
-
-            super.setRowHeight(rowHeight);
-        }
-
         public Component prepareEditor(TableCellEditor editor, int row, int column) {
             Component comp = super.prepareEditor(editor, row, column);
             comp.setFont(this.getFont());
