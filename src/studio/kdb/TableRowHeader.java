@@ -4,8 +4,6 @@ import javax.swing.*;
 import javax.swing.event.MouseInputAdapter;
 import java.awt.*;
 import java.awt.event.MouseEvent;
-import java.beans.PropertyChangeEvent;
-import java.beans.PropertyChangeListener;
 
 public class TableRowHeader extends JList {
     private JTable table;
@@ -13,7 +11,7 @@ public class TableRowHeader extends JList {
     public void recalcWidth() {
         Insets i = new RowHeaderRenderer().getInsets();
         int w = i.left + i.right;
-        int width = SwingUtilities.computeStringWidth(table.getFontMetrics(getFont()),
+        int width = SwingUtilities.computeStringWidth(table.getFontMetrics(table.getFont()),
                                                       (table.getRowCount() < 9999 ? "9999" : "" + (table.getRowCount() - 1)));
         // used to be rowcount - 1 as 0 based index
         setFixedCellWidth(w + width);
@@ -21,16 +19,6 @@ public class TableRowHeader extends JList {
 
     public TableRowHeader(final JTable table) {
         this.table = table;
-        table.addPropertyChangeListener(new PropertyChangeListener() {
-                                        public void propertyChange(PropertyChangeEvent propertyChangeEvent) {
-                                            if ("zoom".equals(propertyChangeEvent.getPropertyName())) {
-                                                setFont(table.getFont());
-                                                setFixedCellHeight(table.getRowHeight());
-                                                recalcWidth();
-                                                setCellRenderer(new RowHeaderRenderer());
-                                            }
-                                        }
-                                    });
         setAutoscrolls(false);
         setCellRenderer(new RowHeaderRenderer());
         setFixedCellHeight(table.getRowHeight());
@@ -66,33 +54,12 @@ public class TableRowHeader extends JList {
                     table.setRowSelectionInterval(startIndex,index);
                     table.requestFocus();
                 }
-                /*
-                public void mouseMoved(MouseEvent e)
-                {
-                System.out.println("moved");
-                int index= locationToIndex(e.getPoint());
-                table.setColumnSelectionInterval(0,table.getColumnCount()-1);
-                table.setRowSelectionInterval(startIndex, index);
-                table.requestFocus();
-                }
-                 **/
             };
             addMouseListener(mia);
             addMouseMotionListener(mia);
         }
     }
 
-    /*
-    public void updateUI()
-    {
-    super.updateUI();
-    setCellRenderer(new RowHeaderRenderer());
-
-    //  setHeight(getFontMetrics(UIManager.getFont("TableHeader.font")).getHeight());
-    if(table != null)
-    setFixedCellHeight( table.getRowHeight());
-    }
-     **/
     class TableListModel extends AbstractListModel {
         public int getSize() {
             return table.getRowCount();

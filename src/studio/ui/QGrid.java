@@ -236,6 +236,7 @@ public class QGrid extends JPanel implements MouseWheelListener {
         tableRowHeader.setFont(font);
         ((JComponent)tableRowHeader.getCellRenderer()).setFont(font);
         tableRowHeader.setFixedCellHeight(rowHeight);
+        tableRowHeader.recalcWidth();
         widthAdjuster.revalidate();
 
         revalidate();
