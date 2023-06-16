@@ -90,6 +90,10 @@ public class Config {
     public static final String SAVE_FILE_CHOOSER = configDefault("saveFileChooser", ConfigType.FILE_CHOOSER, new FileChooserConfig());
     public static final String EXPORT_FILE_CHOOSER = configDefault("exportFileChooser", ConfigType.FILE_CHOOSER, new FileChooserConfig());
 
+    public static final String SESSION_INVALIDATION_ENABLED = configDefault("sessionInvalidationEnabled", ConfigType.BOOLEAN, false);
+    public static final String SESSION_INVALIDATION_TIMEOUT_IN_HOURS = configDefault("sessionInvalidationTimeoutInHours", ConfigType.INT, 12);
+    public static final String SESSION_REUSE = configDefault("sessionsReuse", ConfigType.BOOLEAN, true);
+
     private enum FontStyle {
         Plain(Font.PLAIN), Bold(Font.BOLD), Italic(Font.ITALIC), ItalicAndBold(Font.BOLD|Font.ITALIC);
         private int style;

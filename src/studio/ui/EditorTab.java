@@ -4,6 +4,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.fife.ui.rsyntaxtextarea.RSyntaxTextArea;
 import studio.kdb.Server;
+import studio.kdb.Session;
 import studio.ui.action.QueryExecutor;
 import studio.utils.Content;
 import studio.utils.FileReaderWriter;
@@ -34,11 +35,28 @@ public class EditorTab implements FileWatcher.Listener {
     private long modifiedTimeOnDisk = 0;
     private boolean watchFile = true;
 
+    private Session session = null;
+
     private static final Logger log = LogManager.getLogger();
 
     public EditorTab(StudioPanel panel) {
         this.panel = panel;
         init();
+    }
+
+    public Session getSession() {
+        return session;
+    }
+
+    public void setSession(Session session) {
+        this.session = session;
+    }
+
+    public void closing() {
+        stopFileWatching();
+        if (session != null) {
+            session.getKdbConnection().close();
+        }
     }
 
     private void init() {

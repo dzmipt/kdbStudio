@@ -960,7 +960,7 @@ public class StudioPanel extends JPanel implements WindowListener {
     private boolean closeTab() {
         if (!checkAndSaveTab(editor)) return false;
 
-        getEditor(tabbedEditors.getSelectedIndex()).stopFileWatching();
+        getEditor(tabbedEditors.getSelectedIndex()).closing();
 
         if (tabbedEditors.getTabCount() == 1 && allPanels.size() == 1) {
             WorkspaceSaver.save(getWorkspace());

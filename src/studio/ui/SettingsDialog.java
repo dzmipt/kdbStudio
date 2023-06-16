@@ -20,6 +20,9 @@ public class SettingsDialog extends EscapeDialog {
     private JComboBox<String> comboBoxAuthMechanism;
     private JTextField txtUser;
     private JPasswordField txtPassword;
+    private JCheckBox chBoxSessionInvalidation;
+    private JFormattedTextField txtSessionInvalidation;
+    private JCheckBox chBoxSessionReuse;
     private JCheckBox chBoxShowServerCombo;
     private JCheckBox chBoxAutoSave;
     private JCheckBox chBoxSaveOnExit;
@@ -45,8 +48,6 @@ public class SettingsDialog extends EscapeDialog {
     private FontSelectionPanel editorFontSelection, resultFontSelection;
 
     private static final Config CONFIG = Config.getInstance();
-
-    private final static int FIELD_SIZE = 150;
 
     public SettingsDialog(JFrame owner) {
         super(owner, "Settings");
@@ -171,6 +172,16 @@ public class SettingsDialog extends EscapeDialog {
         NumberFormatter formatter = new NumberFormatter();
         formatter.setMinimum(1);
 
+        chBoxSessionInvalidation = new JCheckBox("Sessions are invalidated every ");
+        chBoxSessionInvalidation.setSelected(CONFIG.getBoolean(Config.SESSION_INVALIDATION_ENABLED));
+
+        JLabel lblSessionInvalidationSuffix = new JLabel(" hour(s)");
+        txtSessionInvalidation = new JFormattedTextField(formatter);
+        txtSessionInvalidation.setValue(CONFIG.getInt(Config.SESSION_INVALIDATION_TIMEOUT_IN_HOURS));
+
+        chBoxSessionReuse = new JCheckBox("Reuse session between tabs");
+        chBoxSessionReuse.setSelected(CONFIG.getBoolean(Config.SESSION_REUSE));
+
         chBoxEmulateTab = new JCheckBox("Emulate tab with spaces");
         chBoxEmulateTab.setSelected(CONFIG.getBoolean(Config.EDITOR_TAB_EMULATED));
         txtEmulatedTabSize = new JFormattedTextField(formatter);
@@ -253,6 +264,8 @@ public class SettingsDialog extends EscapeDialog {
                 new GroupLayoutSimple.Stack()
                         .addLineAndGlue(lblLookAndFeel, comboBoxLookAndFeel)
                         .addLineAndGlue(chBoxShowServerCombo, chBoxAutoSave, chBoxSaveOnExit)
+                        .addLineAndGlue(chBoxSessionInvalidation, txtSessionInvalidation, lblSessionInvalidationSuffix)
+                        .addLineAndGlue(chBoxSessionReuse)
                         .addLine(lblAuthMechanism, comboBoxAuthMechanism, lblUser, txtUser, lblPassword, txtPassword)
         );
 
@@ -305,6 +318,9 @@ public class SettingsDialog extends EscapeDialog {
 
     public void saveSettings() {
         String auth = getDefaultAuthenticationMechanism();
+        CONFIG.setBoolean(Config.SESSION_INVALIDATION_ENABLED, chBoxSessionInvalidation.isSelected());
+        CONFIG.setInt(Config.SESSION_INVALIDATION_TIMEOUT_IN_HOURS, Math.max(1,(Integer)txtSessionInvalidation.getValue()));
+        CONFIG.setBoolean(Config.SESSION_REUSE, chBoxSessionReuse.isSelected());
         CONFIG.setDefaultAuthMechanism(auth);
         CONFIG.setDefaultCredentials(auth, new Credentials(getUser(), getPassword()));
         CONFIG.setShowServerComboBox(isShowServerComboBox());

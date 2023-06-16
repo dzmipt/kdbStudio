@@ -32,12 +32,12 @@ public class QueryExecutor implements ProgressCallback {
     }
 
     public void execute(K.KBase query) {
-        worker = new Worker(queryIndex.getAndIncrement(), editor.getServer(), query);
+        worker = new Worker(queryIndex.getAndIncrement(), editor, query);
         worker.execute();
     }
 
     public void execute(String query) {
-        worker = new Worker(queryIndex.getAndIncrement(), editor.getServer(), query);
+        worker = new Worker(queryIndex.getAndIncrement(), editor, query);
         worker.execute();
     }
 
@@ -98,22 +98,26 @@ public class QueryExecutor implements ProgressCallback {
 
     private class Worker extends SwingWorker<QueryResult, Integer> {
 
+        private volatile EditorTab editor;
         private volatile Server server;
         private volatile K.KBase query;
         private volatile String queryText;
         private volatile kx.c c = null;
         private final int queryIndex;
+        private Session session = null;
 
-        public Worker(int queryIndex, Server server, K.KBase query) {
+        public Worker(int queryIndex, EditorTab editor, K.KBase query) {
             this.queryIndex = queryIndex;
-            this.server = server;
+            this.editor = editor;
+            this.server = editor.getServer();
             this.query = query;
             this.queryText = "<upload to server>";
         }
 
-        public Worker(int queryIndex, Server server, String query) {
+        public Worker(int queryIndex, EditorTab editor, String query) {
             this.queryIndex = queryIndex;
-            this.server = server;
+            this.editor = editor;
+            this.server = editor.getServer();
             this.query = new K.KCharacterVector(query);
             this.queryText = query;
         }
@@ -124,14 +128,35 @@ public class QueryExecutor implements ProgressCallback {
             }
         }
 
+        private Session getSession() {
+            if (Config.getInstance().getBoolean(Config.SESSION_REUSE)) {
+                return ConnectionPool.getInstance().leaseConnection(server);
+            }
+
+            Session session = editor.getSession();
+            if (session == null) {
+                session = new Session(server);
+                editor.setSession(session);
+            }
+
+            if (! session.getServer().equals(server) ) {
+                session.getKdbConnection().close();
+                session = new Session(server);
+                editor.setSession(session);
+            }
+
+            session.validate();
+            return session;
+        }
+
         @Override
         protected QueryResult doInBackground() {
             QueryResult result = new QueryResult(server, queryText);
             queryLog.info("#{}: query {}({})\n{}",queryIndex, server.getFullName(), server.getConnectionString(), queryText);
             long startTime = System.currentTimeMillis();
             try {
-                c = ConnectionPool.getInstance().leaseConnection(server);
-                K.KBase response = c.k(query, QueryExecutor.this);
+                session = getSession();
+                K.KBase response = session.getKdbConnection().k(query, QueryExecutor.this);
                 result.setResult(response);
             } catch (Throwable e) {
                 if (! (e instanceof kx.c.K4Exception)) {
@@ -140,8 +165,8 @@ public class QueryExecutor implements ProgressCallback {
                 }
                 result.setError(e);
             } finally {
-                if (c!=null) {
-                    ConnectionPool.getInstance().freeConnection(server, c);
+                if (session != null) {
+                    session.setFree();
                 }
             }
             result.setExecutionTime(System.currentTimeMillis() - startTime);
