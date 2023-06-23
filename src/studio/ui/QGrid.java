@@ -323,24 +323,6 @@ public class QGrid extends JPanel implements MouseWheelListener, SearchPanelList
         TableModel model = table.getModel();
 
         for(;;) {
-            int colIndex = cols.length > 0 ? cols[col] : col;
-            int rowIndex = rows.length > 0 ? rows[row] : row;
-
-            String val = "";
-
-            K.KBase o = (K.KBase)model.getValueAt(table.convertRowIndexToModel(rowIndex), table.convertColumnIndexToModel(colIndex));
-            if (! o.isNull()) {
-                val = o.toString(KFormatContext.NO_TYPE);
-            }
-
-            if (val.contains(text)) {
-                table.setColumnSelectionInterval(colIndex, colIndex);
-                table.setRowSelectionInterval(rowIndex, rowIndex);
-                Rectangle rectangle = table.getCellRect(rowIndex, colIndex, false);
-                table.scrollRectToVisible(rectangle);
-                return;
-            }
-
             col++;
             boolean nextRow = false;
             if (cols.length>0) {
@@ -362,6 +344,27 @@ public class QGrid extends JPanel implements MouseWheelListener, SearchPanelList
 
                 if (finish) break;
             }
+
+
+
+            int colIndex = cols.length > 0 ? cols[col] : col;
+            int rowIndex = rows.length > 0 ? rows[row] : row;
+
+            String val = "";
+
+            K.KBase o = (K.KBase)model.getValueAt(table.convertRowIndexToModel(rowIndex), table.convertColumnIndexToModel(colIndex));
+            if (! o.isNull()) {
+                val = o.toString(KFormatContext.NO_TYPE);
+            }
+
+            if (val.contains(text)) {
+                table.setColumnSelectionInterval(colIndex, colIndex);
+                table.setRowSelectionInterval(rowIndex, rowIndex);
+                Rectangle rectangle = table.getCellRect(rowIndex, colIndex, false);
+                table.scrollRectToVisible(rectangle);
+                break;
+            }
+
         }
     }
 
