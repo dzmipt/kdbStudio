@@ -2,16 +2,23 @@ package studio.ui;
 
 import org.fife.ui.rsyntaxtextarea.RSyntaxTextArea;
 import org.fife.ui.rtextarea.RTextScrollPane;
+import org.fife.ui.rtextarea.SearchContext;
+import org.fife.ui.rtextarea.SearchEngine;
+import org.fife.ui.rtextarea.SearchResult;
 import studio.kdb.Config;
 import studio.ui.rstextarea.RSTextAreaFactory;
 import studio.ui.rstextarea.StudioRSyntaxTextArea;
+import studio.ui.search.SearchAction;
 import studio.ui.search.SearchPanel;
+import studio.ui.search.SearchPanelListener;
 
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.*;
+import java.util.regex.Pattern;
+import java.util.regex.PatternSyntaxException;
 
-public class EditorPane extends JPanel implements MouseWheelListener {
+public class EditorPane extends JPanel implements MouseWheelListener, SearchPanelListener {
 
     private final StudioRSyntaxTextArea textArea;
     private final SearchPanel searchPanel;
@@ -144,5 +151,54 @@ public class EditorPane extends JPanel implements MouseWheelListener {
                     BorderFactory.createEmptyBorder(2*yGap, 2*xGap, yGap, 2*xGap)
                 )
         );
+    }
+
+    @Override
+    public void search(SearchContext context, SearchAction action) {
+        if (context.isRegularExpression()) {
+            try {
+                Pattern.compile(context.getSearchFor());
+            } catch (PatternSyntaxException e) {
+                setTemporaryStatus("Error in regular expression: " + e.getMessage());
+                return;
+            }
+        }
+
+        int pos = context.getSearchForward() ? textArea.getSelectionEnd() : textArea.getSelectionStart();
+        textArea.setSelectionStart(pos);
+        textArea.setSelectionEnd(pos);
+        SearchResult result;
+        if (action == SearchAction.Find) {
+            result = SearchEngine.find(textArea, context);
+        } else {
+            try {
+                if (action == SearchAction.Replace) {
+                    result = SearchEngine.replace(textArea, context);
+                } else { //ReplaceAll
+                    result = SearchEngine.replaceAll(textArea, context);
+                }
+            } catch (IndexOutOfBoundsException e) {
+                setTemporaryStatus("Error during replacement: " + e.getMessage());
+                return;
+            }
+        }
+
+        String status;
+        if (! result.wasFound()) {
+            status = "Nothing was found";
+        } else if (result.getMarkedCount() > 0) {
+            status = "Marked " + result.getMarkedCount() + " occurrence(s)";
+        } else if (action == SearchAction.Find) {
+            status = "Selected the first occurrence";
+        } else {
+            status = "Replaced " + result.getCount() + " occurrence(s)";
+        }
+        setTemporaryStatus(status);
+    }
+
+    @Override
+    public void closeSearchPanel() {
+        hideSearchPanel();
+        textArea.requestFocus();
     }
 }

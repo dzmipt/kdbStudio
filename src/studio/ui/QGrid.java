@@ -1,7 +1,11 @@
 package studio.ui;
 
+import org.fife.ui.rtextarea.SearchContext;
 import studio.kdb.*;
 import studio.ui.action.CopyTableSelectionAction;
+import studio.ui.search.SearchAction;
+import studio.ui.search.SearchPanel;
+import studio.ui.search.SearchPanelListener;
 
 import javax.swing.*;
 import javax.swing.event.ChangeEvent;
@@ -14,7 +18,7 @@ import java.awt.*;
 import java.awt.event.*;
 
 //@TODO: Should it be really a JPanel? It looks it should be just a JTabel. And anyway any additional components could be added to TabPanel
-public class QGrid extends JPanel implements MouseWheelListener {
+public class QGrid extends JPanel implements MouseWheelListener, SearchPanelListener {
     private StudioPanel panel;
     private final TableModel model;
     private final JTable table;
@@ -69,6 +73,32 @@ public class QGrid extends JPanel implements MouseWheelListener {
     public QGrid(StudioPanel panel, KTableModel model) {
         this.panel = panel;
         this.model = model;
+
+        InputMap inputMap = getInputMap(JComponent.WHEN_ANCESTOR_OF_FOCUSED_COMPONENT);
+        ActionMap actionMap = getActionMap();
+
+        KeyStroke keyStroke = KeyStroke.getKeyStroke(KeyEvent.VK_F, StudioPanel.menuShortcutKeyMask);
+        Action action = new AbstractAction() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                SearchPanel searchPanel = panel.getResultSearchPanel();
+                searchPanel.setReplaceVisible(false);
+                searchPanel.setVisible(true);
+            }
+        };
+        inputMap.put(keyStroke, "searchPanel");
+        actionMap.put("searchPanel", action);
+
+        keyStroke = KeyStroke.getKeyStroke(KeyEvent.VK_ESCAPE, 0);
+        action = new AbstractAction() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                closeSearchPanel();
+            }
+        };
+        inputMap.put(keyStroke, "closeSearchPanel");
+        actionMap.put("closeSearchPanel", action);
+
         setDoubleClickTimeout(Config.getInstance().getInt(Config.EMULATED_DOUBLE_CLICK_TIMEOUT));
 
         table = new MYJTable(model);
@@ -274,4 +304,70 @@ public class QGrid extends JPanel implements MouseWheelListener {
         return popupMenu;
     }
 
+    @Override
+    public void search(SearchContext context, SearchAction action) {
+        String text = context.getSearchFor();
+
+        int[] cols = table.getSelectedColumns();
+        int[] rows = table.getSelectedRows();
+
+        int col = 0;
+        int row = 0;
+        if (cols.length == 1 && rows.length == 1) {
+            col = cols[0];
+            row = rows[0];
+            cols = new int[0];
+            rows = new int[0];
+        }
+
+        TableModel model = table.getModel();
+
+        for(;;) {
+            int colIndex = cols.length > 0 ? cols[col] : col;
+            int rowIndex = rows.length > 0 ? rows[row] : row;
+
+            String val = "";
+
+            K.KBase o = (K.KBase)model.getValueAt(table.convertRowIndexToModel(rowIndex), table.convertColumnIndexToModel(colIndex));
+            if (! o.isNull()) {
+                val = o.toString(KFormatContext.NO_TYPE);
+            }
+
+            if (val.contains(text)) {
+                table.setColumnSelectionInterval(colIndex, colIndex);
+                table.setRowSelectionInterval(rowIndex, rowIndex);
+                Rectangle rectangle = table.getCellRect(rowIndex, colIndex, false);
+                table.scrollRectToVisible(rectangle);
+                return;
+            }
+
+            col++;
+            boolean nextRow = false;
+            if (cols.length>0) {
+                if (col == cols.length) nextRow = true;
+            } else {
+                if (model.getColumnCount() == col) nextRow = true;
+            }
+
+            if (nextRow) {
+                col = 0;
+                row++;
+
+                boolean finish = false;
+                if (rows.length>0) {
+                    if (row == rows.length) finish = true;
+                } else {
+                    if (model.getRowCount() == row) finish = true;
+                }
+
+                if (finish) break;
+            }
+        }
+    }
+
+    @Override
+    public void closeSearchPanel() {
+        panel.getResultSearchPanel().setVisible(false);
+        table.requestFocus();
+    }
 }

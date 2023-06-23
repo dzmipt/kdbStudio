@@ -1521,7 +1521,13 @@ public class StudioPanel extends JPanel implements WindowListener {
         JPanel bottomPanel = new JPanel(new BorderLayout());
         bottomPanel.add(tabbedPane, BorderLayout.CENTER);
 
-        resultSearchPanel = new SearchPanel(() -> getResultPane(tabbedPane.getSelectedIndex()).getEditor());
+        resultSearchPanel = new SearchPanel(() -> {
+            TabPanel resultTab = getResultPane(tabbedPane.getSelectedIndex());
+            EditorPane editorPane = resultTab.getEditor();
+            if (editorPane != null) return editorPane;
+
+            return resultTab.getGrid(); // the Grid or null
+        });
         bottomPanel.add(resultSearchPanel, BorderLayout.NORTH);
 
         splitpane.setBottomComponent(bottomPanel);
@@ -1749,7 +1755,11 @@ public class StudioPanel extends JPanel implements WindowListener {
     private JTable getSelectedTable() {
         TabPanel tab = (TabPanel) tabbedPane.getSelectedComponent();
         if (tab == null) return null;
-        return tab.getTable();
+
+        QGrid grid = tab.getGrid();
+        if (grid == null) return null;
+
+        return grid.getTable();
     }
 
     private void executeK4Query(String text) {

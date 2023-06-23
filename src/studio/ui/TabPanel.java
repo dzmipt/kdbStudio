@@ -181,9 +181,8 @@ public class TabPanel extends JPanel {
         grid.setDoubleClickTimeout(doubleClickTimeout);
     }
 
-    public JTable getTable() {
-        if (grid == null) return null;
-        return grid.getTable();
+    public QGrid getGrid() {
+        return grid;
     }
 
     public EditorPane getEditor() {

@@ -1,10 +1,6 @@
 package studio.ui.search;
 
-import org.fife.ui.rsyntaxtextarea.RSyntaxTextArea;
 import org.fife.ui.rtextarea.SearchContext;
-import org.fife.ui.rtextarea.SearchEngine;
-import org.fife.ui.rtextarea.SearchResult;
-import studio.ui.EditorPane;
 import studio.ui.GroupLayoutSimple;
 import studio.ui.UserAction;
 import studio.ui.Util;
@@ -13,8 +9,6 @@ import javax.swing.*;
 import javax.swing.border.Border;
 import javax.swing.border.EtchedBorder;
 import java.awt.event.KeyEvent;
-import java.util.regex.Pattern;
-import java.util.regex.PatternSyntaxException;
 
 public class SearchPanel extends JPanel {
 
@@ -28,8 +22,6 @@ public class SearchPanel extends JPanel {
     private JTextField txtReplace;
 
     private final EditorPaneLocator editorPaneLocator;
-
-    private enum SearchAction {Find, Replace, ReplaceAll};
 
     private static final Border ICON_BORDER = BorderFactory.createCompoundBorder(
             BorderFactory.createEtchedBorder(EtchedBorder.LOWERED),
@@ -140,50 +132,10 @@ public class SearchPanel extends JPanel {
     }
 
     private void doSearch(SearchContext context, SearchAction action) {
-        EditorPane editorPane = editorPaneLocator.getEditorPane();
-        if (editorPane == null) return;
+        SearchPanelListener searchPanelListener = editorPaneLocator.getSearchPanelListener();
+        if (searchPanelListener == null) return;
 
-        RSyntaxTextArea textArea = editorPane.getTextArea();
-
-        if (context.isRegularExpression()) {
-            try {
-                Pattern.compile(context.getSearchFor());
-            } catch (PatternSyntaxException e) {
-                editorPane.setTemporaryStatus("Error in regular expression: " + e.getMessage());
-                return;
-            }
-        }
-
-        int pos = context.getSearchForward() ? textArea.getSelectionEnd() : textArea.getSelectionStart();
-        textArea.setSelectionStart(pos);
-        textArea.setSelectionEnd(pos);
-        SearchResult result;
-        if (action == SearchAction.Find) {
-            result = SearchEngine.find(textArea, context);
-        } else {
-            try {
-                if (action == SearchAction.Replace) {
-                    result = SearchEngine.replace(textArea, context);
-                } else { //ReplaceAll
-                    result = SearchEngine.replaceAll(textArea, context);
-                }
-            } catch (IndexOutOfBoundsException e) {
-                editorPane.setTemporaryStatus("Error during replacement: " + e.getMessage());
-                return;
-            }
-        }
-
-        String status;
-        if (! result.wasFound()) {
-            status = "Nothing was found";
-        } else if (result.getMarkedCount() > 0) {
-            status = "Marked " + result.getMarkedCount() + " occurrence(s)";
-        } else if (action == SearchAction.Find) {
-            status = "Selected the first occurrence";
-        } else {
-            status = "Replaced " + result.getCount() + " occurrence(s)";
-        }
-        editorPane.setTemporaryStatus(status);
+        searchPanelListener.search(context,action);
     }
 
     private void find(boolean forward) {
@@ -211,9 +163,8 @@ public class SearchPanel extends JPanel {
     }
 
     private void close() {
-        EditorPane editorPane = editorPaneLocator.getEditorPane();
-        if (editorPane == null) return;
-        editorPane.hideSearchPanel();
-        editorPane.getTextArea().requestFocus();
+        SearchPanelListener searchPanelListener = editorPaneLocator.getSearchPanelListener();
+        if (searchPanelListener == null) return;
+        searchPanelListener.closeSearchPanel();
     }
 }
