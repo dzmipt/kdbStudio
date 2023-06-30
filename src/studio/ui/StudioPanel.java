@@ -126,6 +126,7 @@ public class StudioPanel extends JPanel implements WindowListener {
     private UserAction addServerAction;
     private UserAction removeServerAction;
     private UserAction toggleCommaFormatAction;
+    private UserAction findInResultAction;
     private UserAction nextEditorTabAction;
     private UserAction prevEditorTabAction;
     private UserAction[] lineEndingActions;
@@ -741,11 +742,15 @@ public class StudioPanel extends JPanel implements WindowListener {
                 KeyEvent.VK_R, KeyStroke.getKeyStroke(KeyEvent.VK_Y, menuShortcutKeyMask | InputEvent.SHIFT_MASK), e -> refreshQuery());
 
         toggleCommaFormatAction = UserAction.create("Toggle Comma Format", Util. COMMA_ICON, "Add/remove thousands separator in selected result",
-                KeyEvent.VK_F, KeyStroke.getKeyStroke(KeyEvent.VK_J, menuShortcutKeyMask),
+                KeyEvent.VK_J, KeyStroke.getKeyStroke(KeyEvent.VK_J, menuShortcutKeyMask),
                 e -> {
                     TabPanel tab = (TabPanel) tabbedPane.getSelectedComponent();
                     if (tab != null) tab.toggleCommaFormatting();
                 });
+
+        findInResultAction = UserAction.create("Find in Result", Util.FIND_ICON, "Find in result tab",
+                KeyEvent.VK_F, KeyStroke.getKeyStroke(KeyEvent.VK_F, menuShortcutKeyMask | InputEvent.SHIFT_MASK),
+                e -> resultSearchPanel.setVisible(true) );
 
         aboutAction = UserAction.create(I18n.getString("About"), Util.ABOUT_ICON, "About Studio for kdb+",
                 KeyEvent.VK_E, null, e -> about());
@@ -1074,8 +1079,6 @@ public class StudioPanel extends JPanel implements WindowListener {
         menu.add(new JMenuItem(findAction));
         menu.add(new JMenuItem(replaceAction));
         menu.add(new JMenuItem(convertTabsToSpacesAction));
-//        menu.addSeparator();
-//        menu.add(new JMenuItem(editFontAction));
         menubar.add(menu);
 
         menu = new JMenu(I18n.getString("Server"));
@@ -1136,6 +1139,7 @@ public class StudioPanel extends JPanel implements WindowListener {
         menu.add(new JMenuItem(stopAction));
         menu.add(new JMenuItem(refreshAction));
         menu.add(new JMenuItem(toggleCommaFormatAction));
+        menu.add(new JMenuItem(findInResultAction));
         menubar.add(menu);
 
         menu = new JMenu(I18n.getString("Window"));
@@ -1522,12 +1526,15 @@ public class StudioPanel extends JPanel implements WindowListener {
         bottomPanel.add(tabbedPane, BorderLayout.CENTER);
 
         resultSearchPanel = new SearchPanel(() -> {
+            if (tabbedPane.getTabCount() == 0) return null;
             TabPanel resultTab = getResultPane(tabbedPane.getSelectedIndex());
             EditorPane editorPane = resultTab.getEditor();
             if (editorPane != null) return editorPane;
 
             return resultTab.getGrid(); // the Grid or null
         });
+
+        resultSearchPanel.setReplaceVisible(false);
         bottomPanel.add(resultSearchPanel, BorderLayout.NORTH);
 
         splitpane.setBottomComponent(bottomPanel);

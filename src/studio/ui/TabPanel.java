@@ -8,6 +8,8 @@ import javax.swing.*;
 import javax.swing.border.EtchedBorder;
 import javax.swing.text.JTextComponent;
 import java.awt.*;
+import java.awt.event.InputEvent;
+import java.awt.event.KeyEvent;
 
 public class TabPanel extends JPanel {
     private StudioPanel panel;
@@ -73,11 +75,12 @@ public class TabPanel extends JPanel {
                 type = ResultType.TEXT;
             }
 
+            KeyStroke keyStroke = KeyStroke.getKeyStroke(KeyEvent.VK_J, StudioPanel.menuShortcutKeyMask);
             tglBtnComma = new JToggleButton(Util.COMMA_CROSSED_ICON);
             tglBtnComma.setSelectedIcon(Util.COMMA_ICON);
 
             tglBtnComma.setBorder(BorderFactory.createEtchedBorder(EtchedBorder.LOWERED));
-            tglBtnComma.setToolTipText("Add comma as thousands separators for numbers");
+            tglBtnComma.setToolTipText(Util.getTooltipWithAccelerator("Add comma as thousands separators for numbers", keyStroke));
             tglBtnComma.setFocusable(false);
             tglBtnComma.addActionListener(e -> {
                 updateFormatting();
@@ -89,11 +92,21 @@ public class TabPanel extends JPanel {
             uploadBtn.setFocusable(false);
             uploadBtn.addActionListener(e -> upload());
 
+            keyStroke = KeyStroke.getKeyStroke(KeyEvent.VK_F, StudioPanel.menuShortcutKeyMask | InputEvent.SHIFT_MASK);
+
+            JButton findBtn = new JButton(Util.FIND_ICON);
+            findBtn.setToolTipText(Util.getTooltipWithAccelerator("Find in result", keyStroke));
+            findBtn.setBorder(BorderFactory.createEtchedBorder(EtchedBorder.LOWERED));
+            findBtn.setFocusable(false);
+            findBtn.addActionListener(e -> panel.getResultSearchPanel().setVisible(true));
+
             toolbar = new JToolBar();
             toolbar.setFloatable(false);
             toolbar.add(tglBtnComma);
             toolbar.add(Box.createRigidArea(new Dimension(16,16)));
             toolbar.add(uploadBtn);
+            toolbar.add(Box.createRigidArea(new Dimension(16,16)));
+            toolbar.add(findBtn);
             updateFormatting();
         } else {
             textArea = new JTextPane();

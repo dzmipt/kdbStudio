@@ -16,12 +16,11 @@ import javax.swing.tree.TreeNode;
 import javax.swing.tree.TreePath;
 import javax.swing.tree.TreeSelectionModel;
 import java.awt.*;
-import java.awt.event.*;
-import java.util.ArrayList;
-import java.util.Enumeration;
-import java.util.HashSet;
-import java.util.StringTokenizer;
+import java.awt.event.KeyEvent;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
 import java.util.List;
+import java.util.*;
 
 public class ServerList extends EscapeDialog implements TreeExpansionListener  {
 
@@ -303,7 +302,7 @@ public class ServerList extends EscapeDialog implements TreeExpansionListener  {
             }
         });
         tglBtnBoxTree = new JToggleButton(Util.TEXT_TREE_ICON);
-        tglBtnBoxTree.setToolTipText("<html>Toggle tree/list <small>" + Util.getAcceleratorString(TREE_VIEW_KEYSTROKE) +"</small></html>");
+        tglBtnBoxTree.setToolTipText(Util.getTooltipWithAccelerator("Toggle tree/list", TREE_VIEW_KEYSTROKE));
         tglBtnBoxTree.setSelectedIcon(Util.TEXT_ICON);
         tglBtnBoxTree.setFocusable(false);
         tglBtnBoxTree.addActionListener(e->actionToggleButton());

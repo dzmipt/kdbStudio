@@ -103,6 +103,12 @@ public class Util {
                 KeyEvent.getKeyText(keyStroke.getKeyCode());
     }
 
+    public static String getTooltipWithAccelerator(String tooltip, KeyStroke keyStroke) {
+        if (keyStroke == null) return tooltip;
+
+        return "<html>" + tooltip + " <small>" + Util.getAcceleratorString(keyStroke) +"</small></html>";
+    }
+
     public static String limitString(String text, int limit) {
         if (text.length() <= limit) return text;
         return text.substring(0, limit)  + " ...";

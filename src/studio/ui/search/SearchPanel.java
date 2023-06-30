@@ -163,6 +163,7 @@ public class SearchPanel extends JPanel {
     }
 
     private void close() {
+        setVisible(false);
         SearchPanelListener searchPanelListener = editorPaneLocator.getSearchPanelListener();
         if (searchPanelListener == null) return;
         searchPanelListener.closeSearchPanel();

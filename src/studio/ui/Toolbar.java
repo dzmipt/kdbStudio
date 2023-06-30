@@ -13,10 +13,8 @@ public class Toolbar extends JToolBar {
             return btn;
         }
 
-        String text = "<html>" + a.getValue(Action.SHORT_DESCRIPTION) +
-                " <small>" + Util.getAcceleratorString(accelerator) + "</small></html>";
-
-        btn.setToolTipText(text);
+        String tooltip = Util.getTooltipWithAccelerator((String)a.getValue(Action.SHORT_DESCRIPTION), accelerator);
+        btn.setToolTipText(tooltip);
         return btn;
     }
 }

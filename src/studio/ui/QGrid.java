@@ -77,16 +77,19 @@ public class QGrid extends JPanel implements MouseWheelListener, SearchPanelList
         InputMap inputMap = getInputMap(JComponent.WHEN_ANCESTOR_OF_FOCUSED_COMPONENT);
         ActionMap actionMap = getActionMap();
 
-        KeyStroke keyStroke = KeyStroke.getKeyStroke(KeyEvent.VK_F, StudioPanel.menuShortcutKeyMask);
         Action action = new AbstractAction() {
             @Override
             public void actionPerformed(ActionEvent e) {
                 SearchPanel searchPanel = panel.getResultSearchPanel();
-                searchPanel.setReplaceVisible(false);
                 searchPanel.setVisible(true);
             }
         };
+
+        KeyStroke keyStroke = KeyStroke.getKeyStroke(KeyEvent.VK_F, StudioPanel.menuShortcutKeyMask);
+        KeyStroke keyStroke1 = KeyStroke.getKeyStroke(KeyEvent.VK_F, StudioPanel.menuShortcutKeyMask | InputEvent.SHIFT_MASK);
+
         inputMap.put(keyStroke, "searchPanel");
+        inputMap.put(keyStroke1, "searchPanel");
         actionMap.put("searchPanel", action);
 
         keyStroke = KeyStroke.getKeyStroke(KeyEvent.VK_ESCAPE, 0);
