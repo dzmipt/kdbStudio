@@ -102,9 +102,8 @@ public class QueryExecutor implements ProgressCallback {
         private volatile Server server;
         private volatile K.KBase query;
         private volatile String queryText;
-        private volatile kx.c c = null;
         private final int queryIndex;
-        private Session session = null;
+        private volatile Session session = null;
 
         public Worker(int queryIndex, EditorTab editor, K.KBase query) {
             this.queryIndex = queryIndex;
@@ -123,8 +122,8 @@ public class QueryExecutor implements ProgressCallback {
         }
 
         void closeConnection() {
-            if (c!=null) {
-                c.close();
+            if (session != null) {
+                session.getKdbConnection().close();
             }
         }
 
@@ -161,7 +160,7 @@ public class QueryExecutor implements ProgressCallback {
             } catch (Throwable e) {
                 if (! (e instanceof kx.c.K4Exception)) {
                     log.error("Error occurred during query execution",e);
-                    if (c != null) c.close();
+                    closeConnection();
                 }
                 result.setError(e);
             } finally {
