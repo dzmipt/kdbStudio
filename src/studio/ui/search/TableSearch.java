@@ -10,89 +10,108 @@ public class TableSearch {
 
     private final JTable table;
     private final TableModel model;
-    private int[] cols;
-    private int[] rows;
-    private int col, nextCol;
-    private int row, nextRow;
-    private boolean nextCalculated = false;
 
-    private final boolean direction;
+    private LineIterator rowIterator;
+    private LineIterator colIterator;
+    private boolean returnFirst;
 
-    public TableSearch(JTable table, boolean direction) {
+    public TableSearch(JTable table, boolean forwardDirection) {
         this.table = table;
-        this.direction = direction;
-        cols = table.getSelectedColumns();
-        rows = table.getSelectedRows();
+        model = table.getModel();
 
-        col = 0;
-        row = 0;
-        if (cols.length == 0 && rows.length == 0) {
-            nextCalculated = true;
-        }
+        int[] cols = table.getSelectedColumns();
+        int[] rows = table.getSelectedRows();
 
         if (cols.length == 1 && rows.length == 1) {
-            col = cols[0];
-            row = rows[0];
-            cols = new int[0];
-            rows = new int[0];
+            rowIterator = new LineIterator(null, table.getRowCount(), forwardDirection);
+            colIterator = new LineIterator(null, table.getColumnCount(), forwardDirection);
+            rowIterator.setPosition(rows[0]);
+            colIterator.setPosition(cols[0]);
+            returnFirst = false;
+        } else {
+            rowIterator = new LineIterator(rows, table.getRowCount(), forwardDirection);
+            colIterator = new LineIterator(cols, table.getColumnCount(), forwardDirection);
+            returnFirst = true;
         }
-
-        model = table.getModel();
     }
 
     public boolean hasNext() {
-        if (nextCalculated) return true;
-
-        boolean toNextRow = false;
-        nextRow = row;
-        nextCol = col+1;
-        if (cols.length>0) {
-            if (nextCol == cols.length) toNextRow = true;
-        } else {
-            if (model.getColumnCount() == nextCol) toNextRow = true;
-        }
-
-        if (toNextRow) {
-            nextCol = 0;
-            nextRow++;
-
-            boolean finish = false;
-            if (rows.length>0) {
-                if (nextRow == rows.length) finish = true;
-            } else {
-                if (model.getRowCount() == nextRow) finish = true;
-            }
-
-            if (finish) return false;
-        }
-
-        nextCalculated = true;
-        return true;
+        if (returnFirst) return true;
+        if (colIterator.hasNext()) return true;
+        if (rowIterator.hasNext()) return true;
+        return false;
     }
 
     public K.KBase next() {
-        if (!nextCalculated) {
-            boolean success = hasNext();
-            if (! success) throw new IllegalStateException("TableSearch reaches to the end");
+        if (returnFirst) {
+            returnFirst = false;
+        } else {
+            if (colIterator.hasNext()) {
+                colIterator.next();
+            } else {
+                rowIterator.next();
+                colIterator.reset();
+            }
         }
-
-        col = nextCol;
-        row = nextRow;
-        nextCalculated = false;
-
-        int colIndex = cols.length > 0 ? cols[col] : col;
-        int rowIndex = rows.length > 0 ? rows[row] : row;
-        return (K.KBase)model.getValueAt(table.convertRowIndexToModel(rowIndex), table.convertColumnIndexToModel(colIndex));
+        return (K.KBase)model.getValueAt(table.convertRowIndexToModel(rowIterator.get()), table.convertColumnIndexToModel(colIterator.get()));
     }
 
     public void scrollTo() {
-        int colIndex = cols.length > 0 ? cols[col] : col;
-        int rowIndex = rows.length > 0 ? rows[row] : row;
+        int colIndex = colIterator.get();
+        int rowIndex = rowIterator.get();
 
         table.setColumnSelectionInterval(colIndex, colIndex);
         table.setRowSelectionInterval(rowIndex, rowIndex);
         Rectangle rectangle = table.getCellRect(rowIndex, colIndex, false);
         table.scrollRectToVisible(rectangle);
+    }
+
+
+    public static class LineIterator {
+
+        private final int[] array;
+        private final int count;
+        private final boolean forwardDirection;
+
+        private int pos;
+
+
+        LineIterator(int[] array, int count, boolean forwardDirection) {
+            this.array = (array != null && array.length == 0) ? null : array;
+            this.count = (this.array != null) ? this.array.length : count;
+            this.forwardDirection = forwardDirection;
+
+            reset();
+        }
+
+        void reset() {
+            pos = forwardDirection ? 0 : count -1;
+        }
+
+        boolean hasNext() {
+
+            if (forwardDirection) {
+                return pos < count - 1;
+            } else {
+                return pos > 0;
+            }
+        }
+
+        void next() {
+            if (forwardDirection) {
+                pos++;
+            } else {
+                pos--;
+            }
+        }
+
+        void setPosition(int pos) {
+            this.pos = pos;
+        }
+
+        int get() {
+            return array == null ? pos : array[pos];
+        }
     }
 
 }
