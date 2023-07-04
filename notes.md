@@ -1,5 +1,6 @@
+* Show timer during query execution
 * Added basic search functionality for result tables
-* Added settings for controlling kdb session reuse and invalidation 
+* Added settings for controlling kdb connection reuse and invalidation 
 * Added font selection for the editor and result table
     * Font size is changed with mouse wheel and pressed Ctrl (Command for MacOS)
 * Tab emulation with spaces

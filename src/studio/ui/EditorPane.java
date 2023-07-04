@@ -24,10 +24,14 @@ public class EditorPane extends JPanel implements MouseWheelListener, SearchPane
     private final SearchPanel searchPanel;
     private final MinSizeLabel lblRowCol;
     private final MinSizeLabel lblInsStatus;
+    private final MinSizeLabel lblClock;
     private final JLabel lblStatus;
     private final Box statusBar;
 
     private final Timer tempStatusTimer;
+    private final Timer tempClock;
+    private long clock;
+
     private String oldStatus = "";
 
     private final int yGap;
@@ -40,6 +44,8 @@ public class EditorPane extends JPanel implements MouseWheelListener, SearchPane
 
         tempStatusTimer =  new Timer(3000, this::tempStatusTimerAction);
         tempStatusTimer.setRepeats(false);
+
+        tempClock =  new Timer(500, this::tempClockAction);
 
         FontMetrics fm = getFontMetrics(UIManager.getFont("Label.font"));
         yGap = Math.round(0.1f * fm.getHeight());
@@ -63,6 +69,13 @@ public class EditorPane extends JPanel implements MouseWheelListener, SearchPane
         lblInsStatus.setHorizontalAlignment(JLabel.CENTER);
         lblInsStatus.setMinimumWidth("INS", "OVR");
         setBorder(lblInsStatus);
+
+        lblClock  = new MinSizeLabel("");
+        lblClock.setHorizontalAlignment(JLabel.CENTER);
+        lblClock.setMinimumWidth("1:00:00");
+        setBorder(lblClock);
+        lblClock.setVisible(false);
+
         lblStatus = new JLabel("Ready");
         Box boxStatus = Box.createHorizontalBox();
         boxStatus.add(lblStatus);
@@ -71,6 +84,7 @@ public class EditorPane extends JPanel implements MouseWheelListener, SearchPane
 
         statusBar = Box.createHorizontalBox();
         statusBar.add(boxStatus);
+        statusBar.add(lblClock);
         statusBar.add(lblInsStatus);
         statusBar.add(lblRowCol);
         statusBar.setVisible(editable);
@@ -135,6 +149,32 @@ public class EditorPane extends JPanel implements MouseWheelListener, SearchPane
     private void tempStatusTimerAction(ActionEvent event) {
         setStatus(oldStatus);
     }
+
+
+    public void startClock() {
+        clock = System.currentTimeMillis();
+        tempClock.start();
+    }
+
+    public void stopClock() {
+        tempClock.stop();
+        lblClock.setVisible(false);
+    }
+
+    private void tempClockAction(ActionEvent event) {
+        long time = (System.currentTimeMillis() - clock) / 1000;
+
+        if (time < 1) return;
+
+        long sec = time % 60;
+        time /= 60;
+        long min = time % 60;
+        long hour = time / 60;
+
+        lblClock.setText(String.format("%d:%02d:%02d",hour, min, sec));
+        lblClock.setVisible(true);
+    }
+
 
     private void updateRowColStatus() {
         int row = textArea.getCaretLineNumber() + 1;

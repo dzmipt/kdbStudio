@@ -172,14 +172,14 @@ public class SettingsDialog extends EscapeDialog {
         NumberFormatter formatter = new NumberFormatter();
         formatter.setMinimum(1);
 
-        chBoxSessionInvalidation = new JCheckBox("Sessions are invalidated every ");
+        chBoxSessionInvalidation = new JCheckBox("Kdb connections are invalidated every ");
         chBoxSessionInvalidation.setSelected(CONFIG.getBoolean(Config.SESSION_INVALIDATION_ENABLED));
 
         JLabel lblSessionInvalidationSuffix = new JLabel(" hour(s)");
         txtSessionInvalidation = new JFormattedTextField(formatter);
         txtSessionInvalidation.setValue(CONFIG.getInt(Config.SESSION_INVALIDATION_TIMEOUT_IN_HOURS));
 
-        chBoxSessionReuse = new JCheckBox("Reuse session between tabs");
+        chBoxSessionReuse = new JCheckBox("Reuse kdb connection between tabs");
         chBoxSessionReuse.setSelected(CONFIG.getBoolean(Config.SESSION_REUSE));
 
         chBoxEmulateTab = new JCheckBox("Emulate tab with spaces");

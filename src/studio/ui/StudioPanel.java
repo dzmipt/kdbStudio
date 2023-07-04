@@ -1773,6 +1773,7 @@ public class StudioPanel extends JPanel implements WindowListener {
         editor.getTextArea().setCursor(waitCursor);
         editor.setStatus("Executing: " + text);
         editor.getQueryExecutor().execute(text);
+        editor.getPane().startClock();
         refreshActionState();
     }
 
@@ -1780,6 +1781,7 @@ public class StudioPanel extends JPanel implements WindowListener {
         editor.getTextArea().setCursor(waitCursor);
         editor.setStatus("Executing: " + query.toString());
         editor.getQueryExecutor().execute(query);
+        editor.getPane().startClock();
         refreshActionState();
     }
 
@@ -1793,6 +1795,7 @@ public class StudioPanel extends JPanel implements WindowListener {
 
     // if the query is cancelled execTime=-1, result and error are null's
     public static void queryExecutionComplete(EditorTab editor, QueryResult queryResult) {
+        editor.getPane().stopClock();
         JTextComponent textArea = editor.getTextArea();
         textArea.setCursor(textCursor);
         Throwable error = queryResult.getError();
