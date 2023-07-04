@@ -27,7 +27,7 @@ public class EditorPane extends JPanel implements MouseWheelListener, SearchPane
     private final JLabel lblStatus;
     private final Box statusBar;
 
-    private Timer tempStatusTimer = new Timer(3000, this::tempStatusTimerAction);
+    private final Timer tempStatusTimer;
     private String oldStatus = "";
 
     private final int yGap;
@@ -37,6 +37,9 @@ public class EditorPane extends JPanel implements MouseWheelListener, SearchPane
     public EditorPane(boolean editable, SearchPanel searchPanel) {
         super(new BorderLayout());
         this.searchPanel = searchPanel;
+
+        tempStatusTimer =  new Timer(3000, this::tempStatusTimerAction);
+        tempStatusTimer.setRepeats(false);
 
         FontMetrics fm = getFontMetrics(UIManager.getFont("Label.font"));
         yGap = Math.round(0.1f * fm.getHeight());
@@ -115,6 +118,9 @@ public class EditorPane extends JPanel implements MouseWheelListener, SearchPane
     }
 
     public void setStatus(String status) {
+        if (tempStatusTimer.isRunning()) {
+            oldStatus = status;
+        }
         lblStatus.setText(status);
     }
 
