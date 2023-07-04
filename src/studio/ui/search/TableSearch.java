@@ -77,8 +77,10 @@ public class TableSearch {
 
 
         LineIterator(int[] array, int count, boolean forwardDirection) {
-            this.array = (array != null && array.length == 0) ? null : array;
-            this.count = (this.array != null) ? this.array.length : count;
+            if (array != null && array.length == 0) array = null;
+
+            this.array = array;
+            this.count = (array != null) ? array.length : count;
             this.forwardDirection = forwardDirection;
 
             reset();
