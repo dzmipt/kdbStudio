@@ -6,7 +6,7 @@ import javax.swing.*;
 import javax.swing.table.TableModel;
 import java.awt.*;
 
-public class TableSearch {
+public class TableIterator {
 
     private final JTable table;
     private final TableModel model;
@@ -15,7 +15,7 @@ public class TableSearch {
     private LineIterator colIterator;
     private boolean returnFirst;
 
-    public TableSearch(JTable table, boolean forwardDirection) {
+    public TableIterator(JTable table, boolean forwardDirection) {
         this.table = table;
         model = table.getModel();
 
@@ -33,6 +33,14 @@ public class TableSearch {
             colIterator = new LineIterator(cols, table.getColumnCount(), forwardDirection);
             returnFirst = true;
         }
+    }
+
+    public int getRow() {
+        return table.convertRowIndexToModel(rowIterator.get());
+    }
+
+    public int getColumn() {
+        return table.convertColumnIndexToModel(colIterator.get());
     }
 
     public boolean hasNext() {
@@ -53,7 +61,7 @@ public class TableSearch {
                 colIterator.reset();
             }
         }
-        return (K.KBase)model.getValueAt(table.convertRowIndexToModel(rowIterator.get()), table.convertColumnIndexToModel(colIterator.get()));
+        return (K.KBase)model.getValueAt(getRow(), getColumn());
     }
 
     public void scrollTo() {

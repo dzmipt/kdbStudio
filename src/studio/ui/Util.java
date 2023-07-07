@@ -75,6 +75,18 @@ public class Util {
 
     public static boolean Java8Minus = System.getProperty("java.version").startsWith("1.");
 
+    public static Color blendColors(Color... colors) {
+        float ratio = 1f / ((float) colors.length);
+        int r = 0, g = 0, b = 0, a = 0;
+        for (Color color : colors) {
+            r += color.getRed() * ratio;
+            g += color.getGreen() * ratio;
+            b += color.getBlue() * ratio;
+            a += color.getAlpha() * ratio;
+        }
+        return new Color(r, g, b, a);
+    }
+
     public static ImageIcon getImage(String strFilename) {
         URL url = Util.class.getResource(strFilename);
         if (url == null) return null;

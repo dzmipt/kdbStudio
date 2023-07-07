@@ -4,6 +4,7 @@ import studio.kdb.Config;
 import studio.kdb.K;
 import studio.kdb.KFormatContext;
 import studio.kdb.KTableModel;
+import studio.utils.TableMarkers;
 
 import javax.swing.*;
 import javax.swing.table.DefaultTableCellRenderer;
@@ -24,9 +25,18 @@ class CellRenderer extends DefaultTableCellRenderer {
 
     private static final Color fgColor = UIManager.getColor("Table.foreground");
 
-    private KFormatContext formatContextWithType, formatContextNoType;
+    private static final Color markColor = new Color(255,200,0);
 
-    public CellRenderer() {
+    private static final Color markKeyColor = Util.blendColors(markColor, keyColor);
+    private static final Color markBgColor = Util.blendColors(markColor, bgColor);
+    private static final Color markAltColor = Util.blendColors(markColor, altColor);
+    private static final Color markSelColor = Util.blendColors(markColor, selColor);
+
+    private KFormatContext formatContextWithType, formatContextNoType;
+    private final TableMarkers markers;
+
+    public CellRenderer(TableMarkers markers) {
+        this.markers = markers;
         setFormatContext(KFormatContext.DEFAULT);
         setHorizontalAlignment(SwingConstants.LEFT);
         setOpaque(true);
@@ -52,18 +62,20 @@ class CellRenderer extends DefaultTableCellRenderer {
             setText(text);
             setForeground(kb.isNull() ? nullColor : fgColor);
 
+            boolean isMarked = markers.isMarked(table.convertRowIndexToModel(row), table.convertColumnIndexToModel(column));
+
             if (!isSelected) {
                 KTableModel ktm = (KTableModel) table.getModel();
                 column = table.convertColumnIndexToModel(column);
                 if (ktm.isKey(column))
-                    setBackground(keyColor);
+                    setBackground(isMarked ? markKeyColor : keyColor);
                 else if (row % 2 == 0)
-                    setBackground(altColor);
+                    setBackground(isMarked ? markAltColor : altColor);
                 else
-                    setBackground(bgColor);
+                    setBackground(isMarked ? markBgColor : bgColor);
             } else {
                 setForeground(selFgColor);
-                setBackground(selColor);
+                setBackground(isMarked ? markSelColor : selColor);
             }
         }
         return this;

@@ -6,7 +6,8 @@ import studio.ui.action.CopyTableSelectionAction;
 import studio.ui.search.SearchAction;
 import studio.ui.search.SearchPanel;
 import studio.ui.search.SearchPanelListener;
-import studio.ui.search.TableSearch;
+import studio.ui.search.TableIterator;
+import studio.utils.TableMarkers;
 
 import javax.swing.*;
 import javax.swing.event.ChangeEvent;
@@ -21,11 +22,13 @@ public class QGrid extends JPanel implements MouseWheelListener, SearchPanelList
     private StudioPanel panel;
     private final TableModel model;
     private final JTable table;
-    private WidthAdjuster widthAdjuster;
-    private TableRowHeader tableRowHeader;
-    private TableHeaderRenderer tableHeaderRenderer;
-    private JScrollPane scrollPane;
-    private CellRenderer cellRenderer;
+    private final WidthAdjuster widthAdjuster;
+    private final TableRowHeader tableRowHeader;
+    private final TableHeaderRenderer tableHeaderRenderer;
+    private final JScrollPane scrollPane;
+    private final CellRenderer cellRenderer;
+    private final TableMarkers markers;
+
     private KFormatContext formatContext = KFormatContext.DEFAULT;
 
     public JTable getTable() {
@@ -76,6 +79,7 @@ public class QGrid extends JPanel implements MouseWheelListener, SearchPanelList
             public void actionPerformed(ActionEvent e) {
                 closeSearchPanel();
                 table.clearSelection();
+                markers.clear();
             }
         };
         inputMap.put(keyStroke, "closeSearchPanel");
@@ -96,7 +100,8 @@ public class QGrid extends JPanel implements MouseWheelListener, SearchPanelList
         ToolTipManager.sharedInstance().unregisterComponent(table);
         ToolTipManager.sharedInstance().unregisterComponent(table.getTableHeader());
 
-        cellRenderer = new CellRenderer();
+        markers = new TableMarkers(model.getColumnCount());
+        cellRenderer = new CellRenderer(markers);
 
         for (int i = 0; i < model.getColumnCount(); i++) {
             TableColumn col = table.getColumnModel().getColumn(i);
@@ -288,23 +293,36 @@ public class QGrid extends JPanel implements MouseWheelListener, SearchPanelList
 
     @Override
     public void search(SearchContext context, SearchAction action) {
-        String text = context.getSearchFor();
+        TableIterator tableIterator = new TableIterator(table, context.getSearchForward());
 
-        TableSearch search = new TableSearch(table, context.getSearchForward());
+        boolean markAll = context.getMarkAll();
 
-        while (search.hasNext()) {
-            String val = "";
-            K.KBase o = search.next();
-            if (!o.isNull()) {
-                val = o.toString(KFormatContext.NO_TYPE);
-            }
-
-            if (val.contains(text)) {
-                search.scrollTo();
-                break;
+        while (tableIterator.hasNext()) {
+            K.KBase value = tableIterator.next();
+            if (matchSearch(value, context)) {
+                if (markAll) {
+                    markers.mark(tableIterator.getRow(), tableIterator.getColumn());
+                } else {
+                    tableIterator.scrollTo();
+                    break;
+                }
             }
         }
+
+        if (markAll) {
+            table.repaint();
+        }
     }
+
+    private boolean matchSearch(K.KBase value, SearchContext context) {
+        String text = "";
+        if (!value.isNull()) {
+            text = value.toString(KFormatContext.NO_TYPE);
+        }
+
+        return text.contains(context.getSearchFor());
+    }
+
 
     @Override
     public void closeSearchPanel() {
