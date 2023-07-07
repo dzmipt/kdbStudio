@@ -15,23 +15,26 @@ public class TableIterator {
     private LineIterator colIterator;
     private boolean returnFirst;
 
-    public TableIterator(JTable table, boolean forwardDirection) {
+    //Probably forMarkup should be replaced with wrapped iteration (wrap search)
+    public TableIterator(JTable table, boolean forwardDirection, boolean forMarkup) {
         this.table = table;
         model = table.getModel();
 
         int[] cols = table.getSelectedColumns();
         int[] rows = table.getSelectedRows();
 
+        returnFirst = true;
         if (cols.length == 1 && rows.length == 1) {
             rowIterator = new LineIterator(null, table.getRowCount(), forwardDirection);
             colIterator = new LineIterator(null, table.getColumnCount(), forwardDirection);
-            rowIterator.setPosition(rows[0]);
-            colIterator.setPosition(cols[0]);
-            returnFirst = false;
+            if (!forMarkup) {
+                rowIterator.setPosition(rows[0]);
+                colIterator.setPosition(cols[0]);
+                returnFirst = false;
+            }
         } else {
             rowIterator = new LineIterator(rows, table.getRowCount(), forwardDirection);
             colIterator = new LineIterator(cols, table.getColumnCount(), forwardDirection);
-            returnFirst = true;
         }
     }
 

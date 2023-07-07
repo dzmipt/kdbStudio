@@ -294,9 +294,9 @@ public class QGrid extends JPanel implements MouseWheelListener, SearchPanelList
 
     @Override
     public void search(SearchContext context, SearchAction action) {
-        TableIterator tableIterator = new TableIterator(table, context.getSearchForward());
-
         boolean markAll = context.getMarkAll();
+
+        TableIterator tableIterator = new TableIterator(table, context.getSearchForward(), markAll);
         SearchEngine searchEngine;
         try {
             searchEngine = new SearchEngine(context);
