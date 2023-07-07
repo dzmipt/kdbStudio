@@ -30,11 +30,6 @@ class CellRenderer extends DefaultTableCellRenderer {
     public CellRenderer(JTable t) {
         setFormatContext(KFormatContext.DEFAULT);
         table = t;
-        table.addPropertyChangeListener(propertyChangeEvent -> {
-            if ("zoom".equals(propertyChangeEvent.getPropertyName()))
-                setFont(table.getFont());
-        });
-
         setHorizontalAlignment(SwingConstants.LEFT);
         setOpaque(true);
         setFont(table.getFont());
