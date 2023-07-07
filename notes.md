@@ -1,5 +1,5 @@
+* Added search functionality for result tables
 * Show timer during query execution
-* Added basic search functionality for result tables
 * Added settings for controlling kdb connection reuse and invalidation 
 * Added font selection for the editor and result table
     * Font size is changed with mouse wheel and pressed Ctrl (Command for MacOS)
@@ -11,7 +11,7 @@
 * Improvements in charting: 
     * display mouse cursor coordinates
     * drag for zoom can be done in any direction
-    * chart can be moved
+    * chart grid can be moved
     * shortcuts for copy, save, etc.
 
 `dz2.0.1` 2021.12.23
