@@ -11,8 +11,6 @@ import studio.ui.search.TableSearch;
 import javax.swing.*;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
-import javax.swing.table.TableCellEditor;
-import javax.swing.table.TableCellRenderer;
 import javax.swing.table.TableColumn;
 import javax.swing.table.TableModel;
 import java.awt.*;
@@ -43,27 +41,6 @@ public class QGrid extends JPanel implements MouseWheelListener, SearchPanelList
     private final UserAction copyHtmlFormatAction;
 
     private long doubleClickTimeout;
-
-    static class MYJTable extends JTable {
-        public MYJTable(TableModel m) {
-            super(m);
-        }
-
-        public Component prepareRenderer(TableCellRenderer renderer,
-                                         int rowIndex,
-                                         int vColIndex) {
-            Component c = super.prepareRenderer(renderer, rowIndex, vColIndex);
-            c.setFont(this.getFont());
-            return c;
-        }
-
-        public Component prepareEditor(TableCellEditor editor, int row, int column) {
-            Component comp = super.prepareEditor(editor, row, column);
-            comp.setFont(this.getFont());
-            return comp;
-        }
-    }
-
 
     public void setFormatContext(KFormatContext formatContext) {
         this.formatContext = formatContext;
@@ -106,7 +83,7 @@ public class QGrid extends JPanel implements MouseWheelListener, SearchPanelList
 
         setDoubleClickTimeout(Config.getInstance().getInt(Config.EMULATED_DOUBLE_CLICK_TIMEOUT));
 
-        table = new MYJTable(model);
+        table = new JTable(model);
 
         tableHeaderRenderer = new TableHeaderRenderer();
         table.getTableHeader().setDefaultRenderer(tableHeaderRenderer);
