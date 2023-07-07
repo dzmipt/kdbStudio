@@ -1,13 +1,11 @@
 package studio.ui;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.fife.ui.rtextarea.SearchContext;
 import studio.kdb.*;
 import studio.ui.action.CopyTableSelectionAction;
-import studio.ui.search.SearchAction;
-import studio.ui.search.SearchPanel;
-import studio.ui.search.SearchPanelListener;
-import studio.ui.search.TableIterator;
-import studio.utils.TableMarkers;
+import studio.ui.search.*;
 
 import javax.swing.*;
 import javax.swing.event.ChangeEvent;
@@ -16,6 +14,7 @@ import javax.swing.table.TableColumn;
 import javax.swing.table.TableModel;
 import java.awt.*;
 import java.awt.event.*;
+import java.util.regex.PatternSyntaxException;
 
 //@TODO: Should it be really a JPanel? It looks it should be just a JTabel. And anyway any additional components could be added to TabPanel
 public class QGrid extends JPanel implements MouseWheelListener, SearchPanelListener {
@@ -30,6 +29,8 @@ public class QGrid extends JPanel implements MouseWheelListener, SearchPanelList
     private final TableMarkers markers;
 
     private KFormatContext formatContext = KFormatContext.DEFAULT;
+
+    private static final Logger log = LogManager.getLogger();
 
     public JTable getTable() {
         return table;
@@ -296,10 +297,20 @@ public class QGrid extends JPanel implements MouseWheelListener, SearchPanelList
         TableIterator tableIterator = new TableIterator(table, context.getSearchForward());
 
         boolean markAll = context.getMarkAll();
+        SearchEngine searchEngine;
+        try {
+            searchEngine = new SearchEngine(context);
+        } catch (PatternSyntaxException e) {
+            //@TODO: need add into status when it is available
+            log.info("Invalid regular expression", e);
+            return;
+        }
 
         while (tableIterator.hasNext()) {
             K.KBase value = tableIterator.next();
-            if (matchSearch(value, context)) {
+            String text = value.isNull() ? "" : value.toString(KFormatContext.NO_TYPE);
+
+            if (searchEngine.containsIn(text)) {
                 if (markAll) {
                     markers.mark(tableIterator.getRow(), tableIterator.getColumn());
                 } else {
@@ -313,16 +324,6 @@ public class QGrid extends JPanel implements MouseWheelListener, SearchPanelList
             table.repaint();
         }
     }
-
-    private boolean matchSearch(K.KBase value, SearchContext context) {
-        String text = "";
-        if (!value.isNull()) {
-            text = value.toString(KFormatContext.NO_TYPE);
-        }
-
-        return text.contains(context.getSearchFor());
-    }
-
 
     @Override
     public void closeSearchPanel() {

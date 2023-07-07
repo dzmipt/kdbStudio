@@ -1,4 +1,4 @@
-package studio.utils;
+package studio.ui.search;
 
 import java.util.HashSet;
 import java.util.Set;

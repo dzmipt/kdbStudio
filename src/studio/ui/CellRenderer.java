@@ -4,7 +4,7 @@ import studio.kdb.Config;
 import studio.kdb.K;
 import studio.kdb.KFormatContext;
 import studio.kdb.KTableModel;
-import studio.utils.TableMarkers;
+import studio.ui.search.TableMarkers;
 
 import javax.swing.*;
 import javax.swing.table.DefaultTableCellRenderer;
