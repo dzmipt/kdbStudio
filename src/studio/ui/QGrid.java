@@ -96,7 +96,7 @@ public class QGrid extends JPanel implements MouseWheelListener, SearchPanelList
         ToolTipManager.sharedInstance().unregisterComponent(table);
         ToolTipManager.sharedInstance().unregisterComponent(table.getTableHeader());
 
-        cellRenderer = new CellRenderer(table);
+        cellRenderer = new CellRenderer();
 
         for (int i = 0; i < model.getColumnCount(); i++) {
             TableColumn col = table.getColumnModel().getColumn(i);

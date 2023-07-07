@@ -23,16 +23,13 @@ class CellRenderer extends DefaultTableCellRenderer {
     private static final Color selFgColor = UIManager.getColor("Table.selectionForeground");
 
     private static final Color fgColor = UIManager.getColor("Table.foreground");
-    private JTable table = null;
 
     private KFormatContext formatContextWithType, formatContextNoType;
 
-    public CellRenderer(JTable t) {
+    public CellRenderer() {
         setFormatContext(KFormatContext.DEFAULT);
-        table = t;
         setHorizontalAlignment(SwingConstants.LEFT);
         setOpaque(true);
-        setFont(table.getFont());
         setBackground(UIManager.getColor("Table.background"));
     }
 
