@@ -4,6 +4,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import studio.core.Credentials;
 import studio.core.DefaultAuthenticationMechanism;
+import studio.kdb.config.ActionOnExit;
 import studio.utils.TableConnExtractor;
 
 import java.awt.*;
@@ -276,13 +277,13 @@ public class ConfigTest {
     @Test
     public void testAutoSaveFlags() throws IOException {
         assertFalse(config.getBoolean(Config.AUTO_SAVE));
-        assertTrue(config.getBoolean(Config.SAVE_ON_EXIT));
+        assertEquals(ActionOnExit.SAVE, config.getEnum(Config.ACTION_ON_EXIT));
 
         config.setBoolean(Config.AUTO_SAVE, true);
-        config.setBoolean(Config.SAVE_ON_EXIT, false);
+        config.setEnum(Config.ACTION_ON_EXIT, ActionOnExit.CLOSE_ANONYMOUS_NOT_SAVED);
         Config newConfig = copyConfig(config, p -> {});
         assertTrue(newConfig.getBoolean(Config.AUTO_SAVE));
-        assertFalse(newConfig.getBoolean(Config.SAVE_ON_EXIT));
+        assertEquals(ActionOnExit.CLOSE_ANONYMOUS_NOT_SAVED, newConfig.getEnum(Config.ACTION_ON_EXIT));
     }
 
     @Test

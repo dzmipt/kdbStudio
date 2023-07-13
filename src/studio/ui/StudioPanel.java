@@ -8,6 +8,7 @@ import org.fife.ui.rsyntaxtextarea.RSyntaxTextAreaEditorKit;
 import studio.core.AuthenticationManager;
 import studio.core.Studio;
 import studio.kdb.*;
+import studio.kdb.config.ActionOnExit;
 import studio.ui.action.QPadImport;
 import studio.ui.action.QueryResult;
 import studio.ui.action.WorkspaceSaver;
@@ -616,7 +617,7 @@ public class StudioPanel extends JPanel implements WindowListener {
                 "Toggle the window divider's orientation", KeyEvent.VK_C, null, e -> toggleDividerOrientation());
 
         closeTabAction = UserAction.create("Close Tab", Util.BLANK_ICON, "Close current tab", KeyEvent.VK_W,
-                KeyStroke.getKeyStroke(KeyEvent.VK_W, menuShortcutKeyMask), e -> closeTab());
+                KeyStroke.getKeyStroke(KeyEvent.VK_W, menuShortcutKeyMask), e -> closeTab(true));
 
         closeFileAction = UserAction.create("Close Window", Util.BLANK_ICON, "Close current window (close all tabs)",
                 KeyEvent.VK_C, null, e -> closePanel());
@@ -892,24 +893,33 @@ public class StudioPanel extends JPanel implements WindowListener {
     public static boolean quit() {
         WorkspaceSaver.setEnabled(false);
         try {
-            if (CONFIG.getBoolean(Config.SAVE_ON_EXIT)) {
+            ActionOnExit action = CONFIG.getEnum(Config.ACTION_ON_EXIT);
+            if (action != ActionOnExit.NOTHING) {
                 for (StudioPanel panel : allPanels.toArray(new StudioPanel[0])) {
                     panel.getFrame().toFront();
                     JTabbedPane tabbedEditors = panel.tabbedEditors;
                     int selectedTab = tabbedEditors.getSelectedIndex();
                     try {
-                        int count = tabbedEditors.getTabCount();
-                        for (int index = 0; index < count; index++) {
+                        for (int index = 0; index < tabbedEditors.getTabCount(); index++) {
                             EditorTab editor = panel.getEditor(index);
                             if (editor.isModified()) {
                                 tabbedEditors.setSelectedIndex(index);
                                 if (!checkAndSaveTab(editor)) {
                                     return false;
                                 }
+
+                                if (editor.isModified()) {
+                                    if (action == ActionOnExit.CLOSE_ANONYMOUS_NOT_SAVED && editor.getFilename()==null) {
+                                        panel.closeTab(false);
+                                        index--;
+                                    }
+                                }
                             }
                         }
                     } finally {
-                        tabbedEditors.setSelectedIndex(selectedTab);
+                        if (selectedTab<tabbedEditors.getTabCount()) { //the tab could be closed
+                            tabbedEditors.setSelectedIndex(selectedTab);
+                        }
                     }
                 }
             }
@@ -930,7 +940,7 @@ public class StudioPanel extends JPanel implements WindowListener {
         if (allPanels.size() == 1) return quit();
 
         while (tabbedEditors.getTabCount() > 0) {
-            if (! closeTab()) return false;
+            if (! closeTab(true)) return false;
         }
         //closing the last tab would dispose the frame
         return true;
@@ -951,31 +961,35 @@ public class StudioPanel extends JPanel implements WindowListener {
         return true;
     }
 
-    private void closeFrame() {
+    private void closeFrame(boolean rebuild) {
         frame.dispose();
         allPanels.remove(this);
-        rebuildAll();
+        if (rebuild) rebuildAll();
     }
 
-    private void closeIfEmpty() {
+    private void closeIfEmpty(boolean rebuild) {
         if (tabbedEditors.getTabCount()>0) return;
-        closeFrame();
+        closeFrame(rebuild);
     }
 
-    private boolean closeTab() {
-        if (!checkAndSaveTab(editor)) return false;
+    private boolean closeTab(boolean rebuild) {
+        if (rebuild) {
+            if (!checkAndSaveTab(editor)) return false;
+        }
 
         getEditor(tabbedEditors.getSelectedIndex()).closing();
 
-        if (tabbedEditors.getTabCount() == 1 && allPanels.size() == 1) {
-            WorkspaceSaver.save(getWorkspace());
-            log.info("Closed the last tab. Shutting down");
-            System.exit(0);
-            return true;
+        if (rebuild) {
+            if (tabbedEditors.getTabCount() == 1 && allPanels.size() == 1) {
+                WorkspaceSaver.save(getWorkspace());
+                log.info("Closed the last tab. Shutting down");
+                System.exit(0);
+                return true;
+            }
         }
 
         tabbedEditors.remove(tabbedEditors.getSelectedIndex());
-        closeIfEmpty();
+        closeIfEmpty(rebuild);
         return true;
     }
 
@@ -1468,7 +1482,7 @@ public class StudioPanel extends JPanel implements WindowListener {
         removeFocusChangeKeysForWindows(tabbedEditors);
         ClosableTabbedPane.makeCloseable(tabbedEditors, (index, force) -> {
             tabbedEditors.setSelectedIndex(index);
-            return closeTab();
+            return closeTab(true);
         });
         tabbedEditors.addChangeListener(e -> refreshEditor() );
         tabbedEditors.addContainerListener(new ContainerListener() {
@@ -1481,7 +1495,7 @@ public class StudioPanel extends JPanel implements WindowListener {
                 refreshEditor();
             }
         });
-        tabbedEditors.addDragCompleteListener(success -> closeIfEmpty() );
+        tabbedEditors.addDragCompleteListener(success -> closeIfEmpty(true) );
 
         JPanel topPanel = new JPanel(new BorderLayout());
         topPanel.add(tabbedEditors, BorderLayout.CENTER);

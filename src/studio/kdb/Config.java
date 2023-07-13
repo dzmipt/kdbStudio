@@ -5,6 +5,7 @@ import org.apache.logging.log4j.Logger;
 import studio.core.AuthenticationManager;
 import studio.core.Credentials;
 import studio.core.DefaultAuthenticationMechanism;
+import studio.kdb.config.ActionOnExit;
 import studio.ui.ServerList;
 import studio.utils.HistoricalList;
 import studio.utils.LineEnding;
@@ -31,9 +32,11 @@ public class Config {
     private static final Map<String,? super Object> defaultValues = new HashMap();
     private static final Map<String, ConfigType> configTypes = new HashMap();
 
+    ;
+
     //@TODO migrate all other keys under such approach
     public static final String AUTO_SAVE = configDefault("isAutoSave", ConfigType.BOOLEAN, false);
-    public static final String SAVE_ON_EXIT = configDefault("isSaveOnExit", ConfigType.BOOLEAN, true);
+    public static final String ACTION_ON_EXIT = configDefault("actionOnExit", ConfigType.ENUM, ActionOnExit.SAVE);
     public static final String SERVER_LIST_BOUNDS = configDefault("serverList", ConfigType.BOUNDS, new Dimension(ServerList.DEFAULT_WIDTH, ServerList.DEFAULT_HEIGHT));
     public static final String CHART_BOUNDS = configDefault("chartBounds", ConfigType.BOUNDS, 0.5);
     public static final String CELL_RIGHT_PADDING = configDefault("cellRightPadding", ConfigType.DOUBLE, 0.5);
@@ -372,6 +375,15 @@ public class Config {
         save();
     }
 
+    private void migrateSaveOnExit() {
+        String oldSaveOnExitKey = "isSaveOnExit";
+        if (p.containsKey(oldSaveOnExitKey)) {
+            boolean saveOnExit = get(oldSaveOnExitKey, true);
+            p.remove(saveOnExit);
+            setEnum(ACTION_ON_EXIT, saveOnExit ? ActionOnExit.SAVE : ActionOnExit.NOTHING);
+        }
+    }
+
     private void checkForUpgrade() {
         if (p.size() == 0) {
             log.info("Found no or empty config");
@@ -391,6 +403,7 @@ public class Config {
             p.setProperty("version", VERSION13);
         }
         initServerHistory();
+        migrateSaveOnExit();
     }
 
     public void save() {

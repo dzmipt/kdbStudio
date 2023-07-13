@@ -4,6 +4,7 @@ import studio.core.AuthenticationManager;
 import studio.core.Credentials;
 import studio.kdb.Config;
 import studio.kdb.KFormatContext;
+import studio.kdb.config.ActionOnExit;
 import studio.ui.settings.FontSelectionPanel;
 import studio.utils.LineEnding;
 
@@ -25,7 +26,7 @@ public class SettingsDialog extends EscapeDialog {
     private JCheckBox chBoxSessionReuse;
     private JCheckBox chBoxShowServerCombo;
     private JCheckBox chBoxAutoSave;
-    private JCheckBox chBoxSaveOnExit;
+    private JComboBox<ActionOnExit> comboBoxActionOnExit;
     private JCheckBox chBoxRTSAAnimateBracketMatching;
     private JCheckBox chBoxRTSAHighlightCurrentLine;
     private JCheckBox chBoxRTSAWordWrap;
@@ -100,10 +101,6 @@ public class SettingsDialog extends EscapeDialog {
 
     public boolean isAutoSave() {
         return chBoxAutoSave.isSelected();
-    }
-
-    public boolean isSaveOnExit() {
-        return chBoxSaveOnExit.isSelected();
     }
 
     public boolean isAnimateBracketMatching() {
@@ -237,8 +234,9 @@ public class SettingsDialog extends EscapeDialog {
         comboBoxExecAll.setSelectedItem(CONFIG.getExecAllOption());
         chBoxAutoSave = new JCheckBox("Auto save files");
         chBoxAutoSave.setSelected(CONFIG.getBoolean(Config.AUTO_SAVE));
-        chBoxSaveOnExit = new JCheckBox("Ask save file on exit");
-        chBoxSaveOnExit.setSelected(CONFIG.getBoolean(Config.SAVE_ON_EXIT));
+        JLabel lblActionOnExit = new JLabel("Action on exit: ");
+        comboBoxActionOnExit = new JComboBox<>(ActionOnExit.values());
+        comboBoxActionOnExit.setSelectedItem(CONFIG.getEnum(Config.ACTION_ON_EXIT));
 
         JLabel lblDefaultLineEnding = new JLabel ("Default line ending:");
         comboBoxLineEnding = new JComboBox<>(LineEnding.values());
@@ -263,7 +261,8 @@ public class SettingsDialog extends EscapeDialog {
         layout.setStacks(
                 new GroupLayoutSimple.Stack()
                         .addLineAndGlue(lblLookAndFeel, comboBoxLookAndFeel)
-                        .addLineAndGlue(chBoxShowServerCombo, chBoxAutoSave, chBoxSaveOnExit)
+                        .addLineAndGlue(chBoxShowServerCombo, chBoxAutoSave)
+                        .addLineAndGlue(lblActionOnExit, comboBoxActionOnExit)
                         .addLineAndGlue(chBoxSessionInvalidation, txtSessionInvalidation, lblSessionInvalidationSuffix)
                         .addLineAndGlue(chBoxSessionReuse)
                         .addLine(lblAuthMechanism, comboBoxAuthMechanism, lblUser, txtUser, lblPassword, txtPassword)
@@ -330,7 +329,7 @@ public class SettingsDialog extends EscapeDialog {
         CONFIG.setDouble(Config.CELL_RIGHT_PADDING, getCellRightPadding());
         CONFIG.setInt(Config.CELL_MAX_WIDTH, getCellMaxWidth());
         CONFIG.setExecAllOption(getExecAllOption());
-        CONFIG.setBoolean(Config.SAVE_ON_EXIT, isSaveOnExit());
+        CONFIG.setEnum(Config.ACTION_ON_EXIT, (ActionOnExit)comboBoxActionOnExit.getSelectedItem());
         CONFIG.setBoolean(Config.AUTO_SAVE, isAutoSave());
         CONFIG.setEnum(Config.DEFAULT_LINE_ENDING, getDefaultLineEnding());
 

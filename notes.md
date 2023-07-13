@@ -1,3 +1,4 @@
+* Added config to close not saved anonymous tabs on exit
 * Added search functionality for result tables
 * Show timer during query execution
 * Added settings for controlling kdb connection reuse and invalidation 
