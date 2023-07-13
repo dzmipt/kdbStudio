@@ -34,21 +34,19 @@ public class TableRowHeader extends JList {
                 int startIndex = 0;
 
                 public void mousePressed(MouseEvent e) {
-                    int index = locationToIndex(e.getPoint());
-                    startIndex = index;
-                    table.setColumnSelectionInterval(0,table.getColumnCount() - 1);
-                    table.setRowSelectionInterval(index,index);
-                    table.requestFocus();
+                    startIndex = locationToIndex(e.getPoint());
+                    select(e);
                 }
 
                 public void mouseReleased(MouseEvent e) {
-                    int index = locationToIndex(e.getPoint());
-                    table.setColumnSelectionInterval(0,table.getColumnCount() - 1);
-                    table.setRowSelectionInterval(startIndex,index);
-                    table.requestFocus();
+                    select(e);
                 }
 
                 public void mouseDragged(MouseEvent e) {
+                    select(e);
+                }
+
+                private void select(MouseEvent e) {
                     int index = locationToIndex(e.getPoint());
                     table.setColumnSelectionInterval(0,table.getColumnCount() - 1);
                     table.setRowSelectionInterval(startIndex,index);
