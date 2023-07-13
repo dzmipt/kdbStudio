@@ -15,13 +15,14 @@ import java.util.Arrays;
 
 public class WidthAdjuster extends MouseAdapter {
 
-    private JTable table;
-    private JScrollPane scrollPane;
+    private final JTable table;
+    private final JScrollPane scrollPane;
     private int gap;
     private int cellMaxWidth;
+    private int resizeIndex = -1;
 
     private static final int EPSILON = 5;   //boundary sensitivity
-    private boolean[] limitWidthState;
+    private final boolean[] limitWidthState;
 
     public WidthAdjuster(JTable table, JScrollPane scrollPane) {
         this.table = table;
@@ -42,32 +43,61 @@ public class WidthAdjuster extends MouseAdapter {
             resize(i, limitWidthState[i]);
     }
 
+    @Override
     public void mousePressed(MouseEvent evt) {
-        if (evt.getClickCount() > 1 && usingResizeCursor())
+        if (evt.getClickCount() > 1 && usingResizeCursor()) {
             if ((table.getSelectedRowCount() == table.getRowCount()) && (table.getSelectedColumnCount() == table.getColumnCount()))
                 resizeAllColumns(false);
             else {
                 int col = getLeftColumn(evt.getPoint());
                 if (col == -1) return;
-                limitWidthState[col] = ! limitWidthState[col];
+                limitWidthState[col] = !limitWidthState[col];
                 resize(getLeftColumn(evt.getPoint()), limitWidthState[col]);
             }
+        }
     }
 
+    @Override
     public void mouseClicked(final MouseEvent e) {
-        if (!usingResizeCursor()) {
-            JTableHeader h = (JTableHeader) e.getSource();
-            TableColumnModel columnModel = h.getColumnModel();
-            int viewColumn = columnModel.getColumnIndexAtX(e.getX());
-            if (viewColumn >= 0) {
-                final int column = columnModel.getColumn(viewColumn).getModelIndex();
-
-                KTableModel ktm = (KTableModel) table.getModel();
-                ktm.sort(column);
-
-                scrollPane.repaint();
+        if ((e.getModifiers() & Event.ALT_MASK) > 0) {
+            if ( (resizeIndex == -1) || (e.getModifiers() & Event.SHIFT_MASK) == 0 ) {
+                resizeIndex = getViewColumn(e);
+            }
+            select(e);
+        } else {
+            if (!usingResizeCursor()) {
+                int column = getModelColumn(e);
+                if (column >= 0) {
+                    KTableModel ktm = (KTableModel) table.getModel();
+                    ktm.sort(column);
+                    scrollPane.repaint();
+                }
             }
         }
+    }
+
+    private int getViewColumn(MouseEvent e) {
+        JTableHeader h = (JTableHeader) e.getSource();
+        TableColumnModel columnModel = h.getColumnModel();
+        return columnModel.getColumnIndexAtX(e.getX());
+    }
+
+    private int getModelColumn(MouseEvent e) {
+        int viewColumn = getViewColumn(e);
+        if (viewColumn < 0) return -1;
+
+        JTableHeader h = (JTableHeader) e.getSource();
+        TableColumnModel columnModel = h.getColumnModel();
+
+        return columnModel.getColumn(viewColumn).getModelIndex();
+    }
+
+    private void select(MouseEvent e) {
+        if ((e.getModifiers() & Event.ALT_MASK) == 0) return;
+
+        int index = getViewColumn(e);
+        table.setRowSelectionInterval(0,table.getRowCount() - 1);
+        table.setColumnSelectionInterval(resizeIndex, index);
     }
 
     private JTableHeader getTableHeader() {
