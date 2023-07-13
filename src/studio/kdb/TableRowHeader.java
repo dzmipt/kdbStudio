@@ -33,15 +33,18 @@ public class TableRowHeader extends JList {
             MouseInputAdapter mia = new MouseInputAdapter() {
                 int startIndex = 0;
 
+                @Override
                 public void mousePressed(MouseEvent e) {
                     startIndex = locationToIndex(e.getPoint());
                     select(e);
                 }
 
+                @Override
                 public void mouseReleased(MouseEvent e) {
                     select(e);
                 }
 
+                @Override
                 public void mouseDragged(MouseEvent e) {
                     select(e);
                 }
