@@ -13,7 +13,6 @@ import studio.utils.LineEnding;
 
 import javax.swing.text.BadLocationException;
 import javax.swing.text.Document;
-import javax.swing.text.JTextComponent;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
@@ -62,8 +61,8 @@ public class EditorTab implements FileWatcher.Listener {
     private void init() {
         if (editorPane != null) throw new IllegalStateException("The EditorTab has been already initialized");
 
-        editorPane = new EditorPane(true, panel.getEditorSearchPanel());
-        JTextComponent textArea = editorPane.getTextArea();
+        editorPane = new EditorPane(true, panel.getEditorSearchPanel(), panel.getMainStatusBar());
+        RSyntaxTextArea textArea = editorPane.getTextArea();
 
         textArea.putClientProperty(QueryExecutor.class, new QueryExecutor(this));
     }
@@ -175,11 +174,11 @@ public class EditorTab implements FileWatcher.Listener {
     }
 
     public void setServer(Server server) {
+        if (this.server != null && this.server.equals(server)) return;
         this.server = server;
         getTextArea().setBackground(server.getBackgroundColor());
-        if (server.equals(getServer())) return;
 
-        setStatus("Changed server: " + server.getDescription(true));
+        panel.getMainStatusBar().setTemporaryStatus("Changed server: " + server.getDescription(true));
     }
 
     public LineEnding getLineEnding() {
@@ -191,10 +190,6 @@ public class EditorTab implements FileWatcher.Listener {
 
         this.lineEnding = lineEnding;
         setModified(true);
-    }
-
-    public void setStatus(String status) {
-        editorPane.setStatus(status);
     }
 
     public QueryExecutor getQueryExecutor() {
@@ -233,7 +228,7 @@ public class EditorTab implements FileWatcher.Listener {
         }
         catch (IOException e) {
             log.error("Error during saving file " + filename, e);
-            editorPane.setTemporaryStatus("Error during saving file " + filename);
+            panel.getMainStatusBar().setTemporaryStatus("Error during saving file " + filename);
         }
 
         return false;
@@ -248,7 +243,7 @@ public class EditorTab implements FileWatcher.Listener {
 
         if (nowModifiedTimeOnDisk == 0) {
             setModified(true);
-            editorPane.setTemporaryStatus("File " + filename + " was removed on disk.");
+            panel.getMainStatusBar().setTemporaryStatus("File " + filename + " was removed on disk.");
             return;
         }
 
@@ -276,10 +271,10 @@ public class EditorTab implements FileWatcher.Listener {
                 log.warn("{} has mixing line ending. Line ending will be update to {}", filename, content.getLineEnding());
             }
             setContent(content);
-            editorPane.setTemporaryStatus("Reloaded: " + filename);
+            panel.getMainStatusBar().setTemporaryStatus("Reloaded: " + filename);
         } catch (IOException e) {
             log.error("Can't reload {} with error {}", filename, e.getMessage());
-            editorPane.setTemporaryStatus("Reload of " + filename + " failed");
+            panel.getMainStatusBar().setTemporaryStatus("Reload of " + filename + " failed");
         }
     }
 }

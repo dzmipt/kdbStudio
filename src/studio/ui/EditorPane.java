@@ -11,10 +11,13 @@ import studio.ui.rstextarea.StudioRSyntaxTextArea;
 import studio.ui.search.SearchAction;
 import studio.ui.search.SearchPanel;
 import studio.ui.search.SearchPanelListener;
+import studio.ui.statusbar.EditorStatusBar;
+import studio.ui.statusbar.MainStatusBar;
 
 import javax.swing.*;
 import java.awt.*;
-import java.awt.event.*;
+import java.awt.event.MouseWheelEvent;
+import java.awt.event.MouseWheelListener;
 import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
 
@@ -22,72 +25,17 @@ public class EditorPane extends JPanel implements MouseWheelListener, SearchPane
 
     private final StudioRSyntaxTextArea textArea;
     private final SearchPanel searchPanel;
-    private final MinSizeLabel lblRowCol;
-    private final MinSizeLabel lblInsStatus;
-    private final MinSizeLabel lblClock;
-    private final JLabel lblStatus;
-    private final Box statusBar;
+    private final MainStatusBar mainStatusBar;
+    private final EditorStatusBar editorStatusBar;
 
-    private final Timer tempStatusTimer;
-    private final Timer tempClock;
-    private long clock;
-
-    private String oldStatus = "";
-
-    private final int yGap;
-    private final int xGap;
-
-
-    public EditorPane(boolean editable, SearchPanel searchPanel) {
+    public EditorPane(boolean editable, SearchPanel searchPanel, MainStatusBar mainStatusBar) {
         super(new BorderLayout());
         this.searchPanel = searchPanel;
-
-        tempStatusTimer =  new Timer(3000, this::tempStatusTimerAction);
-        tempStatusTimer.setRepeats(false);
-
-        tempClock =  new Timer(500, this::tempClockAction);
-
-        FontMetrics fm = getFontMetrics(UIManager.getFont("Label.font"));
-        yGap = Math.round(0.1f * fm.getHeight());
-        xGap = Math.round(0.25f * SwingUtilities.computeStringWidth(fm, "x"));
+        this.mainStatusBar = mainStatusBar;
 
         textArea = RSTextAreaFactory.newTextArea(editable);
-        textArea.addCaretListener(e -> updateRowColStatus());
-        textArea.addKeyListener(new KeyAdapter() {
-            @Override
-            public void keyReleased(KeyEvent e) {
-                updateTextModeStatus();
-            }
-        });
+        mainStatusBar.bindTextArea(textArea);
 
-        lblRowCol = new MinSizeLabel("");
-        lblRowCol.setHorizontalAlignment(JLabel.CENTER);
-        lblRowCol.setMinimumWidth("9999:9999");
-        setBorder(lblRowCol);
-
-        lblInsStatus = new MinSizeLabel("INS");
-        lblInsStatus.setHorizontalAlignment(JLabel.CENTER);
-        lblInsStatus.setMinimumWidth("INS", "OVR");
-        setBorder(lblInsStatus);
-
-        lblClock  = new MinSizeLabel("");
-        lblClock.setHorizontalAlignment(JLabel.CENTER);
-        lblClock.setMinimumWidth("1:00:00");
-        setBorder(lblClock);
-        lblClock.setVisible(false);
-
-        lblStatus = new JLabel("Ready");
-        Box boxStatus = Box.createHorizontalBox();
-        boxStatus.add(lblStatus);
-        boxStatus.add(Box.createHorizontalGlue());
-        setBorder(boxStatus);
-
-        statusBar = Box.createHorizontalBox();
-        statusBar.add(boxStatus);
-        statusBar.add(lblClock);
-        statusBar.add(lblInsStatus);
-        statusBar.add(lblRowCol);
-        statusBar.setVisible(editable);
 
         RTextScrollPane scrollPane = new RTextScrollPane(textArea);
         textArea.setGutter(scrollPane.getGutter());
@@ -100,7 +48,24 @@ public class EditorPane extends JPanel implements MouseWheelListener, SearchPane
         hideSearchPanel();
 
         add(scrollPane, BorderLayout.CENTER);
-        add(statusBar, BorderLayout.SOUTH);
+
+        editorStatusBar = new EditorStatusBar();
+        if (editable) {
+            add(editorStatusBar, BorderLayout.SOUTH);
+            editorStatusBar.setStatus("Ready");
+        }
+    }
+
+    public void setEditorStatus(String status) {
+        editorStatusBar.setStatus(status);
+    }
+
+    public void startClock() {
+        editorStatusBar.startClock();
+    }
+
+    public void stopClock() {
+        editorStatusBar.stopClock();
     }
 
     @Override
@@ -131,81 +96,13 @@ public class EditorPane extends JPanel implements MouseWheelListener, SearchPane
         return textArea;
     }
 
-    public void setStatus(String status) {
-        if (tempStatusTimer.isRunning()) {
-            oldStatus = status;
-        }
-        lblStatus.setText(status);
-    }
-
-    public void setTemporaryStatus(String status) {
-        if (!tempStatusTimer.isRunning()) {
-            oldStatus = lblStatus.getText();
-        }
-        setStatus(status);
-        tempStatusTimer.restart();
-    }
-
-    private void tempStatusTimerAction(ActionEvent event) {
-        setStatus(oldStatus);
-    }
-
-
-    public void startClock() {
-        clock = System.currentTimeMillis();
-        tempClock.start();
-    }
-
-    public void stopClock() {
-        tempClock.stop();
-        lblClock.setVisible(false);
-    }
-
-    private void tempClockAction(ActionEvent event) {
-        long time = (System.currentTimeMillis() - clock) / 1000;
-
-        if (time < 1) return;
-
-        long sec = time % 60;
-        time /= 60;
-        long min = time % 60;
-        long hour = time / 60;
-
-        lblClock.setText(String.format("%d:%02d:%02d",hour, min, sec));
-        lblClock.setVisible(true);
-    }
-
-
-    private void updateRowColStatus() {
-        int row = textArea.getCaretLineNumber() + 1;
-        int col = textArea.getCaretPosition() - textArea.getLineStartOffsetOfCurrentLine() + 1;
-        lblRowCol.setText("" + row + ":" + col);
-    }
-
-    private void updateTextModeStatus() {
-        String text = textArea.getTextMode() == RSyntaxTextArea.INSERT_MODE ? "INS" : "OVR";
-        lblInsStatus.setText(text);
-    }
-
-    private void setBorder(JComponent component) {
-        component.setBorder(
-                BorderFactory.createCompoundBorder(
-                    BorderFactory.createCompoundBorder(
-                            BorderFactory.createEmptyBorder(yGap,xGap,yGap,xGap),
-                            BorderFactory.createLineBorder(Color.LIGHT_GRAY)
-                    ),
-                    BorderFactory.createEmptyBorder(2*yGap, 2*xGap, yGap, 2*xGap)
-                )
-        );
-    }
-
     @Override
     public void search(SearchContext context, SearchAction action) {
         if (context.isRegularExpression()) {
             try {
                 Pattern.compile(context.getSearchFor());
             } catch (PatternSyntaxException e) {
-                setTemporaryStatus("Error in regular expression: " + e.getMessage());
+                mainStatusBar.setTemporaryStatus("Error in regular expression: " + e.getMessage());
                 return;
             }
         }
@@ -224,7 +121,7 @@ public class EditorPane extends JPanel implements MouseWheelListener, SearchPane
                     result = SearchEngine.replaceAll(textArea, context);
                 }
             } catch (IndexOutOfBoundsException e) {
-                setTemporaryStatus("Error during replacement: " + e.getMessage());
+                mainStatusBar.setTemporaryStatus("Error during replacement: " + e.getMessage());
                 return;
             }
         }
@@ -239,7 +136,7 @@ public class EditorPane extends JPanel implements MouseWheelListener, SearchPane
         } else {
             status = "Replaced " + result.getCount() + " occurrence(s)";
         }
-        setTemporaryStatus(status);
+        mainStatusBar.setTemporaryStatus(status);
     }
 
     @Override

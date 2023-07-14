@@ -69,7 +69,7 @@ public class TabPanel extends JPanel {
                     type = ResultType.TABLE;
                 }
             } else {
-                editor = new EditorPane(false, panel.getResultSearchPanel());
+                editor = new EditorPane(false, panel.getResultSearchPanel(), panel.getMainStatusBar());
                 textArea = editor.getTextArea();
                 component = editor;
                 type = ResultType.TEXT;

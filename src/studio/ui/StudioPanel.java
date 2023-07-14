@@ -19,6 +19,7 @@ import studio.ui.rstextarea.ConvertTabsToSpacesAction;
 import studio.ui.rstextarea.FindReplaceAction;
 import studio.ui.rstextarea.RSTextAreaFactory;
 import studio.ui.search.SearchPanel;
+import studio.ui.statusbar.MainStatusBar;
 import studio.utils.*;
 import studio.utils.log4j.EnvConfig;
 
@@ -84,6 +85,7 @@ public class StudioPanel extends JPanel implements WindowListener {
     private DraggableTabbedPane tabbedEditors;
     private EditorTab editor;
     private JSplitPane splitpane;
+    private MainStatusBar mainStatusBar;
     private DraggableTabbedPane tabbedPane;
     private SearchPanel editorSearchPanel;
     private SearchPanel resultSearchPanel;
@@ -1574,11 +1576,11 @@ public class StudioPanel extends JPanel implements WindowListener {
 
         Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
 
-//        rebuildMenuAndTooblar();
+        mainStatusBar = new MainStatusBar();
 
-        frame.getContentPane().add(toolbar,BorderLayout.NORTH);
-        frame.getContentPane().add(splitpane,BorderLayout.CENTER);
-        // frame.setSize(frame.getContentPane().getPreferredSize());
+        frame.getContentPane().add(toolbar, BorderLayout.NORTH);
+        frame.getContentPane().add(splitpane, BorderLayout.CENTER);
+        frame.getContentPane().add(mainStatusBar, BorderLayout.SOUTH);
 
         frame.setDefaultCloseOperation(WindowConstants.DO_NOTHING_ON_CLOSE);
         frame.addWindowListener(this);
@@ -1590,7 +1592,6 @@ public class StudioPanel extends JPanel implements WindowListener {
 
         frame.setIconImage(Util.LOGO_ICON.getImage());
 
-        //     frame.pack();
         frame.setVisible(true);
         splitpane.setDividerLocation(0.5);
 
@@ -1711,6 +1712,10 @@ public class StudioPanel extends JPanel implements WindowListener {
         return frame;
     }
 
+    public MainStatusBar getMainStatusBar() {
+        return mainStatusBar;
+    }
+
     public Server getServer() {
         return editor.getServer();
     }
@@ -1791,7 +1796,7 @@ public class StudioPanel extends JPanel implements WindowListener {
 
     private void executeK4Query(String text) {
         editor.getTextArea().setCursor(waitCursor);
-        editor.setStatus("Executing: " + text);
+        editor.getPane().setEditorStatus("Executing: " + text);
         editor.getQueryExecutor().execute(text);
         editor.getPane().startClock();
         refreshActionState();
@@ -1799,7 +1804,7 @@ public class StudioPanel extends JPanel implements WindowListener {
 
     void executeK4Query(K.KBase query) {
         editor.getTextArea().setCursor(waitCursor);
-        editor.setStatus("Executing: " + query.toString());
+        editor.getPane().setEditorStatus("Executing: " + query.toString());
         editor.getQueryExecutor().execute(query);
         editor.getPane().startClock();
         refreshActionState();
@@ -1821,9 +1826,9 @@ public class StudioPanel extends JPanel implements WindowListener {
         Throwable error = queryResult.getError();
         if (queryResult.isComplete()) {
             long execTime = queryResult.getExecutionTime();
-            editor.setStatus("Last execution time: " + (execTime > 0 ? "" + execTime : "<1") + " mS");
+            editor.getPane().setEditorStatus("Last execution time: " + (execTime > 0 ? "" + execTime : "<1") + " mS");
         } else {
-            editor.setStatus("Last query was cancelled");
+            editor.getPane().setEditorStatus("Last query was cancelled");
         }
 
         StudioPanel panel = editor.getPanel();

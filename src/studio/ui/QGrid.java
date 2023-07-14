@@ -156,9 +156,8 @@ public class QGrid extends JPanel implements MouseWheelListener, SearchPanelList
         rowCountLabel.setForeground(UIManager.getColor("TableHeader.foreground"));
         scrollPane.setCorner(JScrollPane.UPPER_RIGHT_CORNER, rowCountLabel);
 
-
         setLayout(new BorderLayout());
-        this.add(scrollPane, BorderLayout.CENTER);
+        add(scrollPane, BorderLayout.CENTER);
 
         copyExcelFormatAction = UserAction.create("Copy (Excel format)",
                 Util.COPY_ICON,"Copy the selected cells to the clipboard using Excel format",
@@ -295,14 +294,14 @@ public class QGrid extends JPanel implements MouseWheelListener, SearchPanelList
     @Override
     public void search(SearchContext context, SearchAction action) {
         boolean markAll = context.getMarkAll();
+        int markCount = 0;
 
         TableIterator tableIterator = new TableIterator(table, context.getSearchForward(), markAll);
         SearchEngine searchEngine;
         try {
             searchEngine = new SearchEngine(context);
         } catch (PatternSyntaxException e) {
-            //@TODO: need add into status when it is available
-            log.info("Invalid regular expression", e);
+            panel.getMainStatusBar().setTemporaryStatus("Error in regular expression: " + e.getMessage());
             return;
         }
 
@@ -313,15 +312,20 @@ public class QGrid extends JPanel implements MouseWheelListener, SearchPanelList
             if (searchEngine.containsIn(text)) {
                 if (markAll) {
                     markers.mark(tableIterator.getRow(), tableIterator.getColumn());
+                    markCount++;
                 } else {
                     tableIterator.scrollTo();
-                    break;
+                    panel.getMainStatusBar().setTemporaryStatus("Found: " + text);
+                    return;
                 }
             }
         }
 
         if (markAll) {
+            panel.getMainStatusBar().setTemporaryStatus("Marked " + markCount + " cell(s)");
             table.repaint();
+        } else {
+            panel.getMainStatusBar().setTemporaryStatus("Nothing was found");
         }
     }
 
