@@ -1503,6 +1503,7 @@ public class StudioPanel extends JPanel implements WindowListener {
         editorSearchPanel = new SearchPanel( () -> getEditor(tabbedEditors.getSelectedIndex()).getPane() );
         topPanel.add(editorSearchPanel, BorderLayout.NORTH);
 
+        topPanel.setMinimumSize(new Dimension(0,0));
         splitpane.setTopComponent(topPanel);
         splitpane.setDividerLocation(0.5);
 
@@ -1551,6 +1552,7 @@ public class StudioPanel extends JPanel implements WindowListener {
         resultSearchPanel.setReplaceVisible(false);
         bottomPanel.add(resultSearchPanel, BorderLayout.NORTH);
 
+        bottomPanel.setMinimumSize(new Dimension(0,0));
         splitpane.setBottomComponent(bottomPanel);
 
         splitpane.setOneTouchExpandable(true);
@@ -1594,7 +1596,11 @@ public class StudioPanel extends JPanel implements WindowListener {
 
         splitpane.addPropertyChangeListener(JSplitPane.DIVIDER_LOCATION_PROPERTY,new PropertyChangeListener(){
             public void propertyChange(PropertyChangeEvent pce){
-                String s=splitpane.getDividerLocation()>=splitpane.getMaximumDividerLocation()?I18n.getString("MinimizeEditorPane"):splitpane.getDividerLocation()<=splitpane.getMinimumDividerLocation()?I18n.getString("RestoreEditorPane"):I18n.getString("MaximizeEditorPane");
+                String s = splitpane.getDividerLocation()>=splitpane.getMaximumDividerLocation() ?
+                        I18n.getString("MinimizeEditorPane")
+                            : splitpane.getDividerLocation()<=splitpane.getMinimumDividerLocation() ?
+                                    I18n.getString("RestoreEditorPane"):
+                                    I18n.getString("MaximizeEditorPane");
                 minMaxDividerAction.putValue(Action.SHORT_DESCRIPTION,s);
                 minMaxDividerAction.putValue(Action.NAME,s);
                 if(splitpane.getDividerLocation()<splitpane.getMaximumDividerLocation()&&splitpane.getDividerLocation()>splitpane.getMinimumDividerLocation())
