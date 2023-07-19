@@ -225,6 +225,8 @@ public class QGrid extends JPanel implements MouseWheelListener, SearchPanelList
                 Util.copyTextToClipboard(b.toString(formatContextForCell));
             }
         });
+
+        panel.getMainStatusBar().bindTable(table);
     }
 
     @Override
