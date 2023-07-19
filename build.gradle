@@ -57,7 +57,6 @@ sourceSets {
             srcDirs 'src','images'
             include 'log4j2.xml'
             include 'studio*.properties'
-            include 'org/netbeans/editor/Bundle*.properties'
             include '*.png'
             include 'notes.html'
             include 'build.txt'
