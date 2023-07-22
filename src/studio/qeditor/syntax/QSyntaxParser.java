@@ -52,14 +52,15 @@ public class QSyntaxParser  {
             "mmu","lsq","inv","md5","ltime","gtime","count","first","var","dev","med","cov","cor","all",
             "any","rand","sums","prds","mins","maxs","fills","deltas","ratios","differ","prev","next",
             "rank","reverse","iasc","idesc","asc","desc","msum","mcount","mavg","mdev","xrank","mmin",
-            "mmax","xprev","rotate","list","distinct","group","where","flip","type","key","til","get",
+            "mmax","xprev","rotate","distinct","group","where","flip","type","key","til","get",
             "value","attr","cut","set","upsert","raze","union","inter","except","cross","ss","sv","vs",
             "sublist","read0","read1","hopen","hclose","hdel","hsym","hcount","peach","system","ltrim",
             "rtrim","trim","lower","upper","ssr","view","tables","views","cols","xcols","keys","xkey","xcol",
-            "xasc","xdesc","fkeys","meta","uj","ij","lj","pj","aj","asof","fby","ungroup","xgroup","plist",
-            "enlist","txf","save","load","rsave","rload","show","csv","parse","eval","over","scan","select",
+            "xasc","xdesc","fkeys","meta","uj","ij","lj","pj","aj","asof","fby","ungroup","xgroup",
+            "enlist","save","load","rsave","rload","show","csv","parse","eval","over","scan","select",
             "from","where","within","update","in","delete","sum","avg","min","max","like","last","by","do",
-            "while","if","getenv","xexp") );
+            "while","if","getenv","xexp",
+            "scov","ema","ljf","sdev","ajf","ajf0","ujf","ijf","reval","binr","dsave","svar") );
 
     private final static SyntaxStateMachine stateMachine = new SyntaxStateMachine();
 
