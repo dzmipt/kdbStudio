@@ -4,17 +4,12 @@ import org.fife.ui.rsyntaxtextarea.RSyntaxTextArea;
 import studio.ui.MinSizeLabel;
 
 import javax.swing.*;
-import java.awt.event.FocusAdapter;
-import java.awt.event.FocusEvent;
-import java.awt.event.KeyAdapter;
-import java.awt.event.KeyEvent;
+import java.awt.event.*;
 
 public class MainStatusBar extends StatusBar {
 
     private final MinSizeLabel lblRowCol;
     private final MinSizeLabel lblInsStatus;
-
-    private JComponent compInFocus = null;
 
     public MainStatusBar() {
         lblInsStatus = new MinSizeLabel("INS");
@@ -22,7 +17,7 @@ public class MainStatusBar extends StatusBar {
         lblInsStatus.setMinimumWidth("INS", "OVR");
         addComponent(lblInsStatus);
 
-        lblRowCol = new MinSizeLabel("");
+        lblRowCol = new MinSizeLabel(" ");
         lblRowCol.setHorizontalAlignment(JLabel.CENTER);
         lblRowCol.setMinimumWidth("9999:9999");
         addComponent(lblRowCol);
@@ -39,10 +34,7 @@ public class MainStatusBar extends StatusBar {
         bindTextArea.addFocusListener(new FocusAdapter() {
             @Override
             public void focusGained(FocusEvent e) {
-                compInFocus = bindTextArea;
-
-                updateTextModeStatus(bindTextArea);
-                updateRowColStatus(bindTextArea);
+                updateStatuses(bindTextArea);
             }
         });
     }
@@ -54,25 +46,33 @@ public class MainStatusBar extends StatusBar {
         table.addFocusListener(new FocusAdapter() {
             @Override
             public void focusGained(FocusEvent e) {
-                compInFocus = table;
-
-                updateRowColStatus(table);
-                lblInsStatus.setText(" ");
+                updateStatuses(table);
             }
         });
     }
 
-    private void updateRowColStatus(RSyntaxTextArea textArea) {
-        if (compInFocus != textArea) return;
+    public void updateStatuses(RSyntaxTextArea textArea) {
+        updateTextModeStatus(textArea);
+        updateRowColStatus(textArea);
+    }
 
+    public void updateStatuses(JTable table) {
+        updateRowColStatus(table);
+        lblInsStatus.setText(" ");
+    }
+
+    public void resetStatuses() {
+        lblRowCol.setText(" ");
+        lblInsStatus.setText(" ");
+    }
+
+    private void updateRowColStatus(RSyntaxTextArea textArea) {
         int row = textArea.getCaretLineNumber() + 1;
         int col = textArea.getCaretPosition() - textArea.getLineStartOffsetOfCurrentLine() + 1;
         lblRowCol.setText("" + row + ":" + col);
     }
 
     private void updateRowColStatus(JTable table) {
-        if (compInFocus != table) return;
-
         int row = table.getSelectedRow();
         int col = table.getSelectedColumn();
 
@@ -81,8 +81,6 @@ public class MainStatusBar extends StatusBar {
     }
 
     private void updateTextModeStatus(RSyntaxTextArea textArea) {
-        if (compInFocus != textArea) return;
-
         String text = textArea.getTextMode() == RSyntaxTextArea.INSERT_MODE ? "INS" : "OVR";
         lblInsStatus.setText(text);
     }

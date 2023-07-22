@@ -1459,10 +1459,26 @@ public class StudioPanel extends JPanel implements WindowListener {
         if ( tabbedEditors.getSelectedIndex() == -1) return;
         editor = getEditor(tabbedEditors.getSelectedIndex());
         editor.setPanel(this);
+        mainStatusBar.updateStatuses(editor.getTextArea());
         setServer(editor.getServer());
         lastQuery = null;
         refreshTitle();
         refreshActionState();
+    }
+
+    private void refreshResultTab() {
+        refreshActionState();
+
+        TabPanel tab = (TabPanel) tabbedPane.getSelectedComponent();
+        if (tab == null) return;
+
+        if (tab.getEditor() != null) {
+            mainStatusBar.updateStatuses(tab.getEditor().getTextArea());
+        } else if (tab.getGrid() != null) {
+            mainStatusBar.updateStatuses(tab.getGrid().getTable());
+        } else if (tab.getType() == TabPanel.ResultType.ERROR) {
+            mainStatusBar.resetStatuses();
+        }
     }
 
     private void resultTabDragged(DragEvent event) {
@@ -1535,7 +1551,7 @@ public class StudioPanel extends JPanel implements WindowListener {
                 panel.setPinned(pinned);
             }
         });
-        tabbedPane.addChangeListener(e->refreshActionState());
+        tabbedPane.addChangeListener(e->refreshResultTab());
         tabbedPane.putClientProperty(StudioPanel.class, this);
         tabbedPane.addDragListener( evt -> resultTabDragged(evt));
 
