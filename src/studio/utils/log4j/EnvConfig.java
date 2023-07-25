@@ -18,10 +18,6 @@ public class EnvConfig implements StrLookup {
         return env == null ? homeFolder : homeFolder + "/" + env;
     }
 
-    public static String getBaseFolder() {
-        return getBaseFolder(environment);
-    }
-
     public static String getFilepath(String env, String filename) {
         return getBaseFolder(env) + "/" + filename;
     }

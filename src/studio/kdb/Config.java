@@ -109,8 +109,6 @@ public class Config {
         }
     }
 
-    // The folder is also referenced in lon4j2.xml config
-    private static final String PATH = System.getProperties().getProperty("user.home") + "/.studioforkdb";
     private static final String CONFIG_FILENAME = "studio.properties";
     private static final String WORKSPACE_FILENAME = "workspace.properties";
 
