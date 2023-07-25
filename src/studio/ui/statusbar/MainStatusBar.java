@@ -2,6 +2,7 @@ package studio.ui.statusbar;
 
 import org.fife.ui.rsyntaxtextarea.RSyntaxTextArea;
 import studio.ui.MinSizeLabel;
+import studio.ui.search.Position;
 
 import javax.swing.*;
 import java.awt.event.*;
@@ -64,6 +65,10 @@ public class MainStatusBar extends StatusBar {
     public void resetStatuses() {
         lblRowCol.setText(" ");
         lblInsStatus.setText(" ");
+    }
+
+    public void setRowColStatus(Position position) {
+        lblRowCol.setText("" + position.getRow() + ":" + position.getColumn());
     }
 
     private void updateRowColStatus(RSyntaxTextArea textArea) {

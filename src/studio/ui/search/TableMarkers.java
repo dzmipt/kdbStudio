@@ -28,4 +28,20 @@ public class TableMarkers {
         return state.contains(getIndex(row, column));
     }
 
+    public int countMarkers() {
+        return state.size();
+    }
+
+    private int getIndex() {
+        if (countMarkers() == 0) return -1;
+        return state.iterator().next();
+    }
+
+    public int getRow() {
+        return getIndex() / columnCount;
+    }
+
+    public int getColumn() {
+        return getIndex() - getRow() * columnCount;
+    }
 }

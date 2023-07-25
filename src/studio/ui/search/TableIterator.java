@@ -1,25 +1,14 @@
 package studio.ui.search;
 
-import studio.kdb.K;
-
 import javax.swing.*;
-import javax.swing.table.TableModel;
-import java.awt.*;
 
 public class TableIterator {
 
-    private final JTable table;
-    private final TableModel model;
-
-    private LineIterator rowIterator;
-    private LineIterator colIterator;
+    private final LineIterator rowIterator;
+    private final LineIterator colIterator;
     private boolean returnFirst;
 
-    //Probably forMarkup should be replaced with wrapped iteration (wrap search)
-    public TableIterator(JTable table, boolean forwardDirection, boolean forMarkup) {
-        this.table = table;
-        model = table.getModel();
-
+    public TableIterator(JTable table, boolean forwardDirection, Position startPos) {
         int[] cols = table.getSelectedColumns();
         int[] rows = table.getSelectedRows();
 
@@ -27,23 +16,16 @@ public class TableIterator {
         if (cols.length == 1 && rows.length == 1) {
             rowIterator = new LineIterator(null, table.getRowCount(), forwardDirection);
             colIterator = new LineIterator(null, table.getColumnCount(), forwardDirection);
-            if (!forMarkup) {
-                rowIterator.setPosition(rows[0]);
-                colIterator.setPosition(cols[0]);
-                returnFirst = false;
-            }
         } else {
             rowIterator = new LineIterator(rows, table.getRowCount(), forwardDirection);
             colIterator = new LineIterator(cols, table.getColumnCount(), forwardDirection);
         }
-    }
 
-    public int getRow() {
-        return table.convertRowIndexToModel(rowIterator.get());
-    }
-
-    public int getColumn() {
-        return table.convertColumnIndexToModel(colIterator.get());
+        if (startPos != null) {
+            rowIterator.setPosition(startPos.getRow());
+            colIterator.setPosition(startPos.getColumn());
+            returnFirst = false;
+        }
     }
 
     public boolean hasNext() {
@@ -53,7 +35,7 @@ public class TableIterator {
         return false;
     }
 
-    public K.KBase next() {
+    public Position next() {
         if (returnFirst) {
             returnFirst = false;
         } else {
@@ -64,19 +46,8 @@ public class TableIterator {
                 colIterator.reset();
             }
         }
-        return (K.KBase)model.getValueAt(getRow(), getColumn());
+        return new Position(rowIterator.get(), colIterator.get());
     }
-
-    public void scrollTo() {
-        int colIndex = colIterator.get();
-        int rowIndex = rowIterator.get();
-
-        table.setColumnSelectionInterval(colIndex, colIndex);
-        table.setRowSelectionInterval(rowIndex, rowIndex);
-        Rectangle rectangle = table.getCellRect(rowIndex, colIndex, false);
-        table.scrollRectToVisible(rectangle);
-    }
-
 
     public static class LineIterator {
 
@@ -118,8 +89,14 @@ public class TableIterator {
             }
         }
 
-        void setPosition(int pos) {
-            this.pos = pos;
+        void setPosition(int value) {
+            if (array == null) pos = value;
+            else {
+                for(pos = 0; pos<array.length; pos++) {
+                    if (array[pos] == value) break;
+                }
+                if (pos == array.length) pos = 0;
+            }
         }
 
         int get() {

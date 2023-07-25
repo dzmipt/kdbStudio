@@ -8,12 +8,12 @@ import studio.ui.action.CopyTableSelectionAction;
 import studio.ui.search.*;
 
 import javax.swing.*;
-import javax.swing.event.ChangeEvent;
-import javax.swing.event.ChangeListener;
+import javax.swing.event.*;
 import javax.swing.table.TableColumn;
 import javax.swing.table.TableModel;
 import java.awt.*;
 import java.awt.event.*;
+import java.util.Objects;
 import java.util.regex.PatternSyntaxException;
 
 //@TODO: Should it be really a JPanel? It looks it should be just a JTabel. And anyway any additional components could be added to TabPanel
@@ -26,7 +26,10 @@ public class QGrid extends JPanel implements MouseWheelListener, SearchPanelList
     private final TableHeaderRenderer tableHeaderRenderer;
     private final JScrollPane scrollPane;
     private final CellRenderer cellRenderer;
+
     private final TableMarkers markers;
+    private SearchContext lastSearchContext;
+    private Position lastSearchPos;
 
     private KFormatContext formatContext = KFormatContext.DEFAULT;
 
@@ -227,6 +230,36 @@ public class QGrid extends JPanel implements MouseWheelListener, SearchPanelList
         });
 
         panel.getMainStatusBar().bindTable(table);
+        initSearch();
+    }
+
+    private void resetSearch() {
+        lastSearchContext = null;
+        lastSearchPos = null;
+    }
+
+    private void initSearch() {
+        resetSearch();
+        table.getModel().addTableModelListener( e-> resetSearch() ); // happens during sorting
+        table.getColumnModel().addColumnModelListener(new TableColumnModelListener() {
+            @Override
+            public void columnAdded(TableColumnModelEvent e) {}
+            @Override
+            public void columnRemoved(TableColumnModelEvent e) {}
+            @Override
+            public void columnMarginChanged(ChangeEvent e) {}
+
+            @Override
+            public void columnMoved(TableColumnModelEvent e) {
+                resetSearch();
+            }
+
+            @Override
+            public void columnSelectionChanged(ListSelectionEvent e) {
+                resetSearch();
+            }
+        });
+        table.getSelectionModel().addListSelectionListener(e -> resetSearch() );
     }
 
     @Override
@@ -293,12 +326,31 @@ public class QGrid extends JPanel implements MouseWheelListener, SearchPanelList
         return popupMenu;
     }
 
+    private boolean isSearchContinue(SearchContext context) {
+        if (lastSearchContext == null) return false;
+
+        return Objects.equals(context.getSearchFor(), lastSearchContext.getSearchFor()) &&
+                context.getWholeWord() == lastSearchContext.getWholeWord() &&
+                context.isRegularExpression() == lastSearchContext.isRegularExpression() &&
+                context.getMatchCase() == lastSearchContext.getMatchCase();
+    }
+
     @Override
     public void search(SearchContext context, SearchAction action) {
         boolean markAll = context.getMarkAll();
         int markCount = 0;
 
-        TableIterator tableIterator = new TableIterator(table, context.getSearchForward(), markAll);
+        boolean continueSearch = isSearchContinue(context);
+        if (!continueSearch) {
+            lastSearchContext = context;
+            lastSearchPos = null;
+        }
+        if (!markAll) {
+            markers.clear();
+            table.repaint();
+        }
+
+        TableIterator tableIterator = new TableIterator(table, context.getSearchForward(), lastSearchPos);
         SearchEngine searchEngine;
         try {
             searchEngine = new SearchEngine(context);
@@ -308,21 +360,30 @@ public class QGrid extends JPanel implements MouseWheelListener, SearchPanelList
         }
 
         while (tableIterator.hasNext()) {
-            K.KBase value = tableIterator.next();
+            lastSearchPos = tableIterator.next();
+            int modelRow = table.convertRowIndexToModel(lastSearchPos.getRow());
+            int modelColumn = table.convertColumnIndexToModel(lastSearchPos.getColumn());
+            K.KBase value = (K.KBase)model.getValueAt(modelRow, modelColumn);
             String text = value.isNull() ? "" : value.toString(KFormatContext.NO_TYPE);
 
             if (searchEngine.containsIn(text)) {
+                markers.mark(modelRow, modelColumn);
                 if (markAll) {
-                    markers.mark(tableIterator.getRow(), tableIterator.getColumn());
                     markCount++;
                 } else {
-                    tableIterator.scrollTo();
+                    table.repaint();
+
+                    Rectangle rectangle = table.getCellRect(lastSearchPos.getRow(), lastSearchPos.getColumn(), false);
+                    table.scrollRectToVisible(rectangle);
+
                     panel.getMainStatusBar().setTemporaryStatus("Found: " + text);
+                    panel.getMainStatusBar().setRowColStatus(lastSearchPos);
                     return;
                 }
             }
         }
 
+        panel.getMainStatusBar().resetStatuses();
         if (markAll) {
             panel.getMainStatusBar().setTemporaryStatus("Marked " + markCount + " cell(s)");
             table.repaint();
