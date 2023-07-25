@@ -82,8 +82,6 @@ public class QGrid extends JPanel implements MouseWheelListener, SearchPanelList
             @Override
             public void actionPerformed(ActionEvent e) {
                 closeSearchPanel();
-                table.clearSelection();
-                markers.clear();
             }
         };
         inputMap.put(keyStroke, "closeSearchPanel");
@@ -406,6 +404,8 @@ public class QGrid extends JPanel implements MouseWheelListener, SearchPanelList
 
     @Override
     public void closeSearchPanel() {
+        markers.clear();
+        table.repaint();
         panel.getResultSearchPanel().setVisible(false);
         table.requestFocus();
     }
