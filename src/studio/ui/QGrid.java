@@ -332,7 +332,8 @@ public class QGrid extends JPanel implements MouseWheelListener, SearchPanelList
         return Objects.equals(context.getSearchFor(), lastSearchContext.getSearchFor()) &&
                 context.getWholeWord() == lastSearchContext.getWholeWord() &&
                 context.isRegularExpression() == lastSearchContext.isRegularExpression() &&
-                context.getMatchCase() == lastSearchContext.getMatchCase();
+                context.getMatchCase() == lastSearchContext.getMatchCase() &&
+                ! context.getMarkAll() && ! lastSearchContext.getMarkAll();
     }
 
     @Override
@@ -340,6 +341,7 @@ public class QGrid extends JPanel implements MouseWheelListener, SearchPanelList
         boolean markAll = context.getMarkAll();
         int markCount = 0;
 
+        boolean searchingInSelection = table.getSelectedColumns().length > 1 || table.getSelectedRows().length > 1;
         boolean continueSearch = isSearchContinue(context);
         if (!continueSearch) {
             lastSearchContext = context;
@@ -380,7 +382,10 @@ public class QGrid extends JPanel implements MouseWheelListener, SearchPanelList
                     Rectangle rectangle = table.getCellRect(lastSearchPos.getRow(), lastSearchPos.getColumn(), false);
                     table.scrollRectToVisible(rectangle);
 
-                    panel.getMainStatusBar().setTemporaryStatus("Found: " + text);
+
+                    panel.getMainStatusBar().setTemporaryStatus(
+                            (searchingInSelection ? "Found in selection: " : "Found: ")
+                             + text);
                     panel.getMainStatusBar().setRowColStatus(lastSearchPos);
                     return;
                 }
@@ -389,10 +394,13 @@ public class QGrid extends JPanel implements MouseWheelListener, SearchPanelList
 
         panel.getMainStatusBar().resetStatuses();
         if (markAll) {
-            panel.getMainStatusBar().setTemporaryStatus("Marked " + markCount + " cell(s)");
+            panel.getMainStatusBar().setTemporaryStatus(
+                    (searchingInSelection ? "Marked in selection " : "Marked ")
+                    + markCount + " cell(s)");
             table.repaint();
         } else {
-            panel.getMainStatusBar().setTemporaryStatus("Nothing was found");
+            panel.getMainStatusBar().setTemporaryStatus("Nothing was found" +
+                    (searchingInSelection ? " in selection" : "") );
         }
     }
 
