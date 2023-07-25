@@ -359,8 +359,12 @@ public class QGrid extends JPanel implements MouseWheelListener, SearchPanelList
             return;
         }
 
-        while (tableIterator.hasNext()) {
+        Position startPos = lastSearchPos;
+        while (true) {
             lastSearchPos = tableIterator.next();
+            if (startPos == null) startPos = lastSearchPos;
+            else if (startPos.equals(lastSearchPos)) break;
+
             int modelRow = table.convertRowIndexToModel(lastSearchPos.getRow());
             int modelColumn = table.convertColumnIndexToModel(lastSearchPos.getColumn());
             K.KBase value = (K.KBase)model.getValueAt(modelRow, modelColumn);

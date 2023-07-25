@@ -28,13 +28,6 @@ public class TableIterator {
         }
     }
 
-    public boolean hasNext() {
-        if (returnFirst) return true;
-        if (colIterator.hasNext()) return true;
-        if (rowIterator.hasNext()) return true;
-        return false;
-    }
-
     public Position next() {
         if (returnFirst) {
             returnFirst = false;
@@ -42,8 +35,12 @@ public class TableIterator {
             if (colIterator.hasNext()) {
                 colIterator.next();
             } else {
-                rowIterator.next();
                 colIterator.reset();
+                if (rowIterator.hasNext()) {
+                    rowIterator.next();
+                } else {
+                    rowIterator.reset();
+                }
             }
         }
         return new Position(rowIterator.get(), colIterator.get());
