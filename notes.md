@@ -1,3 +1,5 @@
+`dz3.0` 2023.08.04
+-----
 * Select columns in result table by clicking headers with ALT and SHIFT
 * Added config to close not saved anonymous tabs on exit
 * Added search functionality for result tables
