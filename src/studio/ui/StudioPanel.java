@@ -171,14 +171,6 @@ public class StudioPanel extends JPanel implements WindowListener {
         }
     }
 
-    //@TODO: Should we have a generic code which override or remove all our actions from the netbeans JEditorPane
-    private void overrideDefaultKeymap(JComponent component, UserAction... actions) {
-        for (UserAction action: actions) {
-            component.getInputMap().put(action.getKeyStroke(), action.getText());
-            component.getActionMap().put(action.getText(), action);
-        }
-    }
-
     private void removeFocusChangeKeysForWindows(JComponent component) {
         if (Util.MAC_OS_X) return;
 
@@ -1437,7 +1429,6 @@ public class StudioPanel extends JPanel implements WindowListener {
         JTextComponent textArea = editor.getTextArea();
         removeFocusChangeKeysForWindows(textArea);
 
-        overrideDefaultKeymap(textArea, toggleCommaFormatAction, newTabAction, closeTabAction, nextEditorTabAction, prevEditorTabAction);
         editorPane.putClientProperty(EditorTab.class, editor);
         tabbedEditors.add(editorPane);
         tabbedEditors.setSelectedIndex(tabbedEditors.getTabCount()-1);
