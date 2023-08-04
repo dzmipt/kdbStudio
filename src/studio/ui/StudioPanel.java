@@ -1551,7 +1551,12 @@ public class StudioPanel extends JPanel implements WindowListener {
                 panel.setPinned(pinned);
             }
         });
-        tabbedPane.addChangeListener(e->refreshResultTab());
+        tabbedPane.addFocusListener(new FocusAdapter() {
+            @Override
+            public void focusGained(FocusEvent e) {
+                refreshResultTab();
+            }
+        });
         tabbedPane.putClientProperty(StudioPanel.class, this);
         tabbedPane.addDragListener( evt -> resultTabDragged(evt));
 
