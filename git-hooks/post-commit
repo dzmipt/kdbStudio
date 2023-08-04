@@ -26,6 +26,24 @@ REGEX='`(.*)`.*'
 if [[ $LINE =~ $REGEX ]]
 then
    VERSION=${BASH_REMATCH[1]}
+   echo "New version is found: $VERSION"
+
+   GR_LINE=$(grep "version = \"" build.gradle)
+   GR_REGEX='version = "(.*)".*'
+   if [[ ! $GR_LINE =~ $GR_REGEX ]]
+   then
+      echo "Failed to found version in build.gradle. Abort!"
+      exit 1
+   fi
+
+   GR_VERSION=${BASH_REMATCH[1]}
+   if [[ ! "$VERSION" == "$GR_VERSION" ]]
+   then
+      echo "Gradle version: ${GR_VERSION}"
+      echo "Abort as versions are different"
+      exit 1
+   fi
+
    TAG="v.$VERSION"
    if ! git rev-parse $TAG >/dev/null 2>&1
    then
