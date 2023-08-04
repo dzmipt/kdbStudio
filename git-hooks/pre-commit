@@ -1,0 +1,38 @@
+#!/bin/bash
+
+# Install into git hooks folder with the following command
+# ln -s `pwd`/pre-commit ../.git/hooks/pre-commit
+#
+# This is to validate that build.gradle has the same version as in notes.md
+#
+# .git/config is recommended to update according to below to push local tags with git push
+# [remote "origin"]
+#         url = ...
+#         fetch = ...
+#         push = +refs/heads/*
+#         push = +refs/tags/*
+
+LINE=$(head -n 1 notes.md)
+REGEX='`(.*)`.*'
+if [[ $LINE =~ $REGEX ]]
+then
+   VERSION=${BASH_REMATCH[1]}
+   echo "New version is found: $VERSION"
+
+   GR_LINE=$(grep "version = \"" build.gradle)
+   GR_REGEX='version = "(.*)".*'
+   if [[ ! $GR_LINE =~ $GR_REGEX ]]
+   then
+      echo "Failed to found version in build.gradle. Abort!"
+      exit 1
+   fi
+
+   GR_VERSION=${BASH_REMATCH[1]}
+   if [[ ! "$VERSION" == "$GR_VERSION" ]]
+   then
+      echo "Gradle version: ${GR_VERSION}"
+      echo "Abort as versions are different"
+      exit 1
+   fi
+
+fi
