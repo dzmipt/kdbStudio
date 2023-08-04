@@ -1682,8 +1682,9 @@ public class StudioPanel extends JPanel implements WindowListener {
                     log.error("Failed to init tab with filename {}", tab.getFilename(), e);
                 }
             }
-            if (window.getSelectedTab() != -1) {
-                panel.tabbedEditors.setSelectedIndex(window.getSelectedTab());
+            int selectedIndex = window.getSelectedTab();
+            if (selectedIndex >= 0 && selectedIndex < panel.tabbedEditors.getTabCount()) {
+                panel.tabbedEditors.setSelectedIndex(selectedIndex);
             }
         }
 

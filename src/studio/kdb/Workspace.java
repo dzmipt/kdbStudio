@@ -109,10 +109,7 @@ public class Workspace {
             for (int index = 0; ; index++) {
                 Workspace.Tab tab = new Workspace.Tab();
                 tab.load(prefix + TAB + "." + index + ".", p);
-                if (tab.getFilename() == null &&
-                    tab.getContent() == null &&
-                    tab.getServerFullName() == null &&
-                    tab.getServerConnection() == null) break;
+                if (tab.getContent() == null) break;
                 tabs.add(tab);
             }
             selectedTab = getInt(p, prefix + SELECTED_TAB, -1);
@@ -124,7 +121,7 @@ public class Workspace {
         private String serverFullName = null;
         private String serverConnection = null;
         private String serverAuth = null;
-        private String content = null;
+        private String content = "";
         private boolean modified = false;
         private LineEnding lineEnding = LineEnding.Unix;
         private int caret = 0;
