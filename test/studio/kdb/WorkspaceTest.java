@@ -12,7 +12,6 @@ import static org.junit.jupiter.api.Assertions.*;
 public class WorkspaceTest {
 
     private Workspace workspace;
-    private Server server;
 
     @BeforeEach
     public void setup() {
@@ -42,8 +41,7 @@ public class WorkspaceTest {
                 .addContent("another content");
     }
 
-    @Test
-    public void testGetter() {
+    private void checkWorkspace(Workspace workspace) {
         assertEquals(1, workspace.getSelectedWindow());
         Workspace.Window[] windows = workspace.getWindows();
         assertEquals(2, windows.length);
@@ -53,11 +51,11 @@ public class WorkspaceTest {
 
         Workspace.Tab[] tabs = windows[0].getTabs();
         assertEquals(1, tabs.length);
-        assertNull(tabs[0].getContent());
+        assertEquals("", tabs[0].getContent());
         assertEquals("test.q", tabs[0].getFilename());
         assertNull(tabs[0].getServerFullName());
         assertNotNull(tabs[0].getServerConnection());
-        assertNull(tabs[0].getContent());
+        assertEquals("", tabs[0].getContent());
         assertEquals(DefaultAuthenticationMechanism.NAME, tabs[0].getServerAuth());
         assertFalse(tabs[0].isModified());
 
@@ -65,6 +63,7 @@ public class WorkspaceTest {
         assertEquals(3, tabs.length);
 
         assertNotNull(tabs[0].getContent());
+        assertNotEquals("", tabs[0].getContent());
         assertNull(tabs[0].getFilename());
         assertEquals("testFolder/testName", tabs[0].getServerFullName());
         assertEquals("auth", tabs[0].getServerAuth());
@@ -78,12 +77,17 @@ public class WorkspaceTest {
     }
 
     @Test
+    public void testGetter() {
+        checkWorkspace(workspace);
+    }
+
+    @Test
     public void testSave() {
         Properties p = new Properties();
         workspace.save(p);
 
-        workspace = new Workspace();
+        Workspace workspace = new Workspace();
         workspace.load(p);
-        testGetter();
+        checkWorkspace(workspace);
     }
 }
