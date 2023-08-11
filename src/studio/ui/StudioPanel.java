@@ -1611,25 +1611,17 @@ public class StudioPanel extends JPanel implements WindowListener {
     }
 
     private void executeK4Query(String text) {
-        if (editor.getServer() == null) {
-            log.info("Server is null. Can't execute the query");
-            return;
-        }
-        editor.getTextArea().setCursor(waitCursor);
-        editor.getPane().setEditorStatus("Executing: " + text);
-        editor.getQueryExecutor().execute(text);
-        editor.getPane().startClock();
-        refreshActionState();
+        executeK4Query(new K.KCharacterVector(text), text);
     }
 
-    void executeK4Query(K.KBase query) {
+    void executeK4Query(K.KBase query, String queryText) {
         if (editor.getServer() == null) {
             log.info("Server is null. Can't execute the query");
             return;
         }
         editor.getTextArea().setCursor(waitCursor);
-        editor.getPane().setEditorStatus("Executing: " + query.toString());
-        editor.getQueryExecutor().execute(query);
+        editor.getPane().setEditorStatus("Executing: " + queryText);
+        editor.getQueryExecutor().execute(query, queryText);
         editor.getPane().startClock();
         refreshActionState();
     }

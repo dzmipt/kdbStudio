@@ -53,7 +53,7 @@ public class TabPanel extends JPanel {
     private void upload() {
         String varName = StudioOptionPane.showInputDialog(panel, "Enter variable name", "Upload to Server");
         if (varName == null) return;
-        panel.executeK4Query(new K.KList(new K.Function("{x set y}"), new K.KSymbol(varName), result));
+        panel.executeK4Query(new K.KList(new K.Function("{x set y}"), new K.KSymbol(varName), result), "<upload to server>");
     }
 
     private void initComponents() {

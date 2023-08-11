@@ -31,13 +31,8 @@ public class QueryExecutor implements ProgressCallback {
         this.editor = editor;
     }
 
-    public void execute(K.KBase query) {
-        worker = new Worker(queryIndex.getAndIncrement(), editor, query);
-        worker.execute();
-    }
-
-    public void execute(String query) {
-        worker = new Worker(queryIndex.getAndIncrement(), editor, query);
+    public void execute(K.KBase query, String queryText) {
+        worker = new Worker(queryIndex.getAndIncrement(), editor, query, queryText);
         worker.execute();
     }
 
@@ -105,21 +100,12 @@ public class QueryExecutor implements ProgressCallback {
         private final int queryIndex;
         private volatile Session session = null;
 
-        //@TODO simplify to remove 2 method... We need to have an boolean argument if this is upload
-        public Worker(int queryIndex, EditorTab editor, K.KBase query) {
+        public Worker(int queryIndex, EditorTab editor, K.KBase query, String queryText) {
             this.queryIndex = queryIndex;
             this.editor = editor;
             this.server = editor.getServer();
             this.query = query;
-            this.queryText = "<upload to server>";
-        }
-
-        public Worker(int queryIndex, EditorTab editor, String query) {
-            this.queryIndex = queryIndex;
-            this.editor = editor;
-            this.server = editor.getServer();
-            this.query = new K.KCharacterVector(query);
-            this.queryText = query;
+            this.queryText = queryText;
         }
 
         void closeConnection() {
