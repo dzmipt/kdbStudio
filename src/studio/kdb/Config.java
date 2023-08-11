@@ -32,8 +32,6 @@ public class Config {
     private static final Map<String,? super Object> defaultValues = new HashMap();
     private static final Map<String, ConfigType> configTypes = new HashMap();
 
-    ;
-
     //@TODO migrate all other keys under such approach
     public static final String AUTO_SAVE = configDefault("isAutoSave", ConfigType.BOOLEAN, false);
     public static final String ACTION_ON_EXIT = configDefault("actionOnExit", ConfigType.ENUM, ActionOnExit.SAVE);

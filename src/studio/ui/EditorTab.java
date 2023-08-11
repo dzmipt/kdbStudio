@@ -118,7 +118,7 @@ public class EditorTab implements FileWatcher.Listener {
 
         this.filename = filename;
         title = getTitleFromFilename();
-        panel.refreshTitle();
+        EditorsPanel.refreshEditorTitle(this);
 
         startFileWatching();
     }
@@ -166,7 +166,7 @@ public class EditorTab implements FileWatcher.Listener {
             watchFile = true;
         }
         modified = value;
-        panel.refreshTitle();
+        EditorsPanel.refreshEditorTitle(this);
     }
 
     public Server getServer() {
@@ -276,5 +276,10 @@ public class EditorTab implements FileWatcher.Listener {
             log.error("Can't reload {} with error {}", filename, e.getMessage());
             panel.getMainStatusBar().setTemporaryStatus("Reload of " + filename + " failed");
         }
+    }
+
+    //quite hacky... needs to think of better design...
+    public EditorsPanel getEditorsPanel() {
+        return (EditorsPanel) getPane().getParent().getParent();
     }
 }

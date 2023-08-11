@@ -5,7 +5,6 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.fife.ui.rsyntaxtextarea.RSyntaxTextArea;
 import org.fife.ui.rsyntaxtextarea.RSyntaxTextAreaEditorKit;
-import studio.core.AuthenticationManager;
 import studio.core.Studio;
 import studio.kdb.*;
 import studio.kdb.config.ActionOnExit;
@@ -25,8 +24,6 @@ import studio.utils.log4j.EnvConfig;
 
 import javax.swing.FocusManager;
 import javax.swing.*;
-import javax.swing.event.DocumentEvent;
-import javax.swing.event.DocumentListener;
 import javax.swing.filechooser.FileFilter;
 import javax.swing.filechooser.FileNameExtensionFilter;
 import javax.swing.plaf.basic.BasicSplitPaneUI;
@@ -82,7 +79,7 @@ public class StudioPanel extends JPanel implements WindowListener {
     private JTextField txtServer;
     private String lastQuery = null;
     private JToolBar toolbar;
-    private DraggableTabbedPane tabbedEditors;
+    private EditorsPanel rootEditorsPanel;
     private EditorTab editor;
     private JSplitPane splitpane;
     private MainStatusBar mainStatusBar;
@@ -150,42 +147,15 @@ public class StudioPanel extends JPanel implements WindowListener {
 
     private static final Config CONFIG = Config.getInstance();
     
-    public void refreshTitle() {
-        if (editor.getTitle() == null) return;
-
-        int count = tabbedEditors.getTabCount();
-        for (int index=0; index<count; index++) {
-            String oldTitle = tabbedEditors.getTitleAt(index);
-            String title = getEditor(index).getTabTitle();
-            if (oldTitle!= null && oldTitle.equals(title)) continue;
-            tabbedEditors.setTitleAt(index, title);
-        }
-
+    public void refreshFrameTitle() {
         if (! loading) {
             Server server = editor.getServer();
             String env = EnvConfig.getEnvironment();
-            String frameTitle = editor.getTitle() + (editor.isModified() ? " (not saved) " : "") + (server != null ? " @" + server.toString() : "") + " Studio for kdb+ " + Lm.version + (env == null ? "" : " [" + env + "]");
+            String frameTitle = editor.getTitle() + (editor.isModified() ? " (not saved) " : "") + (server != null ? " @" + server : "") + " Studio for kdb+ " + Lm.version + (env == null ? "" : " [" + env + "]");
             if (!frameTitle.equals(frame.getTitle())) {
                 frame.setTitle(frameTitle);
             }
         }
-    }
-
-    private void removeFocusChangeKeysForWindows(JComponent component) {
-        if (Util.MAC_OS_X) return;
-
-        KeyStroke ctrlTab = KeyStroke.getKeyStroke("ctrl TAB");
-        KeyStroke ctrlShiftTab = KeyStroke.getKeyStroke("ctrl shift TAB");
-
-        // Remove ctrl-tab from normal focus traversal
-        Set<AWTKeyStroke> forwardKeys = new HashSet<>(component.getFocusTraversalKeys(KeyboardFocusManager.FORWARD_TRAVERSAL_KEYS));
-        forwardKeys.remove(ctrlTab);
-        component.setFocusTraversalKeys(KeyboardFocusManager.FORWARD_TRAVERSAL_KEYS, forwardKeys);
-
-        // Remove ctrl-shift-tab from normal focus traversal
-        Set<AWTKeyStroke> backwardKeys = new HashSet<>(component.getFocusTraversalKeys(KeyboardFocusManager.BACKWARD_TRAVERSAL_KEYS));
-        backwardKeys.remove(ctrlShiftTab);
-        component.setFocusTraversalKeys(KeyboardFocusManager.BACKWARD_TRAVERSAL_KEYS, backwardKeys);
     }
 
     private void setActionsEnabled(boolean value, Action... actions) {
@@ -235,7 +205,7 @@ public class StudioPanel extends JPanel implements WindowListener {
         }
     }
 
-    private static File chooseFile(Component parent, String fileChooserType, int dialogType, String title, File defaultFile, FileFilter... filters) {
+    public static File chooseFile(Component parent, String fileChooserType, int dialogType, String title, File defaultFile, FileFilter... filters) {
         JFileChooser fileChooser = fileChooserMap.get(fileChooserType);
         FileChooserConfig config = CONFIG.getFileChooserConfig(fileChooserType);
         if (fileChooser == null) {
@@ -453,7 +423,7 @@ public class StudioPanel extends JPanel implements WindowListener {
     }
 
     public void newFile() {
-        if (!checkAndSaveTab(editor)) return;
+        if (!EditorsPanel.checkAndSaveTab(editor)) return;
 
         editor.setFilename(null);
         editor.init(Content.getEmpty());
@@ -470,11 +440,11 @@ public class StudioPanel extends JPanel implements WindowListener {
     }
 
     public void loadMRUFile(String filename) {
-        if (!checkAndSaveTab(editor)) return;
+        if (!EditorsPanel.checkAndSaveTab(editor)) return;
 
         if (!loadFile(filename)) return;
         addToMruFiles(filename);
-        refreshTitle();
+        EditorsPanel.refreshEditorTitle(editor);
         rebuildAll();
     }
 
@@ -513,42 +483,9 @@ public class StudioPanel extends JPanel implements WindowListener {
         return false;
     }
 
-    private static boolean saveAsFile(EditorTab editor) {
-        String filename = editor.getFilename();
-        File file = chooseFile(editor.getPanel(), Config.SAVE_FILE_CHOOSER, JFileChooser.SAVE_DIALOG, "Save script as",
-                filename == null ? null : new File(filename),
-                new FileNameExtensionFilter("q script", "q"));
-
-        if (file == null) return false;
-
-        filename = file.getAbsolutePath();
-        if (file.exists()) {
-            int choice = StudioOptionPane.showYesNoDialog(editor.getPanel(),
-                    filename + " already exists.\nOverwrite?",
-                    "Overwrite?");
-
-            if (choice != JOptionPane.YES_OPTION)
-                return false;
-        }
-
-        editor.setFilename(filename);
-        return editor.saveFileOnDisk(false);
-    }
-
-    private static boolean saveEditor(EditorTab editor) {
-        if (editor.getFilename() == null) {
-            return saveAsFile(editor);
-        } else {
-            return editor.saveFileOnDisk(false);
-        }
-    }
-
-    private void saveAll() {
+    private static void saveAll() {
         for (StudioPanel panel: allPanels) {
-            int count = panel.tabbedEditors.getTabCount();
-            for (int index=0; index<count; index++) {
-                panel.getEditor(index).saveFileOnDisk(false);
-            }
+            panel.rootEditorsPanel.execute(editorTab -> editorTab.saveFileOnDisk(false));
         }
     }
 
@@ -583,7 +520,7 @@ public class StudioPanel extends JPanel implements WindowListener {
         }
     }
 
-    private void setServer(Server server) {
+    public void setServer(Server server) {
         if (server == null) return;
         editor.setServer(server);
 
@@ -591,7 +528,7 @@ public class StudioPanel extends JPanel implements WindowListener {
             CONFIG.addServerToHistory(server);
             serverHistory.add(server);
 
-            refreshTitle();
+            EditorsPanel.refreshEditorTitle(editor);
             rebuildAll();
         }
     }
@@ -611,7 +548,7 @@ public class StudioPanel extends JPanel implements WindowListener {
                 "Toggle the window divider's orientation", KeyEvent.VK_C, null, e -> toggleDividerOrientation());
 
         closeTabAction = UserAction.create("Close Tab", Util.BLANK_ICON, "Close current tab", KeyEvent.VK_W,
-                KeyStroke.getKeyStroke(KeyEvent.VK_W, menuShortcutKeyMask), e -> closeTab(true));
+                KeyStroke.getKeyStroke(KeyEvent.VK_W, menuShortcutKeyMask), e -> editor.getEditorsPanel().closeTab(editor));
 
         closeFileAction = UserAction.create("Close Window", Util.BLANK_ICON, "Close current window (close all tabs)",
                 KeyEvent.VK_C, null, e -> closePanel());
@@ -698,14 +635,14 @@ public class StudioPanel extends JPanel implements WindowListener {
 
         saveFileAction = UserAction.create(I18n.getString("Save"), Util.DISKS_ICON, "Save the script",
                 KeyEvent.VK_S, KeyStroke.getKeyStroke(KeyEvent.VK_S, menuShortcutKeyMask),
-                e -> saveEditor(editor));
+                e -> EditorsPanel.saveEditor(editor));
 
         saveAllFilesAction = UserAction.create("Save All...", Util.BLANK_ICON, "Save all files",
                 KeyEvent.VK_L, KeyStroke.getKeyStroke(KeyEvent.VK_S, menuShortcutKeyMask | InputEvent.SHIFT_MASK),
                 e -> saveAll());
 
         saveAsFileAction = UserAction.create(I18n.getString("SaveAs"), Util.SAVE_AS_ICON, "Save script as",
-                KeyEvent.VK_A, null, e -> saveAsFile(editor));
+                KeyEvent.VK_A, null, e -> EditorsPanel.saveAsFile(editor));
 
         exportAction = UserAction.create(I18n.getString("Export"), Util.EXPORT_ICON, "Export result set",
                 KeyEvent.VK_E, null, e -> export());
@@ -795,13 +732,13 @@ public class StudioPanel extends JPanel implements WindowListener {
                 "Select next editor tab", KeyEvent.VK_N,
                     Util.MAC_OS_X ? KeyStroke.getKeyStroke(KeyEvent.VK_RIGHT, menuShortcutKeyMask | InputEvent.ALT_MASK ) :
                                     KeyStroke.getKeyStroke(KeyEvent.VK_TAB, menuShortcutKeyMask),
-                e -> selectNextTab(true));
+                e -> editor.getEditorsPanel().selectNextTab(true));
 
         prevEditorTabAction = UserAction.create("Previous tab", Util.BLANK_ICON,
                 "Select previous editor tab", KeyEvent.VK_P,
                 Util.MAC_OS_X ? KeyStroke.getKeyStroke(KeyEvent.VK_LEFT, menuShortcutKeyMask | InputEvent.ALT_MASK ) :
                         KeyStroke.getKeyStroke(KeyEvent.VK_TAB, menuShortcutKeyMask | InputEvent.SHIFT_MASK),
-                e -> selectNextTab(false));
+                e -> editor.getEditorsPanel().selectNextTab(false));
 
         lineEndingActions = new UserAction[LineEnding.values().length];
         for(LineEnding lineEnding: LineEnding.values()) {
@@ -845,9 +782,8 @@ public class StudioPanel extends JPanel implements WindowListener {
 
     public static void refreshEditorsSettings() {
         for (StudioPanel panel: allPanels) {
-            int count = panel.tabbedEditors.getTabCount();
-            for (int index=0; index<count; index++) {
-                RSyntaxTextArea editor = panel.getEditor(index).getTextArea();
+            panel.rootEditorsPanel.execute(editorTab -> {
+                RSyntaxTextArea editor = editorTab.getTextArea();
                 editor.setHighlightCurrentLine(CONFIG.getBoolean(Config.RSTA_HIGHLIGHT_CURRENT_LINE));
                 editor.setAnimateBracketMatching(CONFIG.getBoolean(Config.RSTA_ANIMATE_BRACKET_MATCHING));
                 editor.setLineWrap(CONFIG.getBoolean(Config.RSTA_WORD_WRAP));
@@ -855,7 +791,8 @@ public class StudioPanel extends JPanel implements WindowListener {
 
                 editor.setTabSize(CONFIG.getInt(Config.EDITOR_TAB_SIZE));
                 editor.setTabsEmulated(CONFIG.getBoolean(Config.EDITOR_TAB_EMULATED));
-            }
+                return true;
+            });
         }
     }
 
@@ -884,37 +821,28 @@ public class StudioPanel extends JPanel implements WindowListener {
         help.setVisible(true);
     }
 
-    public static boolean quit() {
+    public static void quit() {
         WorkspaceSaver.setEnabled(false);
         try {
             ActionOnExit action = CONFIG.getEnum(Config.ACTION_ON_EXIT);
             if (action != ActionOnExit.NOTHING) {
                 for (StudioPanel panel : allPanels.toArray(new StudioPanel[0])) {
                     panel.getFrame().toFront();
-                    JTabbedPane tabbedEditors = panel.tabbedEditors;
-                    int selectedTab = tabbedEditors.getSelectedIndex();
-                    try {
-                        for (int index = 0; index < tabbedEditors.getTabCount(); index++) {
-                            EditorTab editor = panel.getEditor(index);
-                            if (editor.isModified()) {
-                                tabbedEditors.setSelectedIndex(index);
-                                if (!checkAndSaveTab(editor)) {
-                                    return false;
-                                }
+                    boolean complete = panel.rootEditorsPanel.execute(editorTab -> {
+                        if (editorTab.isModified()) {
+                            if (!EditorsPanel.checkAndSaveTab(editorTab)) {
+                                return false;
+                            }
 
-                                if (editor.isModified()) {
-                                    if (action == ActionOnExit.CLOSE_ANONYMOUS_NOT_SAVED && editor.getFilename()==null) {
-                                        panel.closeTab(false);
-                                        index--;
-                                    }
+                            if (editorTab.isModified()) {
+                                if (action == ActionOnExit.CLOSE_ANONYMOUS_NOT_SAVED && editorTab.getFilename()==null) {
+                                    editorTab.getEditorsPanel().closeTab(editorTab);
                                 }
                             }
                         }
-                    } finally {
-                        if (selectedTab<tabbedEditors.getTabCount()) { //the tab could be closed
-                            tabbedEditors.setSelectedIndex(selectedTab);
-                        }
-                    }
+                        return true;
+                    });
+                    if (!complete) return;
                 }
             }
         } finally {
@@ -926,65 +854,27 @@ public class StudioPanel extends JPanel implements WindowListener {
         WorkspaceSaver.save(getWorkspace());
         log.info("Shutting down");
         System.exit(0);
-        return true;
     }
 
-    private boolean closePanel() {
+    private void closePanel() {
         // If this is the last window, we need to properly persist workspace
-        if (allPanels.size() == 1) return quit();
-
-        while (tabbedEditors.getTabCount() > 0) {
-            if (! closeTab(true)) return false;
+        if (allPanels.size() == 1) {
+            quit();
+        } else {
+            rootEditorsPanel.execute(editorTab -> editorTab.getEditorsPanel().closeTab(editorTab));
+            //closing the last tab would dispose the frame
         }
-        //closing the last tab would dispose the frame
-        return true;
     }
 
-    private static boolean checkAndSaveTab(EditorTab editor) {
-        if (! editor.isModified()) return true;
 
-        int choice = StudioOptionPane.showYesNoCancelDialog(editor.getPane(),
-                editor.getTitle() + " is changed. Save changes?","Save changes?");
-
-        if (choice == JOptionPane.CANCEL_OPTION || choice == JOptionPane.CLOSED_OPTION) return false;
-
-        if (choice == JOptionPane.YES_OPTION) {
-            return saveEditor(editor);
+    public void closeFrame() {
+        if (allPanels.size() == 1) {
+            quit();
+        } else {
+            frame.dispose();
+            allPanels.remove(this);
+            rebuildAll();
         }
-
-        return true;
-    }
-
-    private void closeFrame(boolean rebuild) {
-        frame.dispose();
-        allPanels.remove(this);
-        if (rebuild) rebuildAll();
-    }
-
-    private void closeIfEmpty(boolean rebuild) {
-        if (tabbedEditors.getTabCount()>0) return;
-        closeFrame(rebuild);
-    }
-
-    private boolean closeTab(boolean rebuild) {
-        if (rebuild) {
-            if (!checkAndSaveTab(editor)) return false;
-        }
-
-        getEditor(tabbedEditors.getSelectedIndex()).closing();
-
-        if (rebuild) {
-            if (tabbedEditors.getTabCount() == 1 && allPanels.size() == 1) {
-                WorkspaceSaver.save(getWorkspace());
-                log.info("Closed the last tab. Shutting down");
-                System.exit(0);
-                return true;
-            }
-        }
-
-        tabbedEditors.remove(tabbedEditors.getSelectedIndex());
-        closeIfEmpty(rebuild);
-        return true;
     }
 
     public static void rebuildAll() {
@@ -1410,50 +1300,22 @@ public class StudioPanel extends JPanel implements WindowListener {
         splitpane.setDividerLocation(0.5);
     }
 
-    private void selectNextTab(boolean forward) {
-        int index = tabbedEditors.getSelectedIndex();
-        int count = tabbedEditors.getTabCount();
-        if (forward) {
-            index++;
-            if (index == count) index = 0;
-        } else {
-            index--;
-            if (index == -1) index = count-1;
-        }
-        tabbedEditors.setSelectedIndex(index);
-    }
-
     public EditorTab addTab(Server server, String filename) {
-        editor = new EditorTab(this);
-        JComponent editorPane = editor.getPane();
-        JTextComponent textArea = editor.getTextArea();
-        removeFocusChangeKeysForWindows(textArea);
-
-        editorPane.putClientProperty(EditorTab.class, editor);
-        tabbedEditors.add(editorPane);
-        tabbedEditors.setSelectedIndex(tabbedEditors.getTabCount()-1);
-        setServer(server);
-
-        if (filename != null) {
-            loadFile(filename);
+        if (editor == null) {
+            // This is the first tab which is added
+            return rootEditorsPanel.addTab(server, filename);
         } else {
-            editor.setFilename(null);
-            editor.init(Content.getEmpty());
+            return editor.getEditorsPanel().addTab(server, filename);
         }
-        textArea.getDocument().addDocumentListener(new MarkingDocumentListener(editor));
-        textArea.requestFocus();
-        refreshActionState();
-        return editor;
     }
 
-    private void refreshEditor() {
-        if ( tabbedEditors.getSelectedIndex() == -1) return;
-        editor = getEditor(tabbedEditors.getSelectedIndex());
+    public void updateEditor(EditorTab newEditor) {
+        editor = newEditor;
         editor.setPanel(this);
         mainStatusBar.updateStatuses(editor.getTextArea());
         setServer(editor.getServer());
         lastQuery = null;
-        refreshTitle();
+        refreshFrameTitle();
         refreshActionState();
     }
 
@@ -1487,29 +1349,11 @@ public class StudioPanel extends JPanel implements WindowListener {
         frame = new JFrame();
         allPanels.add(this);
 
-        tabbedEditors = new DraggableTabbedPane("Editor");
-        removeFocusChangeKeysForWindows(tabbedEditors);
-        ClosableTabbedPane.makeCloseable(tabbedEditors, (index, force) -> {
-            tabbedEditors.setSelectedIndex(index);
-            return closeTab(true);
-        });
-        tabbedEditors.addChangeListener(e -> refreshEditor() );
-        tabbedEditors.addContainerListener(new ContainerListener() {
-            @Override
-            public void componentAdded(ContainerEvent e) {
-                refreshEditor();
-            }
-            @Override
-            public void componentRemoved(ContainerEvent e) {
-                refreshEditor();
-            }
-        });
-        tabbedEditors.addDragCompleteListener(success -> closeIfEmpty(true) );
-
+        rootEditorsPanel = new EditorsPanel(this);
         JPanel topPanel = new JPanel(new BorderLayout());
-        topPanel.add(tabbedEditors, BorderLayout.CENTER);
+        topPanel.add(rootEditorsPanel, BorderLayout.CENTER);
 
-        editorSearchPanel = new SearchPanel( () -> getEditor(tabbedEditors.getSelectedIndex()).getPane() );
+        editorSearchPanel = new SearchPanel( () -> editor.getPane() );
         topPanel.add(editorSearchPanel, BorderLayout.NORTH);
 
         topPanel.setMinimumSize(new Dimension(0,0));
@@ -1631,29 +1475,6 @@ public class StudioPanel extends JPanel implements WindowListener {
         return resultSearchPanel;
     }
 
-    private static Server getServer(Workspace.Tab tab) {
-        Server server = null;
-        String serverFullname = tab.getServerFullName();
-        if (serverFullname != null) {
-            server = CONFIG.getServer(serverFullname);
-        }
-        if (server != null) return server;
-
-        String connectionString = tab.getServerConnection();
-        if (connectionString != null) {
-            server = CONFIG.getServerByConnectionString(connectionString);
-        }
-        if (server == null) server = new Server();
-
-        String auth = tab.getServerAuth();
-        if (auth == null) return server;
-
-        if (AuthenticationManager.getInstance().lookup(auth) != null) {
-            server.setAuthenticationMechanism(auth);
-        }
-        return server;
-    }
-
     public static void loadWorkspace(Workspace workspace) {
         loading = true;
         for (Workspace.Window window: workspace.getWindows()) {
@@ -1662,26 +1483,8 @@ public class StudioPanel extends JPanel implements WindowListener {
                 log.info("Strange: a window has zero tabs. Skipping initialization");
                 continue;
             }
-
             StudioPanel panel = new StudioPanel();
-            for (Workspace.Tab tab: tabs) {
-                try {
-                    EditorTab editor = panel.addTab(getServer(tab), tab.getFilename());
-                    editor.init(Content.newContent(tab.getContent(), tab.getLineEnding()));
-                    editor.setModified(tab.isModified());
-                    int caretPosition = tab.getCaret();
-                    if (caretPosition >= 0 && caretPosition < editor.getTextArea().getDocument().getLength()) {
-                        editor.getTextArea().setCaretPosition(caretPosition);
-                    }
-                    editor.getTextArea().discardAllEdits();
-                } catch (RuntimeException e) {
-                    log.error("Failed to init tab with filename {}", tab.getFilename(), e);
-                }
-            }
-            int selectedIndex = window.getSelectedTab();
-            if (selectedIndex >= 0 && selectedIndex < panel.tabbedEditors.getTabCount()) {
-                panel.tabbedEditors.setSelectedIndex(selectedIndex);
-            }
+            panel.rootEditorsPanel.loadWorkspace(window);
         }
 
         if (workspace.getSelectedWindow() != -1) {
@@ -1690,7 +1493,7 @@ public class StudioPanel extends JPanel implements WindowListener {
 
         loading = false;
         for (StudioPanel panel: allPanels) {
-            panel.refreshTitle();
+            panel.refreshFrameTitle();
         }
         rebuildAll();
     }
@@ -1808,6 +1611,10 @@ public class StudioPanel extends JPanel implements WindowListener {
     }
 
     private void executeK4Query(String text) {
+        if (editor.getServer() == null) {
+            log.info("Server is null. Can't execute the query");
+            return;
+        }
         editor.getTextArea().setCursor(waitCursor);
         editor.getPane().setEditorStatus("Executing: " + text);
         editor.getQueryExecutor().execute(text);
@@ -1816,15 +1623,15 @@ public class StudioPanel extends JPanel implements WindowListener {
     }
 
     void executeK4Query(K.KBase query) {
+        if (editor.getServer() == null) {
+            log.info("Server is null. Can't execute the query");
+            return;
+        }
         editor.getTextArea().setCursor(waitCursor);
         editor.getPane().setEditorStatus("Executing: " + query.toString());
         editor.getQueryExecutor().execute(query);
         editor.getPane().startClock();
         refreshActionState();
-    }
-
-    private EditorTab getEditor(int index) {
-        return (EditorTab) ((JComponent) tabbedEditors.getComponentAt(index)).getClientProperty(EditorTab.class);
     }
 
     private TabPanel getResultPane(int index) {
@@ -1889,27 +1696,7 @@ public class StudioPanel extends JPanel implements WindowListener {
 
         for (StudioPanel panel : allPanels) {
             Workspace.Window window = workspace.addWindow(panel.getFrame() == activeWindow);
-
-            int count = panel.tabbedEditors.getTabCount();
-            for (int index = 0; index < count; index++) {
-                EditorTab editor = panel.getEditor(index);
-                Server server = editor.getServer();
-                String filename = editor.getFilename();
-                boolean modified = editor.isModified();
-                if (modified && CONFIG.getBoolean(Config.AUTO_SAVE)) {
-                    editor.saveFileOnDisk(true);
-                }
-                JTextComponent textArea = editor.getTextArea();
-
-                window.addTab(index == panel.tabbedEditors.getSelectedIndex())
-                        .addFilename(filename)
-                        .addServer(server)
-                        .addContent(textArea.getText())
-                        .setCaret(textArea.getCaretPosition())
-                        .setModified(modified)
-                        .setLineEnding(editor.getLineEnding());
-            }
-
+            panel.rootEditorsPanel.getWorkspace(window);
         }
         return workspace;
     }
@@ -1944,21 +1731,4 @@ public class StudioPanel extends JPanel implements WindowListener {
     public void windowDeactivated(WindowEvent e) {
     }
 
-    private class MarkingDocumentListener implements DocumentListener {
-        private final EditorTab editor;
-        public MarkingDocumentListener(EditorTab editor) {
-            this.editor = editor;
-        }
-        private void update() {
-            editor.setModified(true);
-            refreshActionState();
-        }
-        public void changedUpdate(DocumentEvent evt) { update(); }
-        public void insertUpdate(DocumentEvent evt) {
-            update();
-        }
-        public void removeUpdate(DocumentEvent evt) {
-            update();
-        }
-    }
 }

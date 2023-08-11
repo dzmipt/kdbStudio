@@ -105,6 +105,7 @@ public class QueryExecutor implements ProgressCallback {
         private final int queryIndex;
         private volatile Session session = null;
 
+        //@TODO simplify to remove 2 method... We need to have an boolean argument if this is upload
         public Worker(int queryIndex, EditorTab editor, K.KBase query) {
             this.queryIndex = queryIndex;
             this.editor = editor;
