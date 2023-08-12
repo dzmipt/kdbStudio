@@ -82,11 +82,13 @@ public class StudioPanel extends JPanel implements WindowListener {
     private EditorsPanel rootEditorsPanel;
     private EditorTab editor;
     private JSplitPane splitpane;
+    private JPanel topPanel;
     private MainStatusBar mainStatusBar;
     private DraggableTabbedPane tabbedPane;
     private SearchPanel editorSearchPanel;
     private SearchPanel resultSearchPanel;
     private ServerList serverList;
+
     private UserAction arrangeAllAction;
     private UserAction closeFileAction;
     private UserAction closeTabAction;
@@ -131,6 +133,8 @@ public class StudioPanel extends JPanel implements WindowListener {
     private UserAction prevEditorTabAction;
     private UserAction[] lineEndingActions;
     private UserAction wordWrapAction;
+    private UserAction splitEditorRight;
+    private UserAction splitEditorDown;
     private JFrame frame;
 
     private static Map<String, JFileChooser> fileChooserMap = new HashMap<>();
@@ -477,6 +481,7 @@ public class StudioPanel extends JPanel implements WindowListener {
             StudioOptionPane.showError(frame, "Failed to load file "+filename + ".\n" + e.getMessage(),
                     "Error in file load");
         } finally {
+            //@TODO check if this is correct.
             editor.setFilename(filename);
             editor.init(content);
         }
@@ -558,7 +563,7 @@ public class StudioPanel extends JPanel implements WindowListener {
 
         newWindowAction = UserAction.create(I18n.getString("NewWindow"), Util.BLANK_ICON, "Open a new window",
                 KeyEvent.VK_N, KeyStroke.getKeyStroke(KeyEvent.VK_N, menuShortcutKeyMask | InputEvent.SHIFT_MASK),
-                e -> new StudioPanel().addTab(editor.getServer(), null) );
+                e -> new StudioPanel(null).addTab(editor.getServer(), null) );
 
         newTabAction = UserAction.create("New Tab", Util.BLANK_ICON, "Open a new tab", KeyEvent.VK_T,
                 KeyStroke.getKeyStroke(KeyEvent.VK_N, menuShortcutKeyMask),
@@ -752,6 +757,13 @@ public class StudioPanel extends JPanel implements WindowListener {
         wordWrapAction = UserAction.create("Word wrap", Util.BLANK_ICON, "Word wrap for all tabs",
                 KeyEvent.VK_W, KeyStroke.getKeyStroke(KeyEvent.VK_W, menuShortcutKeyMask | InputEvent.SHIFT_MASK),
                 e -> toggleWordWrap());
+
+        splitEditorRight = UserAction.create("Split right", Util.BLANK_ICON, "Split vertically",
+                KeyEvent.VK_R, null,
+                e-> editor.getEditorsPanel().split(false));
+        splitEditorDown = UserAction.create("Split down", Util.BLANK_ICON, "Split horizontally",
+                KeyEvent.VK_D, null,
+                e-> editor.getEditorsPanel().split(true));
     }
 
     public static StudioPanel getActivePanel() {
@@ -1043,6 +1055,9 @@ public class StudioPanel extends JPanel implements WindowListener {
         menu = new JMenu(I18n.getString("Window"));
         menu.setMnemonic(KeyEvent.VK_W);
 
+        menu.add(new JMenuItem(splitEditorRight));
+        menu.add(new JMenuItem(splitEditorDown));
+        menu.addSeparator();
         menu.add(new JMenuItem(minMaxDividerAction));
         menu.add(new JMenuItem(toggleDividerOrientationAction));
         menu.add(new JMenuItem(arrangeAllAction));
@@ -1340,33 +1355,54 @@ public class StudioPanel extends JPanel implements WindowListener {
         ((TabPanel)targetPane.getComponentAt(event.getTargetIndex())).setPanel(targetPanel);
     }
 
-    public StudioPanel() {
-        initActions();
+    public void setRootEditorsPanel(EditorsPanel editorsPanel) {
+        topPanel.remove(rootEditorsPanel);
+        rootEditorsPanel = editorsPanel;
+        topPanel.add(editorsPanel, BorderLayout.CENTER);
+    }
+
+    public StudioPanel(Workspace.Window workspaceWindow) {
+        allPanels.add(this);
         serverHistory = new HistoricalList<>(CONFIG.getServerHistoryDepth(),
                 CONFIG.getServerHistory());
 
-        splitpane = new JSplitPane();
-        frame = new JFrame();
-        allPanels.add(this);
+        initActions();
 
-        rootEditorsPanel = new EditorsPanel(this);
-        JPanel topPanel = new JPanel(new BorderLayout());
-        topPanel.add(rootEditorsPanel, BorderLayout.CENTER);
-
+        mainStatusBar = new MainStatusBar();
+        topPanel = new JPanel(new BorderLayout());
         editorSearchPanel = new SearchPanel( () -> editor.getPane() );
         topPanel.add(editorSearchPanel, BorderLayout.NORTH);
 
         topPanel.setMinimumSize(new Dimension(0,0));
-        splitpane.setTopComponent(topPanel);
-        splitpane.setDividerLocation(0.5);
 
-        toolbar = new Toolbar();
+        toolbar = initToolbar();
+        tabbedPane = initResultPane();
+        resultSearchPanel = initResultSearchPanel();
+
+        JPanel bottomPanel = new JPanel(new BorderLayout());
+        bottomPanel.add(tabbedPane, BorderLayout.CENTER);
+        bottomPanel.add(resultSearchPanel, BorderLayout.NORTH);
+        bottomPanel.setMinimumSize(new Dimension(0,0));
+        splitpane = initSplitPane(topPanel, bottomPanel);
+
+        rootEditorsPanel = new EditorsPanel(this, workspaceWindow);
+        topPanel.add(rootEditorsPanel, BorderLayout.CENTER);
+
+        frame = initFrame(toolbar, splitpane, mainStatusBar);
+
+        splitpane.setDividerLocation(0.5);
+    }
+
+    private Toolbar initToolbar() {
+        Toolbar toolbar = new Toolbar();
         toolbar.setLayout(new BoxLayout(toolbar, BoxLayout.X_AXIS));
         toolbar.setFloatable(false);
         toolbar.setBorder(BorderFactory.createEmptyBorder(0,2,0,1));
+        return toolbar;
+    }
 
-
-        tabbedPane = new DraggableTabbedPane("Result", JTabbedPane.TOP);
+    private DraggableTabbedPane initResultPane() {
+        DraggableTabbedPane tabbedPane = new DraggableTabbedPane("Result", JTabbedPane.TOP);
         ClosableTabbedPane.makeCloseable(tabbedPane, new ClosableTabbedPane.PinTabAction() {
             @Override
             public boolean close(int index, boolean force) {
@@ -1394,11 +1430,11 @@ public class StudioPanel extends JPanel implements WindowListener {
         });
         tabbedPane.putClientProperty(StudioPanel.class, this);
         tabbedPane.addDragListener( evt -> resultTabDragged(evt));
+        return tabbedPane;
+    }
 
-        JPanel bottomPanel = new JPanel(new BorderLayout());
-        bottomPanel.add(tabbedPane, BorderLayout.CENTER);
-
-        resultSearchPanel = new SearchPanel(() -> {
+    private SearchPanel initResultSearchPanel() {
+        SearchPanel resultSearchPanel = new SearchPanel(() -> {
             if (tabbedPane.getTabCount() == 0) return null;
             TabPanel resultTab = getResultPane(tabbedPane.getSelectedIndex());
             EditorPane editorPane = resultTab.getEditor();
@@ -1408,63 +1444,69 @@ public class StudioPanel extends JPanel implements WindowListener {
         });
 
         resultSearchPanel.setReplaceVisible(false);
-        bottomPanel.add(resultSearchPanel, BorderLayout.NORTH);
 
-        bottomPanel.setMinimumSize(new Dimension(0,0));
-        splitpane.setBottomComponent(bottomPanel);
+        return resultSearchPanel;
+    }
+
+    private JSplitPane initSplitPane(JComponent top, JComponent bottom) {
+        JSplitPane splitpane = new JSplitPane();
+        splitpane.setTopComponent(top);
+        splitpane.setBottomComponent(bottom);
 
         splitpane.setOneTouchExpandable(true);
         splitpane.setOrientation(JSplitPane.VERTICAL_SPLIT);
-        try {
+
+        if (splitpane.getUI() instanceof  BasicSplitPaneUI) {
             Component divider = ((BasicSplitPaneUI) splitpane.getUI()).getDivider();
-
             divider.addMouseListener(new MouseAdapter() {
-
                 public void mouseClicked(MouseEvent event) {
                     if (event.getClickCount() == 2)
                         toggleDividerOrientation();
                 }
             });
         }
-        catch (ClassCastException e) {
-        }
         splitpane.setContinuousLayout(true);
-
-        Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
-
-        mainStatusBar = new MainStatusBar();
-
-        frame.getContentPane().add(toolbar, BorderLayout.NORTH);
-        frame.getContentPane().add(splitpane, BorderLayout.CENTER);
-        frame.getContentPane().add(mainStatusBar, BorderLayout.SOUTH);
-
-        frame.setDefaultCloseOperation(WindowConstants.DO_NOTHING_ON_CLOSE);
-        frame.addWindowListener(this);
-        frame.setSize((int) (0.8 * screenSize.width),
-                (int) (0.8 * screenSize.height));
-
-        frame.setLocation(((int) Math.max(0,(screenSize.width - frame.getWidth()) / 2.0)),
-                (int) (Math.max(0,(screenSize.height - frame.getHeight()) / 2.0)));
-
-        frame.setIconImage(Util.LOGO_ICON.getImage());
-
-        frame.setVisible(true);
-        splitpane.setDividerLocation(0.5);
 
         splitpane.addPropertyChangeListener(JSplitPane.DIVIDER_LOCATION_PROPERTY,new PropertyChangeListener(){
             public void propertyChange(PropertyChangeEvent pce){
                 String s = splitpane.getDividerLocation()>=splitpane.getMaximumDividerLocation() ?
                         I18n.getString("MinimizeEditorPane")
-                            : splitpane.getDividerLocation()<=splitpane.getMinimumDividerLocation() ?
-                                    I18n.getString("RestoreEditorPane"):
-                                    I18n.getString("MaximizeEditorPane");
+                        : splitpane.getDividerLocation()<=splitpane.getMinimumDividerLocation() ?
+                        I18n.getString("RestoreEditorPane"):
+                        I18n.getString("MaximizeEditorPane");
                 minMaxDividerAction.putValue(Action.SHORT_DESCRIPTION,s);
                 minMaxDividerAction.putValue(Action.NAME,s);
                 if(splitpane.getDividerLocation()<splitpane.getMaximumDividerLocation()&&splitpane.getDividerLocation()>splitpane.getMinimumDividerLocation())
                     dividerLastPosition=splitpane.getDividerLocation();
             }
         });
-        dividerLastPosition=splitpane.getDividerLocation();
+        dividerLastPosition = splitpane.getDividerLocation();
+
+        return splitpane;
+    }
+
+    private JFrame initFrame(JComponent toolbar, JComponent central, JComponent statusBar) {
+        JFrame frame = new JFrame();
+        JPanel contentPane = new JPanel(new BorderLayout());
+        contentPane.add(toolbar, BorderLayout.NORTH);
+        contentPane.add(central, BorderLayout.CENTER);
+        contentPane.add(statusBar, BorderLayout.SOUTH);
+
+        frame.setContentPane(contentPane);
+        frame.setDefaultCloseOperation(WindowConstants.DO_NOTHING_ON_CLOSE);
+        frame.addWindowListener(this);
+
+        Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
+        frame.setSize((int) (0.8 * screenSize.width),
+                (int) (0.8 * screenSize.height));
+
+        frame.setLocation(((int) Math.max(0, (screenSize.width - frame.getWidth()) / 2.0)),
+                (int) (Math.max(0, (screenSize.height - frame.getHeight()) / 2.0)));
+
+        frame.setIconImage(Util.LOGO_ICON.getImage());
+
+        frame.setVisible(true);
+        return frame;
     }
 
     public SearchPanel getEditorSearchPanel() {
@@ -1478,17 +1520,16 @@ public class StudioPanel extends JPanel implements WindowListener {
     public static void loadWorkspace(Workspace workspace) {
         loading = true;
         for (Workspace.Window window: workspace.getWindows()) {
-            Workspace.Tab[] tabs = window.getTabs();
-            if (tabs.length == 0) {
-                log.info("Strange: a window has zero tabs. Skipping initialization");
-                continue;
-            }
-            StudioPanel panel = new StudioPanel();
-            panel.rootEditorsPanel.loadWorkspace(window);
+            new StudioPanel(window);
         }
 
-        if (workspace.getSelectedWindow() != -1) {
-            allPanels.get(workspace.getSelectedWindow()).frame.toFront();
+        int index = workspace.getSelectedWindow();
+        if (index >= 0 && index < allPanels.size()) {
+            allPanels.get(index).frame.toFront();
+        }
+
+        if (allPanels.size() == 0) {
+            new StudioPanel(null).addTab(null, null);
         }
 
         loading = false;

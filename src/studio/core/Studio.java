@@ -181,7 +181,7 @@ public class Studio {
         FileWatcher.start();
 
         if (args.length > 0) {
-            new StudioPanel().addTab(getInitServer(), args[0]);
+            new StudioPanel(null).addTab(getInitServer(), args[0]);
         } else {
             Workspace workspace = Config.getInstance().loadWorkspace();
             // Reload files from disk if it was modified somewhere else
@@ -203,7 +203,7 @@ public class Studio {
             if (workspace.getWindows().length == 0) {
                 String[] mruFiles = Config.getInstance().getMRUFiles();
                 String filename = mruFiles.length == 0 ? null : mruFiles[0];
-                new StudioPanel().addTab(getInitServer(), filename);
+                new StudioPanel(null).addTab(getInitServer(), filename);
             } else {
                 StudioPanel.loadWorkspace(workspace);
             }

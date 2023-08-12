@@ -39,12 +39,32 @@ public class WorkspaceTest {
 
         w2.addTab(false)
                 .addContent("another content");
+
+
+        Workspace.Window w3 = workspace.addWindow(false);
+        Workspace.Window left = w3.addLeft();
+        Workspace.Window right = w3.addRight();
+        w3.setVerticalSplit(true);
+
+        left.addTab(false)
+                .addServer(server)
+                .addContent("left1");
+        left.addTab(true)
+                .addServer(server)
+                .addContent("left2");
+
+        Workspace.Window right1 = right.addLeft();
+        Workspace.Window right2 = right.addRight();
+        right1.setVerticalSplit(false);
+
+        right1.addTab(true).addServer(server).addContent("right1");
+        right2.addTab(true).addServer(server).addContent("right2");
     }
 
     private void checkWorkspace(Workspace workspace) {
         assertEquals(1, workspace.getSelectedWindow());
         Workspace.Window[] windows = workspace.getWindows();
-        assertEquals(2, windows.length);
+        assertEquals(3, windows.length);
 
         assertEquals(0, windows[0].getSelectedTab());
         assertEquals(1, windows[1].getSelectedTab());
@@ -74,6 +94,24 @@ public class WorkspaceTest {
         assertNull(tabs[2].getServerFullName());
         assertNull(tabs[2].getServerConnection());
         assertTrue(tabs[2].isModified());
+
+
+        assertFalse(windows[0].isSplit());
+        assertFalse(windows[1].isSplit());
+        assertTrue(windows[2].isSplit());
+        assertTrue(windows[2].isVerticalSplit());
+
+        Workspace.Window left = windows[2].getLeft();
+        Workspace.Window right = windows[2].getRight();
+
+        assertFalse(left.isSplit());
+        assertTrue(right.isSplit());
+
+        Workspace.Window right1 = right.getLeft();
+        Workspace.Window right2 = right.getRight();
+
+        assertFalse(right1.isSplit());
+        assertFalse(right2.isSplit());
     }
 
     @Test

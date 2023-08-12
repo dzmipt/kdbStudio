@@ -278,7 +278,7 @@ public class EditorTab implements FileWatcher.Listener {
         }
     }
 
-    //quite hacky... needs to think of better design...
+    //@TODO quite hacky... needs to think of better design...
     public EditorsPanel getEditorsPanel() {
         return (EditorsPanel) getPane().getParent().getParent();
     }

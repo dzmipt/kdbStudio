@@ -17,6 +17,9 @@ public class Workspace {
     private final static String SELECTED_WINDOW = "selectedWindow";
     private final static String WINDOW = "window";
     private final static String TAB = "tab";
+    private final static String LEFT = "left";
+    private final static String RIGHT = "right";
+    private final static String VERTICAL_SPLIT = "vertialSplit";
     private final static String SELECTED_TAB = "selectedTab";
     private final static String FILENAME = "filename";
     private final static String SERVER_FULLNAME = "serverFullname";
@@ -54,12 +57,21 @@ public class Workspace {
         }
     }
 
+    private static boolean hasKeysWithPrefix(Properties p, String prefix) {
+        for(Object key : p.keySet() ) {
+            if (key.toString().startsWith(prefix)) return true;
+        }
+        return false;
+    }
+
     public void load(Properties p) {
         windows.clear();
         for (int index = 0; ; index++) {
+            String prefix = WINDOW + "." + index + ".";
+            if (! hasKeysWithPrefix(p, prefix)) break;
+
             Workspace.Window window = new Workspace.Window();
-            window.load(WINDOW + "." + index + ".", p);
-            if (window.getTabs().length == 0) break;
+            window.load(prefix, p);
             windows.add(window);
         }
         selectedWindow = getInt(p, SELECTED_WINDOW, -1);
@@ -78,6 +90,8 @@ public class Workspace {
 
         private final List<Tab> tabs = new ArrayList<>();
         private int selectedTab = -1;
+        private Window left, right;
+        private boolean verticalSplit;
 
         public int getSelectedTab() {
             return selectedTab;
@@ -96,11 +110,45 @@ public class Workspace {
             return tab;
         }
 
+        public boolean isSplit() {
+            return left != null || right != null;
+        }
+
+        public Window getLeft() {
+            return left;
+        }
+
+        public Window getRight() {
+            return right;
+        }
+
+        public Window addLeft() {
+            return left = new Window();
+        }
+
+        public Window addRight() {
+            return right = new Window();
+        }
+
+        public boolean isVerticalSplit() {
+            return verticalSplit;
+        }
+
+        public void setVerticalSplit(boolean verticalSplit) {
+            this.verticalSplit = verticalSplit;
+        }
+
         private void save(String prefix, Properties p) {
-            p.setProperty(prefix + SELECTED_TAB, "" + selectedTab);
-            for (int index = 0; index<tabs.size(); index++) {
-                Tab tab = tabs.get(index);
-                tab.save(prefix + TAB + "." + index + ".", p);
+            if (left != null && right != null) {
+                p.setProperty(prefix + VERTICAL_SPLIT, Boolean.toString(verticalSplit));
+                left.save(prefix + LEFT + ".", p);
+                right.save(prefix + RIGHT + ".", p);
+            } else {
+                p.setProperty(prefix + SELECTED_TAB, "" + selectedTab);
+                for (int index = 0; index < tabs.size(); index++) {
+                    Tab tab = tabs.get(index);
+                    tab.save(prefix + TAB + "." + index + ".", p);
+                }
             }
         }
 
@@ -113,6 +161,17 @@ public class Workspace {
                 tabs.add(tab);
             }
             selectedTab = getInt(p, prefix + SELECTED_TAB, -1);
+
+            verticalSplit = Boolean.parseBoolean(p.getProperty(prefix + VERTICAL_SPLIT, "false"));
+            left = loadChild(prefix + LEFT + ".", p);
+            right = loadChild(prefix + RIGHT + ".", p);
+        }
+
+        private Window loadChild(String prefix, Properties p) {
+            if (! hasKeysWithPrefix(p, prefix)) return null;
+            Window window = new Window();
+            window.load(prefix, p);
+            return window;
         }
     }
 

@@ -15,6 +15,8 @@ import javax.swing.event.DocumentListener;
 import javax.swing.filechooser.FileNameExtensionFilter;
 import javax.swing.text.JTextComponent;
 import java.awt.*;
+import java.awt.event.FocusAdapter;
+import java.awt.event.FocusEvent;
 import java.io.File;
 import java.util.HashSet;
 import java.util.Set;
@@ -28,8 +30,17 @@ public class EditorsPanel extends JPanel {
 
     private static final Logger log = LogManager.getLogger();
 
-    public EditorsPanel(StudioPanel panel) {
+    public EditorsPanel(StudioPanel panel, Workspace.Window workspaceWindow) {
         this.panel = panel;
+
+        if (workspaceWindow != null && workspaceWindow.isSplit()) {
+            left = loadWorkspaceWindow(panel, workspaceWindow.getLeft());
+            right = loadWorkspaceWindow(panel, workspaceWindow.getRight());
+            init(left, right, workspaceWindow.isVerticalSplit());
+            return;
+        }
+
+
         tabbedEditors = new DraggableTabbedPane("Editor");
         removeFocusChangeKeysForWindows(tabbedEditors);
         ClosableTabbedPane.makeCloseable(tabbedEditors, (index, force) -> {
@@ -45,11 +56,44 @@ public class EditorsPanel extends JPanel {
 
         setLayout(new BorderLayout());
         add(tabbedEditors, BorderLayout.CENTER);
+
+        if (workspaceWindow != null) {
+            loadWorkspaceTabs(workspaceWindow);
+            if (tabbedEditors.getTabCount() == 0) {
+                log.warn("Workspace is corrupted. No tab found in a split. Creating empty tab");
+                addTab(null, null);
+            }
+        }
+    }
+
+    public EditorsPanel(EditorsPanel left, EditorsPanel right, boolean verticalSplit) {
+        this.panel = left.panel;
+        init(left, right, verticalSplit);
+    }
+
+    private void init(EditorsPanel left, EditorsPanel right, boolean verticalSplit) {
+        this.left = left;
+        this.right = right;
+        left.parent = this;
+        right.parent = this;
+
+        splitPane = new JSplitPane(verticalSplit ? JSplitPane.VERTICAL_SPLIT : JSplitPane.HORIZONTAL_SPLIT);
+        splitPane.setLeftComponent(left);
+        splitPane.setRightComponent(right);
+
+        setLayout(new BorderLayout());
+        add(splitPane, BorderLayout.CENTER);
     }
 
     public EditorTab addTab(Server server, String filename) {
         EditorTab editor = new EditorTab(panel);
         JComponent editorPane = editor.getPane();
+        editorPane.addFocusListener(new FocusAdapter() {
+            @Override
+            public void focusGained(FocusEvent e) {
+                panel.updateEditor(editor);
+            }
+        });
         JTextComponent textArea = editor.getTextArea();
         removeFocusChangeKeysForWindows(textArea);
 
@@ -69,6 +113,39 @@ public class EditorsPanel extends JPanel {
         panel.refreshActionState();
         refreshEditorTitle(editor);
         return editor;
+    }
+
+    public void split(boolean vertically) {
+        if (tabbedEditors == null) return;
+
+        int index = tabbedEditors.getSelectedIndex();
+        if (index == -1) return;
+        EditorTab editorTab = getEditorTab(index);
+        EditorsPanel oldParent = parent;
+
+        EditorsPanel aRight = new EditorsPanel(panel, null);
+        //@TODO move modified content as well
+        aRight.addTab(editorTab.getServer(), editorTab.getFilename());
+
+        EditorsPanel aRoot = new EditorsPanel(this, aRight, vertically);
+        if (oldParent == null) {
+            panel.setRootEditorsPanel(aRoot);
+        } else {
+            oldParent.setLeftOrRight(this, aRoot);
+        }
+    }
+
+    private void setLeftOrRight(EditorsPanel oldChild, EditorsPanel newChild) {
+        newChild.parent = this;
+        if (left == oldChild) {
+            left = newChild;
+            splitPane.setLeftComponent(left);
+        } else if (right == oldChild) {
+            right = newChild;
+            splitPane.setRightComponent(right);
+        } else {
+            throw new RuntimeException("Unexpected...");
+        }
     }
 
     public static boolean saveAsFile(EditorTab editor) {
@@ -176,33 +253,50 @@ public class EditorsPanel extends JPanel {
     }
 
     public void getWorkspace(Workspace.Window window) {
-        Config config = Config.getInstance();
-        int count = tabbedEditors.getTabCount();
-        for (int index = 0; index < count; index++) {
-            EditorTab editor = getEditorTab(index);
-            Server server = editor.getServer();
-            String filename = editor.getFilename();
-            boolean modified = editor.isModified();
-            if (modified && config.getBoolean(Config.AUTO_SAVE)) {
-                editor.saveFileOnDisk(true);
-            }
-            JTextComponent textArea = editor.getTextArea();
+        if (tabbedEditors == null) {
+            window.setVerticalSplit(splitPane.getOrientation() == JSplitPane.VERTICAL_SPLIT);
+            left.getWorkspace(window.addLeft());
+            right.getWorkspace(window.addRight());
+        } else {
+            Config config = Config.getInstance();
+            int count = tabbedEditors.getTabCount();
+            for (int index = 0; index < count; index++) {
+                EditorTab editor = getEditorTab(index);
+                Server server = editor.getServer();
+                String filename = editor.getFilename();
+                boolean modified = editor.isModified();
+                if (modified && config.getBoolean(Config.AUTO_SAVE)) {
+                    editor.saveFileOnDisk(true);
+                }
+                JTextComponent textArea = editor.getTextArea();
 
-            window.addTab(index == tabbedEditors.getSelectedIndex())
-                    .addFilename(filename)
-                    .addServer(server)
-                    .addContent(textArea.getText())
-                    .setCaret(textArea.getCaretPosition())
-                    .setModified(modified)
-                    .setLineEnding(editor.getLineEnding());
+                window.addTab(index == tabbedEditors.getSelectedIndex())
+                        .addFilename(filename)
+                        .addServer(server)
+                        .addContent(textArea.getText())
+                        .setCaret(textArea.getCaretPosition())
+                        .setModified(modified)
+                        .setLineEnding(editor.getLineEnding());
+            }
         }
     }
 
-    public void loadWorkspace(Workspace.Window window) {
+    private static EditorsPanel loadWorkspaceWindow(StudioPanel panel, Workspace.Window window) {
+        if (window == null) {
+            log.warn("Workspace is corrupted. There is no one of the split. Creating empty one");
+            EditorsPanel editorsPanel = new EditorsPanel(panel, null);
+            editorsPanel.addTab(null, null);
+            return editorsPanel;
+        }
+
+        return new EditorsPanel(panel, window);
+    }
+
+    private void loadWorkspaceTabs(Workspace.Window window) {
         Workspace.Tab[] tabs = window.getTabs();
         for (Workspace.Tab tab: tabs) {
             try {
-                EditorTab editor = panel.addTab(getServer(tab), tab.getFilename());
+                EditorTab editor = addTab(getServer(tab), tab.getFilename());
                 editor.init(Content.newContent(tab.getContent(), tab.getLineEnding()));
                 editor.setModified(tab.isModified());
                 int caretPosition = tab.getCaret();
