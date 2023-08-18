@@ -26,7 +26,7 @@ class DragSourceHandler implements DragSourceListener {
         if (! (component instanceof DraggableTabbedPane)) return;
 
         DraggableTabbedPane tabbedPane = (DraggableTabbedPane) component;
-        tabbedPane.setSourceRect(null);
+        tabbedPane.setDimSelectedTab(false);
         // Ideally I'd like to have a listener from DropTargetHandler.drop with full details
         // Unfortunately trying to close the panel from the drop method resulted
         // InvalidDnDOperationException Drag and drop in progress
