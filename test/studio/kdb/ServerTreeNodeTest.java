@@ -14,10 +14,10 @@ public class ServerTreeNodeTest {
         ServerTreeNode serverTree = new ServerTreeNode();
         ServerTreeNode folderA = serverTree.add("a");
         ServerTreeNode folderB = folderA.add("b");
-        ServerTreeNode serverNode = folderB.add(new Server());
+        ServerTreeNode serverNode = folderB.add(Server.newServer());
 
         ServerTreeNode folderB1 = serverTree.add("b");
-        ServerTreeNode serverNode1 = folderB1.add(new Server());
+        ServerTreeNode serverNode1 = folderB1.add(Server.newServer());
 
         assertTrue( folderB1.theSame(serverTree.findPath(new TreeNode[] {new ServerTreeNode(), new ServerTreeNode("b")})));
 

@@ -93,6 +93,13 @@ public class Workspace {
         private Window left, right;
         private boolean verticalSplit;
 
+        Window() {}
+
+        public Window(Server server, String filename) {
+            tabs.add(new Tab(server,filename));
+            selectedTab = 0;
+        }
+
         public int getSelectedTab() {
             return selectedTab;
         }
@@ -184,6 +191,18 @@ public class Workspace {
         private boolean modified = false;
         private LineEnding lineEnding = LineEnding.Unix;
         private int caret = 0;
+
+        Tab() {}
+
+        public Tab(Server server, String filename) {
+            this.filename = filename;
+            lineEnding = Config.getInstance().getEnum(Config.DEFAULT_LINE_ENDING);
+            if (server != null) {
+                serverFullName = server.getFullName();
+                serverConnection = server.getConnectionStringWithPwd();
+                serverAuth = server.getAuthenticationMechanism();
+            }
+        }
 
         public String getFilename() {
             return filename;

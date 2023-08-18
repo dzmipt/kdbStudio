@@ -1,17 +1,17 @@
 
 package studio.ui;
 
+import studio.core.AuthenticationManager;
 import studio.core.Credentials;
 import studio.kdb.Config;
 import studio.kdb.Server;
-import studio.core.AuthenticationManager;
 
+import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
-import javax.swing.*;
 
 import static javax.swing.GroupLayout.Alignment.*;
 import static javax.swing.GroupLayout.DEFAULT_SIZE;
@@ -19,26 +19,26 @@ import static javax.swing.GroupLayout.PREFERRED_SIZE;
 import static javax.swing.LayoutStyle.ComponentPlacement.RELATED;
 
 public class ServerForm extends EscapeDialog {
-    private Server s;
+    private Server server;
 
     public ServerForm(Window frame, String title, Server server){
         super(frame, title);
-        s = server;
+        this.server = server;
 
         initComponents();
 
-        logicalName.setText(s.getName());
-        hostname.setText(s.getHost());
-        username.setText(s.getUsername());
-        port.setText(""+s.getPort());
-        password.setText(s.getPassword());
-        jCheckBox2.setSelected(s.getUseTLS());
+        logicalName.setText(this.server.getName());
+        hostname.setText(this.server.getHost());
+        username.setText(this.server.getUsername());
+        port.setText(""+ this.server.getPort());
+        password.setText(this.server.getPassword());
+        jCheckBox2.setSelected(this.server.getUseTLS());
         DefaultComboBoxModel dcbm= (DefaultComboBoxModel)authenticationMechanism.getModel();
         String [] am;
         am = AuthenticationManager.getInstance().getAuthenticationMechanisms();
         for(int i= 0;i < am.length; i++) {
             dcbm.addElement(am[i]);
-            if(s.getAuthenticationMechanism().equals(am[i]))
+            if(this.server.getAuthenticationMechanism().equals(am[i]))
                 dcbm.setSelectedItem(am[i]);
         }
 
@@ -59,7 +59,7 @@ public class ServerForm extends EscapeDialog {
 
 //        testConnection.setSelected(true);
         
-        SampleTextOnBackgroundTextField.setBackground(s.getBackgroundColor());
+        SampleTextOnBackgroundTextField.setBackground(this.server.getBackgroundColor());
             SampleTextOnBackgroundTextField.setEditable(false);
         addWindowListener(new WindowAdapter()
         {
@@ -267,24 +267,24 @@ public class ServerForm extends EscapeDialog {
             return;
         }
         else {
-            s.setName(logicalName.getText().trim());
-            s.setHost(hostname.getText().trim());
-            s.setUsername(username.getText().trim());
+            server.setName(logicalName.getText().trim());
+            server.setHost(hostname.getText().trim());
+            server.setUsername(username.getText().trim());
             if(port.getText().length() == 0)
-                s.setPort(0);
+                server.setPort(0);
             else
-                s.setPort(Integer.parseInt(port.getText()));
+                server.setPort(Integer.parseInt(port.getText()));
 
-            s.setPassword(new String(password.getPassword()).trim()); 
-            s.setUseTLS(jCheckBox2.isSelected());
+            server.setPassword(new String(password.getPassword()).trim());
+            server.setUseTLS(jCheckBox2.isSelected());
             DefaultComboBoxModel dcbm= (DefaultComboBoxModel)authenticationMechanism.getModel();
-            s.setAuthenticationMechanism((String)dcbm.getSelectedItem());
+            server.setAuthenticationMechanism((String)dcbm.getSelectedItem());
         }
         accept();
     }//GEN-LAST:event_onOk
 
 
-    public Server getServer(){return s;}
+    public Server getServer(){return server;}
     
     private void onCancel(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_onCancel
         cancel();
@@ -307,7 +307,7 @@ private void onColor(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_onColor
         dialog.setVisible(true);
 
         SampleTextOnBackgroundTextField.setBackground(c);
-        s.setBackgroundColor(c);
+        server.setBackgroundColor(c);
 }//GEN-LAST:event_onColor
 
 private void SampleTextOnBackgroundTextFieldActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_SampleTextOnBackgroundTextFieldActionPerformed

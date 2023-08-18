@@ -148,7 +148,7 @@ public class Studio {
 
     private static Server getInitServer() {
         List<Server> serverHistory = Config.getInstance().getServerHistory();
-        return serverHistory.size() == 0 ? null : serverHistory.get(0);
+        return serverHistory.size() == 0 ? Server.NO_SERVER : serverHistory.get(0);
     }
 
     private static void initLF() {
@@ -181,7 +181,7 @@ public class Studio {
         FileWatcher.start();
 
         if (args.length > 0) {
-            new StudioPanel(null).addTab(getInitServer(), args[0]);
+            new StudioPanel(getInitServer(), args[0]);
         } else {
             Workspace workspace = Config.getInstance().loadWorkspace();
             // Reload files from disk if it was modified somewhere else
@@ -203,7 +203,7 @@ public class Studio {
             if (workspace.getWindows().length == 0) {
                 String[] mruFiles = Config.getInstance().getMRUFiles();
                 String filename = mruFiles.length == 0 ? null : mruFiles[0];
-                new StudioPanel(null).addTab(getInitServer(), filename);
+                new StudioPanel(getInitServer(), filename);
             } else {
                 StudioPanel.loadWorkspace(workspace);
             }

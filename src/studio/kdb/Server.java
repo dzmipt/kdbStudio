@@ -2,7 +2,7 @@ package studio.kdb;
 
 import studio.core.Credentials;
 
-import java.awt.Color;
+import java.awt.*;
 import java.util.Objects;
 import java.util.Properties;
 
@@ -16,6 +16,8 @@ public class Server {
     private String password;
     private boolean useTLS = false;
     private ServerTreeNode folder = null;
+
+    public static final Server NO_SERVER = new Server();
 
     public Properties getAsProperties() {
         Properties p = new Properties();
@@ -64,12 +66,16 @@ public class Server {
         this.useTLS = useTLS;
     }
 
-    public Server() {
-        authenticationMechanism = Config.getInstance().getDefaultAuthMechanism();
-        Credentials credentials = Config.getInstance().getDefaultCredentials(authenticationMechanism);
-        username = credentials.getUsername();
-        password = credentials.getPassword();
+    public static Server newServer() {
+        Server server = new Server();
+        server.authenticationMechanism = Config.getInstance().getDefaultAuthMechanism();
+        Credentials credentials = Config.getInstance().getDefaultCredentials(server.authenticationMechanism);
+        server.username = credentials.getUsername();
+        server.password = credentials.getPassword();
+        return server;
     }
+
+    private Server() {}
 
     @Override
     public boolean equals(Object obj) {

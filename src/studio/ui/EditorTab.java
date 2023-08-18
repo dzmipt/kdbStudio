@@ -22,7 +22,7 @@ public class EditorTab implements FileWatcher.Listener {
 
     private String title;
     private String filename;
-    private Server server;
+    private Server server = Server.NO_SERVER;
     private boolean modified = false;
     private LineEnding lineEnding = LineEnding.Unix;
 
@@ -62,6 +62,7 @@ public class EditorTab implements FileWatcher.Listener {
         if (editorPane != null) throw new IllegalStateException("The EditorTab has been already initialized");
 
         editorPane = new EditorPane(true, panel.getEditorSearchPanel(), panel.getMainStatusBar());
+        editorPane.setFocusable(false);
         RSyntaxTextArea textArea = editorPane.getTextArea();
 
         textArea.putClientProperty(QueryExecutor.class, new QueryExecutor(this));
@@ -142,7 +143,7 @@ public class EditorTab implements FileWatcher.Listener {
     private String getTabTitleInternal() {
         if (getFilename() != null) return getTitle();
         Server server = getServer();
-        if (server == null) return getTitle();
+        if (server == Server.NO_SERVER) return getTitle();
 
         if (server.getName().length() > 0) return server.getName();
         return server.getHost() + ":" + server.getPort();
@@ -174,7 +175,7 @@ public class EditorTab implements FileWatcher.Listener {
     }
 
     public void setServer(Server server) {
-        if (this.server != null && this.server.equals(server)) return;
+        if (this.server.equals(server)) return;
         this.server = server;
         getTextArea().setBackground(server.getBackgroundColor());
 

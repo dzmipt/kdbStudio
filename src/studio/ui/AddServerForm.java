@@ -6,6 +6,6 @@ import java.awt.*;
 
 public class AddServerForm extends ServerForm {
     public AddServerForm(Window owner) {
-        super(owner, "Add a new server", new Server());
+        super(owner, "Add a new server", Server.newServer());
     }
 }

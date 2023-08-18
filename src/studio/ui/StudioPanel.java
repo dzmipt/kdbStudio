@@ -19,7 +19,10 @@ import studio.ui.rstextarea.FindReplaceAction;
 import studio.ui.rstextarea.RSTextAreaFactory;
 import studio.ui.search.SearchPanel;
 import studio.ui.statusbar.MainStatusBar;
-import studio.utils.*;
+import studio.utils.BrowserLaunch;
+import studio.utils.Content;
+import studio.utils.HistoricalList;
+import studio.utils.LineEnding;
 import studio.utils.log4j.EnvConfig;
 
 import javax.swing.FocusManager;
@@ -80,7 +83,7 @@ public class StudioPanel extends JPanel implements WindowListener {
     private String lastQuery = null;
     private JToolBar toolbar;
     private EditorsPanel rootEditorsPanel;
-    private EditorTab editor;
+    private EditorTab editor; // should be NotNull
     private JSplitPane splitpane;
     private JPanel topPanel;
     private MainStatusBar mainStatusBar;
@@ -152,13 +155,24 @@ public class StudioPanel extends JPanel implements WindowListener {
     private static final Config CONFIG = Config.getInstance();
     
     public void refreshFrameTitle() {
-        if (! loading) {
-            Server server = editor.getServer();
-            String env = EnvConfig.getEnvironment();
-            String frameTitle = editor.getTitle() + (editor.isModified() ? " (not saved) " : "") + (server != null ? " @" + server : "") + " Studio for kdb+ " + Lm.version + (env == null ? "" : " [" + env + "]");
-            if (!frameTitle.equals(frame.getTitle())) {
-                frame.setTitle(frameTitle);
-            }
+        if (loading) return;
+
+        StringBuilder frameTitleBuilder = new StringBuilder();
+        frameTitleBuilder.append(editor.getTitle());
+        if (editor.isModified()) frameTitleBuilder.append(" (not saved) ");
+
+        Server server = editor.getServer();
+        if (server != Server.NO_SERVER) frameTitleBuilder.append(" @").append(server);
+        frameTitleBuilder.append(" ");
+
+        frameTitleBuilder.append("Studio for kdb+ ").append(Lm.version);
+
+        String env = EnvConfig.getEnvironment();
+        if (env != null) frameTitleBuilder.append(" [").append(env).append("]");
+
+        String frameTitle = frameTitleBuilder.toString();
+        if (!frameTitle.equals(frame.getTitle())) {
+            frame.setTitle(frameTitle);
         }
     }
 
@@ -172,15 +186,9 @@ public class StudioPanel extends JPanel implements WindowListener {
 
     public void refreshActionState() {
         RSyntaxTextArea textArea = editor.getTextArea();
-        if (textArea == null || tabbedPane == null) {
-            setActionsEnabled(false, undoAction, redoAction, stopAction, executeAction,
-                    executeCurrentLineAction, refreshAction);
-            return;
-        }
-
         Server server = editor.getServer();
-        editServerAction.setEnabled(server != null);
-        removeServerAction.setEnabled(server != null);
+        editServerAction.setEnabled(server != Server.NO_SERVER);
+        removeServerAction.setEnabled(server != Server.NO_SERVER);
 
         undoAction.setEnabled(textArea.canUndo());
         redoAction.setEnabled(textArea.canRedo());
@@ -445,8 +453,8 @@ public class StudioPanel extends JPanel implements WindowListener {
 
     public void loadMRUFile(String filename) {
         if (!EditorsPanel.checkAndSaveTab(editor)) return;
+        if (!EditorsPanel.loadFile(editor, filename)) return;
 
-        if (!loadFile(filename)) return;
         addToMruFiles(filename);
         EditorsPanel.refreshEditorTitle(editor);
         rebuildAll();
@@ -464,28 +472,6 @@ public class StudioPanel extends JPanel implements WindowListener {
                 v.add(mru[i]);
         CONFIG.saveMRUFiles((String[]) v.toArray(new String[0]));
         rebuildMenuBar();
-    }
-
-    public boolean loadFile(String filename) {
-        Content content = Content.getEmpty();
-        try {
-            content = FileReaderWriter.read(filename);
-            if (content.hasMixedLineEnding()) {
-                StudioOptionPane.showMessage(frame, "The file " + filename + " has mixed line endings. Mixed line endings are not supported.\n\n" +
-                                "All line endings are set to " + content.getLineEnding() + " style.",
-                        "Mixed Line Ending");
-            }
-            return true;
-        } catch (IOException e) {
-            log.error("Failed to load file {}", filename, e);
-            StudioOptionPane.showError(frame, "Failed to load file "+filename + ".\n" + e.getMessage(),
-                    "Error in file load");
-        } finally {
-            //@TODO check if this is correct.
-            editor.setFilename(filename);
-            editor.init(content);
-        }
-        return false;
     }
 
     private static void saveAll() {
@@ -526,9 +512,6 @@ public class StudioPanel extends JPanel implements WindowListener {
     }
 
     public void setServer(Server server) {
-        if (server == null) return;
-        editor.setServer(server);
-
         if (!loading) {
             CONFIG.addServerToHistory(server);
             serverHistory.add(server);
@@ -563,7 +546,7 @@ public class StudioPanel extends JPanel implements WindowListener {
 
         newWindowAction = UserAction.create(I18n.getString("NewWindow"), Util.BLANK_ICON, "Open a new window",
                 KeyEvent.VK_N, KeyStroke.getKeyStroke(KeyEvent.VK_N, menuShortcutKeyMask | InputEvent.SHIFT_MASK),
-                e -> new StudioPanel(null).addTab(editor.getServer(), null) );
+                e -> new StudioPanel(editor.getServer(), null) );
 
         newTabAction = UserAction.create("New Tab", Util.BLANK_ICON, "Open a new tab", KeyEvent.VK_T,
                 KeyStroke.getKeyStroke(KeyEvent.VK_N, menuShortcutKeyMask),
@@ -1074,9 +1057,9 @@ public class StudioPanel extends JPanel implements WindowListener {
                 String filename = editor.getFilename();
 
                 if (filename != null)
-                    t = filename.replace('\\','/');
+                    t = filename.replace('\\', '/');
 
-                if (editor.getServer() != null)
+                if (editor.getServer() != Server.NO_SERVER)
                     t = t + "[" + editor.getServer().getFullName() + "]";
                 else
                     t = t + "[no server]";
@@ -1120,7 +1103,7 @@ public class StudioPanel extends JPanel implements WindowListener {
         String connection = txtServer.getText().trim();
         if (connection.length() == 0) return;
         Server server = editor.getServer();
-        if (server != null && server.getConnectionString().equals(connection)) return;
+        if (server != Server.NO_SERVER && server.getConnectionString().equals(connection)) return;
 
         try {
             setServer(CONFIG.getServerByConnectionString(connection));
@@ -1168,7 +1151,7 @@ public class StudioPanel extends JPanel implements WindowListener {
 
     private void refreshConnection() {
         Server server = editor.getServer();
-        if (server == null) {
+        if (server == Server.NO_SERVER) {
             txtServer.setText("");
             txtServer.setToolTipText("Select connection details");
         } else {
@@ -1180,7 +1163,7 @@ public class StudioPanel extends JPanel implements WindowListener {
     private void toolbarAddServerSelection() {
         Server server = editor.getServer();
         Collection<String> names = CONFIG.getServerNames();
-        String name = server == null ? "" : server.getFullName();
+        String name = server == Server.NO_SERVER ? "" : server.getFullName();
         if (!names.contains(name)) {
             List<String> newNames = new ArrayList<>();
             newNames.add(name);
@@ -1259,7 +1242,7 @@ public class StudioPanel extends JPanel implements WindowListener {
 
                 if (c instanceof JButton) {
                     JButton btn = (JButton)c;
-                    btn.setRequestFocusEnabled(false);
+                    btn.setFocusable(false);
                     btn.setMnemonic(KeyEvent.VK_UNDEFINED);
                 }
             }
@@ -1316,12 +1299,7 @@ public class StudioPanel extends JPanel implements WindowListener {
     }
 
     public EditorTab addTab(Server server, String filename) {
-        if (editor == null) {
-            // This is the first tab which is added
-            return rootEditorsPanel.addTab(server, filename);
-        } else {
-            return editor.getEditorsPanel().addTab(server, filename);
-        }
+        return editor.getEditorsPanel().addTab(server, filename);
     }
 
     public void updateEditor(EditorTab newEditor) {
@@ -1355,29 +1333,32 @@ public class StudioPanel extends JPanel implements WindowListener {
         ((TabPanel)targetPane.getComponentAt(event.getTargetIndex())).setPanel(targetPanel);
     }
 
-    public void setRootEditorsPanel(EditorsPanel editorsPanel) {
-        topPanel.remove(rootEditorsPanel);
-        rootEditorsPanel = editorsPanel;
-        topPanel.add(editorsPanel, BorderLayout.CENTER);
+    public StudioPanel(Server server, String filename) {
+        this(new Workspace.Window(server, filename));
     }
 
     public StudioPanel(Workspace.Window workspaceWindow) {
         allPanels.add(this);
         serverHistory = new HistoricalList<>(CONFIG.getServerHistoryDepth(),
                 CONFIG.getServerHistory());
-
         initActions();
 
-        mainStatusBar = new MainStatusBar();
-        topPanel = new JPanel(new BorderLayout());
-        editorSearchPanel = new SearchPanel( () -> editor.getPane() );
-        topPanel.add(editorSearchPanel, BorderLayout.NORTH);
-
-        topPanel.setMinimumSize(new Dimension(0,0));
-
         toolbar = initToolbar();
+        editorSearchPanel = new SearchPanel( () -> editor.getPane() );
+        mainStatusBar = new MainStatusBar();
         tabbedPane = initResultPane();
         resultSearchPanel = initResultSearchPanel();
+
+        // We need to have some editor initizlize to prevent NPE
+        editor = new EditorTab(this);
+
+        topPanel = new JPanel(new BorderLayout());
+
+        rootEditorsPanel = new EditorsPanel(this, workspaceWindow);
+        editor = rootEditorsPanel.getSelectedEditors().get(0);
+
+        topPanel.add(editorSearchPanel, BorderLayout.NORTH);
+        topPanel.setMinimumSize(new Dimension(0,0));
 
         JPanel bottomPanel = new JPanel(new BorderLayout());
         bottomPanel.add(tabbedPane, BorderLayout.CENTER);
@@ -1385,7 +1366,6 @@ public class StudioPanel extends JPanel implements WindowListener {
         bottomPanel.setMinimumSize(new Dimension(0,0));
         splitpane = initSplitPane(topPanel, bottomPanel);
 
-        rootEditorsPanel = new EditorsPanel(this, workspaceWindow);
         topPanel.add(rootEditorsPanel, BorderLayout.CENTER);
 
         frame = initFrame(toolbar, splitpane, mainStatusBar);
@@ -1529,7 +1509,7 @@ public class StudioPanel extends JPanel implements WindowListener {
         }
 
         if (allPanels.size() == 0) {
-            new StudioPanel(null).addTab(null, null);
+            new StudioPanel(Server.NO_SERVER, null);
         }
 
         loading = false;
@@ -1656,8 +1636,8 @@ public class StudioPanel extends JPanel implements WindowListener {
     }
 
     void executeK4Query(K.KBase query, String queryText) {
-        if (editor.getServer() == null) {
-            log.info("Server is null. Can't execute the query");
+        if (editor.getServer() == Server.NO_SERVER) {
+            log.info("Server is not set. Can't execute the query");
             return;
         }
         editor.getTextArea().setCursor(waitCursor);

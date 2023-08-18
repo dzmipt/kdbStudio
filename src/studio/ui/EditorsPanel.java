@@ -8,6 +8,7 @@ import studio.kdb.Server;
 import studio.kdb.Workspace;
 import studio.ui.dndtabbedpane.DraggableTabbedPane;
 import studio.utils.Content;
+import studio.utils.FileReaderWriter;
 
 import javax.swing.*;
 import javax.swing.event.DocumentEvent;
@@ -18,7 +19,10 @@ import java.awt.*;
 import java.awt.event.FocusAdapter;
 import java.awt.event.FocusEvent;
 import java.io.File;
+import java.io.IOException;
+import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 public class EditorsPanel extends JPanel {
@@ -40,18 +44,18 @@ public class EditorsPanel extends JPanel {
             return;
         }
 
-
         tabbedEditors = new DraggableTabbedPane("Editor");
+        tabbedEditors.setFocusable(false);
         removeFocusChangeKeysForWindows(tabbedEditors);
         ClosableTabbedPane.makeCloseable(tabbedEditors, (index, force) -> {
             return closeTab(getEditorTab(index));
         });
-        tabbedEditors.addChangeListener(e -> {
+/*        tabbedEditors.addChangeListener(e -> {
             int index = tabbedEditors.getSelectedIndex();
             if (index!=-1) {
                 panel.updateEditor(getEditorTab(index));
             }
-        } );
+        } );*/
         tabbedEditors.addDragCompleteListener(success -> closeIfEmpty() );
 
         setLayout(new BorderLayout());
@@ -61,14 +65,20 @@ public class EditorsPanel extends JPanel {
             loadWorkspaceTabs(workspaceWindow);
             if (tabbedEditors.getTabCount() == 0) {
                 log.warn("Workspace is corrupted. No tab found in a split. Creating empty tab");
-                addTab(null, null);
+                addTab(Server.NO_SERVER, null);
             }
         }
     }
 
-    public EditorsPanel(EditorsPanel left, EditorsPanel right, boolean verticalSplit) {
-        this.panel = left.panel;
-        init(left, right, verticalSplit);
+    public List<EditorTab> getSelectedEditors() {
+        List<EditorTab> result = new ArrayList<>();
+        if (tabbedEditors!=null) {
+            result.add(getEditorTab(tabbedEditors.getSelectedIndex()));
+        } else {
+            result.addAll(left.getSelectedEditors());
+            result.addAll(right.getSelectedEditors());
+        }
+        return result;
     }
 
     private void init(EditorsPanel left, EditorsPanel right, boolean verticalSplit) {
@@ -87,8 +97,7 @@ public class EditorsPanel extends JPanel {
 
     public EditorTab addTab(Server server, String filename) {
         EditorTab editor = new EditorTab(panel);
-        JComponent editorPane = editor.getPane();
-        editorPane.addFocusListener(new FocusAdapter() {
+        editor.getTextArea().addFocusListener(new FocusAdapter() {
             @Override
             public void focusGained(FocusEvent e) {
                 panel.updateEditor(editor);
@@ -97,55 +106,78 @@ public class EditorsPanel extends JPanel {
         JTextComponent textArea = editor.getTextArea();
         removeFocusChangeKeysForWindows(textArea);
 
+        JComponent editorPane = editor.getPane();
         editorPane.putClientProperty(EditorTab.class, editor);
-        tabbedEditors.add(editorPane);
-        tabbedEditors.setSelectedIndex(tabbedEditors.getTabCount()-1);
-        panel.setServer(server);
+
+        editor.setServer(server);
 
         if (filename != null) {
-            panel.loadFile(filename);
+            loadFile(editor, filename);
         } else {
             editor.setFilename(null);
             editor.init(Content.getEmpty());
         }
+
+        addTab(editor);
         textArea.getDocument().addDocumentListener(new MarkingDocumentListener(editor));
         textArea.requestFocus();
+
+        panel.setServer(server);
         panel.refreshActionState();
         refreshEditorTitle(editor);
         return editor;
     }
 
+    private void addTab(EditorTab editorTab) {
+        tabbedEditors.add(editorTab.getTabTitle(), editorTab.getPane());
+        tabbedEditors.setSelectedIndex(tabbedEditors.getTabCount()-1);
+    }
+
     public void split(boolean vertically) {
         if (tabbedEditors == null) return;
 
-        int index = tabbedEditors.getSelectedIndex();
-        if (index == -1) return;
-        EditorTab editorTab = getEditorTab(index);
+        int selectedIndex = tabbedEditors.getSelectedIndex();
+        if (selectedIndex == -1) return;
+        EditorTab editorTab = getEditorTab(selectedIndex);
         EditorsPanel oldParent = parent;
+
+        remove(tabbedEditors);
 
         EditorsPanel aRight = new EditorsPanel(panel, null);
         //@TODO move modified content as well
         aRight.addTab(editorTab.getServer(), editorTab.getFilename());
 
-        EditorsPanel aRoot = new EditorsPanel(this, aRight, vertically);
-        if (oldParent == null) {
-            panel.setRootEditorsPanel(aRoot);
-        } else {
-            oldParent.setLeftOrRight(this, aRoot);
+        EditorsPanel aLeft = new EditorsPanel(panel, null);
+
+        int count = tabbedEditors.getTabCount();
+        for (int index=0; index<count; index++) {
+            aLeft.addTab(getEditorTab(index));
         }
+        aLeft.tabbedEditors.setSelectedIndex(selectedIndex);
+
+        init(aLeft, aRight, vertically);
     }
 
-    private void setLeftOrRight(EditorsPanel oldChild, EditorsPanel newChild) {
-        newChild.parent = this;
-        if (left == oldChild) {
-            left = newChild;
-            splitPane.setLeftComponent(left);
-        } else if (right == oldChild) {
-            right = newChild;
-            splitPane.setRightComponent(right);
-        } else {
-            throw new RuntimeException("Unexpected...");
+    public static boolean loadFile(EditorTab editor, String filename) {
+        Content content = Content.getEmpty();
+        try {
+            content = FileReaderWriter.read(filename);
+            if (content.hasMixedLineEnding()) {
+                StudioOptionPane.showMessage(editor.getPanel(), "The file " + filename + " has mixed line endings. Mixed line endings are not supported.\n\n" +
+                                "All line endings are set to " + content.getLineEnding() + " style.",
+                        "Mixed Line Ending");
+            }
+            return true;
+        } catch (IOException e) {
+            log.error("Failed to load file {}", filename, e);
+            StudioOptionPane.showError(editor.getPanel(), "Failed to load file "+filename + ".\n" + e.getMessage(),
+                    "Error in file load");
+        } finally {
+            //@TODO check if this is correct.
+            editor.setFilename(filename);
+            editor.init(content);
         }
+        return false;
     }
 
     public static boolean saveAsFile(EditorTab editor) {
@@ -240,6 +272,7 @@ public class EditorsPanel extends JPanel {
 
     public static void refreshEditorTitle(EditorTab editorTab) {
         EditorsPanel panel = editorTab.getEditorsPanel();
+        if (panel == null) return; //while new tab is added
         JTabbedPane tabbedPane = panel.tabbedEditors;
         int count = tabbedPane.getTabCount();
         //@TODO: need to rework
@@ -285,7 +318,7 @@ public class EditorsPanel extends JPanel {
         if (window == null) {
             log.warn("Workspace is corrupted. There is no one of the split. Creating empty one");
             EditorsPanel editorsPanel = new EditorsPanel(panel, null);
-            editorsPanel.addTab(null, null);
+            editorsPanel.addTab(Server.NO_SERVER, null);
             return editorsPanel;
         }
 
@@ -328,7 +361,7 @@ public class EditorsPanel extends JPanel {
         if (connectionString != null) {
             server = config.getServerByConnectionString(connectionString);
         }
-        if (server == null) server = new Server();
+        if (server == null) server = Server.NO_SERVER;
 
         String auth = tab.getServerAuth();
         if (auth == null) return server;
