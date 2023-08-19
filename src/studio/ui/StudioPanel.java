@@ -76,7 +76,7 @@ public class StudioPanel extends JPanel implements WindowListener {
     }
 
 
-    private static boolean loading = false;
+    private boolean loading = true;
 
     private JComboBox<String> comboServer;
     private JTextField txtServer;
@@ -546,7 +546,10 @@ public class StudioPanel extends JPanel implements WindowListener {
 
         newWindowAction = UserAction.create(I18n.getString("NewWindow"), Util.BLANK_ICON, "Open a new window",
                 KeyEvent.VK_N, KeyStroke.getKeyStroke(KeyEvent.VK_N, menuShortcutKeyMask | InputEvent.SHIFT_MASK),
-                e -> new StudioPanel(editor.getServer(), null) );
+                e -> {
+                    StudioPanel panel = new StudioPanel(editor.getServer(), null);
+                    panel.rebuildMenuAndTooblar();
+                } );
 
         newTabAction = UserAction.create("New Tab", Util.BLANK_ICON, "Open a new tab", KeyEvent.VK_T,
                 KeyStroke.getKeyStroke(KeyEvent.VK_N, menuShortcutKeyMask),
@@ -1348,6 +1351,8 @@ public class StudioPanel extends JPanel implements WindowListener {
     }
 
     public StudioPanel(Workspace.Window workspaceWindow) {
+        loading = true;
+
         allPanels.add(this);
         serverHistory = new HistoricalList<>(CONFIG.getServerHistoryDepth(),
                 CONFIG.getServerHistory());
@@ -1359,14 +1364,14 @@ public class StudioPanel extends JPanel implements WindowListener {
         tabbedPane = initResultPane();
         resultSearchPanel = initResultSearchPanel();
 
-        // We need to have some editor initizlize to prevent NPE
+        // We need to have some editor initialize to prevent NPE
         editor = new EditorTab(this);
-
         topPanel = new JPanel(new BorderLayout());
+        frame = new JFrame();
 
         rootEditorsPanel = new EditorsPanel(this, workspaceWindow);
 
-        List<EditorTab> editors = rootEditorsPanel.getSelectedEditors();
+        List<EditorTab> editors = rootEditorsPanel.getAllEditors(true);
         boolean first = true;
         for (EditorTab editor: editors) {
             if (first) {
@@ -1388,9 +1393,10 @@ public class StudioPanel extends JPanel implements WindowListener {
 
         topPanel.add(rootEditorsPanel, BorderLayout.CENTER);
 
-        frame = initFrame(toolbar, splitpane, mainStatusBar);
-
+        initFrame(frame, toolbar, splitpane, mainStatusBar);
         splitpane.setDividerLocation(0.5);
+
+        loading = false;
     }
 
     private Toolbar initToolbar() {
@@ -1485,8 +1491,7 @@ public class StudioPanel extends JPanel implements WindowListener {
         return splitpane;
     }
 
-    private JFrame initFrame(JComponent toolbar, JComponent central, JComponent statusBar) {
-        JFrame frame = new JFrame();
+    private void initFrame(JFrame frame, JComponent toolbar, JComponent central, JComponent statusBar) {
         JPanel contentPane = new JPanel(new BorderLayout());
         contentPane.add(toolbar, BorderLayout.NORTH);
         contentPane.add(central, BorderLayout.CENTER);
@@ -1506,7 +1511,6 @@ public class StudioPanel extends JPanel implements WindowListener {
         frame.setIconImage(Util.LOGO_ICON.getImage());
 
         frame.setVisible(true);
-        return frame;
     }
 
     public SearchPanel getEditorSearchPanel() {
@@ -1518,7 +1522,6 @@ public class StudioPanel extends JPanel implements WindowListener {
     }
 
     public static void loadWorkspace(Workspace workspace) {
-        loading = true;
         for (Workspace.Window window: workspace.getWindows()) {
             new StudioPanel(window);
         }
@@ -1532,7 +1535,6 @@ public class StudioPanel extends JPanel implements WindowListener {
             new StudioPanel(Server.NO_SERVER, null);
         }
 
-        loading = false;
         for (StudioPanel panel: allPanels) {
             panel.refreshFrameTitle();
         }

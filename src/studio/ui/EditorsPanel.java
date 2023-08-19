@@ -44,6 +44,18 @@ public class EditorsPanel extends JPanel {
             return;
         }
 
+        initTabbedEditors();
+
+        if (workspaceWindow != null) {
+            loadWorkspaceTabs(workspaceWindow);
+            if (tabbedEditors.getTabCount() == 0) {
+                log.warn("Workspace is corrupted. No tab found in a split. Creating empty tab");
+                addTab(Server.NO_SERVER, null);
+            }
+        }
+    }
+
+    private void initTabbedEditors() {
         tabbedEditors = new DraggableTabbedPane("Editor");
         removeFocusChangeKeysForWindows(tabbedEditors);
         ClosableTabbedPane.makeCloseable(tabbedEditors, (index, force) -> closeTab(getEditorTab(index)) );
@@ -58,30 +70,35 @@ public class EditorsPanel extends JPanel {
 
         setLayout(new BorderLayout());
         add(tabbedEditors, BorderLayout.CENTER);
+    }
 
-        if (workspaceWindow != null) {
-            loadWorkspaceTabs(workspaceWindow);
-            if (tabbedEditors.getTabCount() == 0) {
-                log.warn("Workspace is corrupted. No tab found in a split. Creating empty tab");
-                addTab(Server.NO_SERVER, null);
-            }
-        }
+    private boolean isVerticalSplit() {
+        return splitPane.getOrientation() == JSplitPane.VERTICAL_SPLIT;
     }
 
     private void activateSelectedEditor() {
+        if (tabbedEditors == null) return; // during split
+
         int index = tabbedEditors.getSelectedIndex();
         if (index!=-1) {
             getEditorTab(index).getTextArea().requestFocus();
         }
     }
 
-    public List<EditorTab> getSelectedEditors() {
+    public List<EditorTab> getAllEditors(boolean selected) {
         List<EditorTab> result = new ArrayList<>();
         if (tabbedEditors!=null) {
-            result.add(getEditorTab(tabbedEditors.getSelectedIndex()));
+            if (selected) {
+                result.add(getEditorTab(tabbedEditors.getSelectedIndex()));
+            } else {
+                int count = tabbedEditors.getTabCount();
+                for (int index=0; index<count; index++) {
+                    result.add(getEditorTab(index));
+                }
+            }
         } else {
-            result.addAll(left.getSelectedEditors());
-            result.addAll(right.getSelectedEditors());
+            result.addAll(left.getAllEditors(selected));
+            result.addAll(right.getAllEditors(selected));
         }
         return result;
     }
@@ -143,24 +160,62 @@ public class EditorsPanel extends JPanel {
 
         int selectedIndex = tabbedEditors.getSelectedIndex();
         if (selectedIndex == -1) return;
-        EditorTab editorTab = getEditorTab(selectedIndex);
-        EditorsPanel oldParent = parent;
+
+        List<EditorTab> editors = getAllEditors(false);
+
+//        EditorTab editorTab = getEditorTab(selectedIndex);
 
         remove(tabbedEditors);
+        tabbedEditors = null;
 
         EditorsPanel aRight = new EditorsPanel(panel, null);
         //@TODO move modified content as well
-        aRight.addTab(editorTab.getServer(), editorTab.getFilename());
+        aRight.addTab(editors.get(selectedIndex).getServer(), editors.get(selectedIndex).getFilename());
 
         EditorsPanel aLeft = new EditorsPanel(panel, null);
-
-        int count = tabbedEditors.getTabCount();
-        for (int index=0; index<count; index++) {
-            aLeft.addTab(getEditorTab(index));
+        for(EditorTab editor: editors) {
+            aLeft.addTab(editor);
         }
         aLeft.tabbedEditors.setSelectedIndex(selectedIndex);
 
         init(aLeft, aRight, vertically);
+    }
+
+    public void unite() {
+        if (left == null || right == null) return;
+
+        boolean leftHasTabs = left.tabbedEditors != null;
+        boolean rightHasTabs = right.tabbedEditors != null;
+
+        // can't unite if both children are split
+        if (!leftHasTabs && !rightHasTabs) return;
+
+        if (leftHasTabs && rightHasTabs) {
+            // both children have tabs
+            List<EditorTab> editors = left.getAllEditors(false);
+            editors.addAll(right.getAllEditors(false));
+
+            left = null;
+            right = null;
+            remove(splitPane);
+            splitPane = null;
+
+            initTabbedEditors();
+            for (EditorTab editor : editors) {
+                addTab(editor);
+            }
+
+        } else {
+            // one child is split and another has tabs
+            EditorsPanel splitChild = leftHasTabs ? right : left;
+            EditorsPanel tabChild = leftHasTabs ? left : right;
+
+            // can't do if there are >0 tabs
+            if (tabChild.tabbedEditors.getTabCount() > 0) return;
+
+            remove(splitPane);
+            init(splitChild.left, splitChild.right, splitChild.isVerticalSplit());
+        }
     }
 
     public void setDimEditors(boolean dimEditors) {
@@ -248,7 +303,12 @@ public class EditorsPanel extends JPanel {
 
     private void closeIfEmpty() {
         if (tabbedEditors.getTabCount()>0) return;
-        panel.closeFrame();
+
+        if (parent == null) {
+            panel.closeFrame();
+        } else {
+            parent.unite();
+        }
     }
 
     public void selectNextTab(boolean forward) {
@@ -298,7 +358,7 @@ public class EditorsPanel extends JPanel {
 
     public void getWorkspace(Workspace.Window window) {
         if (tabbedEditors == null) {
-            window.setVerticalSplit(splitPane.getOrientation() == JSplitPane.VERTICAL_SPLIT);
+            window.setVerticalSplit(isVerticalSplit());
             left.getWorkspace(window.addLeft());
             right.getWorkspace(window.addRight());
         } else {
