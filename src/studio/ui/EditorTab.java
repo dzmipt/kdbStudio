@@ -283,4 +283,8 @@ public class EditorTab implements FileWatcher.Listener {
     public EditorsPanel getEditorsPanel() {
         return (EditorsPanel) getPane().getParent().getParent();
     }
+
+    public boolean isAddedToPanel() {
+        return getPane().getParent() != null;
+    }
 }

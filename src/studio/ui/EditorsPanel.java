@@ -45,17 +45,15 @@ public class EditorsPanel extends JPanel {
         }
 
         tabbedEditors = new DraggableTabbedPane("Editor");
-        tabbedEditors.setFocusable(false);
         removeFocusChangeKeysForWindows(tabbedEditors);
-        ClosableTabbedPane.makeCloseable(tabbedEditors, (index, force) -> {
-            return closeTab(getEditorTab(index));
-        });
-/*        tabbedEditors.addChangeListener(e -> {
-            int index = tabbedEditors.getSelectedIndex();
-            if (index!=-1) {
-                panel.updateEditor(getEditorTab(index));
+        ClosableTabbedPane.makeCloseable(tabbedEditors, (index, force) -> closeTab(getEditorTab(index)) );
+        tabbedEditors.addChangeListener(e -> activateSelectedEditor());
+        tabbedEditors.addFocusListener(new FocusAdapter() {
+            @Override
+            public void focusGained(FocusEvent e) {
+                activateSelectedEditor();
             }
-        } );*/
+        });
         tabbedEditors.addDragCompleteListener(success -> closeIfEmpty() );
 
         setLayout(new BorderLayout());
@@ -67,6 +65,13 @@ public class EditorsPanel extends JPanel {
                 log.warn("Workspace is corrupted. No tab found in a split. Creating empty tab");
                 addTab(Server.NO_SERVER, null);
             }
+        }
+    }
+
+    private void activateSelectedEditor() {
+        int index = tabbedEditors.getSelectedIndex();
+        if (index!=-1) {
+            getEditorTab(index).getTextArea().requestFocus();
         }
     }
 
@@ -156,6 +161,12 @@ public class EditorsPanel extends JPanel {
         aLeft.tabbedEditors.setSelectedIndex(selectedIndex);
 
         init(aLeft, aRight, vertically);
+    }
+
+    public void setDimEditors(boolean dimEditors) {
+        if (tabbedEditors == null) return;
+
+        tabbedEditors.setDimSelectedTab(dimEditors);
     }
 
     public static boolean loadFile(EditorTab editor, String filename) {

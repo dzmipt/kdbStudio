@@ -1303,6 +1303,16 @@ public class StudioPanel extends JPanel implements WindowListener {
     }
 
     public void updateEditor(EditorTab newEditor) {
+        if (editor == newEditor) return;
+
+        log.info("Update editor with server {} and filename {}",newEditor.getServer(), newEditor.getFilename());
+
+        if (editor.isAddedToPanel()) { // during initialization editor is not in the panel
+            editor.getEditorsPanel().setDimEditors(true);
+        }
+
+        newEditor.getEditorsPanel().setDimEditors(false);
+
         editor = newEditor;
         editor.setPanel(this);
         mainStatusBar.updateStatuses(editor.getTextArea());
@@ -1355,7 +1365,17 @@ public class StudioPanel extends JPanel implements WindowListener {
         topPanel = new JPanel(new BorderLayout());
 
         rootEditorsPanel = new EditorsPanel(this, workspaceWindow);
-        editor = rootEditorsPanel.getSelectedEditors().get(0);
+
+        List<EditorTab> editors = rootEditorsPanel.getSelectedEditors();
+        boolean first = true;
+        for (EditorTab editor: editors) {
+            if (first) {
+                updateEditor(editor);
+                first = false;
+            } else {
+                editor.getEditorsPanel().setDimEditors(true);
+            }
+        }
 
         topPanel.add(editorSearchPanel, BorderLayout.NORTH);
         topPanel.setMinimumSize(new Dimension(0,0));
