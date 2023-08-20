@@ -57,6 +57,7 @@ public class EditorsPanel extends JPanel {
 
     private void initTabbedEditors() {
         tabbedEditors = new DraggableTabbedPane("Editor");
+        tabbedEditors.setDimSelectedTab(true);
         removeFocusChangeKeysForWindows(tabbedEditors);
         ClosableTabbedPane.makeCloseable(tabbedEditors, (index, force) -> closeTab(getEditorTab(index)) );
         tabbedEditors.addChangeListener(e -> activateSelectedEditor());
@@ -122,6 +123,7 @@ public class EditorsPanel extends JPanel {
         editor.getTextArea().addFocusListener(new FocusAdapter() {
             @Override
             public void focusGained(FocusEvent e) {
+                log.info("FocusGained: {}", editor.getTabTitle());
                 panel.updateEditor(editor);
             }
         });
@@ -153,6 +155,10 @@ public class EditorsPanel extends JPanel {
     private void addTab(EditorTab editorTab) {
         tabbedEditors.add(editorTab.getTabTitle(), editorTab.getPane());
         tabbedEditors.setSelectedIndex(tabbedEditors.getTabCount()-1);
+
+        if (panel.getActiveEditor() == editorTab && panel == StudioPanel.getActivePanel()) {
+            tabbedEditors.setDimSelectedTab(false);
+        }
     }
 
     public void split(boolean vertically) {
@@ -162,8 +168,6 @@ public class EditorsPanel extends JPanel {
         if (selectedIndex == -1) return;
 
         List<EditorTab> editors = getAllEditors(false);
-
-//        EditorTab editorTab = getEditorTab(selectedIndex);
 
         remove(tabbedEditors);
         tabbedEditors = null;

@@ -360,7 +360,7 @@ public class SettingsDialog extends EscapeDialog {
         String lfClass = getLookAndFeelClassName();
         if (!lfClass.equals(UIManager.getLookAndFeel().getClass().getName())) {
             CONFIG.setLookAndFeel(lfClass);
-            StudioOptionPane.showMessage(StudioPanel.getActivePanel().getFrame(), "Look and Feel was changed. " +
+            StudioOptionPane.showMessage(this, "Look and Feel was changed. " +
                     "New L&F will take effect on the next start up.", "Look and Feel Setting Changed");
         }
     }

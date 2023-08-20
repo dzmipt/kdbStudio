@@ -25,7 +25,6 @@ import studio.utils.HistoricalList;
 import studio.utils.LineEnding;
 import studio.utils.log4j.EnvConfig;
 
-import javax.swing.FocusManager;
 import javax.swing.*;
 import javax.swing.filechooser.FileFilter;
 import javax.swing.filechooser.FileNameExtensionFilter;
@@ -143,6 +142,7 @@ public class StudioPanel extends JPanel implements WindowListener {
     private static Map<String, JFileChooser> fileChooserMap = new HashMap<>();
 
     private static List<StudioPanel> allPanels = new ArrayList<>();
+    private static StudioPanel activePanel = null;
 
     private final List<Server> serverHistory;
 
@@ -512,6 +512,7 @@ public class StudioPanel extends JPanel implements WindowListener {
     }
 
     public void setServer(Server server) {
+        editor.setServer(server);
         if (!loading) {
             CONFIG.addServerToHistory(server);
             serverHistory.add(server);
@@ -752,16 +753,7 @@ public class StudioPanel extends JPanel implements WindowListener {
                 e-> editor.getEditorsPanel().split(true));
     }
 
-    public static StudioPanel getActivePanel() {
-        Window window = FocusManager.getCurrentManager().getActiveWindow();
-        for(StudioPanel panel: allPanels) {
-            if (window == panel.frame) return panel;
-        }
-        return allPanels.get(0);
-    }
-
     public static void settings() {
-        StudioPanel activePanel = getActivePanel();
         SettingsDialog dialog = new SettingsDialog(activePanel.frame);
         dialog.alignAndShow();
         if (dialog.getResult() == CANCELLED) return;
@@ -811,7 +803,6 @@ public class StudioPanel extends JPanel implements WindowListener {
     }
 
     public static void about() {
-        StudioPanel activePanel = getActivePanel();
         HelpDialog help = new HelpDialog(activePanel.frame);
         Util.centerChildOnParent(help,activePanel.frame);
         // help.setTitle("About Studio for kdb+");
@@ -845,7 +836,7 @@ public class StudioPanel extends JPanel implements WindowListener {
             }
         } finally {
             if (allPanels.size() > 0) {
-                getActivePanel().frame.toFront();
+                activePanel.frame.toFront();
             }
             WorkspaceSaver.setEnabled(true);
         }
@@ -1204,53 +1195,51 @@ public class StudioPanel extends JPanel implements WindowListener {
     private void rebuildToolbar() {
         if (loading) return;
 
-        if (toolbar != null) {
-            toolbar.removeAll();
-            toolbarAddServerSelection();
+        toolbar.removeAll();
+        toolbarAddServerSelection();
 
-            toolbar.add(stopAction);
-            toolbar.add(executeAction);
-            toolbar.add(refreshAction);
-            toolbar.addSeparator();
+        toolbar.add(stopAction);
+        toolbar.add(executeAction);
+        toolbar.add(refreshAction);
+        toolbar.addSeparator();
 
-            toolbar.add(openFileAction);
-            toolbar.add(saveFileAction);
-            toolbar.add(saveAsFileAction);
-            toolbar.addSeparator();
-            toolbar.add(openInExcel);
-            toolbar.addSeparator();
-            toolbar.add(exportAction);
-            toolbar.addSeparator();
+        toolbar.add(openFileAction);
+        toolbar.add(saveFileAction);
+        toolbar.add(saveAsFileAction);
+        toolbar.addSeparator();
+        toolbar.add(openInExcel);
+        toolbar.addSeparator();
+        toolbar.add(exportAction);
+        toolbar.addSeparator();
 
-            toolbar.add(chartAction);
-            toolbar.addSeparator();
+        toolbar.add(chartAction);
+        toolbar.addSeparator();
 
-            toolbar.add(undoAction);
-            toolbar.add(redoAction);
-            toolbar.addSeparator();
+        toolbar.add(undoAction);
+        toolbar.add(redoAction);
+        toolbar.addSeparator();
 
-            toolbar.add(cutAction);
-            toolbar.add(copyAction);
-            toolbar.add(pasteAction);
+        toolbar.add(cutAction);
+        toolbar.add(copyAction);
+        toolbar.add(pasteAction);
 
-            toolbar.addSeparator();
-            toolbar.add(findAction);
+        toolbar.addSeparator();
+        toolbar.add(findAction);
 
-            toolbar.add(replaceAction);
-            toolbar.addSeparator();
-            toolbar.add(codeKxComAction);
+        toolbar.add(replaceAction);
+        toolbar.addSeparator();
+        toolbar.add(codeKxComAction);
 
-            for (int j = 0;j < toolbar.getComponentCount();j++) {
-                Component c = toolbar.getComponentAtIndex(j);
+        for (int j = 0;j < toolbar.getComponentCount();j++) {
+            Component c = toolbar.getComponentAtIndex(j);
 
-                if (c instanceof JButton) {
-                    JButton btn = (JButton)c;
-                    btn.setFocusable(false);
-                    btn.setMnemonic(KeyEvent.VK_UNDEFINED);
-                }
+            if (c instanceof JButton) {
+                JButton btn = (JButton)c;
+                btn.setFocusable(false);
+                btn.setMnemonic(KeyEvent.VK_UNDEFINED);
             }
-            refreshActionState();
         }
+        refreshActionState();
     }
 
     private int dividerLastPosition; // updated from property change listener
@@ -1305,6 +1294,14 @@ public class StudioPanel extends JPanel implements WindowListener {
         return editor.getEditorsPanel().addTab(server, filename);
     }
 
+    public EditorTab getActiveEditor() {
+        return editor;
+    }
+
+    public static StudioPanel getActivePanel() {
+        return activePanel;
+    }
+
     public void updateEditor(EditorTab newEditor) {
         if (editor == newEditor) return;
 
@@ -1354,6 +1351,8 @@ public class StudioPanel extends JPanel implements WindowListener {
         loading = true;
 
         allPanels.add(this);
+        if (activePanel == null) activePanel = this;
+
         serverHistory = new HistoricalList<>(CONFIG.getServerHistoryDepth(),
                 CONFIG.getServerHistory());
         initActions();
@@ -1492,6 +1491,22 @@ public class StudioPanel extends JPanel implements WindowListener {
     }
 
     private void initFrame(JFrame frame, JComponent toolbar, JComponent central, JComponent statusBar) {
+        frame.addWindowFocusListener(new WindowFocusListener() {
+            @Override
+            public void windowGainedFocus(WindowEvent e) {
+                StudioPanel newPanel = StudioPanel.this;
+                if (StudioPanel.activePanel == newPanel) return;
+
+                StudioPanel.activePanel.editor.getEditorsPanel().setDimEditors(true);
+                newPanel.editor.getEditorsPanel().setDimEditors(false);
+                StudioPanel.activePanel = newPanel;
+            }
+
+            @Override
+            public void windowLostFocus(WindowEvent e) {
+            }
+        });
+
         JPanel contentPane = new JPanel(new BorderLayout());
         contentPane.add(toolbar, BorderLayout.NORTH);
         contentPane.add(central, BorderLayout.CENTER);
