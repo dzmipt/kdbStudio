@@ -798,6 +798,10 @@ public class StudioPanel extends JPanel implements WindowListener {
         }
     }
 
+    public EditorsPanel getRootEditorsPanel() {
+        return rootEditorsPanel;
+    }
+
     public static StudioPanel[] getPanels() {
         return allPanels.toArray(new StudioPanel[0]);
     }
@@ -1032,7 +1036,11 @@ public class StudioPanel extends JPanel implements WindowListener {
         menu = new JMenu(I18n.getString("Window"));
         menu.setMnemonic(KeyEvent.VK_W);
 
-        menu.add(new JMenuItem(splitEditorRight));
+        // Added temporary for integration test
+        // TODO: either this need to be removed; or implemented in the same way for others
+        JMenuItem menuItem = new JMenuItem(splitEditorRight);
+        menuItem.setName("splitRight");
+        menu.add(menuItem);
         menu.add(new JMenuItem(splitEditorDown));
         menu.addSeparator();
         menu.add(new JMenuItem(minMaxDividerAction));
