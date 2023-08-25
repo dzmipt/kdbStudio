@@ -1,7 +1,8 @@
 package studio.ui;
 
-import org.fife.ui.rsyntaxtextarea.RSyntaxTextArea;
+import org.fife.ui.rtextarea.RTextScrollPane;
 import studio.ui.rstextarea.RSTextAreaFactory;
+import studio.ui.rstextarea.StudioRSyntaxTextArea;
 
 import javax.swing.*;
 import java.awt.*;
@@ -16,11 +17,14 @@ public class TestFrame extends JFrame {
         JTextField textField = new JTextField(50);
         textField.setName("textField");
 
-        RSyntaxTextArea textArea = RSTextAreaFactory.newTextArea(true);
+        StudioRSyntaxTextArea textArea = RSTextAreaFactory.newTextArea(true);
         textArea.setName("textArea");
 
+        RTextScrollPane scrollPane = new RTextScrollPane(textArea);
+        textArea.setGutter(scrollPane.getGutter());
+
         panel.add(textField, BorderLayout.NORTH);
-        panel.add(textArea, BorderLayout.CENTER);
+        panel.add(scrollPane, BorderLayout.CENTER);
 
         setContentPane(panel);
         setSize(600,400);
