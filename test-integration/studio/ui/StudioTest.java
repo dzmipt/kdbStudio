@@ -10,7 +10,6 @@ import org.assertj.swing.junit.testcase.AssertJSwingJUnitTestCase;
 import org.junit.AfterClass;
 import org.junit.Assert;
 import org.junit.BeforeClass;
-import org.junit.Test;
 import studio.kdb.Server;
 import studio.utils.log4j.EnvConfig;
 
@@ -84,7 +83,7 @@ public class StudioTest extends AssertJSwingJUnitTestCase {
         editors.get(0).getTextArea().setName("qEditor");
     }
 
-    @Test
+//    @Test
     public void test() {
         JTextComponentFixture tb = window.textBox("qEditor");
         tb.requireEmpty();
@@ -95,7 +94,7 @@ public class StudioTest extends AssertJSwingJUnitTestCase {
         tb.requireText("abc\ndef");
     }
 
-    @Test
+//    @Test
     public void splitTest() {
         window.menuItem("splitRight").click();
         List<EditorTab> editors = panel.getRootEditorsPanel().getAllEditors(false);

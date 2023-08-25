@@ -27,8 +27,8 @@ jobs:
     - name: Build with Gradle
       run: ./gradlew build
 
-#    - name: Integration tests
-#      run: ./intTests-Xvfb.sh
+    - name: Integration tests
+      run: ./intTests-Xvfb.sh
 
     - name: Report
       uses: dorny/test-reporter@v1
