@@ -23,7 +23,7 @@ FAIL=0
 rm -f build/test-results/test/*.xml
 if ! ./gradlew integrationTest ; then
     FAIL=1
-    cat build/test-results/test/*.xml || true
+    cat build/test-results/integrationTest/*.xml || true
 fi
 
 if [[ $USE_XVFB = 1 ]]; then
