@@ -41,8 +41,6 @@ dependencies {
     implementation group: 'net.java.dev.jna', name: 'jna', version: '5.10.0'
     implementation group: 'org.drjekyll', name: 'fontchooser', version: '2.5.2'
 
-    runtimeOnly files ('lib/images.jar')
-
     testImplementation 'org.junit.jupiter:junit-jupiter-api:5.3.1'
     testImplementation 'org.junit.jupiter:junit-jupiter-params:5.3.1'
     testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.3.1'
@@ -54,10 +52,11 @@ sourceSets {
             srcDirs 'src'
         }
         resources {
-            srcDirs 'src','images'
+            srcDirs 'src','images','imagesOrig'
             include 'log4j2.xml'
             include 'studio*.properties'
             include '*.png'
+            include '*.gif'
             include 'notes.html'
             include 'build.txt'
         }
