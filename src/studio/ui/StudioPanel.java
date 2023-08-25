@@ -1396,6 +1396,7 @@ public class StudioPanel extends JPanel implements WindowListener {
         splitpane.setDividerLocation(0.5);
 
         loading = false;
+        rebuildMenuAndTooblar();
     }
 
     private Toolbar initToolbar() {
