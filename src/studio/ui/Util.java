@@ -13,7 +13,6 @@ public class Util {
     private final static String IMAGE_BASE2 = "/de/skelton/utils/";
 
     public final static ImageIcon LOGO_ICON = getImage(IMAGE_BASE + "32x32/dot-chart.png");
-    public final static ImageIcon BLANK_ICON = getImage(IMAGE_BASE2 + "blank.png");
     public final static ImageIcon QUESTION_ICON = getImage(IMAGE_BASE + "32x32/question.png");
     public final static ImageIcon INFORMATION_ICON = getImage(IMAGE_BASE + "32x32/information.png");
     public final static ImageIcon WARNING_ICON = getImage(IMAGE_BASE + "32x32/warning.png");
@@ -48,12 +47,12 @@ public class Util {
     public final static ImageIcon TABLE_ICON = getImage(IMAGE_BASE2 + "table.png");
     public final static ImageIcon CONSOLE_ICON = getImage(IMAGE_BASE2 + "console.png");
     public final static ImageIcon DATA_COPY_ICON = getImage(IMAGE_BASE2 + "data_copy.png");
-    public final static ImageIcon CHART_BIG_ICON = Util.getImage(IMAGE_BASE2 + "chart_24.png");
+    public final static ImageIcon CHART_BIG_ICON = getImage(IMAGE_BASE2 + "chart_24.png");
     public final static ImageIcon COLUMN_ICON = getImage(IMAGE_BASE2 +"column.png");
     public final static ImageIcon SORT_ASC_ICON = getImage(IMAGE_BASE + "sort_ascending.png");
     public final static ImageIcon SORT_AZ_ASC_ICON = getImage(IMAGE_BASE + "sort_az_ascending.png");
     public final static ImageIcon SORT_DESC_ICON = getImage(IMAGE_BASE + "sort_descending.png");
-    public final static ImageIcon SORT_AZ_DESC_ICON = Util.getImage(IMAGE_BASE + "sort_az_descending.png");
+    public final static ImageIcon SORT_AZ_DESC_ICON = getImage(IMAGE_BASE + "sort_az_descending.png");
 
     public final static ImageIcon COMMA_ICON = getImage("/comma.png");
     public final static ImageIcon COMMA_CROSSED_ICON = getImage("/comma_crossed.png");

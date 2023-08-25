@@ -526,33 +526,33 @@ public class StudioPanel extends JPanel implements WindowListener {
         cleanAction = UserAction.create("Clean", Util.NEW_DOCUMENT_ICON, "Clean editor script", KeyEvent.VK_N,
                 null, e -> newFile());
 
-        arrangeAllAction = UserAction.create(I18n.getString("ArrangeAll"), Util.BLANK_ICON, "Arrange all windows on screen",
+        arrangeAllAction = UserAction.create(I18n.getString("ArrangeAll"),  "Arrange all windows on screen",
                 KeyEvent.VK_A, null, e -> arrangeAll());
 
-        minMaxDividerAction = UserAction.create(I18n.getString("MaximizeEditorPane"), Util.BLANK_ICON, "Maximize editor pane",
+        minMaxDividerAction = UserAction.create(I18n.getString("MaximizeEditorPane"), "Maximize editor pane",
                 KeyEvent.VK_M, KeyStroke.getKeyStroke(KeyEvent.VK_M, menuShortcutKeyMask),
                 e -> minMaxDivider());
 
-        toggleDividerOrientationAction = UserAction.create(I18n.getString("ToggleDividerOrientation"), Util.BLANK_ICON,
+        toggleDividerOrientationAction = UserAction.create(I18n.getString("ToggleDividerOrientation"),
                 "Toggle the window divider's orientation", KeyEvent.VK_C, null, e -> toggleDividerOrientation());
 
-        closeTabAction = UserAction.create("Close Tab", Util.BLANK_ICON, "Close current tab", KeyEvent.VK_W,
+        closeTabAction = UserAction.create("Close Tab",  "Close current tab", KeyEvent.VK_W,
                 KeyStroke.getKeyStroke(KeyEvent.VK_W, menuShortcutKeyMask), e -> editor.getEditorsPanel().closeTab(editor));
 
-        closeFileAction = UserAction.create("Close Window", Util.BLANK_ICON, "Close current window (close all tabs)",
+        closeFileAction = UserAction.create("Close Window",  "Close current window (close all tabs)",
                 KeyEvent.VK_C, null, e -> closePanel());
 
         openFileAction = UserAction.create(I18n.getString("Open"), Util.FOLDER_ICON, "Open a script", KeyEvent.VK_O,
                 KeyStroke.getKeyStroke(KeyEvent.VK_O, menuShortcutKeyMask), e -> openFile());
 
-        newWindowAction = UserAction.create(I18n.getString("NewWindow"), Util.BLANK_ICON, "Open a new window",
+        newWindowAction = UserAction.create(I18n.getString("NewWindow"),  "Open a new window",
                 KeyEvent.VK_N, KeyStroke.getKeyStroke(KeyEvent.VK_N, menuShortcutKeyMask | InputEvent.SHIFT_MASK),
                 e -> {
                     StudioPanel panel = new StudioPanel(editor.getServer(), null);
                     panel.rebuildMenuAndTooblar();
                 } );
 
-        newTabAction = UserAction.create("New Tab", Util.BLANK_ICON, "Open a new tab", KeyEvent.VK_T,
+        newTabAction = UserAction.create("New Tab",  "Open a new tab", KeyEvent.VK_T,
                 KeyStroke.getKeyStroke(KeyEvent.VK_N, menuShortcutKeyMask),
                 e -> addTab(editor.getServer(), null));
 
@@ -629,7 +629,7 @@ public class StudioPanel extends JPanel implements WindowListener {
                 KeyEvent.VK_S, KeyStroke.getKeyStroke(KeyEvent.VK_S, menuShortcutKeyMask),
                 e -> EditorsPanel.saveEditor(editor));
 
-        saveAllFilesAction = UserAction.create("Save All...", Util.BLANK_ICON, "Save all files",
+        saveAllFilesAction = UserAction.create("Save All...",  "Save all files",
                 KeyEvent.VK_L, KeyStroke.getKeyStroke(KeyEvent.VK_S, menuShortcutKeyMask | InputEvent.SHIFT_MASK),
                 e -> saveAll());
 
@@ -679,10 +679,10 @@ public class StudioPanel extends JPanel implements WindowListener {
         aboutAction = UserAction.create(I18n.getString("About"), Util.ABOUT_ICON, "About Studio for kdb+",
                 KeyEvent.VK_E, null, e -> about());
 
-        exitAction = UserAction.create(I18n.getString("Exit"), Util.BLANK_ICON, "Close this window",
+        exitAction = UserAction.create(I18n.getString("Exit"), "Close this window",
                 KeyEvent.VK_X, e -> quit());
 
-        settingsAction = UserAction.create("Settings", Util.BLANK_ICON, "Settings",
+        settingsAction = UserAction.create("Settings",  "Settings",
                 KeyEvent.VK_S, null, e -> settings());
 
         codeKxComAction = UserAction.create("code.kx.com", Util.TEXT_ICON, "Open code.kx.com",
@@ -720,13 +720,13 @@ public class StudioPanel extends JPanel implements WindowListener {
         redoAction = UserAction.create(I18n.getString("Redo"), Util.REDO_ICON, "Redo the last change to the document",
                 KeyEvent.VK_R, KeyStroke.getKeyStroke(KeyEvent.VK_Y,menuShortcutKeyMask), editorRedoAction);
 
-        nextEditorTabAction = UserAction.create("Next tab", Util.BLANK_ICON,
+        nextEditorTabAction = UserAction.create("Next tab",
                 "Select next editor tab", KeyEvent.VK_N,
                     Util.MAC_OS_X ? KeyStroke.getKeyStroke(KeyEvent.VK_RIGHT, menuShortcutKeyMask | InputEvent.ALT_MASK ) :
                                     KeyStroke.getKeyStroke(KeyEvent.VK_TAB, menuShortcutKeyMask),
                 e -> editor.getEditorsPanel().selectNextTab(true));
 
-        prevEditorTabAction = UserAction.create("Previous tab", Util.BLANK_ICON,
+        prevEditorTabAction = UserAction.create("Previous tab",
                 "Select previous editor tab", KeyEvent.VK_P,
                 Util.MAC_OS_X ? KeyStroke.getKeyStroke(KeyEvent.VK_LEFT, menuShortcutKeyMask | InputEvent.ALT_MASK ) :
                         KeyStroke.getKeyStroke(KeyEvent.VK_TAB, menuShortcutKeyMask | InputEvent.SHIFT_MASK),
@@ -741,14 +741,14 @@ public class StudioPanel extends JPanel implements WindowListener {
                 } );
         }
 
-        wordWrapAction = UserAction.create("Word wrap", Util.BLANK_ICON, "Word wrap for all tabs",
+        wordWrapAction = UserAction.create("Word wrap",  "Word wrap for all tabs",
                 KeyEvent.VK_W, KeyStroke.getKeyStroke(KeyEvent.VK_W, menuShortcutKeyMask | InputEvent.SHIFT_MASK),
                 e -> toggleWordWrap());
 
-        splitEditorRight = UserAction.create("Split right", Util.BLANK_ICON, "Split vertically",
+        splitEditorRight = UserAction.create("Split right",  "Split vertically",
                 KeyEvent.VK_R, null,
                 e-> editor.getEditorsPanel().split(false));
-        splitEditorDown = UserAction.create("Split down", Util.BLANK_ICON, "Split horizontally",
+        splitEditorDown = UserAction.create("Split down",  "Split horizontally",
                 KeyEvent.VK_D, null,
                 e-> editor.getEditorsPanel().split(true));
     }
@@ -924,7 +924,7 @@ public class StudioPanel extends JPanel implements WindowListener {
 
                 JMenuItem item = new JMenuItem("" + (i + 1) + " " + filename);
                 item.setMnemonic(mnems[i]);
-                item.setIcon(Util.BLANK_ICON);
+//                item.setIcon(Util.BLANK_ICON);
                 item.addActionListener(new ActionListener() {
 
                     public void actionPerformed(ActionEvent e) {
@@ -954,7 +954,7 @@ public class StudioPanel extends JPanel implements WindowListener {
         menu.add(new JCheckBoxMenuItem(wordWrapAction));
 
         JMenu lineEndingSubMenu = new JMenu("Line Ending");
-        lineEndingSubMenu.setIcon(Util.BLANK_ICON);
+//        lineEndingSubMenu.setIcon(Util.BLANK_ICON);
         for (Action action: lineEndingActions) {
             lineEndingSubMenu.add(new JCheckBoxMenuItem(action));
         }
@@ -1069,7 +1069,7 @@ public class StudioPanel extends JPanel implements WindowListener {
                 if (panel == this)
                     item.setIcon(Util.CHECK_ICON);
                 else
-                    item.setIcon(Util.BLANK_ICON);
+                    item.setIcon(null);
 
                 menu.add(item);
                 i++;
