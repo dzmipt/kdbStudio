@@ -72,7 +72,7 @@ public class StudioTest extends AssertJSwingJUnitTestCase {
     public void test() throws Exception {
         JTextComponentFixture tb = window.textBox("qEditor");
         tb.requireEmpty();
-        tb.pressAndReleaseKey(KeyPressInfo.keyCode(KeyEvent.VK_A));
+        tb.robot().pressAndReleaseKey(KeyEvent.VK_A);
         tb.requireText("a");
         type(tb, "bc\ndef");
         tb.requireText("abc\ndef");
