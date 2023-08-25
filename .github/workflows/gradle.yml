@@ -26,3 +26,12 @@ jobs:
       run: chmod +x gradlew
     - name: Build with Gradle
       run: ./gradlew build
+
+    - name: Report
+      uses: dorny/test-reporter@v1
+      if: always()
+      with:
+        name: JUnit Tests
+        path: build/reports/test-results/*/*.xml
+        reporter: java-junit
+        fail-on-error: true
