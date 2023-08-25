@@ -10,11 +10,20 @@ public class EnvConfig implements StrLookup {
     private final static String environment = System.getProperty("env");
     private final static String homeFolder = getValue("KDBSTUDIO_CONFIG_HOME", System.getProperty("user.home") + "/.studioforkdb");
 
+    private static String baseFolder = null;
+
     public static String getEnvironment() {
         return environment;
     }
 
+    //Useful method which could be used in test environment to point to a pre-configured or empty location
+    public static void setBaseFolder(String baseFolder) {
+        EnvConfig.baseFolder = baseFolder;
+    }
+
     public static String getBaseFolder(String env) {
+        if (baseFolder != null) return baseFolder;
+
         return env == null ? homeFolder : homeFolder + "/" + env;
     }
 
