@@ -2,7 +2,10 @@ package studio.ui;
 
 import org.apache.commons.io.FileUtils;
 import org.assertj.swing.core.KeyPressInfo;
+import org.assertj.swing.core.Robot;
 import org.assertj.swing.edt.GuiActionRunner;
+import org.assertj.swing.finder.WindowFinder;
+import org.assertj.swing.fixture.DialogFixture;
 import org.assertj.swing.fixture.FrameFixture;
 import org.assertj.swing.fixture.JTextComponentFixture;
 import org.assertj.swing.junit.testcase.AssertJSwingJUnitTestCase;
@@ -38,13 +41,16 @@ public class StudioTest extends AssertJSwingJUnitTestCase {
 
     @Override
     protected void onSetUp() {
+        Robot robot = robot();
         GuiActionRunner.execute( () -> Studio.main(new String[0]) );
 
         StudioPanel[] panels = GuiActionRunner.execute(() -> StudioPanel.getPanels());
 
+        DialogFixture dialog = WindowFinder.findDialog(HelpDialog.class).using(robot);
+        dialog.pressAndReleaseKeys(KeyEvent.VK_ESCAPE);
+
         Assert.assertEquals("expected to have one panel", 1, panels.length);
-        window = new FrameFixture(robot(), panels[0].getFrame());
-        window.show(); // shows the frame to test
+        window = new FrameFixture(robot, panels[0].getFrame());
 
         List<EditorTab> editors = panels[0].getActiveEditor().getEditorsPanel().getAllEditors(false);
         Assert.assertEquals("expected to have one editor", 1, panels.length);
