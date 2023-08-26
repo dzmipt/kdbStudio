@@ -20,7 +20,7 @@ fi
 
 FAIL=0
 
-if ! ./gradlew integrationTest ; then
+if ! ./gradlew integrationTest -x test ; then
     FAIL=1
     cat build/test-results/integrationTest/*.xml || true
 fi
