@@ -6,7 +6,7 @@ import java.awt.event.ActionListener;
 
 public abstract class UserAction extends AbstractAction {
     public UserAction(String text,
-                      ImageIcon icon,
+                      Icon icon,
                       String desc,
                       Integer mnemonic,
                       KeyStroke key) {
@@ -14,6 +14,10 @@ public abstract class UserAction extends AbstractAction {
         putValue(SHORT_DESCRIPTION,desc);
         putValue(MNEMONIC_KEY,mnemonic);
         putValue(ACCELERATOR_KEY,key);
+    }
+
+    public void removeIcon() {
+        putValue(SMALL_ICON, null);
     }
 
     public String getText() {
@@ -24,7 +28,7 @@ public abstract class UserAction extends AbstractAction {
         return (KeyStroke)getValue(ACCELERATOR_KEY);
     }
 
-    public static UserAction create(String text, ImageIcon icon,
+    public static UserAction create(String text, Icon icon,
                                String desc, int mnemonic,
                                KeyStroke key, ActionListener listener) {
         return new UserAction(text, icon, desc, mnemonic, key) {
@@ -39,25 +43,19 @@ public abstract class UserAction extends AbstractAction {
         putValue(SELECTED_KEY, value);
     }
 
-    public static UserAction create(String text, ImageIcon icon,
-                             String desc, int mnemonic,
-                             ActionListener listener) {
-        return create(text, icon, desc, mnemonic, null, listener);
-    }
-
     public static UserAction create(String text,
                              String desc, int mnemonic,
                              KeyStroke key, ActionListener listener) {
-        return create(text, null, desc, mnemonic, key, listener);
+        return create(text, Util.BLANK_ICON, desc, mnemonic, key, listener);
     }
 
     public static UserAction create(String text,
                              String desc, int mnemonic,
                              ActionListener listener) {
-        return create(text, null, desc, mnemonic, null, listener);
+        return create(text, Util.BLANK_ICON, desc, mnemonic, null, listener);
     }
 
     public static UserAction create(String text, ActionListener listener) {
-        return create(text, null, null, 0, null, listener);
+        return create(text, Util.BLANK_ICON, null, 0, null, listener);
     }
 }

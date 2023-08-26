@@ -97,7 +97,7 @@ public class StudioTest extends AssertJSwingJUnitTestCase {
 
     @Test
     public void splitTest() {
-        window.menuItem("splitRight").click();
+        window.menuItem("Split right").click();
         List<EditorTab> editors = panel.getRootEditorsPanel().getAllEditors(false);
         Assert.assertEquals("expected to have one editor", 2, editors.size());
     }

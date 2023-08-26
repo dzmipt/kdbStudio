@@ -560,11 +560,11 @@ public class StudioPanel extends JPanel implements WindowListener {
                 KeyEvent.VK_L, KeyStroke.getKeyStroke(KeyEvent.VK_L, menuShortcutKeyMask | InputEvent.SHIFT_MASK),
                 e -> showServerList(false));
 
-        serverHistoryAction = UserAction.create("Server History", null, "Recent selected servers", KeyEvent.VK_R,
+        serverHistoryAction = UserAction.create("Server History", "Recent selected servers", KeyEvent.VK_R,
                 KeyStroke.getKeyStroke(KeyEvent.VK_R, menuShortcutKeyMask | InputEvent.SHIFT_MASK),
                 e -> showServerList(true));
 
-        importFromQPadAction = UserAction.create("Import Servers from QPad...", null, "Import from Servers.cfg",
+        importFromQPadAction = UserAction.create("Import Servers from QPad...", "Import from Servers.cfg",
                 KeyEvent.VK_I, null, e -> QPadImport.doImport(this));
 
         editServerAction = UserAction.create(I18n.getString("Edit"), Util.SERVER_INFORMATION_ICON, "Edit the server details",
@@ -734,11 +734,13 @@ public class StudioPanel extends JPanel implements WindowListener {
 
         lineEndingActions = new UserAction[LineEnding.values().length];
         for(LineEnding lineEnding: LineEnding.values()) {
-            lineEndingActions[lineEnding.ordinal()] = UserAction.create(lineEnding.getDescription(),
+             UserAction action = UserAction.create(lineEnding.getDescription(),
                 e -> {
                     editor.setLineEnding(lineEnding);
                     refreshActionState();
                 } );
+             action.removeIcon();
+             lineEndingActions[lineEnding.ordinal()] = action;
         }
 
         wordWrapAction = UserAction.create("Word wrap",  "Word wrap for all tabs",
@@ -892,33 +894,51 @@ public class StudioPanel extends JPanel implements WindowListener {
         frame.repaint();
     }
 
+    private void addToMenu(JMenu menu, Action... actions) {
+        for (Action action: actions) {
+            if (action == null) {
+                menu.addSeparator();
+            } else {
+                menu.add(action);
+            }
+        }
+    }
+
+    private void setNamesInMenu(JMenu menu) {
+        menu.setName(menu.getText());
+        for (int index = 0; index < menu.getMenuComponentCount(); index++) {
+            Component c = menu.getMenuComponent(index);
+            if (c instanceof JMenuItem) {
+                JMenuItem menuItem = (JMenuItem) c;
+                menuItem.setName(menuItem.getText());
+            }
+            if (c instanceof JMenu) {
+                setNamesInMenu((JMenu) c);
+            }
+        }
+    }
+
+    private void setNamesInMenu(JMenuBar menuBar) {
+        for (int index = 0; index < menuBar.getMenuCount(); index++) {
+            setNamesInMenu(menuBar.getMenu(index));
+        }
+    }
+
     private JMenuBar createMenuBar() {
         JMenuBar menubar = new JMenuBar();
         JMenu menu = new JMenu(I18n.getString("File"));
         menu.setMnemonic(KeyEvent.VK_F);
-        menu.add(new JMenuItem(newWindowAction));
-        menu.add(new JMenuItem(newTabAction));
-        menu.add(new JMenuItem(openFileAction));
-        menu.add(new JMenuItem(saveFileAction));
-        menu.add(new JMenuItem(saveAsFileAction));
-        menu.add(new JMenuItem(saveAllFilesAction));
 
-        menu.add(new JMenuItem(closeTabAction));
-        menu.add(new JMenuItem(closeFileAction));
+        addToMenu(menu, newWindowAction, newTabAction, openFileAction, saveFileAction,
+                saveAsFileAction, saveAllFilesAction, closeTabAction, closeFileAction);
 
         if (!Studio.hasMacOSSystemMenu()) {
-            menu.add(new JMenuItem(settingsAction));
+            addToMenu(menu, settingsAction);
         }
-        menu.addSeparator();
-//        menu.add(new JMenuItem(importAction));
-        menu.add(new JMenuItem(openInExcel));
-        menu.addSeparator();
-        menu.add(new JMenuItem(exportAction));
-        menu.addSeparator();
-        menu.add(new JMenuItem(chartAction));
+
+        addToMenu(menu, null, openInExcel, null, exportAction, null, chartAction);
 
         String[] mru = CONFIG.getMRUFiles();
-
         if (mru.length > 0) {
             menu.addSeparator();
             char[] mnems = "123456789".toCharArray();
@@ -928,7 +948,7 @@ public class StudioPanel extends JPanel implements WindowListener {
 
                 JMenuItem item = new JMenuItem("" + (i + 1) + " " + filename);
                 item.setMnemonic(mnems[i]);
-//                item.setIcon(Util.BLANK_ICON);
+                item.setIcon(Util.BLANK_ICON);
                 item.addActionListener(new ActionListener() {
 
                     public void actionPerformed(ActionEvent e) {
@@ -940,43 +960,32 @@ public class StudioPanel extends JPanel implements WindowListener {
         }
 
         if (!Studio.hasMacOSSystemMenu()) {
-            menu.addSeparator();
-            menu.add(new JMenuItem(exitAction));
+            addToMenu(menu, null, exitAction);
         }
         menubar.add(menu);
 
+
         menu = new JMenu(I18n.getString("Edit"));
         menu.setMnemonic(KeyEvent.VK_E);
-        menu.add(new JMenuItem(undoAction));
-        menu.add(new JMenuItem(redoAction));
-        menu.addSeparator();
-        menu.add(new JMenuItem(cutAction));
-        menu.add(new JMenuItem(copyAction));
-        menu.add(new JMenuItem(pasteAction));
-        menu.addSeparator();
+
+        addToMenu(menu, undoAction, redoAction, null, cutAction, copyAction, pasteAction, null);
 
         menu.add(new JCheckBoxMenuItem(wordWrapAction));
 
         JMenu lineEndingSubMenu = new JMenu("Line Ending");
-//        lineEndingSubMenu.setIcon(Util.BLANK_ICON);
+        lineEndingSubMenu.setIcon(Util.BLANK_ICON);
         for (Action action: lineEndingActions) {
             lineEndingSubMenu.add(new JCheckBoxMenuItem(action));
         }
         menu.add(lineEndingSubMenu);
 
-        menu.add(new JMenuItem(cleanAction));
-        menu.add(new JMenuItem(selectAllAction));
-        menu.addSeparator();
-        menu.add(new JMenuItem(findAction));
-        menu.add(new JMenuItem(replaceAction));
-        menu.add(new JMenuItem(convertTabsToSpacesAction));
+        addToMenu(menu, cleanAction, selectAllAction, null, findAction, replaceAction, convertTabsToSpacesAction);
         menubar.add(menu);
 
         menu = new JMenu(I18n.getString("Server"));
         menu.setMnemonic(KeyEvent.VK_S);
-        menu.add(new JMenuItem(addServerAction));
-        menu.add(new JMenuItem(editServerAction));
-        menu.add(new JMenuItem(removeServerAction));
+
+        addToMenu(menu, addServerAction, editServerAction, removeServerAction);
 
         Server server = editor.getServer();
         Server[] servers = CONFIG.getServers();
@@ -1002,7 +1011,6 @@ public class StudioPanel extends JPanel implements WindowListener {
                         if (f.getResult() == ACCEPTED) {
                             clone = f.getServer();
                             CONFIG.addServer(clone);
-                            //ebuildToolbar();
                             setServer(clone);
                             ConnectionPool.getInstance().purge(clone); //?
                             rebuildAll();
@@ -1016,38 +1024,22 @@ public class StudioPanel extends JPanel implements WindowListener {
             menu.add(subMenu);
         }
 
-        menu.addSeparator();
-        menu.add(new JMenuItem(serverListAction));
-        menu.add(new JMenuItem(serverHistoryAction));
-        menu.add(new JMenuItem(importFromQPadAction));
+        addToMenu(menu, null, serverListAction, serverHistoryAction, importFromQPadAction);
 
         menubar.add(menu);
 
         menu = new JMenu(I18n.getString("Query"));
         menu.setMnemonic(KeyEvent.VK_Q);
-        menu.add(new JMenuItem(executeCurrentLineAction));
-        menu.add(new JMenuItem(executeAction));
-        menu.add(new JMenuItem(stopAction));
-        menu.add(new JMenuItem(refreshAction));
-        menu.add(new JMenuItem(toggleCommaFormatAction));
-        menu.add(new JMenuItem(findInResultAction));
+
+        addToMenu(menu, executeCurrentLineAction, executeAction, stopAction, refreshAction,
+                toggleCommaFormatAction, findInResultAction);
         menubar.add(menu);
 
         menu = new JMenu(I18n.getString("Window"));
         menu.setMnemonic(KeyEvent.VK_W);
 
-        // Added temporary for integration test
-        // TODO: either this need to be removed; or implemented in the same way for others
-        JMenuItem menuItem = new JMenuItem(splitEditorRight);
-        menuItem.setName("splitRight");
-        menu.add(menuItem);
-        menu.add(new JMenuItem(splitEditorDown));
-        menu.addSeparator();
-        menu.add(new JMenuItem(minMaxDividerAction));
-        menu.add(new JMenuItem(toggleDividerOrientationAction));
-        menu.add(new JMenuItem(arrangeAllAction));
-        menu.add(new JMenuItem(nextEditorTabAction));
-        menu.add(new JMenuItem(prevEditorTabAction));
+        addToMenu(menu, splitEditorRight, splitEditorDown, null, minMaxDividerAction, toggleDividerOrientationAction,
+                arrangeAllAction, nextEditorTabAction, prevEditorTabAction);
 
         if (allPanels.size() > 0) {
             menu.addSeparator();
@@ -1077,7 +1069,7 @@ public class StudioPanel extends JPanel implements WindowListener {
                 if (panel == this)
                     item.setIcon(Util.CHECK_ICON);
                 else
-                    item.setIcon(null);
+                    item.setIcon(Util.BLANK_ICON);
 
                 menu.add(item);
                 i++;
@@ -1091,6 +1083,7 @@ public class StudioPanel extends JPanel implements WindowListener {
             menu.add(new JMenuItem(aboutAction));
         menubar.add(menu);
 
+        setNamesInMenu(menubar);
         return menubar;
     }
 

@@ -9,6 +9,7 @@ import java.awt.event.KeyEvent;
 import java.net.URL;
 
 public class Util {
+    public final static Icon BLANK_ICON = new BlankIcon(16,16);
     public final static ImageIcon LOGO_ICON = getImage("/logo.png");
     public final static ImageIcon QUESTION_ICON = getImage("/question.png");
     public final static ImageIcon INFORMATION_ICON = getImage("/information.png");
