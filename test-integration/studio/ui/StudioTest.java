@@ -14,6 +14,7 @@ import org.junit.Test;
 import studio.kdb.Server;
 import studio.utils.log4j.EnvConfig;
 
+import java.awt.*;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -29,7 +30,6 @@ public class StudioTest extends AssertJSwingJUnitTestCase {
     protected StudioPanel panel;
 
     private static Path tmpConfigFolder;
-    private static boolean first = true;
 
 
     @BeforeClass
@@ -57,23 +57,6 @@ public class StudioTest extends AssertJSwingJUnitTestCase {
     @Override
     protected void onSetUp() {
         Robot robot = robot();
-//        robot.settings().delayBetweenEvents(500);
-
-
-//        if (first) {
-//            GuiActionRunner.execute( () -> Studio.main(new String[0]) );
-//            DialogFixture dialog = WindowFinder.findDialog(HelpDialog.class).using(robot);
-//            dialog.pressAndReleaseKeys(KeyEvent.VK_ESCAPE);
-//            first = false;
-//            StudioPanel[] panels = GuiActionRunner.execute(() -> StudioPanel.getPanels());
-//            Assert.assertEquals("expected to have one panel", 1, panels.length);
-//
-//            FrameFixture initWindow = new FrameFixture(robot, panel.getFrame());
-//            initWindow.pressAndReleaseKey(keyCode(VK_N).modifiers(controlOrCommandMask(), SHIFT_MASK));
-//            panels = GuiActionRunner.execute(() -> StudioPanel.getPanels());
-//            Assert.assertEquals("expected to have one panel", 2, panels.length);
-//            panel = panels[1];
-//        }
 
         studio.ui.I18n.setLocale(Locale.getDefault());
         panel = GuiActionRunner.execute( () -> new StudioPanel(Server.NO_SERVER, null) );
@@ -81,25 +64,43 @@ public class StudioTest extends AssertJSwingJUnitTestCase {
 
         List<EditorTab> editors = panel.getRootEditorsPanel().getAllEditors(false);
         Assert.assertEquals("expected to have one editor", 1, editors.size());
-        editors.get(0).getTextArea().setName("qEditor");
     }
 
     @Test
     public void test() {
-        JTextComponentFixture tb = window.textBox("qEditor");
+        JTextComponentFixture tb = window.textBox("editor1");
         tb.requireEmpty();
-//        tb.pressAndReleaseKey(KeyEvent.VK_A);
         tb.enterText("a");
         tb.requireText("a");
         tb.enterText("bc\ndef");
         tb.requireText("abc\ndef");
     }
 
+    private Rectangle getScreenBound(Component component) {
+        return new Rectangle(component.getLocationOnScreen(), component.getSize());
+    }
+
     @Test
     public void splitTest() {
+        JTextComponentFixture editor1 = window.textBox("editor1");
+        Rectangle bound = GuiActionRunner.execute(() -> getScreenBound(editor1.target()));
+
         window.menuItem("Split right").click();
         List<EditorTab> editors = panel.getRootEditorsPanel().getAllEditors(false);
         Assert.assertEquals("expected to have one editor", 2, editors.size());
+
+        JTextComponentFixture editor2 = window.textBox("editor2");
+
+        Rectangle bound1 = GuiActionRunner.execute(() -> getScreenBound(editor1.target()));
+        Rectangle bound2 = GuiActionRunner.execute(() -> getScreenBound(editor2.target()));
+
+        Assert.assertTrue(bound1.x + bound1.width < bound2.x);
+        Assert.assertTrue(bound1.y == bound2.y );
+        Assert.assertTrue(bound1.height == bound2.height );
+        Assert.assertTrue(Math.abs(bound.y - bound1.y) < 10 );
+        Assert.assertTrue(Math.abs(bound1.x - bound.x) < 10 );
+        Assert.assertTrue(bound1.width + bound2.width < bound.width);
+
     }
 
 }

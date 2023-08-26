@@ -139,6 +139,8 @@ public class StudioPanel extends JPanel implements WindowListener {
     private UserAction splitEditorDown;
     private JFrame frame;
 
+    private int editorNameIndex = 0;
+
     private static Map<String, JFileChooser> fileChooserMap = new HashMap<>();
 
     private static List<StudioPanel> allPanels = new ArrayList<>();
@@ -154,6 +156,10 @@ public class StudioPanel extends JPanel implements WindowListener {
 
     private static final Config CONFIG = Config.getInstance();
     
+    public int nextEditorNameIndex() {
+        return editorNameIndex++;
+    }
+
     public void refreshFrameTitle() {
         if (loading) return;
 

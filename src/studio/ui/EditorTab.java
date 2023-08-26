@@ -64,6 +64,7 @@ public class EditorTab implements FileWatcher.Listener {
         editorPane = new EditorPane(true, panel.getEditorSearchPanel(), panel.getMainStatusBar());
         editorPane.setFocusable(false);
         RSyntaxTextArea textArea = editorPane.getTextArea();
+        textArea.setName("editor" + panel.nextEditorNameIndex());
 
         textArea.putClientProperty(QueryExecutor.class, new QueryExecutor(this));
     }
