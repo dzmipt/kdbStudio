@@ -130,7 +130,8 @@ public class Config {
 
     private TableConnExtractor tableConnExtractor;
 
-    private final static Config instance = new Config();
+    // Can be overridden in test cases
+    protected static Config instance = new Config();
 
     public enum ExecAllOption {Execute, Ask, Ignore}
 
@@ -288,6 +289,14 @@ public class Config {
     }
 
     private void init(String filename) {
+        load(filename);
+        checkForUpgrade();
+        initServers();
+        initServerHistory();
+        initTableConnExtractor();
+    }
+
+    protected void load(String filename) {
         Path file = Paths.get(filename);
         Path dir = file.getParent();
         if (Files.notExists(dir)) {
@@ -307,11 +316,6 @@ public class Config {
                 log.error("Can't read configuration from file {}", filename, e);
             }
         }
-
-        checkForUpgrade();
-        initServers();
-        initServerHistory();
-        initTableConnExtractor();
     }
 
     public String getFilename() {
