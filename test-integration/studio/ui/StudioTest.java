@@ -2,19 +2,22 @@ package studio.ui;
 
 import org.apache.commons.io.FileUtils;
 import org.assertj.swing.core.EmergencyAbortListener;
-import org.assertj.swing.edt.GuiActionRunner;
 import org.assertj.swing.fixture.FrameFixture;
+import org.assertj.swing.fixture.JTabbedPaneFixture;
 import org.assertj.swing.fixture.JTextComponentFixture;
 import org.assertj.swing.junit.testcase.AssertJSwingJUnitTestCase;
+import org.fife.ui.rsyntaxtextarea.RSyntaxTextArea;
 import org.junit.AfterClass;
 import org.junit.Assert;
 import org.junit.BeforeClass;
 import studio.core.Studio;
 import studio.kdb.Server;
 import studio.utils.LogErrors;
+import studio.utils.Lookup;
 import studio.utils.MockConfig;
 import studio.utils.log4j.EnvConfig;
 
+import javax.swing.*;
 import java.awt.*;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -26,6 +29,7 @@ import static java.awt.event.KeyEvent.*;
 import static junit.framework.TestCase.assertEquals;
 import static junit.framework.TestCase.fail;
 import static org.assertj.swing.core.KeyPressInfo.keyCode;
+import static org.assertj.swing.edt.GuiActionRunner.execute;
 
 public class StudioTest extends AssertJSwingJUnitTestCase {
 
@@ -69,11 +73,10 @@ public class StudioTest extends AssertJSwingJUnitTestCase {
         LogErrors.reset();
 
         studio.ui.I18n.setLocale(Locale.getDefault());
-        panel = GuiActionRunner.execute( () -> new StudioPanel(Server.NO_SERVER, null) );
+        panel = execute( () -> new StudioPanel(Server.NO_SERVER, null) );
         frameFixture = new FrameFixture(robot(), panel.getFrame());
 
-        List<EditorTab> editors = panel.getRootEditorsPanel().getAllEditors(false);
-        Assert.assertEquals("expected to have one editor", 1, editors.size());
+        Assert.assertEquals("expected to have one editor", 1, getEditors().size());
     }
 
     @Override
@@ -86,19 +89,39 @@ public class StudioTest extends AssertJSwingJUnitTestCase {
         }
     }
 
+    protected List<RSyntaxTextArea> getEditors() {
+        return getEditors(panel);
+    }
+
+    protected List<RSyntaxTextArea> getEditors(StudioPanel panel) {
+        return Lookup.getChildren(panel.getFrame(), RSyntaxTextArea.class);
+    }
+
     protected Rectangle getScreenBound(Component component) {
-        return GuiActionRunner.execute(() -> new Rectangle(component.getLocationOnScreen(), component.getSize()) );
+        return execute(() -> new Rectangle(component.getLocationOnScreen(), component.getSize()) );
     }
 
 
+    protected void addTab(String editorName) {
+        JTextComponentFixture editorFixture = frameFixture.textBox(editorName);
+
+        JTabbedPane tabbedPane = Lookup.getParent(editorFixture.target(), JTabbedPane.class);
+        JTabbedPaneFixture tabbedFixture = new JTabbedPaneFixture(robot(), tabbedPane);
+
+        int count = execute(() -> tabbedPane.getTabCount());
+
+        editorFixture.focus();
+
+
+    }
+
     protected void split(String editorName, boolean verticallySplit) {
-        int count = panel.getRootEditorsPanel().getAllEditors(false).size();
-        JTextComponentFixture editor = frameFixture.textBox(editorName);
-        editor.focus();
+        int count = getEditors().size();
+        frameFixture.textBox(editorName).focus();
         String menuName = verticallySplit ? "Split down" : "Split right";
         frameFixture.menuItem(menuName).click();
 
-        int newCount = panel.getRootEditorsPanel().getAllEditors(false).size();
+        int newCount = getEditors().size();
         assertEquals("Number of editor should increase after split", count + 1, newCount);
     }
 
