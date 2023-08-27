@@ -47,7 +47,7 @@ import static javax.swing.JSplitPane.VERTICAL_SPLIT;
 import static studio.ui.EscapeDialog.DialogResult.ACCEPTED;
 import static studio.ui.EscapeDialog.DialogResult.CANCELLED;
 
-public class StudioPanel extends JPanel implements WindowListener {
+public class StudioPanel extends JFrame implements WindowListener {
 
     private static final Logger log = LogManager.getLogger();
     private static final Action editorUndoAction;
@@ -137,7 +137,6 @@ public class StudioPanel extends JPanel implements WindowListener {
     private UserAction wordWrapAction;
     private UserAction splitEditorRight;
     private UserAction splitEditorDown;
-    private JFrame frame;
 
     private int editorNameIndex = 0;
 
@@ -177,8 +176,8 @@ public class StudioPanel extends JPanel implements WindowListener {
         if (env != null) frameTitleBuilder.append(" [").append(env).append("]");
 
         String frameTitle = frameTitleBuilder.toString();
-        if (!frameTitle.equals(frame.getTitle())) {
-            frame.setTitle(frameTitle);
+        if (!frameTitle.equals(getTitle())) {
+            setTitle(frameTitle);
         }
     }
 
@@ -283,12 +282,12 @@ public class StudioPanel extends JPanel implements WindowListener {
     }
 
     private void exportAsExcel(final String filename) {
-        new ExcelExporter().exportTableX(frame,getSelectedTable(),new File(filename),false);
+        new ExcelExporter().exportTableX(this,getSelectedTable(),new File(filename),false);
     }
 
     private void exportAsDelimited(final TableModel model,final String filename,final char delimiter) {
         UIManager.put("ProgressMonitor.progressText","Studio for kdb+");
-        final ProgressMonitor pm = new ProgressMonitor(frame,"Exporting data to " + filename,
+        final ProgressMonitor pm = new ProgressMonitor(this,"Exporting data to " + filename,
                 "0% complete",0,100);
         pm.setMillisToDecideToPopup(100);
         pm.setMillisToPopup(100);
@@ -341,7 +340,7 @@ public class StudioPanel extends JPanel implements WindowListener {
 
     private void exportAsXml(final TableModel model,final String filename) {
         UIManager.put("ProgressMonitor.progressText","Studio for kdb+");
-        final ProgressMonitor pm = new ProgressMonitor(frame,"Exporting data to " + filename,
+        final ProgressMonitor pm = new ProgressMonitor(this,"Exporting data to " + filename,
                 "0% complete",0,100);
         pm.setMillisToDecideToPopup(100);
         pm.setMillisToPopup(100);
@@ -508,11 +507,10 @@ public class StudioPanel extends JPanel implements WindowListener {
 
             for (int col = 0;col < noCols;col++) {
                 StudioPanel panel = panelIterator.next();
-                JFrame frame = panel.frame;
 
-                frame.setSize(width,height);
-                frame.setLocation(col * width,((noRows - 1) - row) * height);
-                ensureDeiconified(frame);
+                panel.setSize(width,height);
+                panel.setLocation(col * width,((noRows - 1) - row) * height);
+                ensureDeiconified(panel);
             }
         }
     }
@@ -577,7 +575,7 @@ public class StudioPanel extends JPanel implements WindowListener {
                 KeyEvent.VK_E, null, e -> {
                     Server s = new Server(editor.getServer());
 
-                    EditServerForm f = new EditServerForm(frame, s);
+                    EditServerForm f = new EditServerForm(this, s);
                     f.alignAndShow();
                     if (f.getResult() == ACCEPTED) {
                         if (stopAction.isEnabled())
@@ -596,7 +594,7 @@ public class StudioPanel extends JPanel implements WindowListener {
 
         addServerAction = UserAction.create(I18n.getString("Add"), Util.ADD_SERVER_ICON, "Configure a new server",
                 KeyEvent.VK_A, null, e -> {
-                    AddServerForm f = new AddServerForm(frame);
+                    AddServerForm f = new AddServerForm(this);
                     f.alignAndShow();
                     if (f.getResult() == ACCEPTED) {
                         Server s = f.getServer();
@@ -609,7 +607,7 @@ public class StudioPanel extends JPanel implements WindowListener {
 
         removeServerAction = UserAction.create(I18n.getString("Remove"), Util.DELETE_SERVER_ICON, "Remove this server",
                 KeyEvent.VK_R, null, e -> {
-                    int choice = JOptionPane.showOptionDialog(frame,
+                    int choice = JOptionPane.showOptionDialog(this,
                             "Remove server " + editor.getServer().getFullName() + " from list?",
                             "Remove server?",
                             JOptionPane.YES_NO_CANCEL_OPTION,
@@ -655,10 +653,10 @@ public class StudioPanel extends JPanel implements WindowListener {
                 KeyEvent.VK_O, null, e -> {
                     try {
                         File file = File.createTempFile("studioExport", ".xlsx");
-                        new ExcelExporter().exportTableX(frame, getSelectedTable(), file, true);
+                        new ExcelExporter().exportTableX(this, getSelectedTable(), file, true);
                     } catch (IOException ex) {
                         log.error("Failed to create temporary file", ex);
-                        StudioOptionPane.showError(frame, "Failed to Open in Excel " + ex.getMessage(),"Error");
+                        StudioOptionPane.showError(this, "Failed to Open in Excel " + ex.getMessage(),"Error");
                     }
                 });
 
@@ -762,7 +760,7 @@ public class StudioPanel extends JPanel implements WindowListener {
     }
 
     public static void settings() {
-        SettingsDialog dialog = new SettingsDialog(activePanel.frame);
+        SettingsDialog dialog = new SettingsDialog(activePanel);
         dialog.alignAndShow();
         if (dialog.getResult() == CANCELLED) return;
 
@@ -815,8 +813,8 @@ public class StudioPanel extends JPanel implements WindowListener {
     }
 
     public static void about() {
-        HelpDialog help = new HelpDialog(activePanel.frame);
-        Util.centerChildOnParent(help,activePanel.frame);
+        HelpDialog help = new HelpDialog(activePanel);
+        Util.centerChildOnParent(help,activePanel);
         // help.setTitle("About Studio for kdb+");
         help.pack();
         help.setVisible(true);
@@ -828,7 +826,7 @@ public class StudioPanel extends JPanel implements WindowListener {
             ActionOnExit action = CONFIG.getEnum(Config.ACTION_ON_EXIT);
             if (action != ActionOnExit.NOTHING) {
                 for (StudioPanel panel : allPanels.toArray(new StudioPanel[0])) {
-                    panel.getFrame().toFront();
+                    panel.toFront();
                     boolean complete = panel.rootEditorsPanel.execute(editorTab -> {
                         if (editorTab.isModified()) {
                             if (!EditorsPanel.checkAndSaveTab(editorTab)) {
@@ -848,7 +846,7 @@ public class StudioPanel extends JPanel implements WindowListener {
             }
         } finally {
             if (allPanels.size() > 0) {
-                activePanel.frame.toFront();
+                activePanel.toFront();
             }
             WorkspaceSaver.setEnabled(true);
         }
@@ -872,7 +870,7 @@ public class StudioPanel extends JPanel implements WindowListener {
         if (allPanels.size() == 1) {
             quit();
         } else {
-            frame.dispose();
+            dispose();
             allPanels.remove(this);
             rebuildAll();
         }
@@ -893,11 +891,11 @@ public class StudioPanel extends JPanel implements WindowListener {
         if (loading) return;
 
         JMenuBar menubar = createMenuBar();
-        frame.setJMenuBar(menubar);
+        setJMenuBar(menubar);
         menubar.validate();
         menubar.repaint();
-        frame.validate();
-        frame.repaint();
+        validate();
+        repaint();
     }
 
     private void addToMenu(JMenu menu, Action... actions) {
@@ -1011,7 +1009,7 @@ public class StudioPanel extends JPanel implements WindowListener {
                         Server clone = new Server(s);
                         clone.setName("Clone of " + clone.getName());
 
-                        EditServerForm f = new EditServerForm(frame,clone);
+                        EditServerForm f = new EditServerForm(StudioPanel.this,clone);
                         f.alignAndShow();
 
                         if (f.getResult() == ACCEPTED) {
@@ -1068,7 +1066,7 @@ public class StudioPanel extends JPanel implements WindowListener {
                 item.addActionListener(new ActionListener() {
 
                     public void actionPerformed(ActionEvent e) {
-                        ensureDeiconified(panel.frame);
+                        ensureDeiconified(panel);
                     }
                 });
 
@@ -1119,7 +1117,7 @@ public class StudioPanel extends JPanel implements WindowListener {
 
     private void showServerList(boolean selectHistory) {
         if (serverList == null) {
-            serverList = new ServerList(frame);
+            serverList = new ServerList(this);
         }
         Rectangle bounds = Config.getInstance().getBounds(Config.SERVER_LIST_BOUNDS);
         serverList.setBounds(bounds);
@@ -1373,7 +1371,6 @@ public class StudioPanel extends JPanel implements WindowListener {
         // We need to have some editor initialize to prevent NPE
         editor = new EditorTab(this);
         topPanel = new JPanel(new BorderLayout());
-        frame = new JFrame();
 
         rootEditorsPanel = new EditorsPanel(this, workspaceWindow);
 
@@ -1399,7 +1396,7 @@ public class StudioPanel extends JPanel implements WindowListener {
 
         topPanel.add(rootEditorsPanel, BorderLayout.CENTER);
 
-        initFrame(frame, toolbar, splitpane, mainStatusBar);
+        initFrame(toolbar, splitpane, mainStatusBar);
         splitpane.setDividerLocation(0.5);
 
         loading = false;
@@ -1498,8 +1495,8 @@ public class StudioPanel extends JPanel implements WindowListener {
         return splitpane;
     }
 
-    private void initFrame(JFrame frame, JComponent toolbar, JComponent central, JComponent statusBar) {
-        frame.addWindowFocusListener(new WindowFocusListener() {
+    private void initFrame(JComponent toolbar, JComponent central, JComponent statusBar) {
+        addWindowFocusListener(new WindowFocusListener() {
             @Override
             public void windowGainedFocus(WindowEvent e) {
                 StudioPanel newPanel = StudioPanel.this;
@@ -1520,20 +1517,19 @@ public class StudioPanel extends JPanel implements WindowListener {
         contentPane.add(central, BorderLayout.CENTER);
         contentPane.add(statusBar, BorderLayout.SOUTH);
 
-        frame.setContentPane(contentPane);
-        frame.setDefaultCloseOperation(WindowConstants.DO_NOTHING_ON_CLOSE);
-        frame.addWindowListener(this);
+        setContentPane(contentPane);
+        setDefaultCloseOperation(WindowConstants.DO_NOTHING_ON_CLOSE);
+        addWindowListener(this);
 
         Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
-        frame.setSize((int) (0.8 * screenSize.width),
-                (int) (0.8 * screenSize.height));
+        setSize((int) (0.8 * screenSize.width), (int) (0.8 * screenSize.height));
 
-        frame.setLocation(((int) Math.max(0, (screenSize.width - frame.getWidth()) / 2.0)),
-                (int) (Math.max(0, (screenSize.height - frame.getHeight()) / 2.0)));
+        setLocation(((int) Math.max(0, (screenSize.width - getWidth()) / 2.0)),
+                (int) (Math.max(0, (screenSize.height - getHeight()) / 2.0)));
 
-        frame.setIconImage(Util.LOGO_ICON.getImage());
+        setIconImage(Util.LOGO_ICON.getImage());
 
-        frame.setVisible(true);
+        setVisible(true);
     }
 
     public SearchPanel getEditorSearchPanel() {
@@ -1551,7 +1547,7 @@ public class StudioPanel extends JPanel implements WindowListener {
 
         int index = workspace.getSelectedWindow();
         if (index >= 0 && index < allPanels.size()) {
-            allPanels.get(index).frame.toFront();
+            allPanels.get(index).toFront();
         }
 
         if (allPanels.size() == 0) {
@@ -1590,10 +1586,6 @@ public class StudioPanel extends JPanel implements WindowListener {
         lastQuery = text;
     }
 
-    public JFrame getFrame() {
-        return frame;
-    }
-
     public MainStatusBar getMainStatusBar() {
         return mainStatusBar;
     }
@@ -1615,7 +1607,7 @@ public class StudioPanel extends JPanel implements WindowListener {
             return editor.getText();
         }
         //Ask
-        int result = StudioOptionPane.showYesNoDialog(frame, "Nothing is selected. Execute the whole script?",
+        int result = StudioOptionPane.showYesNoDialog(this, "Nothing is selected. Execute the whole script?",
                 "Execute All?");
 
         if (result == JOptionPane.YES_OPTION ) {
@@ -1753,7 +1745,7 @@ public class StudioPanel extends JPanel implements WindowListener {
         Window activeWindow = KeyboardFocusManager.getCurrentKeyboardFocusManager().getActiveWindow();
 
         for (StudioPanel panel : allPanels) {
-            Workspace.Window window = workspace.addWindow(panel.getFrame() == activeWindow);
+            Workspace.Window window = workspace.addWindow(panel == activeWindow);
             panel.rootEditorsPanel.getWorkspace(window);
         }
         return workspace;

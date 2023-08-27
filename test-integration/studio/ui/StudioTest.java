@@ -74,7 +74,7 @@ public class StudioTest extends AssertJSwingJUnitTestCase {
 
         studio.ui.I18n.setLocale(Locale.getDefault());
         panel = execute( () -> new StudioPanel(Server.NO_SERVER, null) );
-        frameFixture = new FrameFixture(robot(), panel.getFrame());
+        frameFixture = new FrameFixture(robot(), panel);
 
         Assert.assertEquals("expected to have one editor", 1, getEditors().size());
     }
@@ -94,7 +94,7 @@ public class StudioTest extends AssertJSwingJUnitTestCase {
     }
 
     protected List<RSyntaxTextArea> getEditors(StudioPanel panel) {
-        return Lookup.getChildren(panel.getFrame(), RSyntaxTextArea.class);
+        return Lookup.getChildren(panel, RSyntaxTextArea.class);
     }
 
     protected Rectangle getScreenBound(Component component) {

@@ -24,7 +24,7 @@ public class QPadImport {
 
     public static void doImport(StudioPanel panel) {
         if (dialog == null) {
-            dialog = new QPadImportDialog(panel.getFrame());
+            dialog = new QPadImportDialog(panel);
             dialog.align();
         }
 
