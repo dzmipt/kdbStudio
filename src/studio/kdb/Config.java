@@ -134,13 +134,9 @@ public class Config {
 
     public enum ExecAllOption {Execute, Ask, Ignore}
 
-    private Config(String filename, Properties properties) {
-        this.filename = filename;
-        init(filename, properties);
-    }
-
     protected Config(String filename) {
-        this(filename, null);
+        this.filename = filename;
+        init(filename);
     }
 
     private static void copyConfig(String configFileName) throws IOException {
@@ -165,7 +161,7 @@ public class Config {
                 log.error("Error during copying configs", e);
             }
         }
-        init(filename, null);
+        init(filename);
     }
 
     private String getWorkspaceFilename() {
@@ -291,7 +287,7 @@ public class Config {
         return instance;
     }
 
-    private void init(String filename, Properties properties) {
+    private void init(String filename) {
         Path file = Paths.get(filename);
         Path dir = file.getParent();
         if (Files.notExists(dir)) {
@@ -302,19 +298,16 @@ public class Config {
             }
         }
 
-        if (properties != null) {
-            p =  (Properties) properties.clone();
-        } else {
-            if (Files.exists(file)) {
-                try {
-                    InputStream in = Files.newInputStream(file);
-                    p.load(in);
-                    in.close();
-                } catch (IOException e) {
-                    log.error("Can't read configuration from file {}", filename, e);
-                }
+        if (Files.exists(file)) {
+            try {
+                InputStream in = Files.newInputStream(file);
+                p.load(in);
+                in.close();
+            } catch (IOException e) {
+                log.error("Can't read configuration from file {}", filename, e);
             }
         }
+
         checkForUpgrade();
         initServers();
         initServerHistory();
