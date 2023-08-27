@@ -8,7 +8,7 @@ import studio.kdb.ServerTreeNode;
 import studio.ui.EscapeDialog;
 import studio.ui.QPadImportDialog;
 import studio.ui.StudioOptionPane;
-import studio.ui.StudioPanel;
+import studio.ui.StudioWindow;
 import studio.utils.QPadConverter;
 
 import javax.swing.*;
@@ -22,9 +22,9 @@ public class QPadImport {
 
     private static final Logger log = LogManager.getLogger();
 
-    public static void doImport(StudioPanel panel) {
+    public static void doImport(StudioWindow window) {
         if (dialog == null) {
-            dialog = new QPadImportDialog(panel);
+            dialog = new QPadImportDialog(window);
             dialog.align();
         }
 
@@ -42,7 +42,7 @@ public class QPadImport {
             if (rootName.length() > 0) {
                 serverTree = Config.getInstance().getServerTree();
                 if (serverTree.getChild(rootName) != null) {
-                    StudioOptionPane.showError(panel, "Folder to import already exists (" + rootName + ")",
+                    StudioOptionPane.showError(window, "Folder to import already exists (" + rootName + ")",
                             "Folder Exists");
                     continue;
                 }
@@ -82,14 +82,14 @@ public class QPadImport {
             result.append(successfulBuilder);
 
             JTextArea txtResult = new JTextArea(result.toString(), 20, 50);
-            JOptionPane.showConfirmDialog(panel, new JScrollPane(txtResult), "Import from QPad", JOptionPane.DEFAULT_OPTION, JOptionPane.PLAIN_MESSAGE);
+            JOptionPane.showConfirmDialog(window, new JScrollPane(txtResult), "Import from QPad", JOptionPane.DEFAULT_OPTION, JOptionPane.PLAIN_MESSAGE);
 
         } catch (IOException e) {
             log.error("Error in reading Servers.cfg", e);
-            StudioOptionPane.showError(panel, "Error in reading QPad Servers.cfg", "Error");
+            StudioOptionPane.showError(window, "Error in reading QPad Servers.cfg", "Error");
         } catch (IllegalArgumentException e) {
             log.error("Error during importing", e);
-            StudioOptionPane.showError(panel, "Error during import", "Error");
+            StudioOptionPane.showError(window, "Error during import", "Error");
         }
 
     }

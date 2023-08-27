@@ -12,7 +12,7 @@ import java.awt.event.InputEvent;
 import java.awt.event.KeyEvent;
 
 public class TabPanel extends JPanel {
-    private StudioPanel panel;
+    private StudioWindow studioWindow;
 
     private JToolBar toolbar = null;
     private JToggleButton tglBtnComma;
@@ -26,17 +26,17 @@ public class TabPanel extends JPanel {
     private ResultType type;
     private boolean pinned = false;
 
-    public TabPanel(StudioPanel panel, QueryResult queryResult) {
-        this.panel = panel;
+    public TabPanel(StudioWindow studioWindow, QueryResult queryResult) {
+        this.studioWindow = studioWindow;
         this.queryResult = queryResult;
         this.result = queryResult.getResult();
         initComponents();
     }
 
-    public void setPanel(StudioPanel panel) {
-        this.panel = panel;
+    public void setStudioWindow(StudioWindow studioWindow) {
+        this.studioWindow = studioWindow;
         if (grid != null) {
-            grid.setPanel(panel);
+            grid.setStudioWindow(studioWindow);
         }
     }
 
@@ -51,9 +51,9 @@ public class TabPanel extends JPanel {
     }
 
     private void upload() {
-        String varName = StudioOptionPane.showInputDialog(panel, "Enter variable name", "Upload to Server");
+        String varName = StudioOptionPane.showInputDialog(studioWindow, "Enter variable name", "Upload to Server");
         if (varName == null) return;
-        panel.executeK4Query(new K.KList(new K.Function("{x set y}"), new K.KSymbol(varName), result), "<upload to server>");
+        studioWindow.executeK4Query(new K.KList(new K.Function("{x set y}"), new K.KSymbol(varName), result), "<upload to server>");
     }
 
     private void initComponents() {
@@ -61,7 +61,7 @@ public class TabPanel extends JPanel {
         if (result != null) {
             KTableModel model = KTableModel.getModel(result);
             if (model != null) {
-                grid = new QGrid(panel, model);
+                grid = new QGrid(studioWindow, model);
                 component = grid;
                 if (model instanceof ListModel) {
                     type = ResultType.LIST;
@@ -69,13 +69,13 @@ public class TabPanel extends JPanel {
                     type = ResultType.TABLE;
                 }
             } else {
-                editor = new EditorPane(false, panel.getResultSearchPanel(), panel.getMainStatusBar());
+                editor = new EditorPane(false, studioWindow.getResultSearchPanel(), studioWindow.getMainStatusBar());
                 textArea = editor.getTextArea();
                 component = editor;
                 type = ResultType.TEXT;
             }
 
-            KeyStroke keyStroke = KeyStroke.getKeyStroke(KeyEvent.VK_J, StudioPanel.menuShortcutKeyMask);
+            KeyStroke keyStroke = KeyStroke.getKeyStroke(KeyEvent.VK_J, StudioWindow.menuShortcutKeyMask);
             tglBtnComma = new JToggleButton(Util.COMMA_CROSSED_ICON);
             tglBtnComma.setSelectedIcon(Util.COMMA_ICON);
 
@@ -92,13 +92,13 @@ public class TabPanel extends JPanel {
             uploadBtn.setFocusable(false);
             uploadBtn.addActionListener(e -> upload());
 
-            keyStroke = KeyStroke.getKeyStroke(KeyEvent.VK_F, StudioPanel.menuShortcutKeyMask | InputEvent.SHIFT_MASK);
+            keyStroke = KeyStroke.getKeyStroke(KeyEvent.VK_F, StudioWindow.menuShortcutKeyMask | InputEvent.SHIFT_MASK);
 
             JButton findBtn = new JButton(Util.FIND_ICON);
             findBtn.setToolTipText(Util.getTooltipWithAccelerator("Find in result", keyStroke));
             findBtn.setBorder(BorderFactory.createEtchedBorder(EtchedBorder.LOWERED));
             findBtn.setFocusable(false);
-            findBtn.addActionListener(e -> panel.getResultSearchPanel().setVisible(true));
+            findBtn.addActionListener(e -> studioWindow.getResultSearchPanel().setVisible(true));
 
             toolbar = new JToolBar();
             toolbar.setFloatable(false);

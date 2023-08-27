@@ -18,7 +18,7 @@ import java.util.regex.PatternSyntaxException;
 
 //@TODO: Should it be really a JPanel? It looks it should be just a JTabel. And anyway any additional components could be added to TabPanel
 public class QGrid extends JPanel implements MouseWheelListener, SearchPanelListener {
-    private StudioPanel panel;
+    private StudioWindow studioWindow;
     private final TableModel model;
     private final JTable table;
     private final WidthAdjuster widthAdjuster;
@@ -55,8 +55,8 @@ public class QGrid extends JPanel implements MouseWheelListener, SearchPanelList
         table.repaint();
     }
 
-    public QGrid(StudioPanel panel, KTableModel model) {
-        this.panel = panel;
+    public QGrid(StudioWindow studioWindow, KTableModel model) {
+        this.studioWindow = studioWindow;
         this.model = model;
 
         InputMap inputMap = getInputMap(JComponent.WHEN_ANCESTOR_OF_FOCUSED_COMPONENT);
@@ -65,13 +65,13 @@ public class QGrid extends JPanel implements MouseWheelListener, SearchPanelList
         Action action = new AbstractAction() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                SearchPanel searchPanel = panel.getResultSearchPanel();
+                SearchPanel searchPanel = studioWindow.getResultSearchPanel();
                 searchPanel.setVisible(true);
             }
         };
 
-        KeyStroke keyStroke = KeyStroke.getKeyStroke(KeyEvent.VK_F, StudioPanel.menuShortcutKeyMask);
-        KeyStroke keyStroke1 = KeyStroke.getKeyStroke(KeyEvent.VK_F, StudioPanel.menuShortcutKeyMask | InputEvent.SHIFT_MASK);
+        KeyStroke keyStroke = KeyStroke.getKeyStroke(KeyEvent.VK_F, StudioWindow.menuShortcutKeyMask);
+        KeyStroke keyStroke1 = KeyStroke.getKeyStroke(KeyEvent.VK_F, StudioWindow.menuShortcutKeyMask | InputEvent.SHIFT_MASK);
 
         inputMap.put(keyStroke, "searchPanel");
         inputMap.put(keyStroke1, "searchPanel");
@@ -227,7 +227,7 @@ public class QGrid extends JPanel implements MouseWheelListener, SearchPanelList
             }
         });
 
-        panel.getMainStatusBar().bindTable(table);
+        studioWindow.getMainStatusBar().bindTable(table);
         initSearch();
     }
 
@@ -262,7 +262,7 @@ public class QGrid extends JPanel implements MouseWheelListener, SearchPanelList
 
     @Override
     public void mouseWheelMoved(MouseWheelEvent e) {
-        if ((e.getModifiers() & StudioPanel.menuShortcutKeyMask) == 0) return;
+        if ((e.getModifiers() & StudioWindow.menuShortcutKeyMask) == 0) return;
 
         Font font = Config.getInstance().getFont(Config.FONT_TABLE);
         int newFontSize = font.getSize() + e.getWheelRotation();
@@ -270,7 +270,7 @@ public class QGrid extends JPanel implements MouseWheelListener, SearchPanelList
         font = font.deriveFont((float) newFontSize);
 
         Config.getInstance().setFont(Config.FONT_TABLE, font);
-        StudioPanel.refreshResultSettings();
+        StudioWindow.refreshResultSettings();
     }
 
     public void setFont(Font font) {
@@ -297,8 +297,8 @@ public class QGrid extends JPanel implements MouseWheelListener, SearchPanelList
         this.doubleClickTimeout = doubleClickTimeout;
     }
 
-    public void setPanel(StudioPanel panel) {
-        this.panel = panel;
+    public void setStudioWindow(StudioWindow studioWindow) {
+        this.studioWindow = studioWindow;
     }
 
     private JPopupMenu getPopupMenu(Point point) {
@@ -315,7 +315,7 @@ public class QGrid extends JPanel implements MouseWheelListener, SearchPanelList
             String name = server.getName().length() == 0 ? connection : server.getName();
             Action action = UserAction.create("Open " + connection,
                     "Open " + name + " in a new tab", 0,
-                    e -> panel.addTab(server, null) );
+                    e -> studioWindow.addTab(server, null) );
             popupMenu.add(action);
         }
         popupMenu.add(new JSeparator());
@@ -355,7 +355,7 @@ public class QGrid extends JPanel implements MouseWheelListener, SearchPanelList
         try {
             searchEngine = new SearchEngine(context);
         } catch (PatternSyntaxException e) {
-            panel.getMainStatusBar().setTemporaryStatus("Error in regular expression: " + e.getMessage());
+            studioWindow.getMainStatusBar().setTemporaryStatus("Error in regular expression: " + e.getMessage());
             return;
         }
 
@@ -381,23 +381,23 @@ public class QGrid extends JPanel implements MouseWheelListener, SearchPanelList
                     table.scrollRectToVisible(rectangle);
 
 
-                    panel.getMainStatusBar().setTemporaryStatus(
+                    studioWindow.getMainStatusBar().setTemporaryStatus(
                             (searchingInSelection ? "Found in selection: " : "Found: ")
                              + text);
-                    panel.getMainStatusBar().setRowColStatus(lastSearchPos);
+                    studioWindow.getMainStatusBar().setRowColStatus(lastSearchPos);
                     return;
                 }
             }
         }
 
-        panel.getMainStatusBar().resetStatuses();
+        studioWindow.getMainStatusBar().resetStatuses();
         if (markAll) {
-            panel.getMainStatusBar().setTemporaryStatus(
+            studioWindow.getMainStatusBar().setTemporaryStatus(
                     (searchingInSelection ? "Marked in selection " : "Marked ")
                     + markCount + " cell(s)");
             table.repaint();
         } else {
-            panel.getMainStatusBar().setTemporaryStatus("Nothing was found" +
+            studioWindow.getMainStatusBar().setTemporaryStatus("Nothing was found" +
                     (searchingInSelection ? " in selection" : "") );
         }
     }
@@ -406,7 +406,7 @@ public class QGrid extends JPanel implements MouseWheelListener, SearchPanelList
     public void closeSearchPanel() {
         markers.clear();
         table.repaint();
-        panel.getResultSearchPanel().setVisible(false);
+        studioWindow.getResultSearchPanel().setVisible(false);
         table.requestFocus();
     }
 }

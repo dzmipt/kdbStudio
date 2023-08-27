@@ -28,7 +28,7 @@ public class EditorTab implements FileWatcher.Listener {
 
     private static int scriptNumber = 0;
 
-    private StudioPanel panel;
+    private StudioWindow studioWindow;
     private EditorPane editorPane;
 
     private long modifiedTimeOnDisk = 0;
@@ -38,8 +38,8 @@ public class EditorTab implements FileWatcher.Listener {
 
     private static final Logger log = LogManager.getLogger();
 
-    public EditorTab(StudioPanel panel) {
-        this.panel = panel;
+    public EditorTab(StudioWindow studioWindow) {
+        this.studioWindow = studioWindow;
         init();
     }
 
@@ -61,10 +61,10 @@ public class EditorTab implements FileWatcher.Listener {
     private void init() {
         if (editorPane != null) throw new IllegalStateException("The EditorTab has been already initialized");
 
-        editorPane = new EditorPane(true, panel.getEditorSearchPanel(), panel.getMainStatusBar());
+        editorPane = new EditorPane(true, studioWindow.getEditorSearchPanel(), studioWindow.getMainStatusBar());
         editorPane.setFocusable(false);
         RSyntaxTextArea textArea = editorPane.getTextArea();
-        textArea.setName("editor" + panel.nextEditorNameIndex());
+        textArea.setName("editor" + studioWindow.nextEditorNameIndex());
 
         textArea.putClientProperty(QueryExecutor.class, new QueryExecutor(this));
     }
@@ -87,19 +87,19 @@ public class EditorTab implements FileWatcher.Listener {
             setLineEnding(content.getLineEnding());
             setModified(content.isModified());
             modifiedTimeOnDisk = readModifiedTime();
-            StudioPanel.rebuildAll();
+            StudioWindow.rebuildAll();
         }
         catch (BadLocationException e) {
             log.error("Unexpected exception", e);
         }
     }
 
-    public StudioPanel getPanel() {
-        return panel;
+    public StudioWindow getStudioWindow() {
+        return studioWindow;
     }
 
-    public void setPanel(StudioPanel panel) {
-        this.panel = panel;
+    public void setStudioWindow(StudioWindow studioWindow) {
+        this.studioWindow = studioWindow;
     }
 
     public EditorPane getPane() {
@@ -180,7 +180,7 @@ public class EditorTab implements FileWatcher.Listener {
         this.server = server;
         getTextArea().setBackground(server.getBackgroundColor());
 
-        panel.getMainStatusBar().setTemporaryStatus("Changed server: " + server.getDescription(true));
+        studioWindow.getMainStatusBar().setTemporaryStatus("Changed server: " + server.getDescription(true));
     }
 
     public LineEnding getLineEnding() {
@@ -222,15 +222,15 @@ public class EditorTab implements FileWatcher.Listener {
 
         try {
             FileReaderWriter.write(filename, getTextArea().getText(), lineEnding);
-            StudioPanel.rebuildAll();
+            StudioWindow.rebuildAll();
             setModified(false);
             modifiedTimeOnDisk = readModifiedTime();
-            panel.addToMruFiles(filename);
+            studioWindow.addToMruFiles(filename);
             return true;
         }
         catch (IOException e) {
             log.error("Error during saving file " + filename, e);
-            panel.getMainStatusBar().setTemporaryStatus("Error during saving file " + filename);
+            studioWindow.getMainStatusBar().setTemporaryStatus("Error during saving file " + filename);
         }
 
         return false;
@@ -245,7 +245,7 @@ public class EditorTab implements FileWatcher.Listener {
 
         if (nowModifiedTimeOnDisk == 0) {
             setModified(true);
-            panel.getMainStatusBar().setTemporaryStatus("File " + filename + " was removed on disk.");
+            studioWindow.getMainStatusBar().setTemporaryStatus("File " + filename + " was removed on disk.");
             return;
         }
 
@@ -273,10 +273,10 @@ public class EditorTab implements FileWatcher.Listener {
                 log.warn("{} has mixing line ending. Line ending will be update to {}", filename, content.getLineEnding());
             }
             setContent(content);
-            panel.getMainStatusBar().setTemporaryStatus("Reloaded: " + filename);
+            studioWindow.getMainStatusBar().setTemporaryStatus("Reloaded: " + filename);
         } catch (IOException e) {
             log.error("Can't reload {} with error {}", filename, e.getMessage());
-            panel.getMainStatusBar().setTemporaryStatus("Reload of " + filename + " failed");
+            studioWindow.getMainStatusBar().setTemporaryStatus("Reload of " + filename + " failed");
         }
     }
 

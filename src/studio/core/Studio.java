@@ -8,7 +8,7 @@ import studio.kdb.Config;
 import studio.kdb.Lm;
 import studio.kdb.Server;
 import studio.kdb.Workspace;
-import studio.ui.StudioPanel;
+import studio.ui.StudioWindow;
 import studio.ui.Util;
 import studio.ui.action.WorkspaceSaver;
 import studio.utils.*;
@@ -79,9 +79,9 @@ public class Studio {
     private static void registerForMacOSMenuJava8() throws Exception {
         // Generate and register the OSXAdapter, passing it a hash of all the methods we wish to
         // use as delegates for various com.apple.eawt.ApplicationListener methods
-        OSXAdapter.setQuitHandler(StudioPanel.class, StudioPanel.class.getDeclaredMethod("quit"));
-        OSXAdapter.setAboutHandler(StudioPanel.class, StudioPanel.class.getDeclaredMethod("about"));
-        OSXAdapter.setPreferencesHandler(StudioPanel.class, StudioPanel.class.getDeclaredMethod("settings"));
+        OSXAdapter.setQuitHandler(StudioWindow.class, StudioWindow.class.getDeclaredMethod("quit"));
+        OSXAdapter.setAboutHandler(StudioWindow.class, StudioWindow.class.getDeclaredMethod("about"));
+        OSXAdapter.setPreferencesHandler(StudioWindow.class, StudioWindow.class.getDeclaredMethod("settings"));
     }
 
     private static void registerForMacOSMenuJava9() throws Exception {
@@ -94,10 +94,10 @@ public class Studio {
         Object handler = Proxy.newProxyInstance(Studio.class.getClassLoader(), new Class[]{settingsClass, quitClass, aboutClass},
                 (o, method, objects) -> {
                     String name = method.getName();
-                    if (name.equals("handlePreferences")) StudioPanel.settings();
-                    else if (name.equals("handleAbout")) StudioPanel.about();
+                    if (name.equals("handlePreferences")) StudioWindow.settings();
+                    else if (name.equals("handleAbout")) StudioWindow.about();
                     else if (name.equals("handleQuitRequestWith")) {
-                        StudioPanel.quit();
+                        StudioWindow.quit();
                         try {
                             Class quiteResponseClass = Class.forName("java.awt.desktop.QuitResponse");
                             quiteResponseClass.getDeclaredMethod("cancelQuit").invoke(objects[1]);
@@ -181,7 +181,7 @@ public class Studio {
         FileWatcher.start();
 
         if (args.length > 0) {
-            new StudioPanel(getInitServer(), args[0]);
+            new StudioWindow(getInitServer(), args[0]);
         } else {
             Workspace workspace = Config.getInstance().loadWorkspace();
             // Reload files from disk if it was modified somewhere else
@@ -203,9 +203,9 @@ public class Studio {
             if (workspace.getWindows().length == 0) {
                 String[] mruFiles = Config.getInstance().getMRUFiles();
                 String filename = mruFiles.length == 0 ? null : mruFiles[0];
-                new StudioPanel(getInitServer(), filename);
+                new StudioWindow(getInitServer(), filename);
             } else {
-                StudioPanel.loadWorkspace(workspace);
+                StudioWindow.loadWorkspace(workspace);
             }
         }
 
@@ -213,7 +213,7 @@ public class Studio {
 
         String hash = Lm.getNotesHash();
         if (! Config.getInstance().getNotesHash().equals(hash) ) {
-            StudioPanel.getPanels()[0].about();
+            StudioWindow.getAllStudioWindows()[0].about();
             Config.getInstance().setNotesHash(hash);
         }
     }

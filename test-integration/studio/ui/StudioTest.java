@@ -34,7 +34,7 @@ import static org.assertj.swing.edt.GuiActionRunner.execute;
 public class StudioTest extends AssertJSwingJUnitTestCase {
 
     protected FrameFixture frameFixture;
-    protected StudioPanel panel;
+    protected StudioWindow studioWindow;
 
     private static Path tmpConfigFolder;
 
@@ -73,8 +73,8 @@ public class StudioTest extends AssertJSwingJUnitTestCase {
         LogErrors.reset();
 
         studio.ui.I18n.setLocale(Locale.getDefault());
-        panel = execute( () -> new StudioPanel(Server.NO_SERVER, null) );
-        frameFixture = new FrameFixture(robot(), panel);
+        studioWindow = execute( () -> new StudioWindow(Server.NO_SERVER, null) );
+        frameFixture = new FrameFixture(robot(), studioWindow);
 
         Assert.assertEquals("expected to have one editor", 1, getEditors().size());
     }
@@ -90,11 +90,11 @@ public class StudioTest extends AssertJSwingJUnitTestCase {
     }
 
     protected List<RSyntaxTextArea> getEditors() {
-        return getEditors(panel);
+        return getEditors(studioWindow);
     }
 
-    protected List<RSyntaxTextArea> getEditors(StudioPanel panel) {
-        return Lookup.getChildren(panel, RSyntaxTextArea.class);
+    protected List<RSyntaxTextArea> getEditors(StudioWindow studioWindow) {
+        return Lookup.getChildren(studioWindow, RSyntaxTextArea.class);
     }
 
     protected Rectangle getScreenBound(Component component) {

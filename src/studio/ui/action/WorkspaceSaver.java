@@ -4,7 +4,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import studio.kdb.Config;
 import studio.kdb.Workspace;
-import studio.ui.StudioPanel;
+import studio.ui.StudioWindow;
 
 import javax.swing.*;
 import java.util.concurrent.Executors;
@@ -31,7 +31,7 @@ public class WorkspaceSaver {
 
     private static void timer() {
         try {
-            SwingUtilities.invokeAndWait(() -> setWorkspace(StudioPanel.getWorkspace()));
+            SwingUtilities.invokeAndWait(() -> setWorkspace(StudioWindow.getWorkspace()));
             save(workspace);
         } catch (Exception e) {
             log.error("Exception during getting workspace", e);

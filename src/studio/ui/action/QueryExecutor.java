@@ -5,7 +5,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import studio.kdb.*;
 import studio.ui.EditorTab;
-import studio.ui.StudioPanel;
+import studio.ui.StudioWindow;
 
 import javax.swing.*;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -181,7 +181,7 @@ public class QueryExecutor implements ProgressCallback {
                 } else {
                     result = get();
                 }
-                StudioPanel.queryExecutionComplete(editor, result);
+                StudioWindow.queryExecutionComplete(editor, result);
             } catch (Exception e) {
                 log.error("Ops... It wasn't expected", e);
             }

@@ -47,7 +47,7 @@ import static javax.swing.JSplitPane.VERTICAL_SPLIT;
 import static studio.ui.EscapeDialog.DialogResult.ACCEPTED;
 import static studio.ui.EscapeDialog.DialogResult.CANCELLED;
 
-public class StudioPanel extends JFrame implements WindowListener {
+public class StudioWindow extends JFrame implements WindowListener {
 
     private static final Logger log = LogManager.getLogger();
     private static final Action editorUndoAction;
@@ -142,8 +142,8 @@ public class StudioPanel extends JFrame implements WindowListener {
 
     private static Map<String, JFileChooser> fileChooserMap = new HashMap<>();
 
-    private static List<StudioPanel> allPanels = new ArrayList<>();
-    private static StudioPanel activePanel = null;
+    private static List<StudioWindow> allWindows = new ArrayList<>();
+    private static StudioWindow activeWindow = null;
 
     private final List<Server> serverHistory;
 
@@ -480,15 +480,15 @@ public class StudioPanel extends JFrame implements WindowListener {
     }
 
     private static void saveAll() {
-        for (StudioPanel panel: allPanels) {
+        for (StudioWindow panel: allWindows) {
             panel.rootEditorsPanel.execute(editorTab -> editorTab.saveFileOnDisk(false));
         }
     }
 
     private void arrangeAll() {
-        int noWins = allPanels.size();
+        int noWins = allWindows.size();
 
-        Iterator<StudioPanel> panelIterator = allPanels.iterator();
+        Iterator<StudioWindow> windowIterator = allWindows.iterator();
 
         Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
 
@@ -506,11 +506,11 @@ public class StudioPanel extends JFrame implements WindowListener {
             int width = screenSize.width / noCols;
 
             for (int col = 0;col < noCols;col++) {
-                StudioPanel panel = panelIterator.next();
+                StudioWindow window = windowIterator.next();
 
-                panel.setSize(width,height);
-                panel.setLocation(col * width,((noRows - 1) - row) * height);
-                ensureDeiconified(panel);
+                window.setSize(width,height);
+                window.setLocation(col * width,((noRows - 1) - row) * height);
+                ensureDeiconified(window);
             }
         }
     }
@@ -552,8 +552,8 @@ public class StudioPanel extends JFrame implements WindowListener {
         newWindowAction = UserAction.create(I18n.getString("NewWindow"),  "Open a new window",
                 KeyEvent.VK_N, KeyStroke.getKeyStroke(KeyEvent.VK_N, menuShortcutKeyMask | InputEvent.SHIFT_MASK),
                 e -> {
-                    StudioPanel panel = new StudioPanel(editor.getServer(), null);
-                    panel.rebuildMenuAndTooblar();
+                    StudioWindow window = new StudioWindow(editor.getServer(), null);
+                    window.rebuildMenuAndTooblar();
                 } );
 
         newTabAction = UserAction.create("New Tab",  "Open a new tab", KeyEvent.VK_T,
@@ -760,12 +760,12 @@ public class StudioPanel extends JFrame implements WindowListener {
     }
 
     public static void settings() {
-        SettingsDialog dialog = new SettingsDialog(activePanel);
+        SettingsDialog dialog = new SettingsDialog(activeWindow);
         dialog.alignAndShow();
         if (dialog.getResult() == CANCELLED) return;
 
         dialog.saveSettings();
-        activePanel.rebuildToolbar();
+        activeWindow.rebuildToolbar();
     }
 
     private void toggleWordWrap() {
@@ -777,8 +777,8 @@ public class StudioPanel extends JFrame implements WindowListener {
     }
 
     public static void refreshEditorsSettings() {
-        for (StudioPanel panel: allPanels) {
-            panel.rootEditorsPanel.execute(editorTab -> {
+        for (StudioWindow window: allWindows) {
+            window.rootEditorsPanel.execute(editorTab -> {
                 RSyntaxTextArea editor = editorTab.getTextArea();
                 editor.setHighlightCurrentLine(CONFIG.getBoolean(Config.RSTA_HIGHLIGHT_CURRENT_LINE));
                 editor.setAnimateBracketMatching(CONFIG.getBoolean(Config.RSTA_ANIMATE_BRACKET_MATCHING));
@@ -794,27 +794,23 @@ public class StudioPanel extends JFrame implements WindowListener {
 
     public static void refreshResultSettings() {
         long doubleClickTimeout = CONFIG.getInt(Config.EMULATED_DOUBLE_CLICK_TIMEOUT);
-        for (StudioPanel panel: allPanels) {
-            int count = panel.tabbedPane.getTabCount();
+        for (StudioWindow window: allWindows) {
+            int count = window.tabbedPane.getTabCount();
             for (int index=0; index<count; index++) {
-                TabPanel tabPanel = panel.getResultPane(index);
+                TabPanel tabPanel = window.getResultPane(index);
                 tabPanel.setDoubleClickTimeout(doubleClickTimeout);
                 tabPanel.refreshFont();
             }
         }
     }
 
-    public EditorsPanel getRootEditorsPanel() {
-        return rootEditorsPanel;
-    }
-
-    public static StudioPanel[] getPanels() {
-        return allPanels.toArray(new StudioPanel[0]);
+    public static StudioWindow[] getAllStudioWindows() {
+        return allWindows.toArray(new StudioWindow[0]);
     }
 
     public static void about() {
-        HelpDialog help = new HelpDialog(activePanel);
-        Util.centerChildOnParent(help,activePanel);
+        HelpDialog help = new HelpDialog(activeWindow);
+        Util.centerChildOnParent(help, activeWindow);
         // help.setTitle("About Studio for kdb+");
         help.pack();
         help.setVisible(true);
@@ -825,9 +821,9 @@ public class StudioPanel extends JFrame implements WindowListener {
         try {
             ActionOnExit action = CONFIG.getEnum(Config.ACTION_ON_EXIT);
             if (action != ActionOnExit.NOTHING) {
-                for (StudioPanel panel : allPanels.toArray(new StudioPanel[0])) {
-                    panel.toFront();
-                    boolean complete = panel.rootEditorsPanel.execute(editorTab -> {
+                for (StudioWindow window : allWindows.toArray(new StudioWindow[0])) {
+                    window.toFront();
+                    boolean complete = window.rootEditorsPanel.execute(editorTab -> {
                         if (editorTab.isModified()) {
                             if (!EditorsPanel.checkAndSaveTab(editorTab)) {
                                 return false;
@@ -845,8 +841,8 @@ public class StudioPanel extends JFrame implements WindowListener {
                 }
             }
         } finally {
-            if (allPanels.size() > 0) {
-                activePanel.toFront();
+            if (allWindows.size() > 0) {
+                activeWindow.toFront();
             }
             WorkspaceSaver.setEnabled(true);
         }
@@ -857,7 +853,7 @@ public class StudioPanel extends JFrame implements WindowListener {
 
     private void closePanel() {
         // If this is the last window, we need to properly persist workspace
-        if (allPanels.size() == 1) {
+        if (allWindows.size() == 1) {
             quit();
         } else {
             rootEditorsPanel.execute(editorTab -> editorTab.getEditorsPanel().closeTab(editorTab));
@@ -867,18 +863,18 @@ public class StudioPanel extends JFrame implements WindowListener {
 
 
     public void closeFrame() {
-        if (allPanels.size() == 1) {
+        if (allWindows.size() == 1) {
             quit();
         } else {
             dispose();
-            allPanels.remove(this);
+            allWindows.remove(this);
             rebuildAll();
         }
     }
 
     public static void rebuildAll() {
-        for (StudioPanel panel: allPanels) {
-            panel.rebuildMenuAndTooblar();
+        for (StudioWindow window: allWindows) {
+            window.rebuildMenuAndTooblar();
         }
     }
 
@@ -1009,7 +1005,7 @@ public class StudioPanel extends JFrame implements WindowListener {
                         Server clone = new Server(s);
                         clone.setName("Clone of " + clone.getName());
 
-                        EditServerForm f = new EditServerForm(StudioPanel.this,clone);
+                        EditServerForm f = new EditServerForm(StudioWindow.this,clone);
                         f.alignAndShow();
 
                         if (f.getResult() == ACCEPTED) {
@@ -1045,12 +1041,12 @@ public class StudioPanel extends JFrame implements WindowListener {
         addToMenu(menu, splitEditorRight, splitEditorDown, null, minMaxDividerAction, toggleDividerOrientationAction,
                 arrangeAllAction, nextEditorTabAction, prevEditorTabAction);
 
-        if (allPanels.size() > 0) {
+        if (allWindows.size() > 0) {
             menu.addSeparator();
 
             int i = 0;
-            for (StudioPanel panel: allPanels) {
-                EditorTab editor = panel.editor;
+            for (StudioWindow window: allWindows) {
+                EditorTab editor = window.editor;
                 String t = "unknown";
                 String filename = editor.getFilename();
 
@@ -1066,11 +1062,11 @@ public class StudioPanel extends JFrame implements WindowListener {
                 item.addActionListener(new ActionListener() {
 
                     public void actionPerformed(ActionEvent e) {
-                        ensureDeiconified(panel);
+                        ensureDeiconified(window);
                     }
                 });
 
-                if (panel == this)
+                if (window == this)
                     item.setIcon(Util.CHECK_ICON);
                 else
                     item.setIcon(Util.BLANK_ICON);
@@ -1303,8 +1299,8 @@ public class StudioPanel extends JFrame implements WindowListener {
         return editor;
     }
 
-    public static StudioPanel getActivePanel() {
-        return activePanel;
+    public static StudioWindow getActiveStudioWindow() {
+        return activeWindow;
     }
 
     public void updateEditor(EditorTab newEditor) {
@@ -1319,7 +1315,7 @@ public class StudioPanel extends JFrame implements WindowListener {
         newEditor.getEditorsPanel().setDimEditors(false);
 
         editor = newEditor;
-        editor.setPanel(this);
+        editor.setStudioWindow(this);
         mainStatusBar.updateStatuses(editor.getTextArea());
         setServer(editor.getServer());
         lastQuery = null;
@@ -1344,19 +1340,19 @@ public class StudioPanel extends JFrame implements WindowListener {
 
     private void resultTabDragged(DragEvent event) {
         DraggableTabbedPane targetPane = event.getTargetPane();
-        StudioPanel targetPanel = (StudioPanel) targetPane.getClientProperty(StudioPanel.class);
-        ((TabPanel)targetPane.getComponentAt(event.getTargetIndex())).setPanel(targetPanel);
+        StudioWindow targetStudiowWindow = (StudioWindow) targetPane.getClientProperty(StudioWindow.class);
+        ((TabPanel)targetPane.getComponentAt(event.getTargetIndex())).setStudioWindow(targetStudiowWindow);
     }
 
-    public StudioPanel(Server server, String filename) {
+    public StudioWindow(Server server, String filename) {
         this(new Workspace.Window(server, filename));
     }
 
-    public StudioPanel(Workspace.Window workspaceWindow) {
+    public StudioWindow(Workspace.Window workspaceWindow) {
         loading = true;
 
-        allPanels.add(this);
-        if (activePanel == null) activePanel = this;
+        allWindows.add(this);
+        if (activeWindow == null) activeWindow = this;
 
         serverHistory = new HistoricalList<>(CONFIG.getServerHistoryDepth(),
                 CONFIG.getServerHistory());
@@ -1438,7 +1434,7 @@ public class StudioPanel extends JFrame implements WindowListener {
                 refreshResultTab();
             }
         });
-        tabbedPane.putClientProperty(StudioPanel.class, this);
+        tabbedPane.putClientProperty(StudioWindow.class, this);
         tabbedPane.addDragListener( evt -> resultTabDragged(evt));
         return tabbedPane;
     }
@@ -1499,12 +1495,11 @@ public class StudioPanel extends JFrame implements WindowListener {
         addWindowFocusListener(new WindowFocusListener() {
             @Override
             public void windowGainedFocus(WindowEvent e) {
-                StudioPanel newPanel = StudioPanel.this;
-                if (StudioPanel.activePanel == newPanel) return;
+                if (StudioWindow.activeWindow == StudioWindow.this) return;
 
-                StudioPanel.activePanel.editor.getEditorsPanel().setDimEditors(true);
-                newPanel.editor.getEditorsPanel().setDimEditors(false);
-                StudioPanel.activePanel = newPanel;
+                StudioWindow.activeWindow.editor.getEditorsPanel().setDimEditors(true);
+                editor.getEditorsPanel().setDimEditors(false);
+                StudioWindow.activeWindow = StudioWindow.this;
             }
 
             @Override
@@ -1542,20 +1537,20 @@ public class StudioPanel extends JFrame implements WindowListener {
 
     public static void loadWorkspace(Workspace workspace) {
         for (Workspace.Window window: workspace.getWindows()) {
-            new StudioPanel(window);
+            new StudioWindow(window);
         }
 
         int index = workspace.getSelectedWindow();
-        if (index >= 0 && index < allPanels.size()) {
-            allPanels.get(index).toFront();
+        if (index >= 0 && index < allWindows.size()) {
+            allWindows.get(index).toFront();
         }
 
-        if (allPanels.size() == 0) {
-            new StudioPanel(Server.NO_SERVER, null);
+        if (allWindows.size() == 0) {
+            new StudioWindow(Server.NO_SERVER, null);
         }
 
-        for (StudioPanel panel: allPanels) {
-            panel.refreshFrameTitle();
+        for (StudioWindow window: allWindows) {
+            window.refreshFrameTitle();
         }
         rebuildAll();
     }
@@ -1701,11 +1696,11 @@ public class StudioPanel extends JFrame implements WindowListener {
             editor.getPane().setEditorStatus("Last query was cancelled");
         }
 
-        StudioPanel panel = editor.getPanel();
+        StudioWindow window = editor.getStudioWindow();
         if (error == null || error instanceof c.K4Exception) {
             try {
                 if (queryResult.isComplete()) {
-                    JTabbedPane tabbedPane = panel.tabbedPane;
+                    JTabbedPane tabbedPane = window.tabbedPane;
                     if (tabbedPane.getTabCount() >= CONFIG.getResultTabsCount()) {
                         for (int index = 0; index < tabbedPane.getTabCount(); index++) {
                             TabPanel tab = (TabPanel)tabbedPane.getComponentAt(index);
@@ -1715,7 +1710,7 @@ public class StudioPanel extends JFrame implements WindowListener {
                             }
                         }
                     }
-                    TabPanel tab = new TabPanel(panel, queryResult);
+                    TabPanel tab = new TabPanel(window, queryResult);
                     tab.addInto(tabbedPane);
                     tab.setToolTipText(editor.getServer().getConnectionString());
                 }
@@ -1737,16 +1732,16 @@ public class StudioPanel extends JFrame implements WindowListener {
                     "Studio for kdb+");
         }
 
-        panel.refreshActionState();
+        window.refreshActionState();
     }
 
     public static Workspace getWorkspace() {
         Workspace workspace = new Workspace();
         Window activeWindow = KeyboardFocusManager.getCurrentKeyboardFocusManager().getActiveWindow();
 
-        for (StudioPanel panel : allPanels) {
-            Workspace.Window window = workspace.addWindow(panel == activeWindow);
-            panel.rootEditorsPanel.getWorkspace(window);
+        for (StudioWindow window : allWindows) {
+            Workspace.Window workspaceWindow = workspace.addWindow(window == activeWindow);
+            window.rootEditorsPanel.getWorkspace(workspaceWindow);
         }
         return workspace;
     }

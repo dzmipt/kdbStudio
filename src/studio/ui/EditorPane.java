@@ -70,7 +70,7 @@ public class EditorPane extends JPanel implements MouseWheelListener, SearchPane
 
     @Override
     public void mouseWheelMoved(MouseWheelEvent e) {
-        if ((e.getModifiers() & StudioPanel.menuShortcutKeyMask) == 0) return;
+        if ((e.getModifiers() & StudioWindow.menuShortcutKeyMask) == 0) return;
 
         Font font = Config.getInstance().getFont(Config.FONT_EDITOR);
         int newFontSize = font.getSize() + e.getWheelRotation();
@@ -78,8 +78,8 @@ public class EditorPane extends JPanel implements MouseWheelListener, SearchPane
         font = font.deriveFont((float) newFontSize);
 
         Config.getInstance().setFont(Config.FONT_EDITOR, font);
-        StudioPanel.refreshEditorsSettings();
-        StudioPanel.refreshResultSettings();
+        StudioWindow.refreshEditorsSettings();
+        StudioWindow.refreshResultSettings();
     }
 
     public void hideSearchPanel() {

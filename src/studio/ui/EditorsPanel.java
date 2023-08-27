@@ -28,18 +28,18 @@ import java.util.Set;
 public class EditorsPanel extends JPanel {
 
     private EditorsPanel parent, left, right;
-    private final StudioPanel panel;
+    private final StudioWindow studioWindow;
     private DraggableTabbedPane tabbedEditors;
     private JSplitPane splitPane;
 
     private static final Logger log = LogManager.getLogger();
 
-    public EditorsPanel(StudioPanel panel, Workspace.Window workspaceWindow) {
-        this.panel = panel;
+    public EditorsPanel(StudioWindow studioWindow, Workspace.Window workspaceWindow) {
+        this.studioWindow = studioWindow;
 
         if (workspaceWindow != null && workspaceWindow.isSplit()) {
-            left = loadWorkspaceWindow(panel, workspaceWindow.getLeft());
-            right = loadWorkspaceWindow(panel, workspaceWindow.getRight());
+            left = loadWorkspaceWindow(studioWindow, workspaceWindow.getLeft());
+            right = loadWorkspaceWindow(studioWindow, workspaceWindow.getRight());
             init(left, right, workspaceWindow.isVerticalSplit());
             return;
         }
@@ -119,12 +119,12 @@ public class EditorsPanel extends JPanel {
     }
 
     public EditorTab addTab(Server server, String filename) {
-        EditorTab editor = new EditorTab(panel);
+        EditorTab editor = new EditorTab(studioWindow);
         editor.getTextArea().addFocusListener(new FocusAdapter() {
             @Override
             public void focusGained(FocusEvent e) {
                 log.info("FocusGained: {}", editor.getTabTitle());
-                panel.updateEditor(editor);
+                studioWindow.updateEditor(editor);
             }
         });
         JTextComponent textArea = editor.getTextArea();
@@ -146,8 +146,8 @@ public class EditorsPanel extends JPanel {
         textArea.getDocument().addDocumentListener(new MarkingDocumentListener(editor));
         textArea.requestFocus();
 
-        panel.setServer(server);
-        panel.refreshActionState();
+        studioWindow.setServer(server);
+        studioWindow.refreshActionState();
         refreshEditorTitle(editor);
         return editor;
     }
@@ -156,7 +156,7 @@ public class EditorsPanel extends JPanel {
         tabbedEditors.add(editorTab.getTabTitle(), editorTab.getPane());
         tabbedEditors.setSelectedIndex(tabbedEditors.getTabCount()-1);
 
-        if (panel.getActiveEditor() == editorTab && panel == StudioPanel.getActivePanel()) {
+        if (studioWindow.getActiveEditor() == editorTab && studioWindow == StudioWindow.getActiveStudioWindow()) {
             tabbedEditors.setDimSelectedTab(false);
         }
     }
@@ -172,11 +172,11 @@ public class EditorsPanel extends JPanel {
         remove(tabbedEditors);
         tabbedEditors = null;
 
-        EditorsPanel aRight = new EditorsPanel(panel, null);
+        EditorsPanel aRight = new EditorsPanel(studioWindow, null);
         //@TODO move modified content as well
         aRight.addTab(editors.get(selectedIndex).getServer(), editors.get(selectedIndex).getFilename());
 
-        EditorsPanel aLeft = new EditorsPanel(panel, null);
+        EditorsPanel aLeft = new EditorsPanel(studioWindow, null);
         for(EditorTab editor: editors) {
             aLeft.addTab(editor);
         }
@@ -233,14 +233,14 @@ public class EditorsPanel extends JPanel {
         try {
             content = FileReaderWriter.read(filename);
             if (content.hasMixedLineEnding()) {
-                StudioOptionPane.showMessage(editor.getPanel(), "The file " + filename + " has mixed line endings. Mixed line endings are not supported.\n\n" +
+                StudioOptionPane.showMessage(editor.getStudioWindow(), "The file " + filename + " has mixed line endings. Mixed line endings are not supported.\n\n" +
                                 "All line endings are set to " + content.getLineEnding() + " style.",
                         "Mixed Line Ending");
             }
             return true;
         } catch (IOException e) {
             log.error("Failed to load file {}", filename, e);
-            StudioOptionPane.showError(editor.getPanel(), "Failed to load file "+filename + ".\n" + e.getMessage(),
+            StudioOptionPane.showError(editor.getStudioWindow(), "Failed to load file "+filename + ".\n" + e.getMessage(),
                     "Error in file load");
         } finally {
             //@TODO check if this is correct.
@@ -252,7 +252,7 @@ public class EditorsPanel extends JPanel {
 
     public static boolean saveAsFile(EditorTab editor) {
         String filename = editor.getFilename();
-        File file = StudioPanel.chooseFile(editor.getPanel(), Config.SAVE_FILE_CHOOSER, JFileChooser.SAVE_DIALOG, "Save script as",
+        File file = StudioWindow.chooseFile(editor.getStudioWindow(), Config.SAVE_FILE_CHOOSER, JFileChooser.SAVE_DIALOG, "Save script as",
                 filename == null ? null : new File(filename),
                 new FileNameExtensionFilter("q script", "q"));
 
@@ -260,7 +260,7 @@ public class EditorsPanel extends JPanel {
 
         filename = file.getAbsolutePath();
         if (file.exists()) {
-            int choice = StudioOptionPane.showYesNoDialog(editor.getPanel(),
+            int choice = StudioOptionPane.showYesNoDialog(editor.getStudioWindow(),
                     filename + " already exists.\nOverwrite?",
                     "Overwrite?");
 
@@ -309,7 +309,7 @@ public class EditorsPanel extends JPanel {
         if (tabbedEditors.getTabCount()>0) return;
 
         if (parent == null) {
-            panel.closeFrame();
+            studioWindow.closeFrame();
         } else {
             parent.unite();
         }
@@ -357,7 +357,7 @@ public class EditorsPanel extends JPanel {
             }
         }
         //@TODO dirty
-        panel.panel.refreshFrameTitle();
+        panel.studioWindow.refreshFrameTitle();
     }
 
     public void getWorkspace(Workspace.Window window) {
@@ -389,15 +389,15 @@ public class EditorsPanel extends JPanel {
         }
     }
 
-    private static EditorsPanel loadWorkspaceWindow(StudioPanel panel, Workspace.Window window) {
+    private static EditorsPanel loadWorkspaceWindow(StudioWindow studioWindow, Workspace.Window window) {
         if (window == null) {
             log.warn("Workspace is corrupted. There is no one of the split. Creating empty one");
-            EditorsPanel editorsPanel = new EditorsPanel(panel, null);
+            EditorsPanel editorsPanel = new EditorsPanel(studioWindow, null);
             editorsPanel.addTab(Server.NO_SERVER, null);
             return editorsPanel;
         }
 
-        return new EditorsPanel(panel, window);
+        return new EditorsPanel(studioWindow, window);
     }
 
     private void loadWorkspaceTabs(Workspace.Window window) {
@@ -478,7 +478,7 @@ public class EditorsPanel extends JPanel {
         }
         private void update() {
             editor.setModified(true);
-            panel.refreshActionState();
+            studioWindow.refreshActionState();
         }
         public void changedUpdate(DocumentEvent evt) { update(); }
         public void insertUpdate(DocumentEvent evt) {

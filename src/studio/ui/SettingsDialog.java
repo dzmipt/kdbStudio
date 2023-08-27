@@ -347,14 +347,14 @@ public class SettingsDialog extends EscapeDialog {
         changedEditor |= CONFIG.setBoolean(Config.AUTO_REPLACE_TAB_ON_OPEN, chBoxReplaceTabOnOpen.isSelected());;
 
         if (changedEditor) {
-            StudioPanel.refreshEditorsSettings();
+            StudioWindow.refreshEditorsSettings();
         }
 
         boolean changedResult = CONFIG.setInt(Config.EMULATED_DOUBLE_CLICK_TIMEOUT, getEmulatedDoubleClickTimeout());
         changedResult |= resultFontSelection.saveSettings();
 
         if (changedResult) {
-            StudioPanel.refreshResultSettings();
+            StudioWindow.refreshResultSettings();
         }
 
         String lfClass = getLookAndFeelClassName();
