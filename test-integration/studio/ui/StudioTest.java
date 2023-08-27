@@ -2,7 +2,6 @@ package studio.ui;
 
 import org.apache.commons.io.FileUtils;
 import org.assertj.swing.core.EmergencyAbortListener;
-import org.assertj.swing.core.Robot;
 import org.assertj.swing.edt.GuiActionRunner;
 import org.assertj.swing.fixture.FrameFixture;
 import org.assertj.swing.fixture.JTextComponentFixture;
@@ -10,10 +9,10 @@ import org.assertj.swing.junit.testcase.AssertJSwingJUnitTestCase;
 import org.junit.AfterClass;
 import org.junit.Assert;
 import org.junit.BeforeClass;
-import org.junit.Test;
 import studio.core.Studio;
 import studio.kdb.Server;
 import studio.utils.LogErrors;
+import studio.utils.MockConfig;
 import studio.utils.log4j.EnvConfig;
 
 import java.awt.*;
@@ -24,12 +23,13 @@ import java.util.List;
 import java.util.Locale;
 
 import static java.awt.event.KeyEvent.*;
+import static junit.framework.TestCase.assertEquals;
 import static junit.framework.TestCase.fail;
 import static org.assertj.swing.core.KeyPressInfo.keyCode;
 
 public class StudioTest extends AssertJSwingJUnitTestCase {
 
-    private FrameFixture window;
+    protected FrameFixture frameFixture;
     protected StudioPanel panel;
 
     private static Path tmpConfigFolder;
@@ -47,6 +47,8 @@ public class StudioTest extends AssertJSwingJUnitTestCase {
         Files.createDirectories(tmpConfigFolder);
         EnvConfig.setBaseFolder(tmpConfigFolder.toString());
         System.out.println("Setup temporary folder for configs: " + tmpConfigFolder.toString());
+
+        MockConfig.init();
     }
 
     @AfterClass
@@ -66,11 +68,9 @@ public class StudioTest extends AssertJSwingJUnitTestCase {
     protected void onSetUp() {
         LogErrors.reset();
 
-        Robot robot = robot();
-
         studio.ui.I18n.setLocale(Locale.getDefault());
         panel = GuiActionRunner.execute( () -> new StudioPanel(Server.NO_SERVER, null) );
-        window = new FrameFixture(robot, panel.getFrame());
+        frameFixture = new FrameFixture(robot(), panel.getFrame());
 
         List<EditorTab> editors = panel.getRootEditorsPanel().getAllEditors(false);
         Assert.assertEquals("expected to have one editor", 1, editors.size());
@@ -86,41 +86,21 @@ public class StudioTest extends AssertJSwingJUnitTestCase {
         }
     }
 
-    @Test
-    public void test() {
-        JTextComponentFixture tb = window.textBox("editor1");
-        tb.requireEmpty();
-        tb.enterText("a");
-        tb.requireText("a");
-        tb.enterText("bc\ndef");
-        tb.requireText("abc\ndef");
+    protected Rectangle getScreenBound(Component component) {
+        return GuiActionRunner.execute(() -> new Rectangle(component.getLocationOnScreen(), component.getSize()) );
     }
 
-    private Rectangle getScreenBound(Component component) {
-        return new Rectangle(component.getLocationOnScreen(), component.getSize());
+
+    protected void split(String editorName, boolean verticallySplit) {
+        int count = panel.getRootEditorsPanel().getAllEditors(false).size();
+        JTextComponentFixture editor = frameFixture.textBox(editorName);
+        editor.focus();
+        String menuName = verticallySplit ? "Split down" : "Split right";
+        frameFixture.menuItem(menuName).click();
+
+        int newCount = panel.getRootEditorsPanel().getAllEditors(false).size();
+        assertEquals("Number of editor should increase after split", count + 1, newCount);
     }
 
-    @Test
-    public void splitTest() {
-        JTextComponentFixture editor1 = window.textBox("editor1");
-        Rectangle bound = GuiActionRunner.execute(() -> getScreenBound(editor1.target()));
-
-        window.menuItem("Split right").click();
-        List<EditorTab> editors = panel.getRootEditorsPanel().getAllEditors(false);
-        Assert.assertEquals("expected to have one editor", 2, editors.size());
-
-        JTextComponentFixture editor2 = window.textBox("editor2");
-
-        Rectangle bound1 = GuiActionRunner.execute(() -> getScreenBound(editor1.target()));
-        Rectangle bound2 = GuiActionRunner.execute(() -> getScreenBound(editor2.target()));
-
-        Assert.assertTrue(bound1.x + bound1.width < bound2.x);
-        Assert.assertTrue(bound1.y == bound2.y );
-        Assert.assertTrue(bound1.height == bound2.height );
-        Assert.assertTrue(Math.abs(bound.y - bound1.y) < 10 );
-        Assert.assertTrue(Math.abs(bound1.x - bound.x) < 10 );
-        Assert.assertTrue(bound1.width + bound2.width < bound.width);
-
-    }
 
 }

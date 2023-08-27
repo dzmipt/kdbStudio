@@ -6,13 +6,13 @@ import org.assertj.swing.fixture.JTextComponentFixture;
 import org.assertj.swing.junit.testcase.AssertJSwingJUnitTestCase;
 import org.junit.Test;
 
-public class TestTestFrame extends AssertJSwingJUnitTestCase {
+public class RSTextAreaTest extends AssertJSwingJUnitTestCase {
 
     private FrameFixture frameFixture;
 
     @Override
     protected void onSetUp() throws Exception {
-        TestFrame frame = GuiActionRunner.execute(() -> new TestFrame());
+        RSTextAreaFrameForTest frame = GuiActionRunner.execute(() -> new RSTextAreaFrameForTest());
 
         frameFixture = new FrameFixture(robot(), frame);
     }

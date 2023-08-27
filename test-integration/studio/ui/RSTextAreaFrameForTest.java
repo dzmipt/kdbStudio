@@ -7,9 +7,9 @@ import studio.ui.rstextarea.StudioRSyntaxTextArea;
 import javax.swing.*;
 import java.awt.*;
 
-public class TestFrame extends JFrame {
+public class RSTextAreaFrameForTest extends JFrame {
 
-    public TestFrame() {
+    public RSTextAreaFrameForTest() {
         super("Frame");
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         JPanel panel = new JPanel(new BorderLayout());
@@ -32,6 +32,6 @@ public class TestFrame extends JFrame {
     }
 
     public static void main(String[] args) throws Exception {
-        SwingUtilities.invokeAndWait(()->new TestFrame());
+        SwingUtilities.invokeAndWait(()->new RSTextAreaFrameForTest());
     }
 }
