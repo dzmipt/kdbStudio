@@ -31,7 +31,7 @@ public class Studio {
 
     private static boolean macOSSystemMenu = false;
 
-    private static void initLogger() {
+    public static void initLogger() {
         PrintStream stdoutStream = IoBuilder.forLogger("stdout").setLevel(Level.INFO).buildPrintStream();
         PrintStream stderrStream = IoBuilder.forLogger("stderr").setLevel(Level.ERROR).buildPrintStream();
         System.setOut(stdoutStream);

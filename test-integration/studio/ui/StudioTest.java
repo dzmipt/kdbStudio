@@ -11,7 +11,9 @@ import org.junit.AfterClass;
 import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.Test;
+import studio.core.Studio;
 import studio.kdb.Server;
+import studio.utils.LogErrors;
 import studio.utils.log4j.EnvConfig;
 
 import java.awt.*;
@@ -22,6 +24,7 @@ import java.util.List;
 import java.util.Locale;
 
 import static java.awt.event.KeyEvent.*;
+import static junit.framework.TestCase.fail;
 import static org.assertj.swing.core.KeyPressInfo.keyCode;
 
 public class StudioTest extends AssertJSwingJUnitTestCase {
@@ -31,6 +34,11 @@ public class StudioTest extends AssertJSwingJUnitTestCase {
 
     private static Path tmpConfigFolder;
 
+    @BeforeClass
+    public static void initLogErrors() {
+        Studio.initLogger();
+        LogErrors.init();
+    }
 
     @BeforeClass
     public static void prepareConfig() throws IOException {
@@ -56,6 +64,8 @@ public class StudioTest extends AssertJSwingJUnitTestCase {
 
     @Override
     protected void onSetUp() {
+        LogErrors.reset();
+
         Robot robot = robot();
 
         studio.ui.I18n.setLocale(Locale.getDefault());
@@ -64,6 +74,16 @@ public class StudioTest extends AssertJSwingJUnitTestCase {
 
         List<EditorTab> editors = panel.getRootEditorsPanel().getAllEditors(false);
         Assert.assertEquals("expected to have one editor", 1, editors.size());
+    }
+
+    @Override
+    protected void onTearDown() throws Exception {
+        super.onTearDown();
+
+        String[] errors = LogErrors.get();
+        if (errors.length > 0) {
+            fail("Error logs were detected:\n" + String.join("\n", errors));
+        }
     }
 
     @Test
