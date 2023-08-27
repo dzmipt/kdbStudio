@@ -30,6 +30,11 @@ jobs:
     - name: Integration tests
       run: ./intTests-Xvfb.sh
 
+    - uses: actions/upload-artifact@v3
+      with:
+        name: Failed tests
+        path: failed-gui-tests
+
     - name: Report
       uses: dorny/test-reporter@v1
       if: always()

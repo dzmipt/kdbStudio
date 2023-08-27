@@ -46,4 +46,10 @@ public class SplitTest extends StudioTest {
         Assert.assertTrue(bound1.height + bound2.height < bound.height);
     }
 
+    @Test
+    public void addTabTest() {
+        addTab("editor1");
+        frameFixture.textBox("editor2").requireFocused();
+    }
+
 }

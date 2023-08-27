@@ -1,15 +1,18 @@
 package studio.ui;
 
 import org.apache.commons.io.FileUtils;
+import org.assertj.swing.annotation.GUITest;
 import org.assertj.swing.core.EmergencyAbortListener;
 import org.assertj.swing.fixture.FrameFixture;
 import org.assertj.swing.fixture.JTabbedPaneFixture;
 import org.assertj.swing.fixture.JTextComponentFixture;
+import org.assertj.swing.junit.runner.GUITestRunner;
 import org.assertj.swing.junit.testcase.AssertJSwingJUnitTestCase;
 import org.fife.ui.rsyntaxtextarea.RSyntaxTextArea;
 import org.junit.AfterClass;
 import org.junit.Assert;
 import org.junit.BeforeClass;
+import org.junit.runner.RunWith;
 import studio.core.Studio;
 import studio.kdb.Server;
 import studio.utils.LogErrors;
@@ -30,7 +33,10 @@ import static junit.framework.TestCase.assertEquals;
 import static junit.framework.TestCase.fail;
 import static org.assertj.swing.core.KeyPressInfo.keyCode;
 import static org.assertj.swing.edt.GuiActionRunner.execute;
+import static org.assertj.swing.util.Platform.controlOrCommandKey;
 
+@GUITest
+@RunWith(GUITestRunner.class)
 public class StudioTest extends AssertJSwingJUnitTestCase {
 
     protected FrameFixture frameFixture;
@@ -108,11 +114,17 @@ public class StudioTest extends AssertJSwingJUnitTestCase {
         JTabbedPane tabbedPane = Lookup.getParent(editorFixture.target(), JTabbedPane.class);
         JTabbedPaneFixture tabbedFixture = new JTabbedPaneFixture(robot(), tabbedPane);
 
-        int count = execute(() -> tabbedPane.getTabCount());
+        int count = getEditors().size();
+        int tabCount = execute(() -> tabbedPane.getTabCount());
 
         editorFixture.focus();
+        editorFixture.pressAndReleaseKey(keyCode(VK_N).modifiers(controlOrCommandKey()));
 
+        int newCount = getEditors().size();
+        int newTabCount = execute(() -> tabbedPane.getTabCount());
 
+        assertEquals("Number of tabs should increase by 1", tabCount + 1, newTabCount);
+        assertEquals("Number of editors should increase by 1", count + 1, newCount);
     }
 
     protected void split(String editorName, boolean verticallySplit) {
