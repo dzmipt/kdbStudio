@@ -32,7 +32,7 @@ jobs:
     - name: Integration tests
       run: ./intTests-Xvfb.sh
 
-    - nmae: Log files
+    - name: Log files
       run: find .
       if: always()
 
