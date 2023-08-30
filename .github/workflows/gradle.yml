@@ -34,9 +34,10 @@ jobs:
 
     - name: Upload Failed test screenshots
       uses: actions/upload-artifact@v3.1.2
+      if: ${{ failure() }}
       with:
         name: Failed tests
-        path: ./
+        path: ./failed-gui-tests/
 
     - name: Report
       uses: dorny/test-reporter@v1
