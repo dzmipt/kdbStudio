@@ -32,6 +32,10 @@ jobs:
     - name: Integration tests
       run: ./intTests-Xvfb.sh
 
+    - nmae: Log files
+      run: find .
+      if: always()
+
     - name: Upload Failed test screenshots
       uses: actions/upload-artifact@v3.1.2
       if: ${{ failure() }}
