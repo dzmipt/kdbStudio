@@ -24,8 +24,18 @@ public class FilesBackup {
     private final Path backupDirPath;
     private static final Logger log = LogManager.getLogger();
 
+    //Useful in tests
+    private static boolean enabled = true;
+
+    public static void setEnabled(boolean enabled) {
+        log.info("setEnabled {}", enabled);
+        FilesBackup.enabled = enabled;
+    }
+
     public FilesBackup(String backupFolder) {
         backupDirPath = Paths.get(backupFolder);
+        if (!enabled) return;
+
         if (Files.notExists(backupDirPath)) {
             try {
                 log.info("Creating backup folder {}", backupDirPath);
@@ -37,6 +47,8 @@ public class FilesBackup {
     }
 
     public void backup(String filename) throws IOException {
+        if (!enabled) return;
+
         long current = System.currentTimeMillis();
         Long lastBackup = lastBackupTime.get(filename);
 
