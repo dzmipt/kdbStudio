@@ -404,6 +404,9 @@ public class Config {
         if (p.size() == 0) {
             log.info("Found no or empty config");
             p.setProperty("version", VERSION);
+
+            initServers();
+            initServerHistory();
             return;
         }
 
