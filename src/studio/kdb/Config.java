@@ -395,7 +395,7 @@ public class Config {
         if (p.containsKey(oldSaveOnExitKey)) {
             boolean saveOnExit = get(oldSaveOnExitKey, true);
             log.info("Migrate isSaveOnExit config property with old value {}", saveOnExit);
-            p.remove(saveOnExit);
+            p.remove(oldSaveOnExitKey);
             setEnum(ACTION_ON_EXIT, saveOnExit ? ActionOnExit.SAVE : ActionOnExit.NOTHING);
         }
     }
