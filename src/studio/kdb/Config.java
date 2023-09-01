@@ -176,12 +176,29 @@ public class Config {
 
 	public Workspace loadWorkspace() {
 		Workspace workspace = new Workspace();
-		File workspaceFile = new File(getWorkspaceFilename());
+        String filename = getWorkspaceFilename();
+        log.info("Loading workspace from {}", filename);
+		File workspaceFile = new File(filename);
 		if (workspaceFile.exists()) {
 			try (InputStream inp = new FileInputStream(workspaceFile)) {
 				Properties p = new Properties();
 				p.load(inp);
-				workspace.load(p);
+                log.info("Loaded {} properties in workspace file", p.size());
+
+                workspace.load(p);
+
+                StringBuilder str = new StringBuilder();
+                Workspace.Window[] windows = workspace.getWindows();
+                for (Workspace.Window window: windows) {
+                    if (str.length()>0) str.append(", ");
+                    if (window == null) str.append("null");
+                    else {
+                        Workspace.Tab[] tabs = window.getTabs();
+                        str.append(tabs == null ? "null tabs" : "" + tabs.length);
+                    }
+                }
+
+                log.info("Number of tabs in loaded windows: " + str);
 			} catch (IOException e) {
 				log.error("Can't load workspace", e);
 			}
@@ -298,6 +315,7 @@ public class Config {
         Path dir = file.getParent();
         if (Files.notExists(dir)) {
             try {
+                log.info("No folder with configuration found. Creating " + dir);
                 Files.createDirectories(dir);
             } catch (IOException e) {
                 log.error("Can't create configuration folder {}", dir, e);
@@ -311,6 +329,7 @@ public class Config {
                 try {
                     InputStream in = Files.newInputStream(file);
                     p.load(in);
+                    log.info("Loaded {} properties from config {}", p.size(), file);
                     in.close();
                 } catch (IOException e) {
                     log.error("Can't read configuration from file {}", filename, e);
@@ -318,8 +337,6 @@ public class Config {
             }
         }
         checkForUpgrade();
-        initServers();
-        initServerHistory();
         initTableConnExtractor();
     }
 
@@ -587,6 +604,7 @@ public class Config {
         serverTree = new ServerTreeNode();
         servers = new HashMap<>();
         initServerTree("serverTree.", serverTree, 0);
+        log.info("Loaded {} server from the config", servers.size());
     }
 
     private int initServerTree(String keyPrefix, ServerTreeNode parent, int number) {
