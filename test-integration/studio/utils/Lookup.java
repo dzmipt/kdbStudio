@@ -27,6 +27,10 @@ public class Lookup {
         });
     }
 
+    public static boolean containsChild(Container parent, Component child) {
+        return 0 < getChildren(parent, Component.class, component -> component == child).size();
+    }
+
     public static <T extends Component> List<T> getChildren(Component component, Class<T> clazz) {
         return getChildren(component, clazz, identical());
     }
@@ -53,61 +57,44 @@ public class Lookup {
         });
     }
 
-    public static <T extends Component> Matcher<T> type(Class<T> clazz) {
-        return new Matcher<T>() {
-            @Override
-            public boolean match(T component) {
-                return clazz.isInstance(component);
-            }
-        };
+    public static <T extends Component> Matcher<T> byType(Class<T> clazz) {
+        return component -> clazz.isInstance(component);
+    }
+
+    public static <T extends Component> Matcher<T> byName(String name) {
+        return component -> name.equals(component.getName());
     }
 
     public static <T extends Component> Matcher<T> identical() {
-        return new Matcher<T>() {
-            @Override
-            public boolean match(T component) {
-                return true;
-            }
-        };
+        return component -> true;
     }
 
     public interface Matcher<T extends Component> {
         boolean match(T component);
 
         default Matcher<T> or(Matcher<T>... matchers) {
-            return new Matcher<T>() {
-                @Override
-                public boolean match(T component) {
-                    if (Matcher.this.match(component)) return true;
+            return component -> {
+                if (Matcher.this.match(component)) return true;
 
-                    for (Matcher<T> matcher: matchers) {
-                        if (matcher.match(component)) return true;
-                    }
-                    return false;
+                for (Matcher<T> matcher: matchers) {
+                    if (matcher.match(component)) return true;
                 }
+                return false;
             };
         }
 
         default Matcher<T> and(Matcher<T>... matchers) {
-            return new Matcher<T>() {
-                @Override
-                public boolean match(T component) {
-                    if (!Matcher.this.match(component)) return false;
+            return component -> {
+                if (!Matcher.this.match(component)) return false;
 
-                    for (Matcher<T> matcher: matchers) {
-                        if (!matcher.match(component)) return false;
-                    }
-                    return true;
+                for (Matcher<T> matcher: matchers) {
+                    if (!matcher.match(component)) return false;
                 }
+                return true;
             };
         }
         default Matcher<T> not() {
-            return new Matcher<T>() {
-                @Override
-                public boolean match(T component) {
-                    return ! Matcher.this.match(component);
-                }
-            };
+            return component -> ! Matcher.this.match(component);
         }
     }
 

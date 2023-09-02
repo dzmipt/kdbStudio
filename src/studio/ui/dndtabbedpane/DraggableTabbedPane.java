@@ -90,7 +90,7 @@ public class DraggableTabbedPane extends JTabbedPane {
 
     }
 
-    String getDragID() {
+    public String getDragID() {
         return dragID;
     }
 

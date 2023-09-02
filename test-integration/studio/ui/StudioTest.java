@@ -3,8 +3,8 @@ package studio.ui;
 import org.apache.commons.io.FileUtils;
 import org.assertj.swing.annotation.GUITest;
 import org.assertj.swing.core.EmergencyAbortListener;
+import org.assertj.swing.core.MouseButton;
 import org.assertj.swing.fixture.FrameFixture;
-import org.assertj.swing.fixture.JTabbedPaneFixture;
 import org.assertj.swing.fixture.JTextComponentFixture;
 import org.assertj.swing.junit.runner.GUITestRunner;
 import org.assertj.swing.junit.testcase.AssertJSwingJUnitTestCase;
@@ -15,6 +15,7 @@ import org.junit.BeforeClass;
 import org.junit.runner.RunWith;
 import studio.core.Studio;
 import studio.kdb.Server;
+import studio.ui.dndtabbedpane.DraggableTabbedPane;
 import studio.utils.LogErrors;
 import studio.utils.Lookup;
 import studio.utils.MockConfig;
@@ -34,6 +35,7 @@ import static junit.framework.TestCase.fail;
 import static org.assertj.swing.core.KeyPressInfo.keyCode;
 import static org.assertj.swing.edt.GuiActionRunner.execute;
 import static org.assertj.swing.util.Platform.controlOrCommandMask;
+import static org.junit.Assert.assertNotEquals;
 
 @GUITest
 @RunWith(GUITestRunner.class)
@@ -103,6 +105,10 @@ abstract public class StudioTest extends AssertJSwingJUnitTestCase {
         return Lookup.getChildren(studioWindow, RSyntaxTextArea.class);
     }
 
+    protected List<DraggableTabbedPane> getEditorsPanes() {
+        return Lookup.getChildren(studioWindow, DraggableTabbedPane.class, dtp -> dtp.getDragID().equals("Editor"));
+    }
+
     protected Rectangle getScreenBound(Component component) {
         return execute(() -> new Rectangle(component.getLocationOnScreen(), component.getSize()) );
     }
@@ -112,7 +118,6 @@ abstract public class StudioTest extends AssertJSwingJUnitTestCase {
         JTextComponentFixture editorFixture = frameFixture.textBox(editorName);
 
         JTabbedPane tabbedPane = Lookup.getParent(editorFixture.target(), JTabbedPane.class);
-        JTabbedPaneFixture tabbedFixture = new JTabbedPaneFixture(robot(), tabbedPane);
 
         int count = getEditors().size();
         int tabCount = execute(() -> tabbedPane.getTabCount());
@@ -125,6 +130,50 @@ abstract public class StudioTest extends AssertJSwingJUnitTestCase {
 
         assertEquals("Number of tabs should increase by 1", tabCount + 1, newTabCount);
         assertEquals("Number of editors should increase by 1", count + 1, newCount);
+    }
+
+    protected void closeTabWithMouse(String editorName) {
+        List<RSyntaxTextArea> textAreas = Lookup.getChildren(studioWindow, RSyntaxTextArea.class, Lookup.byName(editorName));
+        assertEquals("Expect to find only one editor with name " + editorName, 1, textAreas.size());
+
+        RSyntaxTextArea textArea = textAreas.get(0);
+        JTabbedPane tabbedPane = Lookup.getParent(textArea, JTabbedPane.class);
+
+        int editorsPanelCount = getEditorsPanes().size();
+        int editorsCount = getEditors().size();
+
+        if (editorsCount == 1) {
+            fail("Closing the last tab is not yet implemented in the StudioTest");
+        }
+
+        int tabCount = execute(() -> tabbedPane.getTabCount());
+
+        Rectangle bounds = execute(() -> {
+           int count = tabbedPane.getTabCount();
+           for (int index=0; index<count; index++) {
+               int num = Lookup.getChildren(tabbedPane.getComponentAt(index), RSyntaxTextArea.class, Lookup.byName(editorName)).size();
+               if (num == 1) return tabbedPane.getBoundsAt(index);
+           }
+           return null;
+        });
+
+        assertNotEquals("Didn't find editor in the JTabbedPane ?? ", null, bounds);
+
+        Point center = new Point((int)bounds.getCenterX(), (int)bounds.getCenterY());
+        robot().click(tabbedPane, center, MouseButton.MIDDLE_BUTTON, 1 );
+
+        if (tabCount > 1) {
+            int newTabCount = execute(() -> tabbedPane.getTabCount());
+            assertEquals("Number of tabs should decrease by 1", tabCount - 1, newTabCount);
+        } else {
+            if (editorsPanelCount > 1) {
+                int newEditorsPanelCount = getEditorsPanes().size();
+                assertEquals("Number of editors JTabbedPane should decrease by 1", editorsPanelCount - 1, newEditorsPanelCount);
+            }
+        }
+
+        int newEditorsCount = getEditors().size();
+        assertEquals("Number of editors should decrease by 1", editorsCount - 1, newEditorsCount);
     }
 
     protected void split(String editorName, boolean verticallySplit) {
