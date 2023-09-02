@@ -1,10 +1,13 @@
 package studio.kdb;
 
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import studio.core.Credentials;
 import studio.core.DefaultAuthenticationMechanism;
 import studio.kdb.config.ActionOnExit;
+import studio.utils.FilesBackup;
 import studio.utils.TableConnExtractor;
 
 import java.awt.*;
@@ -20,6 +23,16 @@ public class ConfigTest {
     private Config config;
     private File tmpFile;
     private Server server;
+
+    @BeforeAll
+    public static void disableFilesBackup() {
+        FilesBackup.setEnabled(false);
+    }
+
+    @AfterAll
+    public static void restoreFilesBackup() {
+        FilesBackup.setEnabled(true);
+    }
 
     @BeforeEach
     public void init() throws IOException {

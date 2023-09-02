@@ -16,6 +16,8 @@ public class MockConfig extends Config {
     public static synchronized void init() {
         if (initialized) return;
 
+        FilesBackup.setEnabled(false);
+
         Config.instance = new MockConfig();
         LoggerContext context = LoggerContext.getContext(false);
         for (Logger logger: context.getLoggers() ) {

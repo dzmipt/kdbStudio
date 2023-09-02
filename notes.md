@@ -1,3 +1,5 @@
+* Backup of config and workspace files for 2 weeks
+
 `dz3.0` 2023.08.04
 -----
 * Select columns in result table by clicking headers with ALT and SHIFT
