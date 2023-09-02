@@ -33,11 +33,11 @@ import static junit.framework.TestCase.assertEquals;
 import static junit.framework.TestCase.fail;
 import static org.assertj.swing.core.KeyPressInfo.keyCode;
 import static org.assertj.swing.edt.GuiActionRunner.execute;
-import static org.assertj.swing.util.Platform.controlOrCommandKey;
+import static org.assertj.swing.util.Platform.controlOrCommandMask;
 
 @GUITest
 @RunWith(GUITestRunner.class)
-public class StudioTest extends AssertJSwingJUnitTestCase {
+abstract public class StudioTest extends AssertJSwingJUnitTestCase {
 
     protected FrameFixture frameFixture;
     protected StudioWindow studioWindow;
@@ -118,7 +118,7 @@ public class StudioTest extends AssertJSwingJUnitTestCase {
         int tabCount = execute(() -> tabbedPane.getTabCount());
 
         editorFixture.focus();
-        editorFixture.pressAndReleaseKey(keyCode(VK_N).modifiers(controlOrCommandKey()));
+        editorFixture.pressAndReleaseKey(keyCode(VK_N).modifiers(controlOrCommandMask()));
 
         int newCount = getEditors().size();
         int newTabCount = execute(() -> tabbedPane.getTabCount());
