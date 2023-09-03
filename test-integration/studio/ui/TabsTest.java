@@ -46,6 +46,7 @@ public class TabsTest extends StudioTest {
         assertEquals("Number of tabs should be now 2", 2, tabbedPaneFixture.tabTitles().length);
         tabbedPaneFixture.requireTitle(file.getName(), Index.atIndex(1));
 
-        frameFixture.textBox("editor2").requireText(text);
+        String endOfLine = System.getProperty("line.separator");
+        frameFixture.textBox("editor2").requireText(text + endOfLine);
     }
 }

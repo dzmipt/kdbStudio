@@ -147,7 +147,6 @@ public class EditorsPanel extends JPanel {
         textArea.getDocument().addDocumentListener(new MarkingDocumentListener(editor));
         textArea.requestFocus();
 
-        studioWindow.setServer(server);
         studioWindow.refreshActionState();
         refreshEditorTitle(editor);
         return editor;
@@ -347,8 +346,8 @@ public class EditorsPanel extends JPanel {
     }
 
     public static void refreshEditorTitle(EditorTab editorTab) {
+        if (! editorTab.isAddedToPanel()) return;
         EditorsPanel panel = editorTab.getEditorsPanel();
-        if (panel == null) return; //while new tab is added
         JTabbedPane tabbedPane = panel.tabbedEditors;
         int count = tabbedPane.getTabCount();
         //@TODO: need to rework
