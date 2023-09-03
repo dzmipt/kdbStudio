@@ -27,7 +27,9 @@ public class ClosableTabbedPane {
                 if (checkPopup(tabIndex, e)) return;
 
                 if (SwingUtilities.isMiddleMouseButton(e)) {
-                    closeTabAction.close(tabIndex, true);
+                    // Other listeners can be broken if we close tab now. Therefore we will close after all are processed
+                    // Found NPE in com.apple.laf.AquaTabbedPaneUI$MouseHandler.repaint(AquaTabbedPaneUI.java:949)
+                    SwingUtilities.invokeLater(() -> closeTabAction.close(tabIndex, true));
                 }
             }
 
