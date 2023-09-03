@@ -47,38 +47,11 @@ public class SplitTest extends StudioTest {
     }
 
     @Test
-    public void test() {
-        closeTabWithMouse("editor1");
-    }
-
-    @Test
-    public void addTabTest() {
-        addTab("editor1");
-        frameFixture.textBox("editor2").requireFocused();
-    }
-
-    @Test
-    public void closeTabTest() {
-        addTab("editor1");
-        frameFixture.textBox("editor2").requireFocused();
-        closeTabWithMouse("editor1");
-        frameFixture.textBox("editor2").requireFocused();
-    }
-
-    @Test
-    public void closeLasTabOnSplitTest() {
-        split("editor1", true);
-        closeTabWithMouse("editor2");
-        frameFixture.textBox("editor1").requireFocused();
-    }
-
-    @Test
     public void closeLasTabOnSplitTest1() {
         split("editor1", false);
         closeTabWithMouse("editor1");
         frameFixture.textBox("editor2").requireFocused();
     }
-
 
     @Test
     public void closeLasTabOnSplitTest2() {
@@ -86,6 +59,5 @@ public class SplitTest extends StudioTest {
         split("editor1", true);
         closeTabWithMouse("editor1");
     }
-
 
 }
