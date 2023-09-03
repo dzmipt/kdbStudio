@@ -50,7 +50,7 @@ public class EditorsPanel extends JPanel {
             loadWorkspaceTabs(workspaceWindow);
             if (tabbedEditors.getTabCount() == 0) {
                 log.warn("Workspace is corrupted. No tab found in a split. Creating empty tab");
-                addTab(Server.NO_SERVER, null);
+                addTab(Server.NO_SERVER);
             }
         }
     }
@@ -119,7 +119,11 @@ public class EditorsPanel extends JPanel {
         add(splitPane, BorderLayout.CENTER);
     }
 
-    public EditorTab addTab(Server server, String filename) {
+    public EditorTab addTab(Server server) {
+        return addTab(server, null, Content.NO_CONTENT);
+    }
+
+    public EditorTab addTab(Server server, String filename, Content content) {
         EditorTab editor = new EditorTab(studioWindow);
         editor.getTextArea().addFocusListener(new FocusAdapter() {
             @Override
@@ -136,12 +140,8 @@ public class EditorsPanel extends JPanel {
 
         editor.setServer(server);
 
-        if (filename != null) {
-            loadFile(editor, filename);
-        } else {
-            editor.setFilename(null);
-            editor.init(Content.getEmpty());
-        }
+        editor.setFilename(filename);
+        editor.init(content);
 
         addTab(editor);
         textArea.getDocument().addDocumentListener(new MarkingDocumentListener(editor));
@@ -168,13 +168,14 @@ public class EditorsPanel extends JPanel {
         if (selectedIndex == -1) return;
 
         List<EditorTab> editors = getAllEditors(false);
+        EditorTab editorToCopy = editors.get(selectedIndex);
 
         remove(tabbedEditors);
         tabbedEditors = null;
 
         EditorsPanel aRight = new EditorsPanel(studioWindow, null);
-        //@TODO move modified content as well
-        aRight.addTab(editors.get(selectedIndex).getServer(), editors.get(selectedIndex).getFilename());
+
+        aRight.addTab(editors.get(selectedIndex).getServer(), editorToCopy.getFilename(), editorToCopy.getContent());
 
         EditorsPanel aLeft = new EditorsPanel(studioWindow, null);
         for(EditorTab editor: editors) {
@@ -228,26 +229,21 @@ public class EditorsPanel extends JPanel {
         tabbedEditors.setDimSelectedTab(dimEditors);
     }
 
-    public static boolean loadFile(EditorTab editor, String filename) {
-        Content content = Content.getEmpty();
+    public static Content loadFile(String filename) {
+        Content content = Content.NO_CONTENT;
         try {
             content = FileReaderWriter.read(filename);
             if (content.hasMixedLineEnding()) {
-                StudioOptionPane.showMessage(editor.getStudioWindow(), "The file " + filename + " has mixed line endings. Mixed line endings are not supported.\n\n" +
+                StudioOptionPane.showMessage(StudioWindow.getActiveStudioWindow(), "The file " + filename + " has mixed line endings. Mixed line endings are not supported.\n\n" +
                                 "All line endings are set to " + content.getLineEnding() + " style.",
                         "Mixed Line Ending");
             }
-            return true;
         } catch (IOException e) {
             log.error("Failed to load file {}", filename, e);
-            StudioOptionPane.showError(editor.getStudioWindow(), "Failed to load file "+filename + ".\n" + e.getMessage(),
+            StudioOptionPane.showError(StudioWindow.getActiveStudioWindow(), "Failed to load file "+filename + ".\n" + e.getMessage(),
                     "Error in file load");
-        } finally {
-            //@TODO check if this is correct.
-            editor.setFilename(filename);
-            editor.init(content);
         }
-        return false;
+        return content;
     }
 
     public static boolean saveAsFile(EditorTab editor) {
@@ -393,7 +389,7 @@ public class EditorsPanel extends JPanel {
         if (window == null) {
             log.warn("Workspace is corrupted. There is no one of the split. Creating empty one");
             EditorsPanel editorsPanel = new EditorsPanel(studioWindow, null);
-            editorsPanel.addTab(Server.NO_SERVER, null);
+            editorsPanel.addTab(Server.NO_SERVER);
             return editorsPanel;
         }
 
@@ -404,8 +400,8 @@ public class EditorsPanel extends JPanel {
         Workspace.Tab[] tabs = window.getTabs();
         for (Workspace.Tab tab: tabs) {
             try {
-                EditorTab editor = addTab(getServer(tab), tab.getFilename());
-                editor.init(Content.newContent(tab.getContent(), tab.getLineEnding()));
+                Content content = Content.newContent(tab.getContent(), tab.getLineEnding());
+                EditorTab editor = addTab(getServer(tab), tab.getFilename(), content);
                 editor.setModified(tab.isModified());
                 int caretPosition = tab.getCaret();
                 if (caretPosition >= 0 && caretPosition < editor.getTextArea().getDocument().getLength()) {

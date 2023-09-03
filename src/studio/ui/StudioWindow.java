@@ -396,7 +396,7 @@ public class StudioWindow extends JFrame implements WindowListener {
         if (!EditorsPanel.checkAndSaveTab(editor)) return;
 
         editor.setFilename(null);
-        editor.init(Content.getEmpty());
+        editor.init(Content.NO_CONTENT);
     }
 
     private void openFile() {
@@ -405,13 +405,17 @@ public class StudioWindow extends JFrame implements WindowListener {
 
         if (file == null) return;
         String filename = file.getAbsolutePath();
-        addToMruFiles(filename);
         addTab(editor.getServer(), filename);
+        addToMruFiles(filename);
     }
 
     public void loadMRUFile(String filename) {
         if (!EditorsPanel.checkAndSaveTab(editor)) return;
-        if (!EditorsPanel.loadFile(editor, filename)) return;
+
+        Content content = EditorsPanel.loadFile(filename);
+        if (content == Content.NO_CONTENT) return;
+        editor.setFilename(filename);
+        editor.init(content);
 
         addToMruFiles(filename);
         EditorsPanel.refreshEditorTitle(editor);
@@ -1219,8 +1223,13 @@ public class StudioWindow extends JFrame implements WindowListener {
         splitpane.setDividerLocation(0.5);
     }
 
-    public EditorTab addTab(Server server, String filename) {
-        return editor.getEditorsPanel().addTab(server, filename);
+    public void addTab(Server server, String filename) {
+        Content content = Content.NO_CONTENT;
+        if (filename != null) {
+            content = EditorsPanel.loadFile(filename);
+            if (content == Content.NO_CONTENT) return;
+        }
+        editor.getEditorsPanel().addTab(server, filename, content);
     }
 
     public EditorTab getActiveEditor() {

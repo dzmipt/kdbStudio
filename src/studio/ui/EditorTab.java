@@ -94,6 +94,10 @@ public class EditorTab implements FileWatcher.Listener {
         }
     }
 
+    public Content getContent() {
+        return Content.newContent(getTextArea().getText(), lineEnding);
+    }
+
     public StudioWindow getStudioWindow() {
         return studioWindow;
     }

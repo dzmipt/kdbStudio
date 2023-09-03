@@ -8,9 +8,7 @@ public class Content {
     private boolean mixedLineEnding;
     private boolean tabsReplaced = false;
 
-    public static Content getEmpty() {
-        return new Content("");
-    }
+    public static Content NO_CONTENT = new Content("");
 
     public static Content newContent(String text, LineEnding lineEnding) {
         Content content = new Content(text);

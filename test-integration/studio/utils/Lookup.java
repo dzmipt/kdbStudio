@@ -2,10 +2,13 @@ package studio.utils;
 
 import org.assertj.swing.edt.GuiActionRunner;
 
+import javax.swing.*;
 import java.awt.*;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+
+import static org.junit.Assert.assertEquals;
 
 public class Lookup {
 
@@ -29,6 +32,16 @@ public class Lookup {
 
     public static boolean containsChild(Container parent, Component child) {
         return 0 < getChildren(parent, Component.class, component -> component == child).size();
+    }
+
+    public static <T extends Component> T getChild(Component component, Class<T> clazz, Matcher<T> matcher) {
+        List<T> children = getChildren(component, clazz, matcher);
+        assertEquals("Expect to find only one child", 1, children.size());
+        return children.get(0);
+    }
+
+    public static <T extends Component> T getChild(Component component, Class<T> clazz) {
+        return getChild(component, clazz, identical());
     }
 
     public static <T extends Component> List<T> getChildren(Component component, Class<T> clazz) {
@@ -58,7 +71,11 @@ public class Lookup {
     }
 
     public static <T extends Component> Matcher<T> byType(Class<T> clazz) {
-        return component -> clazz.isInstance(component);
+        return clazz::isInstance;
+    }
+
+    public static <T extends AbstractButton> Matcher<T> byButtonText(String text) {
+        return button -> text.equals(button.getText());
     }
 
     public static <T extends Component> Matcher<T> byName(String name) {

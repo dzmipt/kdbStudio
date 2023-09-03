@@ -137,10 +137,7 @@ abstract public class StudioTest extends AssertJSwingJUnitTestCase {
     }
 
     protected void closeTabWithMouse(String editorName) {
-        List<RSyntaxTextArea> textAreas = Lookup.getChildren(studioWindow, RSyntaxTextArea.class, Lookup.byName(editorName));
-        assertEquals("Expect to find only one editor with name " + editorName, 1, textAreas.size());
-
-        RSyntaxTextArea textArea = textAreas.get(0);
+        RSyntaxTextArea textArea = Lookup.getChild(studioWindow, RSyntaxTextArea.class, Lookup.byName(editorName));
         JTabbedPane tabbedPane = Lookup.getParent(textArea, JTabbedPane.class);
 
         int editorsPanelCount = getEditorsPanes().size();

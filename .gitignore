@@ -12,3 +12,5 @@ build/
 .classpath
 .project
 .settings
+
+/failed-gui-tests/

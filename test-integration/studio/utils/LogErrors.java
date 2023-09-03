@@ -17,6 +17,8 @@ public class LogErrors extends AbstractAppender {
     private final static LogErrors thisAppender = new LogErrors();
     private final static List<String> logs = Collections.synchronizedList(new ArrayList<>());
 
+    private static boolean disabled = false;
+
     public static void reset() {
         logs.clear();
     }
@@ -35,6 +37,14 @@ public class LogErrors extends AbstractAppender {
 
     }
 
+    public static void pause() {
+        disabled = true;
+    }
+
+    public static void enable() {
+        disabled = false;
+    }
+
     private LogErrors() {
         super("MyAppender", null,
                 PatternLayout.newBuilder()
@@ -45,6 +55,8 @@ public class LogErrors extends AbstractAppender {
 
     @Override
     public void append(LogEvent event) {
+        if (disabled) return;
+
         if (event.getLevel().isLessSpecificThan(Level.WARN)) return;
         logs.add( String.format("[%s] %s %s - %s",
                                     event.getThreadName(), event.getLevel(),
