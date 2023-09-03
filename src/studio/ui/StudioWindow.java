@@ -26,7 +26,6 @@ import studio.utils.LineEnding;
 import studio.utils.log4j.EnvConfig;
 
 import javax.swing.*;
-import javax.swing.filechooser.FileFilter;
 import javax.swing.filechooser.FileNameExtensionFilter;
 import javax.swing.plaf.basic.BasicSplitPaneUI;
 import javax.swing.table.TableModel;
@@ -141,8 +140,6 @@ public class StudioWindow extends JFrame implements WindowListener {
     private int editorNameIndex = 0;
     private static int studioWindowNameIndex = 0;
 
-    private static Map<String, JFileChooser> fileChooserMap = new HashMap<>();
-
     private static List<StudioWindow> allWindows = new ArrayList<>();
     private static StudioWindow activeWindow = null;
 
@@ -229,65 +226,6 @@ public class StudioWindow extends JFrame implements WindowListener {
             refreshAction.setEnabled(true);
             tab.refreshActionState(queryRunning);
         }
-    }
-
-    public static File chooseFile(Component parent, String fileChooserType, int dialogType, String title, File defaultFile, FileFilter... filters) {
-        JFileChooser fileChooser = fileChooserMap.get(fileChooserType);
-        FileChooserConfig config = CONFIG.getFileChooserConfig(fileChooserType);
-        if (fileChooser == null) {
-            fileChooser = new JFileChooser();
-            fileChooserMap.put(fileChooserType, fileChooser);
-
-            if (title != null) fileChooser.setDialogTitle(title);
-            fileChooser.setDialogType(dialogType);
-            fileChooser.setFileSelectionMode(JFileChooser.FILES_ONLY);
-            for (FileFilter ff: filters) {
-                fileChooser.addChoosableFileFilter(ff);
-            }
-            if (filters.length == 1) fileChooser.setFileFilter(filters[0]);
-
-            if (defaultFile == null && ! config.getFilename().equals("")) {
-                defaultFile = new File(config.getFilename());
-            }
-
-        }
-
-        if (defaultFile != null) {
-            fileChooser.setCurrentDirectory(defaultFile.getParentFile());
-            fileChooser.setSelectedFile(defaultFile);
-            fileChooser.ensureFileIsVisible(defaultFile);
-        }
-
-        Dimension preferredSize = config.getPreferredSize();
-        if (preferredSize.width > 0 && preferredSize.height > 0) {
-            fileChooser.setPreferredSize(preferredSize);
-        }
-
-        int option;
-        if (dialogType == JFileChooser.OPEN_DIALOG) option = fileChooser.showOpenDialog(parent);
-        else option = fileChooser.showSaveDialog(parent);
-
-        File selectedFile = fileChooser.getSelectedFile();
-        String filename = "";
-        if (selectedFile != null) {
-            filename = selectedFile.getAbsolutePath();
-        }
-
-        if (dialogType == JFileChooser.SAVE_DIALOG && option == JFileChooser.APPROVE_OPTION) {
-            FileFilter ff = fileChooser.getFileFilter();
-            if (ff instanceof FileNameExtensionFilter) {
-                String ext = "." + ((FileNameExtensionFilter) ff).getExtensions()[0];
-                if (!filename.endsWith(ext)) {
-                    filename = filename + ext;
-                    selectedFile = new File(filename);
-                }
-            }
-        }
-
-        config = new FileChooserConfig(filename, fileChooser.getSize());
-        CONFIG.setFileChooserConfig(fileChooserType, config);
-
-        return option == JFileChooser.APPROVE_OPTION ? selectedFile : null;
     }
 
     private void exportAsExcel(final String filename) {
@@ -417,7 +355,7 @@ public class StudioWindow extends JFrame implements WindowListener {
     private void export() {
         if (getSelectedTable() == null) return;
 
-        File file = chooseFile(this, Config.EXPORT_FILE_CHOOSER, JFileChooser.SAVE_DIALOG, "Export result set as",
+        File file = FileChooser.chooseFile(this, Config.EXPORT_FILE_CHOOSER, JFileChooser.SAVE_DIALOG, "Export result set as",
                 null,
                 new FileNameExtensionFilter("csv (Comma delimited)", "csv"),
                 new FileNameExtensionFilter("txt (Tab delimited)", "txt"),
@@ -456,7 +394,7 @@ public class StudioWindow extends JFrame implements WindowListener {
     }
 
     private void openFile() {
-        File file = chooseFile(this, Config.OPEN_FILE_CHOOSER, JFileChooser.OPEN_DIALOG, null, null,
+        File file = FileChooser.chooseFile(this, Config.OPEN_FILE_CHOOSER, JFileChooser.OPEN_DIALOG, null, null,
                 new FileNameExtensionFilter("q script", "q"));
 
         if (file == null) return;
