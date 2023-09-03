@@ -1710,8 +1710,6 @@ public class StudioWindow extends JFrame implements WindowListener {
 
 
     public void windowActivated(WindowEvent e) {
-        this.invalidate();
-        SwingUtilities.updateComponentTreeUI(this);
     }
 
 
