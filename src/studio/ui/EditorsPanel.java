@@ -309,7 +309,7 @@ public class EditorsPanel extends JPanel {
         if (tabbedEditors.getTabCount()>0) return;
 
         if (parent == null) {
-            studioWindow.closeFrame();
+            studioWindow.close();
         } else {
             parent.unite();
         }
@@ -425,18 +425,17 @@ public class EditorsPanel extends JPanel {
     }
     private static Server getServer(Workspace.Tab tab) {
         Config config = Config.getInstance();
-        Server server = null;
+        Server server = Server.NO_SERVER;
         String serverFullname = tab.getServerFullName();
         if (serverFullname != null) {
             server = config.getServer(serverFullname);
         }
-        if (server != null) return server;
+        if (server != Server.NO_SERVER) return server;
 
         String connectionString = tab.getServerConnection();
         if (connectionString != null) {
             server = config.getServerByConnectionString(connectionString);
         }
-        if (server == null) server = Server.NO_SERVER;
 
         String auth = tab.getServerAuth();
         if (auth == null) return server;

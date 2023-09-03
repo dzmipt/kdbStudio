@@ -5,7 +5,8 @@ import studio.kdb.Server;
 import studio.kdb.ServerTreeNode;
 
 import javax.swing.tree.TreeNode;
-import java.io.*;
+import java.io.File;
+import java.io.IOException;
 import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -21,7 +22,7 @@ public class QPadConverter {
         List<Server> servers = new ArrayList<>();
         for(String line:lines) {
             Server server = convert(line, root, defaultAuth, defaultCredentials);
-            if (server != null) servers.add(server);
+            if (server != Server.NO_SERVER) servers.add(server);
         }
         return servers;
     }
@@ -41,7 +42,7 @@ public class QPadConverter {
             }
             return server;
         } catch (IllegalArgumentException e) {
-            return null;
+            return Server.NO_SERVER;
         }
     }
 
@@ -53,7 +54,7 @@ public class QPadConverter {
         if (items.length < 2) return null;
 
         Server server = convertConnection(items[0], defaultAuth, defaultCredentials);
-        if (server == null) return null;
+        if (server == Server.NO_SERVER) return Server.NO_SERVER;
 
         server.setName(items[items.length-1]);
 

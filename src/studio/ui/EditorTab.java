@@ -141,6 +141,10 @@ public class EditorTab implements FileWatcher.Listener {
         return title;
     }
 
+    // If filename != null, returns baseName of the filename
+    // If server == NO_SERVER, returns "Script"+index (is it possible??)
+    // If server has a name, then server name
+    // Server host:port
     private String getTabTitleInternal() {
         if (getFilename() != null) return getTitle();
         Server server = getServer();

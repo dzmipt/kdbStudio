@@ -380,7 +380,7 @@ public class Config {
         p.remove("lruServer");
         if (! fullName.equals("")) {
             Server server = getServer(fullName);
-            if (server != null) addServerToHistory(server);
+            if (server != Server.NO_SERVER) addServerToHistory(server);
         }
         save();
     }
@@ -455,7 +455,7 @@ public class Config {
             String key = "serverHistory." + i;
             if (! p.containsKey(key)) continue;
             Server server = getServer(p.getProperty(key));
-            if (server == null) continue;
+            if (server == Server.NO_SERVER) continue;
             serverHistory.add(server);
         }
     }
@@ -575,7 +575,8 @@ public class Config {
     }
 
     public Server getServer(String name) {
-        return servers.get(name);
+        if (servers.containsKey(name)) return servers.get(name);
+        return Server.NO_SERVER;
     }
 
     public ServerTreeNode getServerTree() {

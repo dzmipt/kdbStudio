@@ -197,7 +197,7 @@ public class Workspace {
         public Tab(Server server, String filename) {
             this.filename = filename;
             lineEnding = Config.getInstance().getEnum(Config.DEFAULT_LINE_ENDING);
-            if (server != null) {
+            if (server != Server.NO_SERVER) {
                 serverFullName = server.getFullName();
                 serverConnection = server.getConnectionStringWithPwd();
                 serverAuth = server.getAuthenticationMechanism();
@@ -242,7 +242,7 @@ public class Workspace {
         }
 
         public Tab addServer(Server server) {
-            if (server == null) return this;
+            if (server == Server.NO_SERVER) return this;
 
             if (server.getFolder() == null) {
                 serverFullName = null;

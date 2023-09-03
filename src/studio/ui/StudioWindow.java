@@ -139,6 +139,7 @@ public class StudioWindow extends JFrame implements WindowListener {
     private UserAction splitEditorDown;
 
     private int editorNameIndex = 0;
+    private static int studioWindowNameIndex = 0;
 
     private static Map<String, JFileChooser> fileChooserMap = new HashMap<>();
 
@@ -159,9 +160,17 @@ public class StudioWindow extends JFrame implements WindowListener {
         return editorNameIndex++;
     }
 
-    public void refreshFrameTitle() {
-        if (loading) return;
+//    private String getCaption() {
+//        StringBuilder caption = new StringBuilder();
+//        caption.append(editor.getTitle());
+//        if (editor.isModified()) caption.append(" (not saved) ");
+//
+//        Server server = editor.getServer();
+//        if (server != Server.NO_SERVER) caption.append(" @").append(server);
+//
+//    }
 
+    public void refreshFrameTitle() {
         StringBuilder frameTitleBuilder = new StringBuilder();
         frameTitleBuilder.append(editor.getTitle());
         if (editor.isModified()) frameTitleBuilder.append(" (not saved) ");
@@ -544,7 +553,7 @@ public class StudioWindow extends JFrame implements WindowListener {
                 KeyStroke.getKeyStroke(KeyEvent.VK_W, menuShortcutKeyMask), e -> editor.getEditorsPanel().closeTab(editor));
 
         closeFileAction = UserAction.create("Close Window",  "Close current window (close all tabs)",
-                KeyEvent.VK_C, null, e -> closePanel());
+                KeyEvent.VK_C, null, e -> close());
 
         openFileAction = UserAction.create(I18n.getString("Open"), Util.FOLDER_ICON, "Open a script", KeyEvent.VK_O,
                 KeyStroke.getKeyStroke(KeyEvent.VK_O, menuShortcutKeyMask), e -> openFile());
@@ -851,25 +860,20 @@ public class StudioWindow extends JFrame implements WindowListener {
         System.exit(0);
     }
 
-    private void closePanel() {
+    public void close() {
         // If this is the last window, we need to properly persist workspace
         if (allWindows.size() == 1) {
             quit();
         } else {
             rootEditorsPanel.execute(editorTab -> editorTab.getEditorsPanel().closeTab(editorTab));
-            //closing the last tab would dispose the frame
+            //  closing the last tab would triger this code again
+            if (allWindows.contains(this)) {
+                allWindows.remove(this);
+                dispose();
+                rebuildAll();
+            }
         }
-    }
 
-
-    public void closeFrame() {
-        if (allWindows.size() == 1) {
-            quit();
-        } else {
-            dispose();
-            allWindows.remove(this);
-            rebuildAll();
-        }
     }
 
     public static void rebuildAll() {
@@ -1041,39 +1045,19 @@ public class StudioWindow extends JFrame implements WindowListener {
         addToMenu(menu, splitEditorRight, splitEditorDown, null, minMaxDividerAction, toggleDividerOrientationAction,
                 arrangeAllAction, nextEditorTabAction, prevEditorTabAction);
 
-        if (allWindows.size() > 0) {
+        int count = allWindows.size();
+        UserAction[] windowMenuActions = new UserAction[count];
+        if (count > 0) {
             menu.addSeparator();
 
-            int i = 0;
-            for (StudioWindow window: allWindows) {
-                EditorTab editor = window.editor;
-                String t = "unknown";
-                String filename = editor.getFilename();
-
-                if (filename != null)
-                    t = filename.replace('\\', '/');
-
-                if (editor.getServer() != Server.NO_SERVER)
-                    t = t + "[" + editor.getServer().getFullName() + "]";
-                else
-                    t = t + "[no server]";
-
-                JMenuItem item = new JMenuItem("" + (i + 1) + " " + t);
-                item.addActionListener(new ActionListener() {
-
-                    public void actionPerformed(ActionEvent e) {
-                        ensureDeiconified(window);
-                    }
-                });
-
-                if (window == this)
-                    item.setIcon(Util.CHECK_ICON);
-                else
-                    item.setIcon(Util.BLANK_ICON);
-
-                menu.add(item);
-                i++;
+            for (int index = 0; index < count; index++) {
+                StudioWindow window = allWindows.get(index);
+                windowMenuActions[index] = UserAction.create("" + (index + 1) + " " + window.getTitle(),
+                    window == this ? Util.CHECK_ICON : Util.BLANK_ICON, "", 0 , null,
+                        e -> ensureDeiconified(window));
             }
+
+            addToMenu(menu, windowMenuActions);
         }
         menubar.add(menu);
         menu = new JMenu(I18n.getString("Help"));
@@ -1349,6 +1333,8 @@ public class StudioWindow extends JFrame implements WindowListener {
     }
 
     public StudioWindow(Workspace.Window workspaceWindow) {
+        setName("studioWindow" + (++studioWindowNameIndex));
+
         loading = true;
 
         allWindows.add(this);
@@ -1497,7 +1483,10 @@ public class StudioWindow extends JFrame implements WindowListener {
             public void windowGainedFocus(WindowEvent e) {
                 if (StudioWindow.activeWindow == StudioWindow.this) return;
 
-                StudioWindow.activeWindow.editor.getEditorsPanel().setDimEditors(true);
+                log.info("Window focus is changed from {} to {} ", StudioWindow.activeWindow.getTitle(), StudioWindow.this.getTitle());
+                if (StudioWindow.allWindows.contains(StudioWindow.activeWindow)) {
+                    StudioWindow.activeWindow.editor.getEditorsPanel().setDimEditors(true);
+                }
                 editor.getEditorsPanel().setDimEditors(false);
                 StudioWindow.activeWindow = StudioWindow.this;
             }
@@ -1747,7 +1736,7 @@ public class StudioWindow extends JFrame implements WindowListener {
     }
 
     public void windowClosing(WindowEvent e) {
-        closePanel();
+        close();
     }
 
 
