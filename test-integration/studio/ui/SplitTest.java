@@ -47,6 +47,13 @@ public class SplitTest extends StudioTest {
     }
 
     @Test
+    public void closeLasTabOnSplitTest() {
+        split("editor1", true);
+        closeTabWithMouse("editor2");
+        frameFixture.textBox("editor1").requireFocused();
+    }
+
+    @Test
     public void closeLasTabOnSplitTest1() {
         split("editor1", false);
         closeTabWithMouse("editor1");

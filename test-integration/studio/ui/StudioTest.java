@@ -114,19 +114,23 @@ abstract public class StudioTest extends AssertJSwingJUnitTestCase {
     }
 
 
+    protected int getTabCount(JTabbedPane tabbedPane) {
+        return execute(() -> tabbedPane.getTabCount());
+    }
+
     protected void addTab(String editorName) {
         JTextComponentFixture editorFixture = frameFixture.textBox(editorName);
 
         JTabbedPane tabbedPane = Lookup.getParent(editorFixture.target(), JTabbedPane.class);
 
         int count = getEditors().size();
-        int tabCount = execute(() -> tabbedPane.getTabCount());
+        int tabCount = getTabCount(tabbedPane);
 
         editorFixture.focus();
         editorFixture.pressAndReleaseKey(keyCode(VK_N).modifiers(controlOrCommandMask()));
 
         int newCount = getEditors().size();
-        int newTabCount = execute(() -> tabbedPane.getTabCount());
+        int newTabCount = getTabCount(tabbedPane);
 
         assertEquals("Number of tabs should increase by 1", tabCount + 1, newTabCount);
         assertEquals("Number of editors should increase by 1", count + 1, newCount);
@@ -146,7 +150,7 @@ abstract public class StudioTest extends AssertJSwingJUnitTestCase {
 //            fail("Closing the last tab is not yet implemented in the StudioTest");
         }
 
-        int tabCount = execute(() -> tabbedPane.getTabCount());
+        int tabCount = getTabCount(tabbedPane);
 
         Rectangle bounds = execute(() -> {
            int count = tabbedPane.getTabCount();
@@ -163,7 +167,7 @@ abstract public class StudioTest extends AssertJSwingJUnitTestCase {
         robot().click(tabbedPane, center, MouseButton.MIDDLE_BUTTON, 1 );
 
         if (tabCount > 1) {
-            int newTabCount = execute(() -> tabbedPane.getTabCount());
+            int newTabCount = getTabCount(tabbedPane);
             assertEquals("Number of tabs should decrease by 1", tabCount - 1, newTabCount);
         } else {
             if (editorsPanelCount > 1) {

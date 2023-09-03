@@ -57,6 +57,7 @@ public class EditorsPanel extends JPanel {
 
     private void initTabbedEditors() {
         tabbedEditors = new DraggableTabbedPane("Editor");
+        tabbedEditors.setName("editorTabbedPane" + studioWindow.nextEditorTabbedPaneNameIndex());
         tabbedEditors.setDimSelectedTab(true);
         removeFocusChangeKeysForWindows(tabbedEditors);
         ClosableTabbedPane.makeCloseable(tabbedEditors, (index, force) -> closeTab(getEditorTab(index)) );

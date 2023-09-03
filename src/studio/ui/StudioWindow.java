@@ -137,8 +137,10 @@ public class StudioWindow extends JFrame implements WindowListener {
     private UserAction splitEditorRight;
     private UserAction splitEditorDown;
 
-    private int editorNameIndex = 0;
     private static int studioWindowNameIndex = 0;
+    private int editorTabbedPaneNameIndex = 0;
+    private int editorNameIndex = 0;
+
 
     private static List<StudioWindow> allWindows = new ArrayList<>();
     private static StudioWindow activeWindow = null;
@@ -155,6 +157,10 @@ public class StudioWindow extends JFrame implements WindowListener {
     
     public int nextEditorNameIndex() {
         return editorNameIndex++;
+    }
+
+    public int nextEditorTabbedPaneNameIndex() {
+        return editorTabbedPaneNameIndex++;
     }
 
 //    private String getCaption() {
