@@ -48,10 +48,10 @@ public class QPadConverter {
 
     static Server convert(String line, ServerTreeNode root, String defaultAuth,
                             Credentials defaultCredentials) {
-        if (! line.startsWith("`")) return null;
+        if (! line.startsWith("`")) return Server.NO_SERVER;
         line = line.substring(1);
         String[] items = line.split("\\`");
-        if (items.length < 2) return null;
+        if (items.length < 2) return Server.NO_SERVER;
 
         Server server = convertConnection(items[0], defaultAuth, defaultCredentials);
         if (server == Server.NO_SERVER) return Server.NO_SERVER;

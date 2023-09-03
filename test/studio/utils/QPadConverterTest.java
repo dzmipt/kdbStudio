@@ -9,61 +9,111 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 
 public class QPadConverterTest {
 
-    @Test
-    public void testConvert() {
-        Credentials cred = new Credentials("aUser", "aPassword");
+    private final Credentials cred = new Credentials("aUser", "aPassword");
 
-        Server server = QPadConverter.convert("`:server.com:11223`name", "authMethod", cred);
+    private Server convert(String line, String defaultAuth) {
+        return QPadConverter.convert(line, defaultAuth, cred);
+    }
+
+    private Server convert(String line) {
+        return convert(line, "auth");
+    }
+
+    @Test
+    public void testDefaultAuthMethod() {
+        Server server = convert("`:server.com:11223`name", "authMethod");
         assertEquals("server.com", server.getHost());
         assertEquals(11223, server.getPort());
         assertEquals("name", server.getName());
         assertEquals("authMethod", server.getAuthenticationMechanism());
         assertEquals(cred.getUsername(), server.getUsername());
         assertEquals(cred.getPassword(), server.getPassword());
-
-        server = QPadConverter.convert("`:server.com:11223`Parent`folder`name", "auth", cred);
+    }
+    @Test
+    public void testTreeStructure() {
+        Server server = convert("`:server.com:11223`Parent`folder`name");
         assertEquals("Parent/folder/name", server.getFullName());
         assertEquals("name", server.getName());
+    }
 
-        server = QPadConverter.convert("`:server.com:11223:user:password`Parent`folder`name", "auth", cred);
+    @Test
+    public void testTreeStructure2() {
+        Server server = convert("`:server.com:11223:user:password`Parent`folder`name");
         assertEquals("Parent/folder/name", server.getFullName());
         assertEquals("user", server.getUsername());
         assertEquals("password", server.getPassword());
         assertEquals(DefaultAuthenticationMechanism.NAME, server.getAuthenticationMechanism());
+    }
 
-        server = QPadConverter.convert("`:server.com:11223:user:testAuth?password`Parent`folder`name", "auth", cred);
+    @Test
+    public void testAuthMechanism() {
+        Server server = convert("`:server.com:11223:user:testAuth?password`Parent`folder`name");
         assertEquals("Parent/folder/name", server.getFullName());
         assertEquals("user", server.getUsername());
         assertEquals("testAuth?password", server.getPassword());
         assertEquals("testAuth", server.getAuthenticationMechanism());
+    }
 
+    @Test
+    public void testComment() {
+        Server server = convert("#`:server.com:11223:user:auth?password`Parent`folder`name");
+        assertEquals(Server.NO_SERVER, server);
+    }
 
-        server = QPadConverter.convert("#`:server.com:11223:user:auth?password`Parent`folder`name", "auth", cred);
-        assertEquals(null, server);
+    @Test
+    public void testEmpty() {
+        Server server = convert("");
+        assertEquals(Server.NO_SERVER, server);
+    }
 
-        server = QPadConverter.convert("","auth", cred);
-        assertEquals(null, server);
+    @Test
+    public void testWithoutName() {
+        Server server = convert("`:server.com:11223");
+        assertEquals(Server.NO_SERVER, server);
+    }
 
-        server = QPadConverter.convert("`:server.com:11223","auth", cred);
-        assertEquals(null, server);
+    @Test
+    public void testShouldStartWithBackTick() {
+        Server server = convert("server.com:11223`root`folder`somename");
+        assertEquals(Server.NO_SERVER, server);
+    }
 
-        server = QPadConverter.convert("server.com:11223`root`folder`somename","auth", cred);
-        assertEquals(null, server);
+    @Test
+    public void testColonInServerNameCouldBeOmitted() {
+        Server server = convert("`server.com:11223`root`folder`somename");
+        assertEquals("server.com", server.getHost());
+        assertEquals(11223, server.getPort());
+        assertEquals("root/folder/somename", server.getFullName());
+    }
 
-        server = QPadConverter.convert("`:server.com:port`name","auth", cred);
-        assertEquals(null, server);
+    @Test
+    public void testInvalidPort() {
+        Server server = convert("`:server.com:port`name");
+        assertEquals(Server.NO_SERVER, server);
+    }
 
-        server = QPadConverter.convert("`:server.com`name","auth", cred);
-        assertEquals(null, server);
+    @Test
+    public void testNoPort() {
+        Server server = convert("`:server.com`name");
+        assertEquals(Server.NO_SERVER, server);
+    }
 
-        server = QPadConverter.convert("`:server.com:11223:user`name","auth", cred);
+    @Test
+    public void testNoPassword() {
+        Server server = convert("`:server.com:11223:user`name");
         assertEquals("", server.getPassword());
         assertEquals("user", server.getUsername());
+    }
 
-        server = QPadConverter.convert("`:server.com:11223`folder``server","auth", cred);
+    @Test
+    public void testEmptyFolder() {
+        Server server = convert("`:server.com:11223`folder``server");
         assertEquals("[empty]", server.getFolder().getFolder());
+    }
 
-        server = QPadConverter.convert("`:server.com:11223:user:password:something`name", "auth", cred);
+    @Test
+    public void testPasswordWithColon() {
+        Server server = convert("`:server.com:11223:user:password:something`name");
         assertEquals("password:something", server.getPassword());
     }
 
