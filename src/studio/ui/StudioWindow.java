@@ -1098,6 +1098,7 @@ public class StudioWindow extends JFrame implements WindowListener {
             names = newNames;
         }
         comboServer = new JComboBox<>(names.toArray(new String[0]));
+        comboServer.setName("serverDropDown");
         comboServer.setToolTipText("Select the server context");
         comboServer.setSelectedItem(name);
         comboServer.addActionListener(e->selectServerName());
@@ -1106,6 +1107,7 @@ public class StudioWindow extends JFrame implements WindowListener {
         comboServer.setVisible(CONFIG.isShowServerComboBox());
 
         txtServer = new JTextField(32);
+        txtServer.setName("serverEntryTextField");
         txtServer.addActionListener(e -> {
             selectConnectionString();
             editor.getTextArea().requestFocus();

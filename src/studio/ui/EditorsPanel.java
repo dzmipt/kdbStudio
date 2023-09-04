@@ -173,15 +173,15 @@ public class EditorsPanel extends JPanel {
         remove(tabbedEditors);
         tabbedEditors = null;
 
-        EditorsPanel aRight = new EditorsPanel(studioWindow, null);
-
-        aRight.addTab(editors.get(selectedIndex).getServer(), editorToCopy.getFilename(), editorToCopy.getContent());
-
         EditorsPanel aLeft = new EditorsPanel(studioWindow, null);
         for(EditorTab editor: editors) {
             aLeft.addTab(editor);
         }
         aLeft.tabbedEditors.setSelectedIndex(selectedIndex);
+
+        EditorsPanel aRight = new EditorsPanel(studioWindow, null);
+
+        aRight.addTab(editors.get(selectedIndex).getServer(), editorToCopy.getFilename(), editorToCopy.getContent());
 
         init(aLeft, aRight, vertically);
     }
