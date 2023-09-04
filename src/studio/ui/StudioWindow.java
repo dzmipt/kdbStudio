@@ -716,6 +716,10 @@ public class StudioWindow extends JFrame implements WindowListener {
                 e-> editor.getEditorsPanel().split(true));
     }
 
+    public UserAction getSplitAction(boolean vertically) {
+        return vertically ? splitEditorDown : splitEditorRight;
+    }
+
     public static void settings() {
         SettingsDialog dialog = new SettingsDialog(activeWindow);
         dialog.alignAndShow();

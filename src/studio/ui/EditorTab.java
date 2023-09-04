@@ -11,6 +11,7 @@ import studio.utils.FileReaderWriter;
 import studio.utils.FileWatcher;
 import studio.utils.LineEnding;
 
+import javax.swing.*;
 import javax.swing.text.BadLocationException;
 import javax.swing.text.Document;
 import java.io.File;
@@ -65,6 +66,11 @@ public class EditorTab implements FileWatcher.Listener {
         editorPane.setFocusable(false);
         RSyntaxTextArea textArea = editorPane.getTextArea();
         textArea.setName("editor" + studioWindow.nextEditorNameIndex());
+
+        JPopupMenu popupMenu = textArea.getPopupMenu();
+        popupMenu.insert(studioWindow.getSplitAction(false), 0);
+        popupMenu.insert(studioWindow.getSplitAction(true), 1);
+        popupMenu.insert(new JPopupMenu.Separator(), 2);
 
         textArea.putClientProperty(QueryExecutor.class, new QueryExecutor(this));
     }
