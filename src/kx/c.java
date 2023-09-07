@@ -515,6 +515,25 @@ public class c {
         return null;
     }
 
+    void w(int i, K.KBase x) throws IOException {
+        java.io.ByteArrayOutputStream baosBody = new ByteArrayOutputStream();
+        java.io.DataOutputStream dosBody = new DataOutputStream(baosBody);
+        x.serialise(dosBody);
+
+        java.io.ByteArrayOutputStream baosHeader = new ByteArrayOutputStream();
+        java.io.DataOutputStream dosHeader = new DataOutputStream(baosHeader);
+        dosHeader.writeByte(0);
+        dosHeader.writeByte(i);
+        dosHeader.writeByte(0);
+        dosHeader.writeByte(0);
+        int msgSize = 8 + dosBody.size();
+        K.write(dosHeader, msgSize);
+        byte[] b = baosHeader.toByteArray();
+        outputStream.write(b);
+        b = baosBody.toByteArray();
+        outputStream.write(b);
+    }
+
     public static class K4Exception extends Exception {
         K4Exception(String s) {
             super(s);
@@ -616,32 +635,21 @@ public class c {
         j = 8;
     }
 
-    private final static byte[] HEADER = new byte[] {0,1,0,0};
-
     public synchronized K.KBase k(K.KBase x, ProgressCallback progress) throws K4Exception, IOException {
         try {
 
             if (isClosed()) connect(true);
-
-            ByteArrayOutputStream bodyStream = new ByteArrayOutputStream();
-            x.serialise(bodyStream);
-            byte[] body = bodyStream.toByteArray();
-
-            ByteArrayOutputStream headerStream = new ByteArrayOutputStream(8);
-            headerStream.write(HEADER);
-            K.write(headerStream, 8 + body.length);
-            byte[] header = headerStream.toByteArray();
-
             try {
-                outputStream.write(header);
+                w(1, x);
+                inputStream.readFully(b = new byte[8]);
             } catch (IOException e) {
-                // may be the socket was closed on the server side?
                 close();
+                // may be the socket was closed on the server side?
                 connect(true);
-                outputStream.write(header);
-            }
-            outputStream.write(body);
+                w(1, x);
             inputStream.readFully(b = new byte[8]);
+            }
+
             return k(progress);
         } catch (IOException e) {
             close();
