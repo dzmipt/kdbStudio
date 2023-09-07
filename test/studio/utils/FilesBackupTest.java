@@ -22,6 +22,7 @@ public class FilesBackupTest {
     private Path file;
     private String filename;
     private FilesBackup filesBackup;
+    private long backupPeriod;
 
     @BeforeEach
     public void prepare() throws IOException {
@@ -34,10 +35,13 @@ public class FilesBackupTest {
 
         log.info("Reference file " + filename);
 
+        backupPeriod = FilesBackup.BACKUP_PERIOD_MILLIS;
     }
 
     @AfterEach
     public void cleanup() throws IOException {
+        FilesBackup.BACKUP_PERIOD_MILLIS = backupPeriod;
+
         FileUtils.deleteDirectory(folder.toFile());
         FileUtils.deleteDirectory(file.getParent().toFile());
     }
@@ -80,6 +84,19 @@ public class FilesBackupTest {
         assertFile(file, "test2");
         assertFile(folder.resolve("test-0.tmp"), "test");
         assertEquals(1, Files.list(folder).count());
+    }
+
+    @Test
+    public void testBackupAgainAfterBackupPeriodTimeout() throws IOException {
+        FilesBackup.BACKUP_PERIOD_MILLIS = -1;
+        filesBackup = new FilesBackup(folder.toString());
+        backup("test");
+
+        backup("test2");
+        assertFile(file, "test2");
+        assertEquals(2, Files.list(folder).count());
+        assertFile(folder.resolve("test-0.tmp"), "test");
+        assertFile(folder.resolve("test-1.tmp"), "test2");
     }
 
     @Test
