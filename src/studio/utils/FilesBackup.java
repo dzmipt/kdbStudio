@@ -20,7 +20,7 @@ import static java.nio.file.StandardCopyOption.REPLACE_EXISTING;
 
 public class FilesBackup {
 
-    private final static long BACKUP_PERIOD_MILLIS = 24*60*60*1000L; // ond day
+    protected static long BACKUP_PERIOD_MILLIS = 24*60*60*1000L; // ond day
     private final static int RETAIN_BACKUP_HISTORY_DAYS = 14; // keep the last 2 weeks
 
     private final Map<String, Long> lastBackupTime = new HashMap<>();
@@ -129,6 +129,7 @@ public class FilesBackup {
         cleanupBackupHistory(reference);
 
         int index = backupIndex.get(filename) + 1;
+        backupIndex.put(filename, index);
         Path dest = backupDirPath.resolve(reference.name + "-" + index + "." + reference.ext);
         log.info("Backing up {} to {}", filename, dest);
         Files.copy(reference.path, dest);
