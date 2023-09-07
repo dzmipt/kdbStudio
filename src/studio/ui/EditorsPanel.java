@@ -129,7 +129,7 @@ public class EditorsPanel extends JPanel {
             @Override
             public void focusGained(FocusEvent e) {
                 log.info("FocusGained: {}", editor.getTabTitle());
-                studioWindow.updateEditor(editor);
+                editor.getEditorsPanel().studioWindow.updateEditor(editor);
             }
         });
         JTextComponent textArea = editor.getTextArea();
