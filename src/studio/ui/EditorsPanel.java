@@ -397,7 +397,7 @@ public class EditorsPanel extends JPanel {
     }
 
     private void loadWorkspaceTabs(Workspace.Window window) {
-        Workspace.Tab[] tabs = window.getTabs();
+        Workspace.Tab[] tabs = window.getAllTabs();
         for (Workspace.Tab tab: tabs) {
             try {
                 Content content = Content.newContent(tab.getContent(), tab.getLineEnding());

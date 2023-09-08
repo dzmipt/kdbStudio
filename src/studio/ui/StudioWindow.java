@@ -163,23 +163,24 @@ public class StudioWindow extends JFrame implements WindowListener {
         return editorTabbedPaneNameIndex++;
     }
 
-//    private String getCaption() {
-//        StringBuilder caption = new StringBuilder();
-//        caption.append(editor.getTitle());
-//        if (editor.isModified()) caption.append(" (not saved) ");
-//
-//        Server server = editor.getServer();
-//        if (server != Server.NO_SERVER) caption.append(" @").append(server);
-//
-//    }
-
-    public void refreshFrameTitle() {
-        StringBuilder frameTitleBuilder = new StringBuilder();
-        frameTitleBuilder.append(editor.getTitle());
-        if (editor.isModified()) frameTitleBuilder.append(" (not saved) ");
+    private String getCaption() {
+        StringBuilder caption = new StringBuilder();
+        caption.append(editor.getTitle());
+        if (editor.isModified()) caption.append(" (not saved)");
 
         Server server = editor.getServer();
-        if (server != Server.NO_SERVER) frameTitleBuilder.append(" @").append(server);
+        if (server != Server.NO_SERVER) {
+            caption.append(" @ ");
+            String fullName = server.getFullName();
+            if (fullName.length()>0) caption.append(fullName);
+            else caption.append(server.getHost()).append(":").append(server.getPort());
+        }
+
+        return caption.toString();
+    }
+
+    public void refreshFrameTitle() {
+        StringBuilder frameTitleBuilder = new StringBuilder(getCaption());
         frameTitleBuilder.append(" ");
 
         frameTitleBuilder.append("Studio for kdb+ ").append(Lm.version);
@@ -1004,7 +1005,7 @@ public class StudioWindow extends JFrame implements WindowListener {
 
             for (int index = 0; index < count; index++) {
                 StudioWindow window = allWindows.get(index);
-                windowMenuActions[index] = UserAction.create("" + (index + 1) + " " + window.getTitle(),
+                windowMenuActions[index] = UserAction.create("" + (index + 1) + " " + window.getCaption(),
                     window == this ? Util.CHECK_ICON : Util.BLANK_ICON, "", 0 , null,
                         e -> ensureDeiconified(window));
             }
@@ -1442,7 +1443,7 @@ public class StudioWindow extends JFrame implements WindowListener {
             public void windowGainedFocus(WindowEvent e) {
                 if (StudioWindow.activeWindow == StudioWindow.this) return;
 
-                log.info("Window focus is changed from {} to {} ", StudioWindow.activeWindow.getTitle(), StudioWindow.this.getTitle());
+                log.info("Window focus is changed from {} to {} ", StudioWindow.activeWindow.getCaption(), StudioWindow.this.getCaption());
                 if (StudioWindow.allWindows.contains(StudioWindow.activeWindow)) {
                     StudioWindow.activeWindow.editor.getEditorsPanel().setDimEditors(true);
                 }

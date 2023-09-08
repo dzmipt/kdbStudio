@@ -187,7 +187,7 @@ public class Config {
                     if (str.length()>0) str.append(", ");
                     if (window == null) str.append("null");
                     else {
-                        Workspace.Tab[] tabs = window.getTabs();
+                        Workspace.Tab[] tabs = window.getAllTabs();
                         str.append(tabs == null ? "null tabs" : "" + tabs.length);
                     }
                 }

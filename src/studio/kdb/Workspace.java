@@ -104,8 +104,16 @@ public class Workspace {
             return selectedTab;
         }
 
-        public Tab[] getTabs() {
-            return tabs.toArray(new Tab[0]);
+        public Tab[] getAllTabs() {
+            List<Tab> list = new ArrayList<>();
+            addAllTabs(list);
+            return list.toArray(new Tab[0]);
+        }
+
+        private void addAllTabs(List<Tab> list) {
+            if (left != null) left.addAllTabs(list);
+            if (right != null) right.addAllTabs(list);
+            list.addAll(tabs);
         }
 
         public Tab addTab(boolean selected) {

@@ -186,7 +186,7 @@ public class Studio {
             Workspace workspace = Config.getInstance().loadWorkspace();
             // Reload files from disk if it was modified somewhere else
             for (Workspace.Window window: workspace.getWindows()) {
-                for (Workspace.Tab tab: window.getTabs()) {
+                for (Workspace.Tab tab: window.getAllTabs()) {
                     if (tab.getFilename() != null && !tab.isModified()) {
                         try {
                             Content content = FileReaderWriter.read(tab.getFilename());

@@ -69,7 +69,7 @@ public class WorkspaceTest {
         assertEquals(0, windows[0].getSelectedTab());
         assertEquals(1, windows[1].getSelectedTab());
 
-        Workspace.Tab[] tabs = windows[0].getTabs();
+        Workspace.Tab[] tabs = windows[0].getAllTabs();
         assertEquals(1, tabs.length);
         assertEquals("", tabs[0].getContent());
         assertEquals("test.q", tabs[0].getFilename());
@@ -79,7 +79,7 @@ public class WorkspaceTest {
         assertEquals(DefaultAuthenticationMechanism.NAME, tabs[0].getServerAuth());
         assertFalse(tabs[0].isModified());
 
-        tabs = windows[1].getTabs();
+        tabs = windows[1].getAllTabs();
         assertEquals(3, tabs.length);
 
         assertNotNull(tabs[0].getContent());
