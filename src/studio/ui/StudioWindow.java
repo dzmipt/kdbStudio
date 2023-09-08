@@ -434,7 +434,7 @@ public class StudioWindow extends JFrame implements WindowListener {
             if (!v.contains(mru[i]))
                 v.add(mru[i]);
         CONFIG.saveMRUFiles((String[]) v.toArray(new String[0]));
-        rebuildMenuBar();
+        refreshMenu();
     }
 
     private static void saveAll() {
@@ -836,19 +836,8 @@ public class StudioWindow extends JFrame implements WindowListener {
     }
 
     private void rebuildMenuAndTooblar() {
-        rebuildMenuBar();
+        refreshMenu();
         rebuildToolbar();
-    }
-
-    private void rebuildMenuBar() {
-        if (loading) return;
-
-        JMenuBar menubar = createMenuBar();
-        setJMenuBar(menubar);
-        menubar.validate();
-        menubar.repaint();
-        validate();
-        repaint();
     }
 
     private void addToMenu(JMenu menu, Action... actions) {
@@ -881,40 +870,96 @@ public class StudioWindow extends JFrame implements WindowListener {
         }
     }
 
-    private JMenuBar createMenuBar() {
+    private JMenu openMRUMenu, cloneMenu, windowMenu;
+    private int windowMenuWindowIndex;
+
+    private void refreshMenu() {
+        openMRUMenu.removeAll();
+
+        String[] mru = CONFIG.getMRUFiles();
+        String mnems = "123456789";
+        for (int i = 0; i < mru.length; i++) {
+            final String filename = mru[i];
+
+            JMenuItem item = new JMenuItem("" + (i + 1) + " " + filename);
+            if (i<mnems.length()) {
+                item.setMnemonic(mnems.charAt(i));
+            }
+            item.setIcon(Util.BLANK_ICON);
+            item.addActionListener(e -> loadMRUFile(filename));
+            openMRUMenu.add(item);
+        }
+
+        cloneMenu.removeAll();
+        Server[] servers = CONFIG.getServers();
+        int count = Math.min(MAX_SERVERS_TO_CLONE, servers.length);
+        for (int i = 0; i < count; i++) {
+            final Server s = servers[i];
+            JMenuItem item = new JMenuItem(s.getFullName());
+            item.addActionListener(e -> {
+                Server clone = new Server(s);
+                clone.setName("Clone of " + clone.getName());
+
+                EditServerForm f = new EditServerForm(StudioWindow.this,clone);
+                f.alignAndShow();
+
+                if (f.getResult() == ACCEPTED) {
+                    clone = f.getServer();
+                    CONFIG.addServer(clone);
+                    setServer(clone);
+                    ConnectionPool.getInstance().purge(clone); //?
+                    rebuildAll();
+                }
+            });
+
+            cloneMenu.add(item);
+        }
+
+
+        for (int index=windowMenu.getMenuComponentCount()-1; index>=windowMenuWindowIndex; index--) {
+            windowMenu.remove(index);
+        }
+
+        count = allWindows.size();
+        UserAction[] windowMenuActions = new UserAction[count];
+        if (count > 0) {
+            windowMenu.addSeparator();
+
+            for (int index = 0; index < count; index++) {
+                StudioWindow window = allWindows.get(index);
+                windowMenuActions[index] = UserAction.create("" + (index + 1) + " " + window.getCaption(),
+                        window == this ? Util.CHECK_ICON : Util.BLANK_ICON, "", 0 , null,
+                        e -> ensureDeiconified(window));
+            }
+
+            addToMenu(windowMenu, windowMenuActions);
+        }
+    }
+
+    private void createMenuBar() {
+        openMRUMenu = new JMenu("Open Recent");
+        openMRUMenu.setIcon(Util.BLANK_ICON);
+
+        cloneMenu = new JMenu(I18n.getString("Clone"));
+        cloneMenu.setIcon(Util.DATA_COPY_ICON);
+
+        windowMenu = new JMenu(I18n.getString("Window"));
+        windowMenu.setMnemonic(KeyEvent.VK_W);
+
+
         JMenuBar menubar = new JMenuBar();
         JMenu menu = new JMenu(I18n.getString("File"));
         menu.setMnemonic(KeyEvent.VK_F);
 
-        addToMenu(menu, newWindowAction, newTabAction, openFileAction, saveFileAction,
-                saveAsFileAction, saveAllFilesAction, closeTabAction, closeFileAction);
+        addToMenu(menu, newWindowAction, newTabAction, openFileAction);
+        menu.add(openMRUMenu);
+        addToMenu(menu,saveFileAction, saveAsFileAction, saveAllFilesAction, closeTabAction, closeFileAction, null);
 
         if (!Studio.hasMacOSSystemMenu()) {
             addToMenu(menu, settingsAction);
         }
 
-        addToMenu(menu, null, openInExcel, null, exportAction, null, chartAction);
-
-        String[] mru = CONFIG.getMRUFiles();
-        if (mru.length > 0) {
-            menu.addSeparator();
-            char[] mnems = "123456789".toCharArray();
-
-            for (int i = 0;i < (mru.length > mnems.length ? mnems.length : mru.length);i++) {
-                final String filename = mru[i];
-
-                JMenuItem item = new JMenuItem("" + (i + 1) + " " + filename);
-                item.setMnemonic(mnems[i]);
-                item.setIcon(Util.BLANK_ICON);
-                item.addActionListener(new ActionListener() {
-
-                    public void actionPerformed(ActionEvent e) {
-                        loadMRUFile(filename);
-                    }
-                });
-                menu.add(item);
-            }
-        }
+        addToMenu(menu, openInExcel, exportAction, chartAction);
 
         if (!Studio.hasMacOSSystemMenu()) {
             addToMenu(menu, null, exitAction);
@@ -943,43 +988,7 @@ public class StudioWindow extends JFrame implements WindowListener {
         menu.setMnemonic(KeyEvent.VK_S);
 
         addToMenu(menu, addServerAction, editServerAction, removeServerAction);
-
-        Server server = editor.getServer();
-        Server[] servers = CONFIG.getServers();
-        if (servers.length > 0) {
-            JMenu subMenu = new JMenu(I18n.getString("Clone"));
-            subMenu.setIcon(Util.DATA_COPY_ICON);
-
-            int count = MAX_SERVERS_TO_CLONE;
-            for (int i = 0;i < servers.length;i++) {
-                final Server s = servers[i];
-                if (!s.equals(server) && count <= 0) continue;
-                count--;
-                JMenuItem item = new JMenuItem(s.getFullName());
-                item.addActionListener(new ActionListener() {
-
-                    public void actionPerformed(ActionEvent e) {
-                        Server clone = new Server(s);
-                        clone.setName("Clone of " + clone.getName());
-
-                        EditServerForm f = new EditServerForm(StudioWindow.this,clone);
-                        f.alignAndShow();
-
-                        if (f.getResult() == ACCEPTED) {
-                            clone = f.getServer();
-                            CONFIG.addServer(clone);
-                            setServer(clone);
-                            ConnectionPool.getInstance().purge(clone); //?
-                            rebuildAll();
-                        }
-                    }
-                });
-
-                subMenu.add(item);
-            }
-
-            menu.add(subMenu);
-        }
+        menu.add(cloneMenu);
 
         addToMenu(menu, null, serverListAction, serverHistoryAction, importFromQPadAction);
 
@@ -992,27 +1001,13 @@ public class StudioWindow extends JFrame implements WindowListener {
                 toggleCommaFormatAction, findInResultAction);
         menubar.add(menu);
 
-        menu = new JMenu(I18n.getString("Window"));
-        menu.setMnemonic(KeyEvent.VK_W);
-
-        addToMenu(menu, splitEditorRight, splitEditorDown, null, minMaxDividerAction, toggleDividerOrientationAction,
+        //Window menu
+        addToMenu(windowMenu, splitEditorRight, splitEditorDown, null, minMaxDividerAction, toggleDividerOrientationAction,
                 arrangeAllAction, nextEditorTabAction, prevEditorTabAction);
 
-        int count = allWindows.size();
-        UserAction[] windowMenuActions = new UserAction[count];
-        if (count > 0) {
-            menu.addSeparator();
+        windowMenuWindowIndex = windowMenu.getMenuComponentCount();
+        menubar.add(windowMenu);
 
-            for (int index = 0; index < count; index++) {
-                StudioWindow window = allWindows.get(index);
-                windowMenuActions[index] = UserAction.create("" + (index + 1) + " " + window.getCaption(),
-                    window == this ? Util.CHECK_ICON : Util.BLANK_ICON, "", 0 , null,
-                        e -> ensureDeiconified(window));
-            }
-
-            addToMenu(menu, windowMenuActions);
-        }
-        menubar.add(menu);
         menu = new JMenu(I18n.getString("Help"));
         menu.setMnemonic(KeyEvent.VK_H);
         menu.add(new JMenuItem(codeKxComAction));
@@ -1021,7 +1016,8 @@ public class StudioWindow extends JFrame implements WindowListener {
         menubar.add(menu);
 
         setNamesInMenu(menubar);
-        return menubar;
+
+        setJMenuBar(menubar);
     }
 
     private void ensureDeiconified(JFrame f) {
@@ -1303,6 +1299,7 @@ public class StudioWindow extends JFrame implements WindowListener {
         serverHistory = new HistoricalList<>(CONFIG.getServerHistoryDepth(),
                 CONFIG.getServerHistory());
         initActions();
+        createMenuBar();
 
         toolbar = initToolbar();
         editorSearchPanel = new SearchPanel( () -> editor.getPane() );
@@ -1342,6 +1339,7 @@ public class StudioWindow extends JFrame implements WindowListener {
         splitpane.setDividerLocation(0.5);
 
         loading = false;
+        refreshMenu();
         rebuildMenuAndTooblar();
     }
 
