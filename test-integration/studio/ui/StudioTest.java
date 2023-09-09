@@ -23,6 +23,7 @@ import studio.utils.log4j.EnvConfig;
 
 import javax.swing.*;
 import java.awt.*;
+import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -136,6 +137,29 @@ abstract public class StudioTest extends AssertJSwingJUnitTestCase {
         assertEquals("Number of editors should increase by 1", count + 1, newCount);
     }
 
+    protected void clickTab(String editorName, MouseButton button) {
+        RSyntaxTextArea textArea = Lookup.getChild(studioWindow, RSyntaxTextArea.class, Lookup.byName(editorName));
+        JTabbedPane tabbedPane = Lookup.getParent(textArea, JTabbedPane.class);
+
+        Rectangle bounds = execute(() -> {
+            int count = tabbedPane.getTabCount();
+            for (int index=0; index<count; index++) {
+                int num = Lookup.getChildren(tabbedPane.getComponentAt(index), RSyntaxTextArea.class, Lookup.byName(editorName)).size();
+                if (num == 1) return tabbedPane.getBoundsAt(index);
+            }
+            return null;
+        });
+        assertNotEquals("Didn't find editor in the JTabbedPane ?? ", null, bounds);
+
+        Point center = new Point((int)bounds.getCenterX(), (int)bounds.getCenterY());
+        robot().click(tabbedPane, center, button, 1 );
+    }
+
+
+    protected void clickTab(String editorName) {
+        clickTab(editorName, MouseButton.LEFT_BUTTON);
+    }
+
     protected void closeTabWithMouse(String editorName) {
         RSyntaxTextArea textArea = Lookup.getChild(studioWindow, RSyntaxTextArea.class, Lookup.byName(editorName));
         JTabbedPane tabbedPane = Lookup.getParent(textArea, JTabbedPane.class);
@@ -148,20 +172,7 @@ abstract public class StudioTest extends AssertJSwingJUnitTestCase {
         }
 
         int tabCount = getTabCount(tabbedPane);
-
-        Rectangle bounds = execute(() -> {
-           int count = tabbedPane.getTabCount();
-           for (int index=0; index<count; index++) {
-               int num = Lookup.getChildren(tabbedPane.getComponentAt(index), RSyntaxTextArea.class, Lookup.byName(editorName)).size();
-               if (num == 1) return tabbedPane.getBoundsAt(index);
-           }
-           return null;
-        });
-
-        assertNotEquals("Didn't find editor in the JTabbedPane ?? ", null, bounds);
-
-        Point center = new Point((int)bounds.getCenterX(), (int)bounds.getCenterY());
-        robot().click(tabbedPane, center, MouseButton.MIDDLE_BUTTON, 1 );
+        clickTab(editorName, MouseButton.MIDDLE_BUTTON);
 
         if (tabCount > 1) {
             int newTabCount = getTabCount(tabbedPane);
@@ -187,5 +198,8 @@ abstract public class StudioTest extends AssertJSwingJUnitTestCase {
         assertEquals("Number of editor should increase after split", count + 1, newCount);
     }
 
-
+    protected void openFile(File file) {
+        FileChooser.mock(file);
+        frameFixture.menuItem("Open...").click();
+    }
 }

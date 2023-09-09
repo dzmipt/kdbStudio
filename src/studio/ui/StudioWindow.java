@@ -731,7 +731,6 @@ public class StudioWindow extends JFrame implements WindowListener {
         CONFIG.setBoolean(Config.RSTA_WORD_WRAP, !value);
         refreshEditorsSettings();
         refreshActionState();
-        //@TODO: do we need to update Menu??
     }
 
     public static void refreshServerSettingsForAllWindows() {

@@ -43,10 +43,9 @@ public class TabsTest extends StudioTest {
 
         File file = File.createTempFile("kdbStudioFileOpen", ".q");
         Files.write(file.toPath(), Collections.singletonList(text));
-        FileChooser.mock(file);
 
         JTabbedPaneFixture tabbedPaneFixture  = frameFixture.tabbedPane("editorTabbedPane0");
-        frameFixture.menuItem("Open...").click();
+        openFile(file);
 
         assertEquals("Number of tabs should be now 2", 2, tabbedPaneFixture.tabTitles().length);
         tabbedPaneFixture.requireTitle(file.getName(), Index.atIndex(1));
