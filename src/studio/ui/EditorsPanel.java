@@ -84,7 +84,12 @@ public class EditorsPanel extends JPanel {
         int index = tabbedEditors.getSelectedIndex();
         if (index!=-1) {
             // need to schedule focus transfer, otherwise focus would be transferred to other UI components which are touched later
-            SwingUtilities.invokeLater(()-> getEditorTab(index).getTextArea().requestFocus() );
+            SwingUtilities.invokeLater(()-> {
+                if (index < tabbedEditors.getTabCount()) {
+                    //to prevent IndexOutOfBoundException when tab is closed
+                    getEditorTab(index).getTextArea().requestFocus();
+                }
+            } );
         }
     }
 
@@ -118,7 +123,19 @@ public class EditorsPanel extends JPanel {
 
         setLayout(new BorderLayout());
         add(splitPane, BorderLayout.CENTER);
-        revalidate();
+        validate();
+        splitPane.setDividerLocation(0.5);
+    }
+
+    public void loadDividerLocation(Workspace.Window window) {
+        if (window == null) return;
+        if (splitPane == null) return;
+
+        if (window.isSplit()) {
+            splitPane.setDividerLocation(window.getDividerLocation());
+            left.loadDividerLocation(window.getLeft());
+            right.loadDividerLocation(window.getRight());
+        }
     }
 
     public EditorTab addTab(Server server) {
@@ -358,9 +375,19 @@ public class EditorsPanel extends JPanel {
         panel.studioWindow.refreshFrameTitle();
     }
 
+    private double getDividerLocation() {
+        if (isVerticalSplit()) {
+            return ((double)splitPane.getDividerLocation()) /(splitPane.getHeight() - splitPane.getDividerSize());
+        } else {
+            return ((double)splitPane.getDividerLocation()) /(splitPane.getWidth() - splitPane.getDividerSize());
+        }
+    }
+
+
     public void getWorkspace(Workspace.Window window) {
         if (tabbedEditors == null) {
             window.setVerticalSplit(isVerticalSplit());
+            window.setDividerLocation(getDividerLocation());
             left.getWorkspace(window.addLeft());
             right.getWorkspace(window.addRight());
         } else {

@@ -1367,6 +1367,8 @@ public class StudioWindow extends JFrame implements WindowListener {
         initFrame(toolbar, splitpane, mainStatusBar);
         splitpane.setDividerLocation(0.5);
 
+        rootEditorsPanel.loadDividerLocation(workspaceWindow);
+
         loading = false;
         refreshAllMenus();
     }

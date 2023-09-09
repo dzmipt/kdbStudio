@@ -15,6 +15,7 @@ public class Workspace {
     private int selectedWindow = -1;
 
     private final static String SELECTED_WINDOW = "selectedWindow";
+    private final static String DIVIDER_LOCATION = "dividerLocation";
     private final static String WINDOW = "window";
     private final static String TAB = "tab";
     private final static String LEFT = "left";
@@ -53,7 +54,15 @@ public class Workspace {
         try {
             return Integer.parseInt(p.getProperty(key, "" + defValue));
         } catch (NumberFormatException e) {
-            return  defValue;
+            return defValue;
+        }
+    }
+
+    private static double getDouble(Properties p, String key, double defValue) {
+        try {
+            return Double.parseDouble(p.getProperty(key, "" + defValue));
+        } catch (NumberFormatException e) {
+            return defValue;
         }
     }
 
@@ -92,6 +101,7 @@ public class Workspace {
         private int selectedTab = -1;
         private Window left, right;
         private boolean verticalSplit;
+        private double dividerLocation = 0.5;
 
         Window() {}
 
@@ -153,9 +163,18 @@ public class Workspace {
             this.verticalSplit = verticalSplit;
         }
 
+        public double getDividerLocation() {
+            return dividerLocation;
+        }
+
+        public void setDividerLocation(double dividerLocation) {
+            this.dividerLocation = dividerLocation;
+        }
+
         private void save(String prefix, Properties p) {
             if (left != null && right != null) {
                 p.setProperty(prefix + VERTICAL_SPLIT, Boolean.toString(verticalSplit));
+                p.setProperty(prefix + DIVIDER_LOCATION, Double.toString(dividerLocation));
                 left.save(prefix + LEFT + ".", p);
                 right.save(prefix + RIGHT + ".", p);
             } else {
@@ -178,6 +197,7 @@ public class Workspace {
             selectedTab = getInt(p, prefix + SELECTED_TAB, -1);
 
             verticalSplit = Boolean.parseBoolean(p.getProperty(prefix + VERTICAL_SPLIT, "false"));
+            dividerLocation = Double.parseDouble(p.getProperty(prefix + DIVIDER_LOCATION, "0.5"));
             left = loadChild(prefix + LEFT + ".", p);
             right = loadChild(prefix + RIGHT + ".", p);
         }
