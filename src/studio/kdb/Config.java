@@ -30,6 +30,8 @@ public class Config {
     private static final Map<String, ConfigType> configTypes = new HashMap();
 
     //@TODO migrate all other keys under such approach
+
+    public static final String SHOW_SERVER_COMBOBOX = configDefault("showServerComboBox", ConfigType.BOOLEAN, true);
     public static final String AUTO_SAVE = configDefault("isAutoSave", ConfigType.BOOLEAN, false);
     public static final String ACTION_ON_EXIT = configDefault("actionOnExit", ConfigType.ENUM, ActionOnExit.SAVE);
     public static final String SERVER_LIST_BOUNDS = configDefault("serverList", ConfigType.BOUNDS, new Dimension(ServerList.DEFAULT_WIDTH, ServerList.DEFAULT_HEIGHT));
@@ -527,15 +529,6 @@ public class Config {
 
     public void setDefaultAuthMechanism(String authMechanism) {
         p.setProperty("auth", authMechanism);
-        save();
-    }
-
-    public boolean isShowServerComboBox() {
-        return Boolean.parseBoolean(p.getProperty("showServerComboBox","true"));
-    }
-
-    public void setShowServerComboBox(boolean value) {
-        p.setProperty("showServerComboBox", "" + value);
         save();
     }
 

@@ -420,7 +420,7 @@ public class StudioWindow extends JFrame implements WindowListener {
 
         addToMruFiles(filename);
         EditorsPanel.refreshEditorTitle(editor);
-        rebuildAll();
+        refreshAllMenus();
     }
 
     public void addToMruFiles(String filename) {
@@ -434,7 +434,7 @@ public class StudioWindow extends JFrame implements WindowListener {
             if (!v.contains(mru[i]))
                 v.add(mru[i]);
         CONFIG.saveMRUFiles((String[]) v.toArray(new String[0]));
-        refreshMenu();
+        refreshAllMenus();
     }
 
     private static void saveAll() {
@@ -480,7 +480,7 @@ public class StudioWindow extends JFrame implements WindowListener {
             serverHistory.add(server);
 
             EditorsPanel.refreshEditorTitle(editor);
-            rebuildAll();
+            refreshServer();
         }
     }
 
@@ -509,10 +509,7 @@ public class StudioWindow extends JFrame implements WindowListener {
 
         newWindowAction = UserAction.create(I18n.getString("NewWindow"),  "Open a new window",
                 KeyEvent.VK_N, KeyStroke.getKeyStroke(KeyEvent.VK_N, menuShortcutKeyMask | InputEvent.SHIFT_MASK),
-                e -> {
-                    StudioWindow window = new StudioWindow(editor.getServer(), null);
-                    window.rebuildMenuAndTooblar();
-                } );
+                e -> new StudioWindow(editor.getServer(), null) );
 
         newTabAction = UserAction.create("New Tab",  "Open a new tab", KeyEvent.VK_T,
                 KeyStroke.getKeyStroke(KeyEvent.VK_N, menuShortcutKeyMask),
@@ -545,7 +542,7 @@ public class StudioWindow extends JFrame implements WindowListener {
                         s = f.getServer();
                         CONFIG.addServer(s);
                         setServer(s);
-                        rebuildAll();
+                        rerfreshAll();
                     }
                 });
 
@@ -559,7 +556,7 @@ public class StudioWindow extends JFrame implements WindowListener {
                         CONFIG.addServer(s);
                         ConnectionPool.getInstance().purge(s);   //?
                         setServer(s);
-                        rebuildAll();
+                        rerfreshAll();
                     }
                 });
 
@@ -582,7 +579,7 @@ public class StudioWindow extends JFrame implements WindowListener {
                         if (servers.length > 0)
                             setServer(servers[0]);
 
-                        rebuildAll();
+                        rerfreshAll();
                     }
                 });
 
@@ -727,7 +724,6 @@ public class StudioWindow extends JFrame implements WindowListener {
         if (dialog.getResult() == CANCELLED) return;
 
         dialog.saveSettings();
-        activeWindow.rebuildToolbar();
     }
 
     private void toggleWordWrap() {
@@ -735,7 +731,13 @@ public class StudioWindow extends JFrame implements WindowListener {
         CONFIG.setBoolean(Config.RSTA_WORD_WRAP, !value);
         refreshEditorsSettings();
         refreshActionState();
-        rebuildAll();
+        //@TODO: do we need to update Menu??
+    }
+
+    public static void refreshServerSettingsForAllWindows() {
+        for (StudioWindow window: allWindows) {
+            window.refreshServer();
+        }
     }
 
     public static void refreshEditorsSettings() {
@@ -823,21 +825,17 @@ public class StudioWindow extends JFrame implements WindowListener {
             if (allWindows.contains(this)) {
                 allWindows.remove(this);
                 dispose();
-                rebuildAll();
+                refreshAllMenus();
             }
         }
 
     }
 
-    public static void rebuildAll() {
+    public static void rerfreshAll() {
         for (StudioWindow window: allWindows) {
-            window.rebuildMenuAndTooblar();
+            window.refreshMenu();
+            window.refreshServerList();
         }
-    }
-
-    private void rebuildMenuAndTooblar() {
-        refreshMenu();
-        rebuildToolbar();
     }
 
     private void addToMenu(JMenu menu, Action... actions) {
@@ -867,6 +865,12 @@ public class StudioWindow extends JFrame implements WindowListener {
     private void setNamesInMenu(JMenuBar menuBar) {
         for (int index = 0; index < menuBar.getMenuCount(); index++) {
             setNamesInMenu(menuBar.getMenu(index));
+        }
+    }
+
+    private static void refreshAllMenus() {
+        for(StudioWindow window: allWindows) {
+            window.refreshMenu();
         }
     }
 
@@ -908,7 +912,7 @@ public class StudioWindow extends JFrame implements WindowListener {
                     CONFIG.addServer(clone);
                     setServer(clone);
                     ConnectionPool.getInstance().purge(clone); //?
-                    rebuildAll();
+                    rerfreshAll();
                 }
             });
 
@@ -1035,12 +1039,9 @@ public class StudioWindow extends JFrame implements WindowListener {
 
         try {
             setServer(CONFIG.getServerByConnectionString(connection));
-
-            rebuildToolbar();
-            toolbar.validate();
-            toolbar.repaint();
+            refreshServer();
         } catch (IllegalArgumentException e) {
-            refreshConnection();
+            refreshConnectionText();
         }
     }
 
@@ -1063,7 +1064,9 @@ public class StudioWindow extends JFrame implements WindowListener {
         if (selectedServer == null || selectedServer.equals(editor.getServer())) return;
 
         setServer(selectedServer);
-        rebuildToolbar();
+
+        refreshAllMenus();
+        refreshServerListAllWindows();
     }
 
 
@@ -1072,12 +1075,10 @@ public class StudioWindow extends JFrame implements WindowListener {
         if(! CONFIG.getServerNames().contains(selection)) return;
 
         setServer(CONFIG.getServer(selection));
-        rebuildToolbar();
-        toolbar.validate();
-        toolbar.repaint();
+        refreshServer();
     }
 
-    private void refreshConnection() {
+    private void refreshConnectionText() {
         Server server = editor.getServer();
         if (server == Server.NO_SERVER) {
             txtServer.setText("");
@@ -1088,7 +1089,19 @@ public class StudioWindow extends JFrame implements WindowListener {
         }
     }
 
-    private void toolbarAddServerSelection() {
+    public static void refreshComboServerVisibility() {
+        for (StudioWindow window: allWindows) {
+            window.comboServer.setVisible(CONFIG.getBoolean(Config.SHOW_SERVER_COMBOBOX));
+        }
+    }
+
+    public static void refreshServerListAllWindows() {
+        for (StudioWindow window: allWindows) {
+            window.refreshServerList();
+        }
+    }
+
+    private void refreshServerList() {
         Server server = editor.getServer();
         Collection<String> names = CONFIG.getServerNames();
         String name = server == Server.NO_SERVER ? "" : server.getFullName();
@@ -1098,14 +1111,31 @@ public class StudioWindow extends JFrame implements WindowListener {
             newNames.addAll(names);
             names = newNames;
         }
-        comboServer = new JComboBox<>(names.toArray(new String[0]));
+        log.info("comboBox.setModel");
+        comboServer.setModel(new DefaultComboBoxModel<>(names.toArray(new String[0])));
+
+        comboServer.setSelectedItem(name);
+    }
+
+
+    private void refreshServer() {
+        Server server = editor.getServer();
+        String name = server == Server.NO_SERVER ? "" : server.getFullName();
+        comboServer.setSelectedItem(name);
+
+        refreshConnectionText();
+        refreshActionState();
+    }
+
+
+    private void toolbarAddServerSelection() {
+        comboServer = new JComboBox<>();
+        comboServer.setVisible(CONFIG.getBoolean(Config.SHOW_SERVER_COMBOBOX));
         comboServer.setName("serverDropDown");
         comboServer.setToolTipText("Select the server context");
-        comboServer.setSelectedItem(name);
         comboServer.addActionListener(e->selectServerName());
         // Cut the width if it is too wide.
         comboServer.setMinimumSize(new Dimension(0, 0));
-        comboServer.setVisible(CONFIG.isShowServerComboBox());
 
         txtServer = new JTextField(32);
         txtServer.setName("serverEntryTextField");
@@ -1119,7 +1149,9 @@ public class StudioWindow extends JFrame implements WindowListener {
                 selectConnectionString();
             }
         });
-        refreshConnection();
+
+        refreshServerList();
+        refreshServer();
 
         toolbar.add(new JLabel(I18n.getString("Server")));
         toolbar.add(comboServer);
@@ -1128,10 +1160,7 @@ public class StudioWindow extends JFrame implements WindowListener {
         toolbar.addSeparator();
     }
 
-    private void rebuildToolbar() {
-        if (loading) return;
-
-        toolbar.removeAll();
+    private void fillInToolbar() {
         toolbarAddServerSelection();
 
         toolbar.add(stopAction);
@@ -1309,6 +1338,7 @@ public class StudioWindow extends JFrame implements WindowListener {
 
         // We need to have some editor initialize to prevent NPE
         editor = new EditorTab(this);
+        fillInToolbar();
         topPanel = new JPanel(new BorderLayout());
 
         rootEditorsPanel = new EditorsPanel(this, workspaceWindow);
@@ -1339,8 +1369,7 @@ public class StudioWindow extends JFrame implements WindowListener {
         splitpane.setDividerLocation(0.5);
 
         loading = false;
-        refreshMenu();
-        rebuildMenuAndTooblar();
+        refreshAllMenus();
     }
 
     private Toolbar initToolbar() {
@@ -1499,7 +1528,6 @@ public class StudioWindow extends JFrame implements WindowListener {
         for (StudioWindow window: allWindows) {
             window.refreshFrameTitle();
         }
-        rebuildAll();
     }
 
     public void refreshQuery() {

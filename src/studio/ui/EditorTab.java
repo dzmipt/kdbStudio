@@ -93,7 +93,6 @@ public class EditorTab implements FileWatcher.Listener {
             setLineEnding(content.getLineEnding());
             setModified(content.isModified());
             modifiedTimeOnDisk = readModifiedTime();
-            StudioWindow.rebuildAll();
         }
         catch (BadLocationException e) {
             log.error("Unexpected exception", e);
@@ -236,7 +235,6 @@ public class EditorTab implements FileWatcher.Listener {
 
         try {
             FileReaderWriter.write(filename, getTextArea().getText(), lineEnding);
-            StudioWindow.rebuildAll();
             setModified(false);
             modifiedTimeOnDisk = readModifiedTime();
             studioWindow.addToMruFiles(filename);

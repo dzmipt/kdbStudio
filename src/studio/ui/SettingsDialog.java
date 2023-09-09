@@ -191,7 +191,7 @@ public class SettingsDialog extends EscapeDialog {
         txtTabsCount = new JFormattedTextField(formatter);
         txtTabsCount.setValue(CONFIG.getResultTabsCount());
         chBoxShowServerCombo = new JCheckBox("Show server drop down list in the toolbar");
-        chBoxShowServerCombo.setSelected(CONFIG.isShowServerComboBox());
+        chBoxShowServerCombo.setSelected(CONFIG.getBoolean(Config.SHOW_SERVER_COMBOBOX));
         JLabel lblMaxCharsInResult = new JLabel("Max chars in result");
         txtMaxCharsInResult = new JFormattedTextField(formatter);
         txtMaxCharsInResult.setValue(CONFIG.getMaxCharsInResult());
@@ -322,7 +322,11 @@ public class SettingsDialog extends EscapeDialog {
         CONFIG.setBoolean(Config.SESSION_REUSE, chBoxSessionReuse.isSelected());
         CONFIG.setDefaultAuthMechanism(auth);
         CONFIG.setDefaultCredentials(auth, new Credentials(getUser(), getPassword()));
-        CONFIG.setShowServerComboBox(isShowServerComboBox());
+
+        if (CONFIG.setBoolean(Config.SHOW_SERVER_COMBOBOX, isShowServerComboBox()) ) {
+            StudioWindow.refreshComboServerVisibility();
+        }
+
         CONFIG.setResultTabsCount(getResultTabsCount());
         CONFIG.setMaxCharsInResult(getMaxCharsInResult());
         CONFIG.setMaxCharsInTableCell(getMaxCharsInTableCell());

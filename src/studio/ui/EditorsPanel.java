@@ -83,7 +83,8 @@ public class EditorsPanel extends JPanel {
 
         int index = tabbedEditors.getSelectedIndex();
         if (index!=-1) {
-            getEditorTab(index).getTextArea().requestFocus();
+            // need to schedule focus transfer, otherwise focus would be transferred to other UI components which are touched later
+            SwingUtilities.invokeLater(()-> getEditorTab(index).getTextArea().requestFocus() );
         }
     }
 
@@ -117,6 +118,7 @@ public class EditorsPanel extends JPanel {
 
         setLayout(new BorderLayout());
         add(splitPane, BorderLayout.CENTER);
+        revalidate();
     }
 
     public EditorTab addTab(Server server) {
@@ -447,17 +449,10 @@ public class EditorsPanel extends JPanel {
     }
 
     public boolean execute(EditorTabAction action) {
-        if (tabbedEditors != null) {
-            int count = tabbedEditors.getTabCount();
-            for (int index = 0; index<count; index++) {
-                EditorTab editorTab = getEditorTab(index);
-                if (!action.execute(editorTab)) return false;
-            }
-        } else {
-            if (! left.execute(action) ) return false;
-            if (! right.execute(action) ) return false;
+        List<EditorTab> editors = getAllEditors(false);
+        for(EditorTab editor: editors) {
+            if (!action.execute(editor)) return false;
         }
-
         return true;
     }
 

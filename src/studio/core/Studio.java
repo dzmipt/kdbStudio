@@ -19,11 +19,11 @@ import java.awt.*;
 import java.awt.event.KeyEvent;
 import java.io.IOException;
 import java.io.PrintStream;
+import java.lang.ref.Reference;
+import java.lang.reflect.Field;
 import java.lang.reflect.Proxy;
-import java.util.Arrays;
 import java.util.List;
-import java.util.Locale;
-import java.util.TimeZone;
+import java.util.*;
 
 public class Studio {
 
@@ -172,8 +172,49 @@ public class Studio {
         }
     }
 
+    private static void debugFocusTransfer() {
+        KeyboardFocusManager.getCurrentKeyboardFocusManager().addPropertyChangeListener(
+                e -> {
+//                    log.info("Property: {}; old: {};\nnew: {}", e.getPropertyName(), e.getOldValue(), e.getNewValue());
+                    if (e.getPropertyName().equals("focusOwner")) {
+                        String oldV = e.getOldValue() == null ? "null": e.getOldValue().getClass().toString();
+                        String newV = e.getNewValue() == null ? "null": e.getNewValue().getClass().toString();
+                        log.info("focusOwner {} -> {}", oldV, newV);
+                    }
+                }
+
+        );
+
+        try {
+            Field mrfoField = KeyboardFocusManager.class.getDeclaredField("mostRecentFocusOwners");
+            mrfoField.setAccessible(true);
+            final Map delegate = (Map) mrfoField.get(null);
+            HashMap map = new HashMap() {
+                @Override
+                public Object put(Object key, Object value) {
+                    if (value instanceof Reference) {
+                        log.info("KFM: Value: {}", ((Reference)value).get().getClass());
+                    } else if (value == null) {
+                        log.info("KFM: Value is null");
+                    }
+//                    log.info("stacktrace", new Throwable());
+                    return delegate.put(key, value);
+                }
+
+                @Override
+                public Object get(Object key) {
+                    return delegate.get(key);
+                }
+            };
+            mrfoField.set(null, map);
+        } catch (Exception e) {
+            log.error("Exception", e);
+        }
+    }
+
     //Executed on the Event Dispatcher Thread
     private static void init(String[] args) {
+//        debugFocusTransfer();
         log.info("Start Studio with args {}", Arrays.asList(args));
         initLF();
         registerForMacOSMenu();

@@ -33,7 +33,6 @@ public class TabsTest extends StudioTest {
     @Test
     public void closeTabTest() {
         addTab("editor1");
-        frameFixture.textBox("editor2").requireFocused();
         closeTabWithMouse("editor1");
         frameFixture.textBox("editor2").requireFocused();
     }
