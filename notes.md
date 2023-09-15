@@ -1,3 +1,4 @@
+* Bugfix to enable "Upload" button when result tabs are switched
 * Backup of config and workspace files for 2 weeks
 
 `dz3.0` 2023.08.04
