@@ -1110,7 +1110,6 @@ public class StudioWindow extends JFrame implements WindowListener {
             newNames.addAll(names);
             names = newNames;
         }
-        log.info("comboBox.setModel");
         comboServer.setModel(new DefaultComboBoxModel<>(names.toArray(new String[0])));
 
         comboServer.setSelectedItem(name);
