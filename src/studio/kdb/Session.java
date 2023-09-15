@@ -1,10 +1,13 @@
 package studio.kdb;
 
+import kx.ProgressCallback;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import studio.core.AuthenticationManager;
 import studio.core.Credentials;
 import studio.core.IAuthenticationMechanism;
+
+import java.io.IOException;
 
 public class Session {
     private kx.c c;
@@ -64,8 +67,16 @@ public class Session {
         busy = true;
     }
 
-    public kx.c getKdbConnection() {
-        return c;
+    public K.KBase execute(K.KBase x, ProgressCallback progress) throws kx.c.K4Exception, IOException {
+        return c.k(x, progress);
+    }
+
+    public boolean isClosed() {
+        return c.isClosed();
+    }
+
+    public void close() {
+        c.close();
     }
 
     public Server getServer() {

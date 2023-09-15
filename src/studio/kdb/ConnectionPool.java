@@ -23,7 +23,7 @@ public class ConnectionPool {
     private ConnectionPool() {}
 
     private static void cleanupSessions(List<Session> sessions) {
-        sessions.removeIf(session -> session.getKdbConnection().isClosed());
+        sessions.removeIf(Session::isClosed);
     }
 
     public synchronized Session leaseConnection(Server server) {
@@ -46,7 +46,7 @@ public class ConnectionPool {
     public synchronized void purge(Server server) {
         List<Session> sessions = sessionMap.computeIfAbsent(server, k-> new ArrayList<>());
         for(Session session: sessions) {
-            session.getKdbConnection().close();
+            session.close();
         }
         sessions.clear();
     }

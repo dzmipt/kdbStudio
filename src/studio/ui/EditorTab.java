@@ -55,7 +55,7 @@ public class EditorTab implements FileWatcher.Listener {
     public void closing() {
         stopFileWatching();
         if (session != null) {
-            session.getKdbConnection().close();
+            session.close();
         }
     }
 

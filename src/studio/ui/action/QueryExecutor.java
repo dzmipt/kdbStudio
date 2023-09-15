@@ -110,7 +110,7 @@ public class QueryExecutor implements ProgressCallback {
 
         void closeConnection() {
             if (session != null) {
-                session.getKdbConnection().close();
+                session.close();
             }
         }
 
@@ -126,7 +126,7 @@ public class QueryExecutor implements ProgressCallback {
             }
 
             if (! session.getServer().equals(server) ) {
-                session.getKdbConnection().close();
+                session.close();
                 session = new Session(server);
                 editor.setSession(session);
             }
@@ -142,7 +142,7 @@ public class QueryExecutor implements ProgressCallback {
             long startTime = System.currentTimeMillis();
             try {
                 session = getSession();
-                K.KBase response = session.getKdbConnection().k(query, QueryExecutor.this);
+                K.KBase response = session.execute(query, QueryExecutor.this);
                 result.setResult(response);
             } catch (Throwable e) {
                 if (! (e instanceof kx.c.K4Exception)) {
