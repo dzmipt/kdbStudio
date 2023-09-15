@@ -44,9 +44,9 @@ public class TabPanel extends JPanel {
         return type;
     }
 
-    public void refreshActionState(boolean queryRunning) {
+    public void refreshActionState() {
         if (uploadBtn != null) {
-            uploadBtn.setEnabled(result != null && !queryRunning);
+            uploadBtn.setEnabled(! panel.isQueryRunning());
         }
     }
 

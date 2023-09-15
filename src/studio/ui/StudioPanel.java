@@ -204,6 +204,10 @@ public class StudioPanel extends JPanel implements WindowListener {
         }
     }
 
+    public boolean isQueryRunning() {
+        return editor.getQueryExecutor().running();
+    }
+
     public void refreshActionState() {
         RSyntaxTextArea textArea = editor.getTextArea();
         if (textArea == null || tabbedPane == null) {
@@ -225,13 +229,13 @@ public class StudioPanel extends JPanel implements WindowListener {
             lineEndingActions[lineEnding.ordinal()].setSelected(editor.getLineEnding() == lineEnding);
         }
 
-        boolean queryRunning = editor.getQueryExecutor().running();
+        boolean queryRunning = isQueryRunning();
         stopAction.setEnabled(queryRunning);
         executeAction.setEnabled(!queryRunning);
         executeCurrentLineAction.setEnabled(!queryRunning);
         refreshAction.setEnabled(lastQuery != null && !queryRunning);
 
-        TabPanel tab = (TabPanel) tabbedPane.getSelectedComponent();
+        TabPanel tab = getSelectedResultPane();
         if (tab == null) {
             setActionsEnabled(false, exportAction, chartAction, openInExcel, refreshAction);
         } else {
@@ -239,7 +243,7 @@ public class StudioPanel extends JPanel implements WindowListener {
             chartAction.setEnabled(tab.getType() == TabPanel.ResultType.TABLE);
             openInExcel.setEnabled(tab.isTable());
             refreshAction.setEnabled(true);
-            tab.refreshActionState(queryRunning);
+            tab.refreshActionState();
         }
     }
 
@@ -747,7 +751,7 @@ public class StudioPanel extends JPanel implements WindowListener {
         toggleCommaFormatAction = UserAction.create("Toggle Comma Format", Util. COMMA_ICON, "Add/remove thousands separator in selected result",
                 KeyEvent.VK_J, KeyStroke.getKeyStroke(KeyEvent.VK_J, menuShortcutKeyMask),
                 e -> {
-                    TabPanel tab = (TabPanel) tabbedPane.getSelectedComponent();
+                    TabPanel tab = getSelectedResultPane();
                     if (tab != null) tab.toggleCommaFormatting();
                 });
 
@@ -1469,7 +1473,7 @@ public class StudioPanel extends JPanel implements WindowListener {
     private void refreshResultTab() {
         refreshActionState();
 
-        TabPanel tab = (TabPanel) tabbedPane.getSelectedComponent();
+        TabPanel tab = getSelectedResultPane();
         if (tab == null) return;
 
         if (tab.getEditor() != null) {
@@ -1559,13 +1563,17 @@ public class StudioPanel extends JPanel implements WindowListener {
         });
         tabbedPane.putClientProperty(StudioPanel.class, this);
         tabbedPane.addDragListener( evt -> resultTabDragged(evt));
+        tabbedPane.addChangeListener(e -> {
+            TabPanel tabPanel = getSelectedResultPane();
+            if (tabPanel != null) tabPanel.refreshActionState();
+        });
 
         JPanel bottomPanel = new JPanel(new BorderLayout());
         bottomPanel.add(tabbedPane, BorderLayout.CENTER);
 
         resultSearchPanel = new SearchPanel(() -> {
             if (tabbedPane.getTabCount() == 0) return null;
-            TabPanel resultTab = getResultPane(tabbedPane.getSelectedIndex());
+            TabPanel resultTab = getSelectedResultPane();
             EditorPane editorPane = resultTab.getEditor();
             if (editorPane != null) return editorPane;
 
@@ -1839,6 +1847,11 @@ public class StudioPanel extends JPanel implements WindowListener {
     private TabPanel getResultPane(int index) {
         return (TabPanel)tabbedPane.getComponentAt(index);
     }
+
+    private TabPanel getSelectedResultPane() {
+        return (TabPanel) tabbedPane.getSelectedComponent();
+    }
+
 
     // if the query is cancelled execTime=-1, result and error are null's
     public static void queryExecutionComplete(EditorTab editor, QueryResult queryResult) {
