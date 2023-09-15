@@ -1385,6 +1385,7 @@ public class StudioWindow extends JFrame implements WindowListener {
 
     private DraggableTabbedPane initResultPane() {
         DraggableTabbedPane tabbedPane = new DraggableTabbedPane("Result", JTabbedPane.TOP);
+        tabbedPane.setName("ResultTabbedPane");
         ClosableTabbedPane.makeCloseable(tabbedPane, new ClosableTabbedPane.PinTabAction() {
             @Override
             public boolean close(int index, boolean force) {

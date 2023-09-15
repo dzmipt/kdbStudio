@@ -202,4 +202,8 @@ abstract public class StudioTest extends AssertJSwingJUnitTestCase {
         FileChooser.mock(file);
         frameFixture.menuItem("Open...").click();
     }
+
+    protected void setServerConnectionText(String serverConnection) {
+        frameFixture.textBox("serverEntryTextField").enterText(serverConnection).pressAndReleaseKey(keyCode(VK_ENTER));
+    }
 }

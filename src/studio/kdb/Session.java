@@ -17,6 +17,7 @@ public class Session {
     private boolean busy = false;
 
     private static final long HOUR = 1000*3600;
+    private static SessionCreator sessionCreator = new SessionCreator();
 
     private static final Logger log = LogManager.getLogger();
 
@@ -32,27 +33,13 @@ public class Session {
         created = System.currentTimeMillis();
     }
 
+    static void mock(SessionCreator sessionCreator) {
+        log.info("Mocking kdb session creator");
+        Session.sessionCreator = sessionCreator;
+    }
+
     private static kx.c createConnection(Server s) {
-        try {
-            Class<?> clazz = AuthenticationManager.getInstance().lookup(s.getAuthenticationMechanism());
-            IAuthenticationMechanism authenticationMechanism = (IAuthenticationMechanism) clazz.newInstance();
-
-            authenticationMechanism.setProperties(s.getAsProperties());
-            Credentials credentials = authenticationMechanism.getCredentials();
-
-            kx.c c;
-            if (credentials.getUsername().length() > 0) {
-                String p = credentials.getPassword();
-                c = new kx.c(s.getHost(), s.getPort(), credentials.getUsername() + ((p.length() == 0) ? "" : ":" + p), s.getUseTLS());
-            } else {
-                c = new kx.c(s.getHost(), s.getPort(), "", s.getUseTLS());
-            }
-            c.setEncoding(Config.getInstance().getEncoding());
-            return c;
-        } catch (InstantiationException | IllegalAccessException | IllegalArgumentException ex) {
-            log.error("Failed to initialize connection", ex);
-            return null;
-        }
+        return sessionCreator.createConnection(s);
     }
 
     public boolean isBusy() {
@@ -93,4 +80,30 @@ public class Session {
             init();
         }
     }
+
+    public static class SessionCreator {
+        public kx.c createConnection(Server s) {
+            try {
+                Class<?> clazz = AuthenticationManager.getInstance().lookup(s.getAuthenticationMechanism());
+                IAuthenticationMechanism authenticationMechanism = (IAuthenticationMechanism) clazz.newInstance();
+
+                authenticationMechanism.setProperties(s.getAsProperties());
+                Credentials credentials = authenticationMechanism.getCredentials();
+
+                kx.c c;
+                if (credentials.getUsername().length() > 0) {
+                    String p = credentials.getPassword();
+                    c = new kx.c(s.getHost(), s.getPort(), credentials.getUsername() + ((p.length() == 0) ? "" : ":" + p), s.getUseTLS());
+                } else {
+                    c = new kx.c(s.getHost(), s.getPort(), "", s.getUseTLS());
+                }
+                c.setEncoding(Config.getInstance().getEncoding());
+                return c;
+            } catch (InstantiationException | IllegalAccessException | IllegalArgumentException ex) {
+                log.error("Failed to initialize connection", ex);
+                return null;
+            }
+        }
+    }
+
 }

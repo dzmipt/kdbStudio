@@ -87,6 +87,7 @@ public class TabPanel extends JPanel {
             });
 
             uploadBtn = new JButton(Util.UPLOAD_ICON);
+            uploadBtn.setName("UploadButton");
             uploadBtn.setToolTipText("Upload to server");
             uploadBtn.setBorder(BorderFactory.createEtchedBorder(EtchedBorder.LOWERED));
             uploadBtn.setFocusable(false);

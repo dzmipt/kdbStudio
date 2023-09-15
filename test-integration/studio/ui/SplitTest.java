@@ -76,7 +76,7 @@ public class SplitTest extends StudioTest {
         split("editor1", false);
         JTextComponentFixture editor1 = frameFixture.textBox("editor1");
         editor1.focus();
-        frameFixture.textBox("serverEntryTextField").enterText("`:server:1111").pressAndReleaseKey(keyCode(VK_ENTER));
+        setServerConnectionText("`:server:1111");
 
         editor1.requireFocused();
         frameFixture.tabbedPane("editorTabbedPane1").requireTitle("server:1111", Index.atIndex(0));
