@@ -17,10 +17,20 @@ public class PropertiesConfig extends Properties {
         return Collections.enumeration(keys);
     }
 
+
+    private boolean superEntrySet = false;
+
     @Override
-    public Set<Map.Entry<Object, Object>> entrySet() {
-        ConcurrentSkipListMap map = new ConcurrentSkipListMap(this);
-        return map.entrySet();
+    public synchronized Set<Map.Entry<Object, Object>> entrySet() {
+        if (superEntrySet) return super.entrySet();
+
+        superEntrySet = true;
+        try {
+            ConcurrentSkipListMap map = new ConcurrentSkipListMap(this);
+            return map.entrySet();
+        } finally {
+            superEntrySet = false;
+        }
     }
 
 }
