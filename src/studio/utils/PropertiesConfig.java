@@ -1,35 +1,45 @@
 package studio.utils;
 
-import java.util.*;
-import java.util.concurrent.ConcurrentSkipListMap;
+import java.io.*;
+import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.Properties;
 
 // The purposes at the moment is to have sorted keys in storing properties to disk
-// It turns out that Properties.store is implemented via keys() in Java 8 and via entrySet in Java 17.
-// Didn't check if there are other implementation
 public class PropertiesConfig extends Properties {
 
+    private final static Charset CHARSET = StandardCharsets.ISO_8859_1;
     public PropertiesConfig() {}
 
     @Override
-    public synchronized Enumeration<Object> keys() {
-        List keys = Collections.list(super.keys());
-        Collections.sort(keys);
-        return Collections.enumeration(keys);
-    }
+    public void store(OutputStream out, String comments) throws IOException {
+        byte[] lineSeparator = System.getProperty("line.separator").getBytes(CHARSET);
 
+        ByteArrayOutputStream buffer = new ByteArrayOutputStream();
+        super.store(buffer, comments);
 
-    private boolean superEntrySet = false;
+        BufferedReader reader = new BufferedReader(
+                new InputStreamReader(new ByteArrayInputStream(buffer.toByteArray()), CHARSET) );
 
-    @Override
-    public synchronized Set<Map.Entry<Object, Object>> entrySet() {
-        if (superEntrySet) return super.entrySet();
+        List<String> lines = new ArrayList<>();
+        for(;;) {
+            String line = reader.readLine();
+            if (line == null) break;
+            if (line.startsWith("#")) {
+                out.write(line.getBytes(CHARSET));
+                out.write(lineSeparator);
+            } else {
+                lines.add(line);
+            }
+        }
+        Collections.sort(lines);
 
-        superEntrySet = true;
-        try {
-            ConcurrentSkipListMap map = new ConcurrentSkipListMap(this);
-            return map.entrySet();
-        } finally {
-            superEntrySet = false;
+        for (String line: lines) {
+            out.write(line.getBytes(CHARSET));
+            out.write(lineSeparator);
         }
     }
 

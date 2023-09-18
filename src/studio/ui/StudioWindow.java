@@ -252,7 +252,7 @@ public class StudioWindow extends JFrame implements WindowListener {
 
         Runnable runner = () -> {
             if (filename != null) {
-                String lineSeparator = System.getProperty("line.separator");;
+                String lineSeparator = System.getProperty("line.separator");
 
                 try (BufferedWriter fw = new BufferedWriter(new FileWriter(filename))) {
                     for(int col = 0; col < model.getColumnCount(); col++) {
