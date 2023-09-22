@@ -91,6 +91,7 @@ public class ConfigTest {
         assertEquals(value+1, config.getResultTabsCount());
         assertEquals(value, config1.getResultTabsCount());
 
+        config.saveToDisk();
         assertEquals(value+1, new Config(tmpFile.getPath()).getResultTabsCount());
     }
 
@@ -166,6 +167,7 @@ public class ConfigTest {
     } 
     
     private Config copyConfig(Config config, Consumer<Properties> propsModification) throws IOException {
+        config.saveToDisk();
         Properties p = new Properties();
         p.load(new FileInputStream(config.getFilename()));
         propsModification.accept(p);

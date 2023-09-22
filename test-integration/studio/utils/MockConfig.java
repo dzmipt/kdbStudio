@@ -61,4 +61,8 @@ public class MockConfig extends Config {
         this.workspace = workspace;
     }
 
+    @Override
+    public void exit() {
+    }
+
 }

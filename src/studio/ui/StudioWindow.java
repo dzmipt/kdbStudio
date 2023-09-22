@@ -813,8 +813,7 @@ public class StudioWindow extends JFrame implements WindowListener {
             WorkspaceSaver.setEnabled(true);
         }
         WorkspaceSaver.save(getWorkspace());
-        log.info("Shutting down");
-        System.exit(0);
+        CONFIG.exit();
     }
 
     public void close() {
