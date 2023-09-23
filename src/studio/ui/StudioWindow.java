@@ -1371,6 +1371,9 @@ public class StudioWindow extends JFrame implements WindowListener {
         rootEditorsPanel.loadDividerLocation(workspaceWindow);
 
         loading = false;
+
+        EditorsPanel.refreshEditorTitle(editor);
+        refreshServer();
         refreshAllMenus();
     }
 
