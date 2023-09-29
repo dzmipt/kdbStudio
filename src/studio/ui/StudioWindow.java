@@ -1130,7 +1130,7 @@ public class StudioWindow extends JFrame implements WindowListener {
     }
 
 
-    private void toolbarAddServerSelection() {
+    private void initToolbar() {
         comboServer = new JComboBox<>();
         comboServer.setVisible(CONFIG.getBoolean(Config.SHOW_SERVER_COMBOBOX));
         comboServer.setName("serverDropDown");
@@ -1158,54 +1158,26 @@ public class StudioWindow extends JFrame implements WindowListener {
         toolbar.add(new JLabel(I18n.getString("Server")));
         toolbar.add(comboServer);
         toolbar.add(txtServer);
-        toolbar.add(serverListAction);
-        toolbar.addSeparator();
-    }
 
-    private void fillInToolbar() {
-        toolbarAddServerSelection();
+        Action[] actions = new Action[] {
+                serverListAction, null,
+                stopAction, executeAction, refreshAction, null, openFileAction, saveFileAction, saveAsFileAction, null,
+                openInExcel, null, exportAction, null, chartAction, null, undoAction, redoAction, null,
+                cutAction, copyAction, pasteAction, null, findAction, replaceAction, null, codeKxComAction };
 
-        toolbar.add(stopAction);
-        toolbar.add(executeAction);
-        toolbar.add(refreshAction);
-        toolbar.addSeparator();
+        for (Action action: actions) {
+            if (action == null) {
+                toolbar.addSeparator();
+            } else {
+                JButton button = toolbar.add(action);
+                button.setFocusable(false);
+                button.setMnemonic(KeyEvent.VK_UNDEFINED);
 
-        toolbar.add(openFileAction);
-        toolbar.add(saveFileAction);
-        toolbar.add(saveAsFileAction);
-        toolbar.addSeparator();
-        toolbar.add(openInExcel);
-        toolbar.addSeparator();
-        toolbar.add(exportAction);
-        toolbar.addSeparator();
-
-        toolbar.add(chartAction);
-        toolbar.addSeparator();
-
-        toolbar.add(undoAction);
-        toolbar.add(redoAction);
-        toolbar.addSeparator();
-
-        toolbar.add(cutAction);
-        toolbar.add(copyAction);
-        toolbar.add(pasteAction);
-
-        toolbar.addSeparator();
-        toolbar.add(findAction);
-
-        toolbar.add(replaceAction);
-        toolbar.addSeparator();
-        toolbar.add(codeKxComAction);
-
-        for (int j = 0;j < toolbar.getComponentCount();j++) {
-            Component c = toolbar.getComponentAtIndex(j);
-
-            if (c instanceof JButton) {
-                JButton btn = (JButton)c;
-                btn.setFocusable(false);
-                btn.setMnemonic(KeyEvent.VK_UNDEFINED);
+                String name = (String) action.getValue(Action.NAME);
+                button.setName("toolbar" + name);
             }
         }
+
         refreshActionState();
     }
 
@@ -1332,7 +1304,7 @@ public class StudioWindow extends JFrame implements WindowListener {
         initActions();
         createMenuBar();
 
-        toolbar = initToolbar();
+        toolbar = createToolbar();
         editorSearchPanel = new SearchPanel( () -> editor.getPane() );
         mainStatusBar = new MainStatusBar();
         tabbedPane = initResultPane();
@@ -1340,7 +1312,7 @@ public class StudioWindow extends JFrame implements WindowListener {
 
         // We need to have some editor initialize to prevent NPE
         editor = new EditorTab(this);
-        fillInToolbar();
+        initToolbar();
         topPanel = new JPanel(new BorderLayout());
 
         rootEditorsPanel = new EditorsPanel(this, workspaceWindow);
@@ -1379,7 +1351,7 @@ public class StudioWindow extends JFrame implements WindowListener {
         refreshAllMenus();
     }
 
-    private Toolbar initToolbar() {
+    private Toolbar createToolbar() {
         Toolbar toolbar = new Toolbar();
         toolbar.setLayout(new BoxLayout(toolbar, BoxLayout.X_AXIS));
         toolbar.setFloatable(false);
