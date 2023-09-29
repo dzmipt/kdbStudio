@@ -188,9 +188,11 @@ public class StudioWindow extends JFrame implements WindowListener {
         if (env != null) frameTitleBuilder.append(" [").append(env).append("]");
 
         String frameTitle = frameTitleBuilder.toString();
-        if (!frameTitle.equals(getTitle())) {
-            setTitle(frameTitle);
-        }
+
+        if (frameTitle.equals(getTitle())) return;
+
+        setTitle(frameTitle);
+        refreshAllMenus();
     }
 
     private void setActionsEnabled(boolean value, Action... actions) {

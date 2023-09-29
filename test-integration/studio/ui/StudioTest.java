@@ -206,4 +206,5 @@ abstract public class StudioTest extends AssertJSwingJUnitTestCase {
     protected void setServerConnectionText(String serverConnection) {
         frameFixture.textBox("serverEntryTextField").enterText(serverConnection).pressAndReleaseKey(keyCode(VK_ENTER));
     }
+
 }
