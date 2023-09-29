@@ -1278,10 +1278,10 @@ public class StudioWindow extends JFrame implements WindowListener {
         log.info("Update editor with server {} and filename {}",newEditor.getServer(), newEditor.getFilename());
 
         if (editor.isAddedToPanel()) { // during initialization editor is not in the panel
-            editor.getEditorsPanel().setDimEditors(true);
+            editor.getEditorsPanel().setInFocusTabbedEditors(false);
         }
 
-        newEditor.getEditorsPanel().setDimEditors(false);
+        newEditor.getEditorsPanel().setInFocusTabbedEditors(true);
 
         editor = newEditor;
         editor.setStudioWindow(this);
@@ -1350,7 +1350,7 @@ public class StudioWindow extends JFrame implements WindowListener {
                 updateEditor(editor);
                 first = false;
             } else {
-                editor.getEditorsPanel().setDimEditors(true);
+                editor.getEditorsPanel().setInFocusTabbedEditors(false);
             }
         }
 
@@ -1482,9 +1482,9 @@ public class StudioWindow extends JFrame implements WindowListener {
 
                 log.info("Window focus is changed from {} to {} ", StudioWindow.activeWindow.getCaption(), StudioWindow.this.getCaption());
                 if (StudioWindow.allWindows.contains(StudioWindow.activeWindow)) {
-                    StudioWindow.activeWindow.editor.getEditorsPanel().setDimEditors(true);
+                    StudioWindow.activeWindow.editor.getEditorsPanel().setInFocusTabbedEditors(false);
                 }
-                editor.getEditorsPanel().setDimEditors(false);
+                editor.getEditorsPanel().setInFocusTabbedEditors(true);
                 StudioWindow.activeWindow = StudioWindow.this;
             }
 

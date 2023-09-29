@@ -31,7 +31,7 @@ class DragGestureHandler implements DragGestureListener {
         pane.paint(g);
         g.dispose();
 
-        pane.setDimSelectedTab(true);
+        pane.setSelectedTabDecoration(SelectedTabDecoration.DIM);
         pane.repaint();
 
         Transferable t = new TabbedPaneTransferable(pane, index);

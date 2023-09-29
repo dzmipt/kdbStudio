@@ -7,6 +7,7 @@ import studio.kdb.Config;
 import studio.kdb.Server;
 import studio.kdb.Workspace;
 import studio.ui.dndtabbedpane.DraggableTabbedPane;
+import studio.ui.dndtabbedpane.SelectedTabDecoration;
 import studio.utils.Content;
 import studio.utils.FileReaderWriter;
 
@@ -58,7 +59,6 @@ public class EditorsPanel extends JPanel {
     private void initTabbedEditors() {
         tabbedEditors = new DraggableTabbedPane("Editor");
         tabbedEditors.setName("editorTabbedPane" + studioWindow.nextEditorTabbedPaneNameIndex());
-        tabbedEditors.setDimSelectedTab(true);
         removeFocusChangeKeysForWindows(tabbedEditors);
         ClosableTabbedPane.makeCloseable(tabbedEditors, (index, force) -> closeTab(getEditorTab(index)) );
         tabbedEditors.addChangeListener(e -> activateSelectedEditor());
@@ -176,7 +176,7 @@ public class EditorsPanel extends JPanel {
         tabbedEditors.setSelectedIndex(tabbedEditors.getTabCount()-1);
 
         if (studioWindow.getActiveEditor() == editorTab && studioWindow == StudioWindow.getActiveStudioWindow()) {
-            tabbedEditors.setDimSelectedTab(false);
+            tabbedEditors.setSelectedTabDecoration(SelectedTabDecoration.UNDERLINE);
         }
     }
 
@@ -242,10 +242,11 @@ public class EditorsPanel extends JPanel {
         }
     }
 
-    public void setDimEditors(boolean dimEditors) {
+    public void setInFocusTabbedEditors(boolean inFocus) {
         if (tabbedEditors == null) return;
 
-        tabbedEditors.setDimSelectedTab(dimEditors);
+        tabbedEditors.setSelectedTabDecoration(inFocus ? SelectedTabDecoration.UNDERLINE :
+                                                        SelectedTabDecoration.NONE);
     }
 
     public static Content loadFile(String filename) {

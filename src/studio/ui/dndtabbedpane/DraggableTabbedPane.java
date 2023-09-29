@@ -98,7 +98,7 @@ public class DraggableTabbedPane extends JTabbedPane {
     private static final Color sourceColor = new Color(255, 255, 255, 154);
 
     private Rectangle targetRect = null;
-    private boolean dimSelectedTab = false;
+    private SelectedTabDecoration selectedTabDecoration = SelectedTabDecoration.NONE;
 
     @Override
     public void setUI(TabbedPaneUI ui) {
@@ -109,12 +109,18 @@ public class DraggableTabbedPane extends JTabbedPane {
     @Override
     public void paint(Graphics g) {
         super.paint(g);
-        if (dimSelectedTab) {
+        if (selectedTabDecoration != SelectedTabDecoration.NONE) {
             int index = getSelectedIndex();
             if (index >= 0) {
                 Rectangle rect = getBoundsAt(index);
-                g.setColor(sourceColor);
-                g.fillRect(rect.x, rect.y, rect.width, rect.height);
+                if (selectedTabDecoration == SelectedTabDecoration.DIM) {
+                    g.setColor(sourceColor);
+                    g.fillRect(rect.x, rect.y, rect.width, rect.height);
+                } else {
+                    g.setColor(targetColor);
+                    g.fillRect(rect.x +5, rect.y + rect.height - 3, rect.width - 10, 2);
+
+                }
             }
         }
 
@@ -125,10 +131,10 @@ public class DraggableTabbedPane extends JTabbedPane {
     }
 
 
-    public void setDimSelectedTab(boolean dimSelectedTab) {
-        if (this.dimSelectedTab == dimSelectedTab) return;
+    public void setSelectedTabDecoration(SelectedTabDecoration decoration) {
+        if (selectedTabDecoration == decoration) return;
+        this.selectedTabDecoration = decoration;
 
-        this.dimSelectedTab = dimSelectedTab;
         repaint();
     }
 
