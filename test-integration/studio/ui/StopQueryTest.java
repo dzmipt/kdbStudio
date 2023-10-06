@@ -18,7 +18,6 @@ public class StopQueryTest extends StudioTest {
 
     @AfterClass
     public static void restore() {
-        MockQSession.unlockResponse();
         MockQSession.lockResponse(false);
     }
 
@@ -50,13 +49,14 @@ public class StopQueryTest extends StudioTest {
         assertTrue(sessions[0].isClosed());
         int sessionCount = MockQSession.getAllSessions().size();
 
-        MockQSession.setEchoMode();
-        frameFixture.button("toolbarExecute").click();
+
+        waitForQueryExecution(() -> {
+            MockQSession.setEchoMode();
+            MockQSession.lockResponse(false);
+            frameFixture.button("toolbarExecute").click();
+        });
 
         assertEquals(sessionCount + 1, MockQSession.getAllSessions().size());
-
-        count = getTabCount(frameFixture.tabbedPane("ResultTabbedPane").target());
-        assertEquals(1, count);
 
     }
 }

@@ -5,9 +5,11 @@ import org.assertj.swing.annotation.GUITest;
 import org.assertj.swing.core.EmergencyAbortListener;
 import org.assertj.swing.core.MouseButton;
 import org.assertj.swing.fixture.FrameFixture;
+import org.assertj.swing.fixture.JTabbedPaneFixture;
 import org.assertj.swing.fixture.JTextComponentFixture;
 import org.assertj.swing.junit.runner.GUITestRunner;
 import org.assertj.swing.junit.testcase.AssertJSwingJUnitTestCase;
+import org.assertj.swing.timing.Condition;
 import org.fife.ui.rsyntaxtextarea.RSyntaxTextArea;
 import org.junit.AfterClass;
 import org.junit.Assert;
@@ -29,12 +31,15 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.Locale;
+import java.util.concurrent.TimeUnit;
 
 import static java.awt.event.KeyEvent.*;
 import static junit.framework.TestCase.assertEquals;
 import static junit.framework.TestCase.fail;
 import static org.assertj.swing.core.KeyPressInfo.keyCode;
 import static org.assertj.swing.edt.GuiActionRunner.execute;
+import static org.assertj.swing.timing.Pause.pause;
+import static org.assertj.swing.timing.Timeout.timeout;
 import static org.assertj.swing.util.Platform.controlOrCommandMask;
 import static org.junit.Assert.assertNotEquals;
 
@@ -205,6 +210,29 @@ abstract public class StudioTest extends AssertJSwingJUnitTestCase {
 
     protected void setServerConnectionText(String serverConnection) {
         frameFixture.textBox("serverEntryTextField").enterText(serverConnection).pressAndReleaseKey(keyCode(VK_ENTER));
+    }
+
+    protected void waitForQueryExecution(Runnable runQuery, long durationInSeconds) {
+        JTabbedPaneFixture tabbedPaneFixture = frameFixture.tabbedPane("ResultTabbedPane");
+        int count = getTabCount(tabbedPaneFixture.target());
+
+        runQuery.run();
+
+        pause(new Condition("mock query execution") {
+            @Override
+            public boolean test() {
+                int newCount = getTabCount(tabbedPaneFixture.target());
+                return newCount > count;
+            }
+        }, timeout(durationInSeconds, TimeUnit.SECONDS));
+
+
+        int newCount = getTabCount(tabbedPaneFixture.target());
+        assertEquals("Expect that one more result tab is added", count+1, newCount);
+    }
+
+    protected void waitForQueryExecution(Runnable runQuery) {
+        waitForQueryExecution(runQuery,1);
     }
 
 }

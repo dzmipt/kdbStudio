@@ -2,18 +2,11 @@ package studio.ui;
 
 import org.assertj.swing.fixture.JTabbedPaneFixture;
 import org.assertj.swing.fixture.JTextComponentFixture;
-import org.assertj.swing.timing.Condition;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import studio.kdb.K;
 import studio.kdb.MockQSession;
-
-import java.util.concurrent.TimeUnit;
-
-import static junit.framework.TestCase.assertEquals;
-import static org.assertj.swing.timing.Pause.pause;
-import static org.assertj.swing.timing.Timeout.timeout;
 
 public class ResultTest extends StudioTest {
 
@@ -29,23 +22,11 @@ public class ResultTest extends StudioTest {
     }
 
     private void execute() {
-        JTabbedPaneFixture tabbedPaneFixture = frameFixture.tabbedPane("ResultTabbedPane");
-        int count = getTabCount(tabbedPaneFixture.target());
-
-        JTextComponentFixture tb = frameFixture.textBox("editor1");
-        tb.enterText("x");
-        frameFixture.menuItem("Execute Current Line").click();
-
-        pause(new Condition("mock query execution") {
-            @Override
-            public boolean test() {
-                return getTabCount(tabbedPaneFixture.target()) > count;
-            }
-        }, timeout(1, TimeUnit.SECONDS));
-
-
-        int newCount = getTabCount(tabbedPaneFixture.target());
-        assertEquals("Expect that one more result tab is added", count+1, newCount);
+        waitForQueryExecution(() -> {
+            JTextComponentFixture tb = frameFixture.textBox("editor1");
+            tb.enterText("x");
+            frameFixture.menuItem("Execute Current Line").click();
+        });
     }
 
     @Test

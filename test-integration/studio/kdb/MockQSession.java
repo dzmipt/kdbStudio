@@ -57,7 +57,8 @@ public class MockQSession extends kx.c {
     public static void lockResponse(boolean lock) {
         if (lock) {
             MockQSession.lock = new Object();
-        } else {
+        } else if (MockQSession.lock != null) {
+            unlockResponse();
             MockQSession.lock = null;
         }
     }
@@ -91,10 +92,12 @@ public class MockQSession extends kx.c {
 
     @Override
     public synchronized K.KBase k(K.KBase x, ProgressCallback progress) throws K4Exception, IOException {
+        log.info("MockQSession.k - query execution");
         queryCount.getAndIncrement();
         closed = false;
 
         if (lock != null) {
+            log.info("MockQSession.k - locking");
             try {
                 synchronized (lock) {
                     lock.wait();
@@ -102,6 +105,7 @@ public class MockQSession extends kx.c {
             } catch (InterruptedException e) {
                 log.info("MockQSession {} was interrupted", index);
             }
+            log.info("MockQSession.k - continue after locking");
         }
 
         if (kResponse != null) return kResponse;
