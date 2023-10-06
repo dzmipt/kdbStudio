@@ -5,22 +5,28 @@ import org.apache.logging.log4j.Logger;
 import studio.utils.Content;
 import studio.utils.LineEnding;
 
+import java.awt.*;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Properties;
 
 public class Workspace {
 
-    private final List<Window> windows = new ArrayList<>();
+    private final List<TopWindow> windows = new ArrayList<>();
     private int selectedWindow = -1;
 
     private final static String SELECTED_WINDOW = "selectedWindow";
     private final static String DIVIDER_LOCATION = "dividerLocation";
+    private final static String RESULT_DIVIDER_LOCATION = "resultDividerLocation";
+    private final static String X = "x";
+    private final static String Y = "y";
+    private final static String WIDTH = "width";
+    private final static String HEIGHT = "height";
     private final static String WINDOW = "window";
     private final static String TAB = "tab";
     private final static String LEFT = "left";
     private final static String RIGHT = "right";
-    private final static String VERTICAL_SPLIT = "vertialSplit";
+    private final static String VERTICAL_SPLIT = "verticalSplit";
     private final static String SELECTED_TAB = "selectedTab";
     private final static String FILENAME = "filename";
     private final static String SERVER_FULLNAME = "serverFullname";
@@ -38,8 +44,8 @@ public class Workspace {
         return selectedWindow;
     }
 
-    public Window[] getWindows() {
-        return windows.toArray(new Window[0]);
+    public TopWindow[] getWindows() {
+        return windows.toArray(new TopWindow[0]);
     }
 
     public void save(Properties p) {
@@ -79,15 +85,15 @@ public class Workspace {
             String prefix = WINDOW + "." + index + ".";
             if (! hasKeysWithPrefix(p, prefix)) break;
 
-            Workspace.Window window = new Workspace.Window();
+            Workspace.TopWindow window = new Workspace.TopWindow();
             window.load(prefix, p);
             windows.add(window);
         }
         selectedWindow = getInt(p, SELECTED_WINDOW, -1);
     }
 
-    public Window addWindow(boolean selected) {
-        Window window = new Window();
+    public TopWindow addWindow(boolean selected) {
+        TopWindow window = new TopWindow();
         windows.add(window);
         if (selected) {
             selectedWindow = windows.size()-1;
@@ -171,7 +177,7 @@ public class Workspace {
             this.dividerLocation = dividerLocation;
         }
 
-        private void save(String prefix, Properties p) {
+        protected void save(String prefix, Properties p) {
             if (left != null && right != null) {
                 p.setProperty(prefix + VERTICAL_SPLIT, Boolean.toString(verticalSplit));
                 p.setProperty(prefix + DIVIDER_LOCATION, Double.toString(dividerLocation));
@@ -186,7 +192,7 @@ public class Workspace {
             }
         }
 
-        private void load(String prefix, Properties p) {
+        protected void load(String prefix, Properties p) {
             tabs.clear();
             for (int index = 0; ; index++) {
                 Workspace.Tab tab = new Workspace.Tab();
@@ -207,6 +213,58 @@ public class Workspace {
             Window window = new Window();
             window.load(prefix, p);
             return window;
+        }
+    }
+
+
+    public static class TopWindow extends Window {
+        private double resultDividerLocation = 0.5;
+        private Rectangle location;
+
+        public TopWindow() {}
+
+        public TopWindow(Server server, String filename) {
+            super(server, filename);
+            location = new Rectangle(-1,-1, 0,0);
+        }
+
+        public double getResultDividerLocation() {
+            return resultDividerLocation;
+        }
+
+        public void setResultDividerLocation(double resultDividerLocation) {
+            this.resultDividerLocation = resultDividerLocation;
+        }
+
+        public Rectangle getLocation() {
+            return location;
+        }
+
+        public void setLocation(Rectangle location) {
+            this.location = location;
+        }
+
+        protected void load(String prefix, Properties p) {
+            resultDividerLocation = Double.parseDouble(p.getProperty(prefix + RESULT_DIVIDER_LOCATION, "0.5"));
+            int x = Integer.parseInt(p.getProperty(prefix + X, "-1"));
+            int y = Integer.parseInt(p.getProperty(prefix + Y, "-1"));
+            int width = Integer.parseInt(p.getProperty(prefix + WIDTH, "0"));
+            int height = Integer.parseInt(p.getProperty(prefix + HEIGHT, "0"));
+            location = new Rectangle(x,y, width, height);
+
+            super.load(prefix, p);
+        }
+
+        protected void save(String prefix, Properties p) {
+            p.setProperty(prefix + RESULT_DIVIDER_LOCATION, Double.toString(resultDividerLocation));
+            if (location != null) {
+                p.setProperty(prefix + X, Integer.toString(location.x));
+                p.setProperty(prefix + Y, Integer.toString(location.y));
+                p.setProperty(prefix + WIDTH, Integer.toString(location.width));
+                p.setProperty(prefix + HEIGHT, Integer.toString(location.height));
+            }
+
+            super.save(prefix, p);
         }
     }
 

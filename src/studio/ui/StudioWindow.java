@@ -1288,10 +1288,10 @@ public class StudioWindow extends JFrame implements WindowListener {
     }
 
     public StudioWindow(Server server, String filename) {
-        this(new Workspace.Window(server, filename));
+        this(new Workspace.TopWindow(server, filename));
     }
 
-    public StudioWindow(Workspace.Window workspaceWindow) {
+    public StudioWindow(Workspace.TopWindow workspaceWindow) {
         setName("studioWindow" + (++studioWindowNameIndex));
 
         loading = true;
@@ -1339,8 +1339,8 @@ public class StudioWindow extends JFrame implements WindowListener {
 
         topPanel.add(rootEditorsPanel, BorderLayout.CENTER);
 
-        initFrame(toolbar, splitpane, mainStatusBar);
-        splitpane.setDividerLocation(0.5);
+        initFrame(workspaceWindow.getLocation(), toolbar, splitpane, mainStatusBar);
+        splitpane.setDividerLocation(workspaceWindow.getResultDividerLocation());
 
         rootEditorsPanel.loadDividerLocation(workspaceWindow);
 
@@ -1448,7 +1448,7 @@ public class StudioWindow extends JFrame implements WindowListener {
         return splitpane;
     }
 
-    private void initFrame(JComponent toolbar, JComponent central, JComponent statusBar) {
+    private void initFrame(Rectangle location, JComponent toolbar, JComponent central, JComponent statusBar) {
         addWindowFocusListener(new WindowFocusListener() {
             @Override
             public void windowGainedFocus(WindowEvent e) {
@@ -1476,11 +1476,16 @@ public class StudioWindow extends JFrame implements WindowListener {
         setDefaultCloseOperation(WindowConstants.DO_NOTHING_ON_CLOSE);
         addWindowListener(this);
 
-        Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
-        setSize((int) (0.8 * screenSize.width), (int) (0.8 * screenSize.height));
+        if (Util.fitToScreen(location)) {
+            setBounds(location);
+        } else {
+            //@TODO: should be defaulted in the Workspace.TopWindow
+            Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
+            setSize((int) (0.8 * screenSize.width), (int) (0.8 * screenSize.height));
 
-        setLocation(((int) Math.max(0, (screenSize.width - getWidth()) / 2.0)),
-                (int) (Math.max(0, (screenSize.height - getHeight()) / 2.0)));
+            setLocation(((int) Math.max(0, (screenSize.width - getWidth()) / 2.0)),
+                    (int) (Math.max(0, (screenSize.height - getHeight()) / 2.0)));
+        }
 
         setIconImage(Util.LOGO_ICON.getImage());
 
@@ -1496,7 +1501,7 @@ public class StudioWindow extends JFrame implements WindowListener {
     }
 
     public static void loadWorkspace(Workspace workspace) {
-        for (Workspace.Window window: workspace.getWindows()) {
+        for (Workspace.TopWindow window: workspace.getWindows()) {
             new StudioWindow(window);
         }
 
@@ -1704,7 +1709,9 @@ public class StudioWindow extends JFrame implements WindowListener {
         Window activeWindow = KeyboardFocusManager.getCurrentKeyboardFocusManager().getActiveWindow();
 
         for (StudioWindow window : allWindows) {
-            Workspace.Window workspaceWindow = workspace.addWindow(window == activeWindow);
+            Workspace.TopWindow workspaceWindow = workspace.addWindow(window == activeWindow);
+            workspaceWindow.setResultDividerLocation(Util.getDividerLocation(window.splitpane));
+            workspaceWindow.setLocation(window.getBounds());
             window.rootEditorsPanel.getWorkspace(workspaceWindow);
         }
         return workspace;

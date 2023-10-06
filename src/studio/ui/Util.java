@@ -133,4 +133,21 @@ public class Util {
                         new StringSelection(plainText.replace((char)0,' '))),null);
     }
 
+    public static double getDividerLocation(JSplitPane splitPane) {
+        if (splitPane.getOrientation() == JSplitPane.VERTICAL_SPLIT) {
+            return ((double)splitPane.getDividerLocation()) / (splitPane.getHeight() - splitPane.getDividerSize());
+        } else {
+            return ((double)splitPane.getDividerLocation()) / (splitPane.getWidth() - splitPane.getDividerSize());
+        }
+    }
+
+    public static boolean fitToScreen(Rectangle bounds) {
+        boolean fitToScreen = false;
+        GraphicsDevice[] devices = GraphicsEnvironment.getLocalGraphicsEnvironment().getScreenDevices();
+        for (GraphicsDevice device : devices) {
+            fitToScreen |= device.getDefaultConfiguration().getBounds().contains(bounds);
+        }
+        return fitToScreen;
+    }
+
 }

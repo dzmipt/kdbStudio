@@ -376,19 +376,10 @@ public class EditorsPanel extends JPanel {
         panel.studioWindow.refreshFrameTitle();
     }
 
-    private double getDividerLocation() {
-        if (isVerticalSplit()) {
-            return ((double)splitPane.getDividerLocation()) /(splitPane.getHeight() - splitPane.getDividerSize());
-        } else {
-            return ((double)splitPane.getDividerLocation()) /(splitPane.getWidth() - splitPane.getDividerSize());
-        }
-    }
-
-
     public void getWorkspace(Workspace.Window window) {
         if (tabbedEditors == null) {
             window.setVerticalSplit(isVerticalSplit());
-            window.setDividerLocation(getDividerLocation());
+            window.setDividerLocation(Util.getDividerLocation(splitPane));
             left.getWorkspace(window.addLeft());
             right.getWorkspace(window.addRight());
         } else {

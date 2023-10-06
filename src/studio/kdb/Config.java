@@ -7,6 +7,7 @@ import studio.core.Credentials;
 import studio.core.DefaultAuthenticationMechanism;
 import studio.kdb.config.ActionOnExit;
 import studio.ui.ServerList;
+import studio.ui.Util;
 import studio.utils.*;
 import studio.utils.log4j.EnvConfig;
 
@@ -926,12 +927,8 @@ public class Config {
             if (strX != null && strY != null && strWidth != null && strHeight != null) {
                 Rectangle bounds = new Rectangle(Integer.parseInt(strX), Integer.parseInt(strY),
                         Integer.parseInt(strWidth), Integer.parseInt(strHeight));
-                boolean fitToScreen = false;
-                GraphicsDevice[] devices = GraphicsEnvironment.getLocalGraphicsEnvironment().getScreenDevices();
-                for (GraphicsDevice device : devices) {
-                    fitToScreen |= device.getDefaultConfiguration().getBounds().contains(bounds);
-                }
-                if (fitToScreen) return bounds;
+
+                if (Util.fitToScreen(bounds)) return bounds;
 
                 log.info("Bounds of {} doesn't fit to any of current monitors - falling back to a default value", key);
             }
