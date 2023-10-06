@@ -1,3 +1,5 @@
+* Persist location of editor windows
+* Keep config properties sorted on disk
 * Split editor tabs
 
 `dz3.0.1` 2023.09.22
