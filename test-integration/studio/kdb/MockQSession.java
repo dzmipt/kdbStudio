@@ -7,9 +7,7 @@ import org.apache.logging.log4j.Logger;
 
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
 
 public class MockQSession extends kx.c {
@@ -127,29 +125,29 @@ public class MockQSession extends kx.c {
     }
 
     public static void resetAllQueryCount() {
-        for (MockQSession session : mockQSessionCreator.sessions.values()) {
+        for (MockQSession session : mockQSessionCreator.sessions) {
             session.resetQueryCount();
         }
     }
 
     public static MockQSession[] getLastActiveSessions() {
-        return mockQSessionCreator.sessions.values().stream()
+        return mockQSessionCreator.sessions.stream()
                 .filter(s -> s.getQueryCount() > 0)
                 .toArray(MockQSession[]::new);
     }
 
     public static List<MockQSession> getAllSessions() {
-        return new ArrayList<>(mockQSessionCreator.sessions.values());
+        return mockQSessionCreator.sessions;
     }
 
     public static class MockQSessionCreator extends Session.SessionCreator {
 
-        private Map<Server, MockQSession> sessions = new HashMap<>();
+        private List<MockQSession> sessions = new ArrayList<>();
 
         @Override
         public c createConnection(Server server) {
             MockQSession session = new MockQSession();
-            sessions.put(server, session);
+            sessions.add(session);
             return session;
         }
 
