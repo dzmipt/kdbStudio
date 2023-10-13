@@ -1,5 +1,6 @@
 package studio.ui;
 
+import org.apache.commons.io.FilenameUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.fife.ui.rsyntaxtextarea.RSyntaxTextArea;
@@ -14,10 +15,16 @@ import studio.utils.LineEnding;
 import javax.swing.*;
 import javax.swing.text.BadLocationException;
 import javax.swing.text.Document;
+import java.awt.datatransfer.DataFlavor;
+import java.awt.datatransfer.Transferable;
+import java.awt.dnd.DnDConstants;
+import java.awt.dnd.DropTarget;
+import java.awt.dnd.DropTargetDropEvent;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Objects;
+import java.util.stream.Stream;
 
 public class EditorTab implements FileWatcher.Listener {
 
@@ -67,6 +74,25 @@ public class EditorTab implements FileWatcher.Listener {
         RSyntaxTextArea textArea = editorPane.getTextArea();
         textArea.setName("editor" + studioWindow.nextEditorNameIndex());
 
+        textArea.setDropTarget(new DropTarget() {
+            @Override
+            public synchronized void drop(DropTargetDropEvent dtde) {
+                Transferable t = dtde.getTransferable();
+                if (!t.isDataFlavorSupported(DataFlavor.javaFileListFlavor)) return;
+                try {
+                    dtde.acceptDrop(DnDConstants.ACTION_COPY);
+                    java.util.List<File> droppedFiles = (java.util.List<File>)
+                            t.getTransferData(DataFlavor.javaFileListFlavor);
+                    File[] files = droppedFiles.toArray(new File[droppedFiles.size()]);
+                    SwingUtilities.invokeLater(() -> dropFiles(files));
+                    dtde.dropComplete(true);
+                } catch (Exception e) {
+                    log.info("Error in drag and drop event processing", e);
+                }
+            }
+        });
+
+
         JPopupMenu popupMenu = textArea.getPopupMenu();
         popupMenu.insert(studioWindow.getSplitAction(false), 0);
         popupMenu.insert(studioWindow.getSplitAction(true), 1);
@@ -80,6 +106,33 @@ public class EditorTab implements FileWatcher.Listener {
         RSyntaxTextArea textArea = getTextArea();
         textArea.discardAllEdits();
         textArea.requestFocus();
+    }
+
+    private void dropFiles(File... files) {
+        files = Stream.of(files)
+                .filter(File::isFile)
+                .toArray(File[]::new);
+
+        if (files.length > 1) {
+            files = Stream.of(files)
+                    .filter(f -> FilenameUtils.getExtension(f.getName()).equals("q"))
+                    .toArray(File[]::new);
+        }
+
+        if (files.length > 10) {
+            int choice = StudioOptionPane.showYesNoDialog(studioWindow,
+                    "" + files.length + " files are going to be opened. Are you sure?", "Are you sure?");
+            if (choice != JOptionPane.YES_OPTION) return;
+        }
+
+        EditorsPanel editorsPanel = getEditorsPanel();
+        for (File file: files) {
+            String name = file.toString();
+            Content content = EditorsPanel.loadFile(name);
+            if (content == Content.NO_CONTENT) continue;
+
+            editorsPanel.addTab(server, name, content);
+        }
     }
 
     private void setContent(Content content) {

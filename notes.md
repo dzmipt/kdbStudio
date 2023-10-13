@@ -1,3 +1,4 @@
+* File drag and drop (no support for a folder drag and drop) 
 * Persist location of editor windows
 * Keep config properties sorted on disk
 * Split editor tabs

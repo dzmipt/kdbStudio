@@ -411,7 +411,7 @@ public class StudioWindow extends JFrame implements WindowListener {
 
         if (file == null) return;
         String filename = file.getAbsolutePath();
-        addTab(editor.getServer(), filename);
+        addTab(filename);
         addToMruFiles(filename);
     }
 
@@ -518,7 +518,7 @@ public class StudioWindow extends JFrame implements WindowListener {
 
         newTabAction = UserAction.create("New Tab",  "Open a new tab", KeyEvent.VK_T,
                 KeyStroke.getKeyStroke(KeyEvent.VK_N, menuShortcutKeyMask),
-                e -> addTab(editor.getServer(), null));
+                e -> addTab(null));
 
         serverListAction = UserAction.create(I18n.getString("ServerList"), Util.TEXT_TREE_ICON, "Show server list",
                 KeyEvent.VK_L, KeyStroke.getKeyStroke(KeyEvent.VK_L, menuShortcutKeyMask | InputEvent.SHIFT_MASK),
@@ -1227,6 +1227,10 @@ public class StudioWindow extends JFrame implements WindowListener {
         }
 
         splitpane.setDividerLocation(0.5);
+    }
+
+    public void addTab(String filename) {
+        addTab(editor.getServer(), filename);
     }
 
     public void addTab(Server server, String filename) {

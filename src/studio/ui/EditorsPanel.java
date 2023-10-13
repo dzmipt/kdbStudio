@@ -144,14 +144,15 @@ public class EditorsPanel extends JPanel {
 
     public EditorTab addTab(Server server, String filename, Content content) {
         EditorTab editor = new EditorTab(studioWindow);
-        editor.getTextArea().addFocusListener(new FocusAdapter() {
+
+        JTextComponent textArea = editor.getTextArea();
+        textArea.addFocusListener(new FocusAdapter() {
             @Override
             public void focusGained(FocusEvent e) {
                 log.info("FocusGained: {}", editor.getTabTitle());
                 editor.getEditorsPanel().studioWindow.updateEditor(editor);
             }
         });
-        JTextComponent textArea = editor.getTextArea();
         removeFocusChangeKeysForWindows(textArea);
 
         JComponent editorPane = editor.getPane();
