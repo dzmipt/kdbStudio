@@ -84,4 +84,16 @@ public class EditorTest extends StudioTest {
         assertMenuLE(false, true, false);
     }
 
+
+    @Test
+    public void testUndoActionEnable() {
+        frameFixture.menuItem("Undo").requireDisabled();
+        frameFixture.button("toolbarUndo").requireDisabled();
+
+        frameFixture.textBox("editor1").enterText("x");
+
+        frameFixture.menuItem("Undo").requireEnabled();
+        frameFixture.button("toolbarUndo").requireEnabled();
+
+    }
 }
