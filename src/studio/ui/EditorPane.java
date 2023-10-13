@@ -1,6 +1,5 @@
 package studio.ui;
 
-import org.fife.ui.rsyntaxtextarea.RSyntaxTextArea;
 import org.fife.ui.rtextarea.RTextScrollPane;
 import org.fife.ui.rtextarea.SearchContext;
 import org.fife.ui.rtextarea.SearchEngine;
@@ -92,7 +91,7 @@ public class EditorPane extends JPanel implements MouseWheelListener, SearchPane
         searchPanel.setVisible(true);
     }
 
-    public RSyntaxTextArea getTextArea() {
+    public StudioRSyntaxTextArea getTextArea() {
         return textArea;
     }
 

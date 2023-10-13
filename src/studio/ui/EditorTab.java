@@ -7,6 +7,7 @@ import org.fife.ui.rsyntaxtextarea.RSyntaxTextArea;
 import studio.kdb.Server;
 import studio.kdb.Session;
 import studio.ui.action.QueryExecutor;
+import studio.ui.rstextarea.StudioRSyntaxTextArea;
 import studio.utils.Content;
 import studio.utils.FileReaderWriter;
 import studio.utils.FileWatcher;
@@ -168,7 +169,7 @@ public class EditorTab implements FileWatcher.Listener {
         return editorPane;
     }
 
-    public RSyntaxTextArea getTextArea() {
+    public StudioRSyntaxTextArea getTextArea() {
         return editorPane.getTextArea();
     }
 

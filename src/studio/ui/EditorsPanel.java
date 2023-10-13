@@ -8,6 +8,7 @@ import studio.kdb.Server;
 import studio.kdb.Workspace;
 import studio.ui.dndtabbedpane.DraggableTabbedPane;
 import studio.ui.dndtabbedpane.SelectedTabDecoration;
+import studio.ui.rstextarea.StudioRSyntaxTextArea;
 import studio.utils.Content;
 import studio.utils.FileReaderWriter;
 
@@ -145,7 +146,7 @@ public class EditorsPanel extends JPanel {
     public EditorTab addTab(Server server, String filename, Content content) {
         EditorTab editor = new EditorTab(studioWindow);
 
-        JTextComponent textArea = editor.getTextArea();
+        StudioRSyntaxTextArea textArea = editor.getTextArea();
         textArea.addFocusListener(new FocusAdapter() {
             @Override
             public void focusGained(FocusEvent e) {
@@ -166,6 +167,7 @@ public class EditorsPanel extends JPanel {
         addTab(editor);
         textArea.getDocument().addDocumentListener(new MarkingDocumentListener(editor));
         textArea.requestFocus();
+        textArea.setActionsUpdateListener(() -> editor.getStudioWindow().refreshActionState());
 
         studioWindow.refreshActionState();
         refreshEditorTitle(editor);
@@ -488,7 +490,6 @@ public class EditorsPanel extends JPanel {
         }
         private void update() {
             editor.setModified(true);
-            editor.getStudioWindow().refreshActionState();
         }
         public void changedUpdate(DocumentEvent evt) { update(); }
         public void insertUpdate(DocumentEvent evt) {
