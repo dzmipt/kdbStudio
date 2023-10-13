@@ -481,14 +481,14 @@ public class EditorsPanel extends JPanel {
     }
 
 
-    private class MarkingDocumentListener implements DocumentListener {
+    private static class MarkingDocumentListener implements DocumentListener {
         private final EditorTab editor;
         public MarkingDocumentListener(EditorTab editor) {
             this.editor = editor;
         }
         private void update() {
             editor.setModified(true);
-            studioWindow.refreshActionState();
+            editor.getStudioWindow().refreshActionState();
         }
         public void changedUpdate(DocumentEvent evt) { update(); }
         public void insertUpdate(DocumentEvent evt) {
