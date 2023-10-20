@@ -140,10 +140,6 @@ public class EditorsPanel extends JPanel {
     }
 
     public EditorTab addTab(Server server) {
-        return addTab(server, null, Content.NO_CONTENT);
-    }
-
-    public EditorTab addTab(Server server, String filename, Content content) {
         EditorTab editor = new EditorTab(studioWindow);
 
         StudioRSyntaxTextArea textArea = editor.getTextArea();
@@ -160,9 +156,6 @@ public class EditorsPanel extends JPanel {
         editorPane.putClientProperty(EditorTab.class, editor);
 
         editor.setServer(server);
-
-        editor.setFilename(filename);
-        editor.init(content);
 
         addTab(editor);
         textArea.getDocument().addDocumentListener(new MarkingDocumentListener(editor));
@@ -203,7 +196,9 @@ public class EditorsPanel extends JPanel {
 
         EditorsPanel aRight = new EditorsPanel(studioWindow, null);
 
-        aRight.addTab(editors.get(selectedIndex).getServer(), editorToCopy.getFilename(), editorToCopy.getContent());
+        EditorTab newEditor = aRight.addTab(editors.get(selectedIndex).getServer());
+        newEditor.setFilename(editorToCopy.getFilename());
+        newEditor.init(editorToCopy.getContent());
 
         init(aLeft, aRight, vertically);
     }
@@ -287,7 +282,7 @@ public class EditorsPanel extends JPanel {
                 return false;
         }
 
-        editor.setFilename(filename);
+        editor.loadFile(filename);
         return editor.saveFileOnDisk(false);
     }
 
@@ -425,7 +420,9 @@ public class EditorsPanel extends JPanel {
         for (Workspace.Tab tab: tabs) {
             try {
                 Content content = Content.newContent(tab.getContent(), tab.getLineEnding());
-                EditorTab editor = addTab(getServer(tab), tab.getFilename(), content);
+                EditorTab editor = addTab(getServer(tab));
+                editor.setFilename(tab.getFilename());
+                editor.init(content);
                 editor.setModified(tab.isModified());
                 int caretPosition = tab.getCaret();
                 if (caretPosition >= 0 && caretPosition < editor.getTextArea().getDocument().getLength()) {

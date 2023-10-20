@@ -401,8 +401,7 @@ public class StudioWindow extends JFrame implements WindowListener {
     public void newFile() {
         if (!EditorsPanel.checkAndSaveTab(editor)) return;
 
-        editor.setFilename(null);
-        editor.init(Content.NO_CONTENT);
+        editor.loadFile(null);
     }
 
     private void openFile() {
@@ -418,11 +417,7 @@ public class StudioWindow extends JFrame implements WindowListener {
     public void loadMRUFile(String filename) {
         if (!EditorsPanel.checkAndSaveTab(editor)) return;
 
-        Content content = EditorsPanel.loadFile(filename);
-        if (content == Content.NO_CONTENT) return;
-        editor.setFilename(filename);
-        editor.init(content);
-
+        editor.loadFile(filename);
         addToMruFiles(filename);
         EditorsPanel.refreshEditorTitle(editor);
         refreshAllMenus();
@@ -1234,12 +1229,9 @@ public class StudioWindow extends JFrame implements WindowListener {
     }
 
     public void addTab(Server server, String filename) {
-        Content content = Content.NO_CONTENT;
-        if (filename != null) {
-            content = EditorsPanel.loadFile(filename);
-            if (content == Content.NO_CONTENT) return;
-        }
-        editor.getEditorsPanel().addTab(server, filename, content);
+        if (filename != null && EditorsPanel.loadFile(filename)== Content.NO_CONTENT) return;
+
+        editor.getEditorsPanel().addTab(server).loadFile(filename);
     }
 
     public EditorTab getActiveEditor() {

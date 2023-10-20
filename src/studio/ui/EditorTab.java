@@ -30,7 +30,7 @@ import java.util.stream.Stream;
 public class EditorTab implements FileWatcher.Listener {
 
     private String title;
-    private String filename;
+    private String filename = null;
     private Server server = Server.NO_SERVER;
     private boolean modified = false;
     private LineEnding lineEnding = LineEnding.Unix;
@@ -105,6 +105,7 @@ public class EditorTab implements FileWatcher.Listener {
     public void init(Content content) {
         setContent(content);
         RSyntaxTextArea textArea = getTextArea();
+        //@TODO do we need to discard all changes??
         textArea.discardAllEdits();
         textArea.requestFocus();
     }
@@ -129,10 +130,7 @@ public class EditorTab implements FileWatcher.Listener {
         EditorsPanel editorsPanel = getEditorsPanel();
         for (File file: files) {
             String name = file.toString();
-            Content content = EditorsPanel.loadFile(name);
-            if (content == Content.NO_CONTENT) continue;
-
-            editorsPanel.addTab(server, name, content);
+            editorsPanel.addTab(server).loadFile(name);
         }
     }
 
@@ -175,6 +173,13 @@ public class EditorTab implements FileWatcher.Listener {
 
     public String getFilename() {
         return filename;
+    }
+
+    public void loadFile(String filename) {
+        setFilename(filename);
+
+        Content content = filename == null ? Content.NO_CONTENT : EditorsPanel.loadFile(filename);
+        init(content);
     }
 
     public void setFilename(String filename) {
