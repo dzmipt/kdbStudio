@@ -47,7 +47,7 @@
                           <Component id="authenticationMechanism" alignment="0" pref="418" max="32767" attributes="0"/>
                           <Component id="password" alignment="0" pref="418" max="32767" attributes="2"/>
                           <Component id="username" alignment="0" pref="418" max="32767" attributes="2"/>
-                          <Component id="jCheckBox2" alignment="0" min="-2" max="-2" attributes="0"/>
+                          <Component id="useTlsCheckbox" alignment="0" min="-2" max="-2" attributes="0"/>
                           <Component id="port" alignment="0" pref="418" max="32767" attributes="1"/>
                           <Component id="hostname" alignment="0" pref="418" max="32767" attributes="1"/>
                           <Component id="logicalName" alignment="0" pref="418" max="32767" attributes="2"/>
@@ -98,7 +98,7 @@
               <EmptySpace max="-2" attributes="0"/>
               <Group type="103" groupAlignment="0" attributes="0">
                   <Component id="jLabel2" alignment="1" min="-2" max="-2" attributes="0"/>
-                  <Component id="jCheckBox2" alignment="1" min="-2" max="-2" attributes="0"/>
+                  <Component id="useTlsCheckbox" alignment="1" min="-2" max="-2" attributes="0"/>
               </Group>
               <EmptySpace max="-2" attributes="0"/>
               <Component id="jSeparator2" min="-2" pref="10" max="-2" attributes="0"/>
@@ -221,7 +221,7 @@
         <Property name="text" type="java.lang.String" value="Auth. Method"/>
       </Properties>
     </Component>
-    <Component class="javax.swing.JCheckBox" name="jCheckBox2">
+    <Component class="javax.swing.JCheckBox" name="useTlsCheckbox">
     </Component>
     <Component class="javax.swing.JLabel" name="jLabel2">
       <Properties>

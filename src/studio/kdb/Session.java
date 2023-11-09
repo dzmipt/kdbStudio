@@ -37,12 +37,16 @@ public class Session {
             authenticationMechanism.setProperties(s.getAsProperties());
             Credentials credentials = authenticationMechanism.getCredentials();
 
+            boolean useTls = s.getUseTLS();
+            if (Config.getInstance().getBoolean(Config.ENFORCE_TLS)) {
+                useTls = true;
+            }
             kx.c c;
             if (credentials.getUsername().length() > 0) {
                 String p = credentials.getPassword();
-                c = new kx.c(s.getHost(), s.getPort(), credentials.getUsername() + ((p.length() == 0) ? "" : ":" + p), s.getUseTLS());
+                c = new kx.c(s.getHost(), s.getPort(), credentials.getUsername() + ((p.length() == 0) ? "" : ":" + p), useTls);
             } else {
-                c = new kx.c(s.getHost(), s.getPort(), "", s.getUseTLS());
+                c = new kx.c(s.getHost(), s.getPort(), "", useTls);
             }
             c.setEncoding(Config.getInstance().getEncoding());
             return c;
