@@ -101,7 +101,7 @@ public class c {
         io(s);
         java.io.ByteArrayOutputStream baos = new ByteArrayOutputStream();
         java.io.DataOutputStream dos = new DataOutputStream(baos);
-        dos.write((up + (retry ? "\3" : "")).getBytes());
+        dos.write((up + "\3").getBytes());
         dos.writeByte(0);
         dos.flush();
         outputStream.write(baos.toByteArray());
