@@ -638,7 +638,9 @@ public class c {
     public synchronized K.KBase k(K.KBase x, ProgressCallback progress) throws K4Exception, IOException {
         try {
 
-            if (isClosed()) connect(true);
+            if (isClosed()) {
+                connect(false);
+            }
             try {
                 w(1, x);
                 inputStream.readFully(b = new byte[8]);
