@@ -282,7 +282,7 @@ public class EditorsPanel extends JPanel {
                 return false;
         }
 
-        editor.loadFile(filename);
+        editor.setFilename(filename);
         return editor.saveFileOnDisk(false);
     }
 
