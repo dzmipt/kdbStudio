@@ -20,13 +20,13 @@ public class KSerialiseTest {
     private static KConnection kConn;
 
     @BeforeAll
-    public static void connect() throws K4Exception, IOException {
+    public static void connect() throws K4Exception, IOException, InterruptedException {
         kConn = new KConnection("localhost", Integer.parseInt(System.getenv("qTestPort")), "", false);
         kConn.k(new K.KCharacterVector(".z.pg:{$[x~\"reset\";`.z.pg set value;x]}"));
     }
 
     @AfterAll
-    public static void exit() throws K4Exception, IOException {
+    public static void exit() throws K4Exception, IOException, InterruptedException {
         kConn.k(new K.KCharacterVector("reset"));
     }
 
@@ -34,7 +34,7 @@ public class KSerialiseTest {
         try {
             K.KBase result = kConn.k(k);
             assertEquals(k, result);
-        } catch (K4Exception |IOException e) {
+        } catch (K4Exception | IOException | InterruptedException e) {
             fail(e);
         }
     }
