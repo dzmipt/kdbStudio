@@ -1,7 +1,8 @@
 package studio.kdb;
 
+import kx.K4Exception;
+import kx.KConnection;
 import kx.ProgressCallback;
-import kx.c;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -10,7 +11,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 
-public class MockQSession extends kx.c {
+public class MockQSession extends KConnection {
 
     private static final Logger log = LogManager.getLogger();
 
@@ -149,7 +150,7 @@ public class MockQSession extends kx.c {
         private List<MockQSession> sessions = new ArrayList<>();
 
         @Override
-        public c createConnection(Server server) {
+        public KConnection createConnection(Server server) {
             MockQSession session = new MockQSession();
             sessions.add(session);
             return session;

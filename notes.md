@@ -1,3 +1,6 @@
+* Rework kdb connection logic
+    * No IPC protocol downgrade in case of first attempt failure
+    * Fix logic to detect server disconnect
 * File drag and drop (no support for a folder drag and drop) 
 * Persist location of editor windows
 * Keep config properties sorted on disk

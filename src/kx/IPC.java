@@ -6,12 +6,32 @@ import studio.kdb.K;
 import java.io.UnsupportedEncodingException;
 import java.util.UUID;
 
+/*
+types
+20+ userenums
+98 table
+99 dict
+100 lambda
+101 unary prim
+102 binary prim
+103 ternary(operator)
+104 projection
+105 composition
+106 f'
+107 f/
+108 f\
+109 f':
+110 f/:
+111 f\:
+112 dynamic load
+ */
+
 public class IPC {
 
     // Do we want to get rid of this coupling?
     private final static String encoding = Config.getInstance().getEncoding();
 
-    public static K.KBase deserialise(byte[] data, boolean compressed, boolean isLittleEndian) throws c.K4Exception, UnsupportedEncodingException {
+    public static KMessage deserialise(byte[] data, boolean compressed, boolean isLittleEndian) {
         return new IPC(data, 0, compressed, isLittleEndian).deserialise();
     }
 
@@ -19,7 +39,7 @@ public class IPC {
     private int j;
     private boolean a;
 
-    public IPC(byte[] data, int offset, boolean compressed, boolean isLittleEndian) {
+    IPC(byte[] data, int offset, boolean compressed, boolean isLittleEndian) {
         b = data;
         a = isLittleEndian;
         j = offset;
@@ -29,12 +49,16 @@ public class IPC {
         }
     }
 
-    public K.KBase deserialise() throws c.K4Exception, UnsupportedEncodingException {
-        if (b[0] == -128) {
-            throw new c.K4Exception(rs().toString());
+    public KMessage deserialise(){
+        try {
+            if (b[0] == -128) {
+                j = 1;
+                return new KMessage(new K4Exception(rs().toString()));
+            }
+            return new KMessage(r());
+        } catch (UnsupportedEncodingException e) {
+            return new KMessage(e);
         }
-
-        return r();
     }
 
     private byte[] uncompress() {

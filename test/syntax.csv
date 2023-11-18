@@ -203,7 +203,7 @@
 `a:b,symbol
 `a:/b,symbol
 `a/:b,symbol,operator,operator,identifier
-`a:b`a/c,symbol,operator,identifier
+`a:b`a/kConn,symbol,operator,identifier
 
 dzmipt,identifier
 .dz.mipt,identifier

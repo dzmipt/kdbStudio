@@ -1,5 +1,7 @@
 package studio.kdb;
 
+import kx.K4Exception;
+import kx.KConnection;
 import kx.ProgressCallback;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -10,7 +12,7 @@ import studio.core.IAuthenticationMechanism;
 import java.io.IOException;
 
 public class Session {
-    private kx.c c;
+    private KConnection kConn;
     private long created;
     private final Server server;
 
@@ -28,8 +30,8 @@ public class Session {
 
     private void init() {
         log.info("Connecting to server " + server.getDescription(true));
-        c = createConnection(server);
-        if (c == null) throw new RuntimeException("Failure in the authentication plugin");
+        kConn = createConnection(server);
+        if (kConn == null) throw new RuntimeException("Failure in the authentication plugin");
         created = System.currentTimeMillis();
     }
 
@@ -38,7 +40,7 @@ public class Session {
         Session.sessionCreator = sessionCreator;
     }
 
-    private static kx.c createConnection(Server s) {
+    private static KConnection createConnection(Server s) {
         return sessionCreator.createConnection(s);
     }
 
@@ -54,16 +56,16 @@ public class Session {
         busy = true;
     }
 
-    public K.KBase execute(K.KBase x, ProgressCallback progress) throws kx.c.K4Exception, IOException {
-        return c.k(x, progress);
+    public K.KBase execute(K.KBase x, ProgressCallback progress) throws K4Exception, IOException, InterruptedException {
+        return kConn.k(x, progress);
     }
 
     public boolean isClosed() {
-        return c.isClosed();
+        return kConn.isClosed();
     }
 
     public void close() {
-        c.close();
+        kConn.close();
     }
 
     public Server getServer() {
@@ -76,13 +78,13 @@ public class Session {
         int hours = Config.getInstance().getInt(Config.SESSION_INVALIDATION_TIMEOUT_IN_HOURS);
         if (created + hours * HOUR < System.currentTimeMillis()) {
             log.info("Closing session to stale server: " + server.getDescription(true));
-            c.close();
+            kConn.close();
             init();
         }
     }
 
     public static class SessionCreator {
-        public kx.c createConnection(Server s) {
+        public KConnection createConnection(Server s) {
             try {
                 Class<?> clazz = AuthenticationManager.getInstance().lookup(s.getAuthenticationMechanism());
                 IAuthenticationMechanism authenticationMechanism = (IAuthenticationMechanism) clazz.newInstance();
@@ -90,14 +92,14 @@ public class Session {
                 authenticationMechanism.setProperties(s.getAsProperties());
                 Credentials credentials = authenticationMechanism.getCredentials();
 
-                kx.c c;
+                KConnection kConn;
                 if (credentials.getUsername().length() > 0) {
                     String p = credentials.getPassword();
-                    c = new kx.c(s.getHost(), s.getPort(), credentials.getUsername() + ((p.length() == 0) ? "" : ":" + p), s.getUseTLS());
+                    kConn = new KConnection(s.getHost(), s.getPort(), credentials.getUsername() + ((p.length() == 0) ? "" : ":" + p), s.getUseTLS());
                 } else {
-                    c = new kx.c(s.getHost(), s.getPort(), "", s.getUseTLS());
+                    kConn = new KConnection(s.getHost(), s.getPort(), "", s.getUseTLS());
                 }
-                return c;
+                return kConn;
             } catch (InstantiationException | IllegalAccessException | IllegalArgumentException ex) {
                 log.error("Failed to initialize connection", ex);
                 return null;

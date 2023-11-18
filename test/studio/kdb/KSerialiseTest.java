@@ -1,5 +1,7 @@
 package studio.kdb;
 
+import kx.K4Exception;
+import kx.KConnection;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
@@ -15,24 +17,24 @@ import static org.junit.jupiter.api.Assertions.fail;
 @EnabledIfEnvironmentVariable(named = "qTestPort", matches = "[0-9]+")
 public class KSerialiseTest {
 
-    private static kx.c c;
+    private static KConnection kConn;
 
     @BeforeAll
-    public static void connect() throws kx.c.K4Exception, IOException {
-        c = new kx.c("localhost", Integer.parseInt(System.getenv("qTestPort")), "", false);
-        c.k(new K.KCharacterVector(".z.pg:{$[x~\"reset\";`.z.pg set value;x]}"));
+    public static void connect() throws K4Exception, IOException {
+        kConn = new KConnection("localhost", Integer.parseInt(System.getenv("qTestPort")), "", false);
+        kConn.k(new K.KCharacterVector(".z.pg:{$[x~\"reset\";`.z.pg set value;x]}"));
     }
 
     @AfterAll
-    public static void exit() throws kx.c.K4Exception, IOException {
-        c.k(new K.KCharacterVector("reset"));
+    public static void exit() throws K4Exception, IOException {
+        kConn.k(new K.KCharacterVector("reset"));
     }
 
     private void test(K.KBase k) {
         try {
-            K.KBase result = c.k(k);
+            K.KBase result = kConn.k(k);
             assertEquals(k, result);
-        } catch (kx.c.K4Exception|IOException e) {
+        } catch (K4Exception |IOException e) {
             fail(e);
         }
     }

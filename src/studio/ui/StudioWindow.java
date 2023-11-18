@@ -1,5 +1,6 @@
 package studio.ui;
 
+import kx.K4Exception;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.fife.ui.rsyntaxtextarea.RSyntaxTextArea;
@@ -1662,7 +1663,7 @@ public class StudioWindow extends JFrame implements WindowListener {
         }
 
         StudioWindow window = editor.getStudioWindow();
-        if (error == null || error instanceof kx.c.K4Exception) {
+        if (error == null || error instanceof K4Exception) {
             try {
                 if (queryResult.isComplete()) {
                     JTabbedPane tabbedPane = window.tabbedPane;

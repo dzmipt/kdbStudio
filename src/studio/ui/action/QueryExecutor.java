@@ -1,5 +1,6 @@
 package studio.ui.action;
 
+import kx.K4Exception;
 import kx.ProgressCallback;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -145,7 +146,7 @@ public class QueryExecutor implements ProgressCallback {
                 K.KBase response = session.execute(query, QueryExecutor.this);
                 result.setResult(response);
             } catch (Throwable e) {
-                if (! (e instanceof kx.c.K4Exception)) {
+                if (! (e instanceof K4Exception)) {
                     log.error("Error occurred during query execution",e);
                     closeConnection();
                 }
@@ -157,7 +158,7 @@ public class QueryExecutor implements ProgressCallback {
             }
             result.setExecutionTime(System.currentTimeMillis() - startTime);
             if (result.getError() != null) {
-                if (result.getError() instanceof kx.c.K4Exception) {
+                if (result.getError() instanceof K4Exception) {
                     queryLog.info("#{}: server returns error {}", queryIndex, result.getError().getMessage());
                 } else {
                     queryLog.info("#{}: error during execution {} {}", queryIndex, result.getError().getClass().getName(), result.getError().getMessage());
