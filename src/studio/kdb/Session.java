@@ -97,7 +97,6 @@ public class Session {
                 } else {
                     c = new kx.c(s.getHost(), s.getPort(), "", s.getUseTLS());
                 }
-                c.setEncoding(Config.getInstance().getEncoding());
                 return c;
             } catch (InstantiationException | IllegalAccessException | IllegalArgumentException ex) {
                 log.error("Failed to initialize connection", ex);
