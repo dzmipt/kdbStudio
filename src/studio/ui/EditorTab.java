@@ -155,6 +155,10 @@ public class EditorTab implements FileWatcher.Listener {
         return studioWindow;
     }
 
+    public void setSessonConnection(boolean connected) {
+        editorPane.setSessionConnected(connected);
+    }
+
     public void setStudioWindow(StudioWindow studioWindow) {
         this.studioWindow = studioWindow;
     }
@@ -251,6 +255,7 @@ public class EditorTab implements FileWatcher.Listener {
         }
         this.server = server;
         session = Session.newSession(this);
+        setSessonConnection(!session.isClosed());
 
         getTextArea().setBackground(server.getBackgroundColor());
 

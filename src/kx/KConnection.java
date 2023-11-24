@@ -21,6 +21,7 @@ public class KConnection {
     private Socket s;
 
     private SocketReader socketReader;
+    private ConnectionStateListener connectionStateListener = null;
 
     void io(Socket s) throws IOException {
         s.setTcpNoDelay(true);
@@ -49,6 +50,9 @@ public class KConnection {
             try {
                 s.close();
             } catch (IOException e) {}
+        }
+        if (connectionStateListener != null) {
+            connectionStateListener.connectionStateChange(false);
         }
     }
 
@@ -86,6 +90,10 @@ public class KConnection {
         socketReader.setName("Reader " + host + ":" + port);
         socketReader.setDaemon(true);
         socketReader.start();
+
+        if (connectionStateListener != null) {
+            connectionStateListener.connectionStateChange(true);
+        }
     }
 
     public KConnection(String h, int p, String userPassword, boolean useTLS) {
@@ -93,6 +101,10 @@ public class KConnection {
         port = p;
         this.userPassword = userPassword;
         this.useTLS = useTLS;
+    }
+
+    public void setConnectionStateListener(ConnectionStateListener connectionStateListener) {
+        this.connectionStateListener = connectionStateListener;
     }
 
     private final static byte[] HEADER = new byte[] {0,1,0,0};

@@ -1,5 +1,6 @@
 package studio.kdb;
 
+import kx.ConnectionStateListener;
 import kx.K4Exception;
 import kx.KConnection;
 import kx.ProgressCallback;
@@ -16,7 +17,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-public class Session {
+public class Session implements ConnectionStateListener {
     private KConnection kConn;
     private long created;
     private final Server server;
@@ -55,6 +56,13 @@ public class Session {
         }
     }
 
+    @Override
+    public void connectionStateChange(boolean connected) {
+        for(EditorTab editor: editors) {
+            editor.setSessonConnection(connected);
+        }
+    }
+
     private Session(Server server) {
         this.server = server;
         init();
@@ -65,6 +73,7 @@ public class Session {
         kConn = createConnection(server);
         if (kConn == null) throw new RuntimeException("Failure in the authentication plugin");
         created = System.currentTimeMillis();
+        kConn.setConnectionStateListener(this);
     }
 
     static void mock(SessionCreator sessionCreator) {

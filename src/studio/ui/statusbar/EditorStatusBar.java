@@ -7,19 +7,23 @@ import java.awt.event.ActionEvent;
 
 public class EditorStatusBar extends StatusBar {
 
-    private final MinSizeLabel lblClock;
+    private final MinSizeLabel lblConnection;
 
     private final Timer timer;
     private long clock;
+    private boolean sessionConnected = false;
+
+    private final static String CONNECTED = "Connected";
+    private final static String DISCONNECTED = "Disconnected";
 
     public EditorStatusBar() {
-        lblClock  = new MinSizeLabel("");
-        lblClock.setHorizontalAlignment(JLabel.CENTER);
-        lblClock.setMinimumWidth("1:00:00");
-        addComponent(lblClock);
-        lblClock.setVisible(false);
+        lblConnection = new MinSizeLabel("");
+        lblConnection.setHorizontalAlignment(JLabel.CENTER);
+        lblConnection.setMinimumWidth("1:00:00", CONNECTED, DISCONNECTED);
+        addComponent(lblConnection);
 
         timer =  new Timer(500, this::timerClockAction);
+        refreshConnectedLabel();
     }
 
     public void startClock() {
@@ -29,7 +33,16 @@ public class EditorStatusBar extends StatusBar {
 
     public void stopClock() {
         timer.stop();
-        lblClock.setVisible(false);
+        refreshConnectedLabel();
+    }
+
+    public void setSessionConnected(boolean connected) {
+        sessionConnected = connected;
+        refreshConnectedLabel();
+    }
+
+    private void refreshConnectedLabel() {
+        lblConnection.setText(sessionConnected ? CONNECTED : DISCONNECTED);
     }
 
     private void timerClockAction(ActionEvent event) {
@@ -42,8 +55,7 @@ public class EditorStatusBar extends StatusBar {
         long min = time % 60;
         long hour = time / 60;
 
-        lblClock.setText(String.format("%d:%02d:%02d",hour, min, sec));
-        lblClock.setVisible(true);
+        lblConnection.setText(String.format("%d:%02d:%02d",hour, min, sec));
     }
 
 }
