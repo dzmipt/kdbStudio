@@ -363,8 +363,7 @@ public class Config {
                 name = name.trim();
                 if (name.equals("")) continue;
                 try {
-                    Server server = initServerFromKey(name);
-                    server.setName(name);
+                    Server server = initServerFromKey(name).newName(name);
                     list.add(server);
                 } catch (IllegalArgumentException e) {
                     log.warn("Error during parsing server " + name, e);
@@ -615,10 +614,9 @@ public class Config {
                 ServerTreeNode node = parent.add(config.getProperty(folderKey));
                 number = initServerTree(key + ".", node, number);
             } else if (config.containsKey(key)) {
-                Server server = initServerFromProperties(number);
-                server.setFolder(parent);
                 String name = config.getProperty(key);
-                server.setName(name);
+                Server server = initServerFromProperties(number).newName(name);
+                server.setFolder(parent);
                 String fullName = server.getFullName();
                 servers.put(fullName, server);
                 serverNames.add(fullName);

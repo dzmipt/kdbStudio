@@ -900,9 +900,7 @@ public class StudioWindow extends JFrame implements WindowListener {
             final Server s = servers[i];
             JMenuItem item = new JMenuItem(s.getFullName());
             item.addActionListener(e -> {
-                Server clone = new Server(s);
-                clone.setName("Clone of " + clone.getName());
-
+                Server clone = s.newName("Clone of " + s.getName()) ;
                 EditServerForm f = new EditServerForm(StudioWindow.this,clone);
                 f.alignAndShow();
 

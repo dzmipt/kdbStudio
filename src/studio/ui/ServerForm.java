@@ -8,8 +8,6 @@ import studio.kdb.Server;
 
 import javax.swing.*;
 import java.awt.*;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 
@@ -24,16 +22,15 @@ public class ServerForm extends EscapeDialog {
     public ServerForm(Window frame, String title, Server server){
         super(frame, title);
         this.server = server;
-
         initComponents();
 
-        logicalName.setText(this.server.getName());
-        hostname.setText(this.server.getHost());
-        username.setText(this.server.getUsername());
-        port.setText(""+ this.server.getPort());
-        password.setText(this.server.getPassword());
-        jCheckBox2.setSelected(this.server.getUseTLS());
-        DefaultComboBoxModel dcbm= (DefaultComboBoxModel)authenticationMechanism.getModel();
+        txtName.setText(this.server.getName());
+        txtHostname.setText(this.server.getHost());
+        txtUsername.setText(this.server.getUsername());
+        txtPort.setText(""+ this.server.getPort());
+        txtPassword.setText(this.server.getPassword());
+        chkBoxUseTLS.setSelected(this.server.getUseTLS());
+        DefaultComboBoxModel<String> dcbm= (DefaultComboBoxModel<String>)authenticationMechanism.getModel();
         String [] am;
         am = AuthenticationManager.getInstance().getAuthenticationMechanisms();
         for(int i= 0;i < am.length; i++) {
@@ -45,27 +42,25 @@ public class ServerForm extends EscapeDialog {
         authenticationMechanism.addItemListener(e -> {
             String auth = authenticationMechanism.getSelectedItem().toString();
             Credentials credentials = Config.getInstance().getDefaultCredentials(auth);
-            username.setText(credentials.getUsername());
-            password.setText(credentials.getPassword());
+            txtUsername.setText(credentials.getUsername());
+            txtPassword.setText(credentials.getPassword());
         });
 
-        logicalName.setToolTipText("The logical name for the server");
-        hostname.setToolTipText("The hostname or ip address for the server");
-        port.setToolTipText("The port for the server");
-        jCheckBox2.setToolTipText("Use TLS for a secure connection");
-        username.setToolTipText("The username used to connect to the server");
-        password.setToolTipText("The password used to connect to the server");
+        txtName.setToolTipText("The logical name for the server");
+        txtHostname.setToolTipText("The hostname or ip address for the server");
+        txtPort.setToolTipText("The port for the server");
+        chkBoxUseTLS.setToolTipText("Use TLS for a secure connection");
+        txtUsername.setToolTipText("The username used to connect to the server");
+        txtPassword.setToolTipText("The password used to connect to the server");
         authenticationMechanism.setToolTipText("The authentication mechanism to use");
 
-//        testConnection.setSelected(true);
-        
-        SampleTextOnBackgroundTextField.setBackground(this.server.getBackgroundColor());
-            SampleTextOnBackgroundTextField.setEditable(false);
+        sampleTextOnBackgroundTextField.setBackground(this.server.getBackgroundColor());
+        sampleTextOnBackgroundTextField.setEditable(false);
         addWindowListener(new WindowAdapter()
         {
             public void windowOpened(WindowEvent e)
             {
-                logicalName.requestFocus();
+                txtName.requestFocus();
             }
         });
         getRootPane().setDefaultButton(okButton);
@@ -81,26 +76,26 @@ public class ServerForm extends EscapeDialog {
   private void initComponents() {
 
     logicalNameLabel = new javax.swing.JLabel();
-    logicalName = new javax.swing.JTextField();
+    txtName = new javax.swing.JTextField();
     hostnameLabel = new javax.swing.JLabel();
-    hostname = new javax.swing.JTextField();
+    txtHostname = new javax.swing.JTextField();
     portLabel = new javax.swing.JLabel();
-    port = new javax.swing.JTextField();
+    txtPort = new javax.swing.JTextField();
     usernameLabel = new javax.swing.JLabel();
-    username = new javax.swing.JTextField();
+    txtUsername = new javax.swing.JTextField();
     passwordLabel = new javax.swing.JLabel();
     okButton = new javax.swing.JButton();
     cancelButton = new javax.swing.JButton();
     jSeparator1 = new javax.swing.JSeparator();
     jSeparator2 = new javax.swing.JSeparator();
-    password = new javax.swing.JPasswordField();
+    txtPassword = new javax.swing.JPasswordField();
     jLabel1 = new javax.swing.JLabel();
     jSeparator3 = new javax.swing.JSeparator();
-    EditColorButton = new javax.swing.JButton();
-    SampleTextOnBackgroundTextField = new javax.swing.JTextField();
+    btnEditColor = new javax.swing.JButton();
+    sampleTextOnBackgroundTextField = new javax.swing.JTextField();
     authenticationMechanism = new javax.swing.JComboBox();
     passwordLabel1 = new javax.swing.JLabel();
-    jCheckBox2 = new javax.swing.JCheckBox();
+    chkBoxUseTLS = new javax.swing.JCheckBox();
     jLabel2 = new javax.swing.JLabel();
 
     logicalNameLabel.setText("Name");
@@ -129,19 +124,15 @@ public class ServerForm extends EscapeDialog {
 
     jLabel1.setText("Color");
 
-    EditColorButton.setText("Edit Color");
-    EditColorButton.addActionListener(new java.awt.event.ActionListener() {
+    btnEditColor.setText("Edit Color");
+    btnEditColor.addActionListener(new java.awt.event.ActionListener() {
       public void actionPerformed(java.awt.event.ActionEvent evt) {
         onColor(evt);
       }
     });
 
-    SampleTextOnBackgroundTextField.setText("Sample text on background");
-    SampleTextOnBackgroundTextField.addActionListener(new java.awt.event.ActionListener() {
-      public void actionPerformed(java.awt.event.ActionEvent evt) {
-        SampleTextOnBackgroundTextFieldActionPerformed(evt);
-      }
-    });
+    sampleTextOnBackgroundTextField.setText("Sample text on background");
+
 
     passwordLabel1.setText("Auth. Method");
 
@@ -165,7 +156,7 @@ public class ServerForm extends EscapeDialog {
         .addPreferredGap(RELATED, 21, Short.MAX_VALUE)
         .addGroup(layout.createParallelGroup(LEADING)
           .addGroup(layout.createSequentialGroup()
-            .addComponent(EditColorButton)
+            .addComponent(btnEditColor)
             .addPreferredGap(RELATED, DEFAULT_SIZE, Short.MAX_VALUE)
             .addComponent(cancelButton)
             .addPreferredGap(RELATED)
@@ -173,14 +164,14 @@ public class ServerForm extends EscapeDialog {
             .addGap(6, 6, 6))
           .addGroup(layout.createSequentialGroup()
             .addGroup(layout.createParallelGroup(LEADING)
-              .addComponent(SampleTextOnBackgroundTextField, DEFAULT_SIZE, 418, Short.MAX_VALUE)
+              .addComponent(sampleTextOnBackgroundTextField, DEFAULT_SIZE, 418, Short.MAX_VALUE)
               .addComponent(authenticationMechanism, 0, 418, Short.MAX_VALUE)
-              .addComponent(password, DEFAULT_SIZE, 418, Short.MAX_VALUE)
-              .addComponent(username, DEFAULT_SIZE, 418, Short.MAX_VALUE)
-              .addComponent(jCheckBox2)
-              .addComponent(port, DEFAULT_SIZE, 418, Short.MAX_VALUE)
-              .addComponent(hostname, DEFAULT_SIZE, 418, Short.MAX_VALUE)
-              .addComponent(logicalName, DEFAULT_SIZE, 418, Short.MAX_VALUE))
+              .addComponent(txtPassword, DEFAULT_SIZE, 418, Short.MAX_VALUE)
+              .addComponent(txtUsername, DEFAULT_SIZE, 418, Short.MAX_VALUE)
+              .addComponent(chkBoxUseTLS)
+              .addComponent(txtPort, DEFAULT_SIZE, 418, Short.MAX_VALUE)
+              .addComponent(txtHostname, DEFAULT_SIZE, 418, Short.MAX_VALUE)
+              .addComponent(txtName, DEFAULT_SIZE, 418, Short.MAX_VALUE))
             .addContainerGap())))
       .addGroup(TRAILING, layout.createSequentialGroup()
         .addGroup(layout.createParallelGroup(LEADING)
@@ -201,31 +192,31 @@ public class ServerForm extends EscapeDialog {
         .addContainerGap(DEFAULT_SIZE, Short.MAX_VALUE)
         .addGroup(layout.createParallelGroup(BASELINE)
           .addComponent(logicalNameLabel)
-          .addComponent(logicalName, PREFERRED_SIZE, DEFAULT_SIZE, PREFERRED_SIZE))
+          .addComponent(txtName, PREFERRED_SIZE, DEFAULT_SIZE, PREFERRED_SIZE))
         .addPreferredGap(RELATED)
         .addComponent(jSeparator1, PREFERRED_SIZE, 10, PREFERRED_SIZE)
         .addPreferredGap(RELATED)
         .addGroup(layout.createParallelGroup(BASELINE)
           .addComponent(hostnameLabel)
-          .addComponent(hostname, PREFERRED_SIZE, DEFAULT_SIZE, PREFERRED_SIZE))
+          .addComponent(txtHostname, PREFERRED_SIZE, DEFAULT_SIZE, PREFERRED_SIZE))
         .addPreferredGap(RELATED)
         .addGroup(layout.createParallelGroup(BASELINE)
           .addComponent(portLabel)
-          .addComponent(port, PREFERRED_SIZE, DEFAULT_SIZE, PREFERRED_SIZE))
+          .addComponent(txtPort, PREFERRED_SIZE, DEFAULT_SIZE, PREFERRED_SIZE))
         .addPreferredGap(RELATED)
         .addGroup(layout.createParallelGroup(LEADING)
           .addComponent(jLabel2, TRAILING)
-          .addComponent(jCheckBox2, TRAILING))
+          .addComponent(chkBoxUseTLS, TRAILING))
         .addPreferredGap(RELATED)
         .addComponent(jSeparator2, PREFERRED_SIZE, 10, PREFERRED_SIZE)
         .addPreferredGap(RELATED)
         .addGroup(layout.createParallelGroup(BASELINE)
           .addComponent(usernameLabel)
-          .addComponent(username, PREFERRED_SIZE, DEFAULT_SIZE, PREFERRED_SIZE))
+          .addComponent(txtUsername, PREFERRED_SIZE, DEFAULT_SIZE, PREFERRED_SIZE))
         .addPreferredGap(RELATED)
         .addGroup(layout.createParallelGroup(BASELINE, false)
           .addComponent(passwordLabel)
-          .addComponent(password, PREFERRED_SIZE, DEFAULT_SIZE, PREFERRED_SIZE))
+          .addComponent(txtPassword, PREFERRED_SIZE, DEFAULT_SIZE, PREFERRED_SIZE))
         .addPreferredGap(RELATED)
         .addGroup(layout.createParallelGroup(BASELINE)
           .addComponent(authenticationMechanism, PREFERRED_SIZE, DEFAULT_SIZE, PREFERRED_SIZE)
@@ -235,53 +226,42 @@ public class ServerForm extends EscapeDialog {
         .addPreferredGap(RELATED)
         .addGroup(layout.createParallelGroup(BASELINE)
           .addComponent(jLabel1)
-          .addComponent(SampleTextOnBackgroundTextField, PREFERRED_SIZE, DEFAULT_SIZE, PREFERRED_SIZE))
+          .addComponent(sampleTextOnBackgroundTextField, PREFERRED_SIZE, DEFAULT_SIZE, PREFERRED_SIZE))
         .addPreferredGap(RELATED)
         .addGroup(layout.createParallelGroup(BASELINE)
           .addComponent(okButton)
           .addComponent(cancelButton)
-          .addComponent(EditColorButton))
+          .addComponent(btnEditColor))
         .addContainerGap())
     );
-  }// </editor-fold>//GEN-END:initComponents
+  }
 
     private void onOk(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_onOk
-        logicalName.setText(logicalName.getText().trim());
-        hostname.setText(hostname.getText().trim());
-        username.setText(username.getText().trim());
-        port.setText(port.getText().trim());
-        password.setText(new String(password.getPassword()).trim());
+        txtName.setText(txtName.getText().trim());
+        txtHostname.setText(txtHostname.getText().trim());
+        txtUsername.setText(txtUsername.getText().trim());
+        txtPort.setText(txtPort.getText().trim());
+        txtPassword.setText(new String(txtPassword.getPassword()).trim());
         
-        if(logicalName.getText().length() == 0)
+        if(txtName.getText().length() == 0)
         {
             StudioOptionPane.showError(this, "The server's name cannot be empty", "Studio for kdb+");
-            logicalName.requestFocus();
+            txtName.requestFocus();
             return;
         }    
 
-        boolean clash=false;
-        if( clash)
-        {
-            StudioOptionPane.showError(this, "A server already exists with that name.", "Studio for kdb+");
-            logicalName.requestFocus();
-            return;
-        }
-        else {
-            server.setName(logicalName.getText().trim());
-            server.setHost(hostname.getText().trim());
-            server.setUsername(username.getText().trim());
-            if(port.getText().length() == 0)
-                server.setPort(0);
-            else
-                server.setPort(Integer.parseInt(port.getText()));
+        int port = txtPort.getText().trim().length() == 0 ? 0 : Integer.parseInt(txtPort.getText());
+        server = new Server(txtName.getText().trim(),
+                txtHostname.getText().trim(),
+                port,
+                txtUsername.getText().trim(),
+                new String(txtPassword.getPassword()),
+                sampleTextOnBackgroundTextField.getBackground(),
+                (String)authenticationMechanism.getSelectedItem(),
+                chkBoxUseTLS.isSelected() );
 
-            server.setPassword(new String(password.getPassword()).trim());
-            server.setUseTLS(jCheckBox2.isSelected());
-            DefaultComboBoxModel dcbm= (DefaultComboBoxModel)authenticationMechanism.getModel();
-            server.setAuthenticationMechanism((String)dcbm.getSelectedItem());
-        }
         accept();
-    }//GEN-LAST:event_onOk
+    }
 
 
     public Server getServer(){return server;}
@@ -290,54 +270,37 @@ public class ServerForm extends EscapeDialog {
         cancel();
     }//GEN-LAST:event_onCancel
 
-    Color c;
 private void onColor(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_onColor
       final JColorChooser chooser = new JColorChooser();
-    //      chooser.setPreviewPanel(new CustomPane());
-            c= SampleTextOnBackgroundTextField.getBackground();
+      chooser.setColor(sampleTextOnBackgroundTextField.getBackground());
+      JDialog dialog = JColorChooser.createDialog(this,
+            "Select background color for editor", true, chooser,
+              e->sampleTextOnBackgroundTextField.setBackground(chooser.getColor()), null);
+      dialog.setVisible(true);
+}
 
-            JDialog dialog = JColorChooser.createDialog(this,
-            "Select background color for editor", true, chooser, new ActionListener() {
-              public void actionPerformed(ActionEvent e)
-              {
-                  c=chooser.getColor();
-              }
-            }, null);
-            
-        dialog.setVisible(true);
-
-        SampleTextOnBackgroundTextField.setBackground(c);
-        server.setBackgroundColor(c);
-}//GEN-LAST:event_onColor
-
-private void SampleTextOnBackgroundTextFieldActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_SampleTextOnBackgroundTextFieldActionPerformed
-// TODO add your handling code here:
-}//GEN-LAST:event_SampleTextOnBackgroundTextFieldActionPerformed
-
-    
-  // Variables declaration - do not modify//GEN-BEGIN:variables
-  private javax.swing.JButton EditColorButton;
-  private javax.swing.JTextField SampleTextOnBackgroundTextField;
-  private javax.swing.JComboBox authenticationMechanism;
+  private javax.swing.JButton btnEditColor;
+  private javax.swing.JTextField sampleTextOnBackgroundTextField;
+  private javax.swing.JComboBox<String> authenticationMechanism;
   private javax.swing.JButton cancelButton;
-  private javax.swing.JTextField hostname;
+  private javax.swing.JTextField txtHostname;
   private javax.swing.JLabel hostnameLabel;
-  private javax.swing.JCheckBox jCheckBox2;
+  private javax.swing.JCheckBox chkBoxUseTLS;
   private javax.swing.JLabel jLabel1;
   private javax.swing.JLabel jLabel2;
   private javax.swing.JSeparator jSeparator1;
   private javax.swing.JSeparator jSeparator2;
   private javax.swing.JSeparator jSeparator3;
-  private javax.swing.JTextField logicalName;
+  private javax.swing.JTextField txtName;
   private javax.swing.JLabel logicalNameLabel;
   private javax.swing.JButton okButton;
-  private javax.swing.JPasswordField password;
+  private javax.swing.JPasswordField txtPassword;
   private javax.swing.JLabel passwordLabel;
   private javax.swing.JLabel passwordLabel1;
-  private javax.swing.JTextField port;
+  private javax.swing.JTextField txtPort;
   private javax.swing.JLabel portLabel;
-  private javax.swing.JTextField username;
+  private javax.swing.JTextField txtUsername;
   private javax.swing.JLabel usernameLabel;
-  // End of variables declaration//GEN-END:variables
+
 
 }

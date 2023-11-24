@@ -458,7 +458,7 @@ public class EditorsPanel extends JPanel {
         if (auth == null) return server;
 
         if (AuthenticationManager.getInstance().lookup(auth) != null) {
-            server.setAuthenticationMechanism(auth);
+            server = server.newAuthMethod(auth);
         }
         return server;
     }

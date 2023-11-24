@@ -38,7 +38,7 @@ public class QPadConverter {
             String password = server.getPassword();
             if (password.contains("?")) {
                 int index = password.indexOf('?');
-                server.setAuthenticationMechanism(password.substring(0, index));
+                server = server.newAuthMethod(password.substring(0, index));
             }
             return server;
         } catch (IllegalArgumentException e) {
@@ -56,7 +56,7 @@ public class QPadConverter {
         Server server = convertConnection(items[0], defaultAuth, defaultCredentials);
         if (server == Server.NO_SERVER) return Server.NO_SERVER;
 
-        server.setName(items[items.length-1]);
+        server = server.newName(items[items.length-1]);
 
         TreeNode[] folderNodes = Stream.concat(
                     Stream.of(""),

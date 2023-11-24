@@ -34,36 +34,16 @@ public class Server {
         return authenticationMechanism;
     }
 
-    public void setAuthenticationMechanism(String authenticationMechanism) {
-        this.authenticationMechanism = authenticationMechanism;
-    }
-
     public Color getBackgroundColor() {
         return backgroundColor;
-    }
-
-    public void setBackgroundColor(Color c) {
-        backgroundColor = c;
     }
 
     public String getPassword() {
         return password;
     }
 
-    public void setPassword(String password) {
-        this.password = password;
-    }
-
     public String getUsername() {
         return username;
-    }
-
-    public void setUsername(String username) {
-        this.username = username;
-    }
-
-    public void setUseTLS(boolean useTLS) {
-        this.useTLS = useTLS;
     }
 
     public static Server newServer() {
@@ -118,16 +98,16 @@ public class Server {
         this.useTLS = useTLS;
     }
 
-    public void setHost(String host) {
-        this.host = host;
+    public Server newName(String name) {
+        Server server = new Server(this);
+        server.name = name;
+        return server;
     }
 
-    public void setName(String name) {
-        this.name = name;
-    }
-
-    public void setPort(int port) {
-        this.port = port;
+    public Server newAuthMethod(String authMethod){
+        Server server = new Server(this);
+        server.authenticationMechanism = authMethod;
+        return server;
     }
 
     public String getName() {
@@ -177,6 +157,7 @@ public class Server {
         return folder;
     }
 
+    //@TODO: all other properties are immutable. May be we need to do this one non-modifiable as well?
     public void setFolder(ServerTreeNode folder) {
         this.folder = folder;
     }

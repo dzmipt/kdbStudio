@@ -115,12 +115,9 @@ public class ConfigTest {
         assertEquals(1, config.getServerHistory().size());
 
 
-        Server server1 = new Server(server);
-        server1.setName("testServer1");
-        Server server2 = new Server(server);
-        server2.setName("testServer2");
-        Server server3 = new Server(server);
-        server3.setName("testServer3");
+        Server server1 = server.newName("testServer1");
+        Server server2 = server.newName("testServer2");
+        Server server3 = server.newName("testServer3");
 
         config.addServers(false, server1, server2, server3);
         config.addServerToHistory(server1);
@@ -227,12 +224,9 @@ public class ConfigTest {
     
     @Test
     public void addServersTest() {
-        Server server1 = new Server(server);
-        server1.setName("testServer1");
-        Server server2 = new Server(server);
-        server2.setName("comma,name");
-        Server server3 = new Server(server);
-        server3.setName("testServer1");
+        Server server1 = server.newName("testServer1");
+        Server server2 = server.newName("comma,name");
+        Server server3 = server.newName("testServer1");
 
         assertThrows(IllegalArgumentException.class, ()->config.addServers(false, server1, server2, server3));
         assertEquals(0, config.getServers().length);
