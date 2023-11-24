@@ -5,8 +5,7 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 import studio.kdb.MockQSession;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.*;
 
 public class StopQueryTest extends StudioTest {
 
@@ -56,7 +55,9 @@ public class StopQueryTest extends StudioTest {
             frameFixture.button("toolbarExecute").click();
         });
 
-        assertEquals(sessionCount + 1, MockQSession.getAllSessions().size());
+        //We do not create a new session. But the session should be opened now
+        assertEquals(sessionCount, MockQSession.getAllSessions().size());
+        assertFalse(sessions[0].isClosed());
 
     }
 }
