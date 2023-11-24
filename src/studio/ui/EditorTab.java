@@ -56,14 +56,10 @@ public class EditorTab implements FileWatcher.Listener {
         return session;
     }
 
-    public void setSession(Session session) {
-        this.session = session;
-    }
-
     public void closing() {
         stopFileWatching();
         if (session != null) {
-            session.close();
+            session.removeTab(this);
         }
     }
 
@@ -249,7 +245,13 @@ public class EditorTab implements FileWatcher.Listener {
 
     public void setServer(Server server) {
         if (this.server == server) return;
+
+        if (session != null) {
+            session.removeTab(this);
+        }
         this.server = server;
+        session = Session.newSession(this);
+
         getTextArea().setBackground(server.getBackgroundColor());
 
         studioWindow.getMainStatusBar().setTemporaryStatus("Changed server: " + server.getDescription(true));

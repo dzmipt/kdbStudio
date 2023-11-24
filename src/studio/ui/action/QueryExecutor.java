@@ -4,7 +4,9 @@ import kx.K4Exception;
 import kx.ProgressCallback;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import studio.kdb.*;
+import studio.kdb.K;
+import studio.kdb.Server;
+import studio.kdb.Session;
 import studio.ui.EditorTab;
 import studio.ui.StudioWindow;
 
@@ -116,22 +118,7 @@ public class QueryExecutor implements ProgressCallback {
         }
 
         private Session getSession() {
-            if (Config.getInstance().getBoolean(Config.SESSION_REUSE)) {
-                return ConnectionPool.getInstance().leaseConnection(server);
-            }
-
             Session session = editor.getSession();
-            if (session == null) {
-                session = new Session(server);
-                editor.setSession(session);
-            }
-
-            if (! session.getServer().equals(server) ) {
-                session.close();
-                session = new Session(server);
-                editor.setSession(session);
-            }
-
             session.validate();
             return session;
         }

@@ -535,7 +535,6 @@ public class StudioWindow extends JFrame implements WindowListener {
                         if (stopAction.isEnabled())
                             stopAction.actionPerformed(e);
 
-                        ConnectionPool.getInstance().purge(editor.getServer());
                         CONFIG.removeServer(editor.getServer());
 
                         Server newServer = f.getServer();
@@ -553,7 +552,6 @@ public class StudioWindow extends JFrame implements WindowListener {
                     if (f.getResult() == ACCEPTED) {
                         Server s = f.getServer();
                         CONFIG.addServer(s);
-                        ConnectionPool.getInstance().purge(s);   //?
                         setServer(s);
                         rerfreshAll();
                     }
@@ -906,7 +904,6 @@ public class StudioWindow extends JFrame implements WindowListener {
                     clone = f.getServer();
                     CONFIG.addServer(clone);
                     setServer(clone);
-                    ConnectionPool.getInstance().purge(clone); //?
                     rerfreshAll();
                 }
             });

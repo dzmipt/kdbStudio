@@ -8,8 +8,13 @@ import org.apache.logging.log4j.Logger;
 import studio.core.AuthenticationManager;
 import studio.core.Credentials;
 import studio.core.IAuthenticationMechanism;
+import studio.ui.EditorTab;
 
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 public class Session {
     private KConnection kConn;
@@ -20,10 +25,37 @@ public class Session {
 
     private static final long HOUR = 1000*3600;
     private static SessionCreator sessionCreator = new SessionCreator();
+    private final List<EditorTab> editors = new ArrayList<>();
 
     private static final Logger log = LogManager.getLogger();
 
-    public Session(Server server) {
+    private final static Map<Server, Session> sessions = new HashMap<>();
+
+    public static Session newSession(EditorTab editor) {
+        Server server = editor.getServer();
+        Session session;
+        if (Config.getInstance().getBoolean(Config.SESSION_REUSE) ) {
+            session = sessions.get(server);
+            if (session == null) {
+                session = new Session(server);
+                sessions.put(server, session);
+            }
+        } else {
+            session = new Session(server);
+        }
+
+        session.editors.add(editor);
+        return session;
+    }
+
+    public void removeTab(EditorTab editor) {
+        editors.remove(editor);
+        if (editors.size() == 0) {
+            close();
+        }
+    }
+
+    private Session(Server server) {
         this.server = server;
         init();
     }
