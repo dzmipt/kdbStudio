@@ -248,7 +248,7 @@ public class EditorTab implements FileWatcher.Listener {
     }
 
     public void setServer(Server server) {
-        if (this.server.equals(server)) return;
+        if (this.server == server) return;
         this.server = server;
         getTextArea().setBackground(server.getBackgroundColor());
 

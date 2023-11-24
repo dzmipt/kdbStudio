@@ -529,9 +529,7 @@ public class StudioWindow extends JFrame implements WindowListener {
 
         editServerAction = UserAction.create(I18n.getString("Edit"), Util.SERVER_INFORMATION_ICON, "Edit the server details",
                 KeyEvent.VK_E, null, e -> {
-                    Server s = new Server(editor.getServer());
-
-                    EditServerForm f = new EditServerForm(this, s);
+                    EditServerForm f = new EditServerForm(this, editor.getServer());
                     f.alignAndShow();
                     if (f.getResult() == ACCEPTED) {
                         if (stopAction.isEnabled())
@@ -540,9 +538,9 @@ public class StudioWindow extends JFrame implements WindowListener {
                         ConnectionPool.getInstance().purge(editor.getServer());
                         CONFIG.removeServer(editor.getServer());
 
-                        s = f.getServer();
-                        CONFIG.addServer(s);
-                        setServer(s);
+                        Server newServer = f.getServer();
+                        CONFIG.addServer(newServer);
+                        setServer(newServer);
                         rerfreshAll();
                     }
                 });
