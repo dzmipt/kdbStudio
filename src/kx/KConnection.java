@@ -14,7 +14,7 @@ public class KConnection {
     private final int port;
     private final String userPassword;
     private final boolean useTLS;
-    private boolean closed = true;
+    private volatile boolean closed = true;
 
     private DataInputStream inputStream;
     private OutputStream outputStream;
@@ -29,7 +29,11 @@ public class KConnection {
     }
 
     public void close() {
-        // this will force k() to break out i hope
+        if (socketReader != null) {
+            socketReader.interrupt();
+            socketReader = null;
+        }
+
         if (closed) return;
 
         closed = true;
@@ -79,9 +83,9 @@ public class KConnection {
         closed = false;
 
         socketReader = new SocketReader(s);
-        Thread socketReaderThread = new Thread(socketReader, "Reader " + host + ":" + port);
-        socketReaderThread.setDaemon(true);
-        socketReaderThread.start();
+        socketReader.setName("Reader " + host + ":" + port);
+        socketReader.setDaemon(true);
+        socketReader.start();
     }
 
     public KConnection(String h, int p, String userPassword, boolean useTLS) {
@@ -122,9 +126,9 @@ public class KConnection {
         return k(x, null);
     }
 
-    private class SocketReader implements Runnable {
+    private class SocketReader extends Thread {
 
-        private DataInputStream inputStream;
+        private final DataInputStream inputStream;
         private KMessage message = null;
         private ProgressCallback progress = null;
 
