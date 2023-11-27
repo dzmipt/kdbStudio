@@ -1,6 +1,7 @@
 package studio.ui.chart;
 
 import org.jfree.chart.plot.DefaultDrawingSupplier;
+import studio.ui.ColorChooser;
 
 import javax.swing.*;
 import javax.swing.border.Border;
@@ -14,20 +15,19 @@ import java.util.List;
 
 public class ChartConfigPanel extends Box implements ActionListener {
 
-    private Chart chart;
-    private List<String> names;
-    private List<Integer> xIndex;
-    private List<Integer> yIndex;
+    private final Chart chart;
+    private final List<String> names;
+    private final List<Integer> xIndex;
+    private final List<Integer> yIndex;
 
-    private JComboBox<ChartType> comboCharType;
-    private JComboBox<String> comboX;
-    private JCheckBox chkAll;
-    private JCheckBox[] chkY;
-    private LegendIcon[] icons;
-    private JPanel pnlLagend;
+    private final JComboBox<ChartType> comboCharType;
+    private final JComboBox<String> comboX;
+    private final JCheckBox chkAll;
+    private final JCheckBox[] chkY;
+    private final LegendIcon[] icons;
+    private final JPanel pnlLagend;
 
-    private JColorChooser colorChooser;
-    private LegendIcon colorChoosePreviewIcon;
+    private final LegendIcon colorChoosePreviewIcon;
 
     private final static Border EMPTY_BORDER = BorderFactory.createEmptyBorder(2,0,2,0);
     private final static Border SELECTED_BORDER = BorderFactory.createEtchedBorder(EtchedBorder.LOWERED);
@@ -185,13 +185,7 @@ public class ChartConfigPanel extends Box implements ActionListener {
 
         add(new JScrollPane(pnlLagend));
         validateState();
-
-        colorChooser = new JColorChooser();
-
         colorChoosePreviewIcon = new LegendIcon(null, null, null);
-        colorChooser.getSelectionModel().addChangeListener(e-> colorChoosePreviewIcon.setColor(colorChooser.getColor()));
-
-        colorChooser.setPreviewPanel(new JLabel(colorChoosePreviewIcon, SwingConstants.CENTER));
     }
 
     public int getDomainIndex() {
@@ -327,18 +321,19 @@ public class ChartConfigPanel extends Box implements ActionListener {
         if (paint instanceof Color) {
             color = (Color)paint;
         }
-        colorChooser.setColor(color);
         colorChoosePreviewIcon.setColor(color);
         colorChoosePreviewIcon.setShape(icons[index].getShape());
         colorChoosePreviewIcon.setStroke(icons[index].getStroke());
         colorChoosePreviewIcon.setChartType(icons[index].getChartType());
-        JDialog dialog = JColorChooser.createDialog(pnlLagend, "Choose color", true, colorChooser, actionEvent -> changeColor(index, actionEvent), null);
-        dialog.setVisible(true);
-    }
+        Color result = ColorChooser.chooseColor(pnlLagend, "Choose color", color,
+                new JLabel(colorChoosePreviewIcon, SwingConstants.CENTER),
+                newColor -> colorChoosePreviewIcon.setColor(newColor)
+                );
 
-    private void changeColor(int index, ActionEvent e) {
-        icons[index].setColor(colorChooser.getColor());
-        actionPerformed(e);
+        if (result != null) {
+            icons[index].setColor(result);
+            actionPerformed(e);
+        }
     }
 
     private void changeChartType(int index, ChartType chartType, ActionEvent e) {

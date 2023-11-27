@@ -85,6 +85,7 @@ public class ServerForm extends EscapeDialog {
     txtUsername = new javax.swing.JTextField();
     passwordLabel = new javax.swing.JLabel();
     okButton = new javax.swing.JButton();
+    okButton.setName("okButton");
     cancelButton = new javax.swing.JButton();
     jSeparator1 = new javax.swing.JSeparator();
     jSeparator2 = new javax.swing.JSeparator();
@@ -92,7 +93,9 @@ public class ServerForm extends EscapeDialog {
     jLabel1 = new javax.swing.JLabel();
     jSeparator3 = new javax.swing.JSeparator();
     btnEditColor = new javax.swing.JButton();
+    btnEditColor.setName("editColor");
     sampleTextOnBackgroundTextField = new javax.swing.JTextField();
+    sampleTextOnBackgroundTextField.setName("sampleTextOnBackground");
     authenticationMechanism = new javax.swing.JComboBox();
     passwordLabel1 = new javax.swing.JLabel();
     chkBoxUseTLS = new javax.swing.JCheckBox();
@@ -271,12 +274,12 @@ public class ServerForm extends EscapeDialog {
     }//GEN-LAST:event_onCancel
 
 private void onColor(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_onColor
-      final JColorChooser chooser = new JColorChooser();
-      chooser.setColor(sampleTextOnBackgroundTextField.getBackground());
-      JDialog dialog = JColorChooser.createDialog(this,
-            "Select background color for editor", true, chooser,
-              e->sampleTextOnBackgroundTextField.setBackground(chooser.getColor()), null);
-      dialog.setVisible(true);
+      Color result = ColorChooser.chooseColor(this, "Select background color for editor",
+              sampleTextOnBackgroundTextField.getBackground());
+
+      if (result !=null ) {
+          sampleTextOnBackgroundTextField.setBackground(result);
+      }
 }
 
   private javax.swing.JButton btnEditColor;
