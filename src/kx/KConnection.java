@@ -12,7 +12,6 @@ public class KConnection {
 
     private final String host;
     private final int port;
-    private final String userPassword;
     private final boolean useTLS;
     private volatile boolean closed = true;
 
@@ -22,6 +21,7 @@ public class KConnection {
 
     private SocketReader socketReader;
     private ConnectionStateListener connectionStateListener = null;
+    private KAuthentication authentication = null;
 
     void io(Socket s) throws IOException {
         s.setTcpNoDelay(true);
@@ -62,6 +62,7 @@ public class KConnection {
     }
 
     private void connect() throws IOException, K4AccessException {
+        String userPassword = authentication == null ? "" : authentication.getUserPassword();
         s = new Socket();
         s.setReceiveBufferSize(1024 * 1024);
         s.connect(new InetSocketAddress(host, port));
@@ -96,10 +97,14 @@ public class KConnection {
         }
     }
 
-    public KConnection(String h, int p, String userPassword, boolean useTLS) {
+    public KConnection(String h, int p, boolean useTLS) {
+        this(h, p, useTLS, null);
+    }
+
+    public KConnection(String h, int p, boolean useTLS, KAuthentication authentication) {
         host = h;
         port = p;
-        this.userPassword = userPassword;
+        this.authentication = authentication;
         this.useTLS = useTLS;
     }
 

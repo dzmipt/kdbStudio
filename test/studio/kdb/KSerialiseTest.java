@@ -21,7 +21,7 @@ public class KSerialiseTest {
 
     @BeforeAll
     public static void connect() throws K4Exception, IOException, InterruptedException {
-        kConn = new KConnection("localhost", Integer.parseInt(System.getenv("qTestPort")), "", false);
+        kConn = new KConnection("localhost", Integer.parseInt(System.getenv("qTestPort")),false);
         kConn.k(new K.KCharacterVector(".z.pg:{$[x~\"reset\";`.z.pg set value;x]}"));
     }
 

@@ -138,10 +138,6 @@ public class QueryExecutor implements ProgressCallback {
                     closeConnection();
                 }
                 result.setError(e);
-            } finally {
-                if (session != null) {
-                    session.setFree();
-                }
             }
             result.setExecutionTime(System.currentTimeMillis() - startTime);
             if (result.getError() != null) {

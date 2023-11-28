@@ -1,6 +1,7 @@
 package studio.kdb;
 
 import kx.K4Exception;
+import kx.KAuthentication;
 import kx.KConnection;
 import kx.ProgressCallback;
 import org.apache.logging.log4j.LogManager;
@@ -73,7 +74,7 @@ public class MockQSession extends KConnection {
     private boolean closed = true;
 
     MockQSession() {
-        super("no host", 0, "mock user", false);
+        super("no host", 0, false);
         index = sessionIndex++;
     }
 
@@ -150,7 +151,7 @@ public class MockQSession extends KConnection {
         private List<MockQSession> sessions = new ArrayList<>();
 
         @Override
-        public KConnection createConnection(Server server) {
+        public KConnection createConnection(Server server, KAuthentication authentication) {
             MockQSession session = new MockQSession();
             sessions.add(session);
             return session;

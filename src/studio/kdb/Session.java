@@ -1,9 +1,6 @@
 package studio.kdb;
 
-import kx.ConnectionStateListener;
-import kx.K4Exception;
-import kx.KConnection;
-import kx.ProgressCallback;
+import kx.*;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import studio.core.AuthenticationManager;
@@ -17,12 +14,10 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-public class Session implements ConnectionStateListener {
+public class Session implements ConnectionStateListener, KAuthentication {
     private KConnection kConn;
     private long created;
     private final Server server;
-
-    private boolean busy = false;
 
     private static final long HOUR = 1000*3600;
     private static SessionCreator sessionCreator = new SessionCreator();
@@ -69,8 +64,7 @@ public class Session implements ConnectionStateListener {
     }
 
     private void init() {
-        log.info("Connecting to server " + server.getDescription(true));
-        kConn = createConnection(server);
+        kConn = sessionCreator.createConnection(server, this);
         if (kConn == null) throw new RuntimeException("Failure in the authentication plugin");
         created = System.currentTimeMillis();
         kConn.setConnectionStateListener(this);
@@ -79,22 +73,6 @@ public class Session implements ConnectionStateListener {
     static void mock(SessionCreator sessionCreator) {
         log.info("Mocking kdb session creator");
         Session.sessionCreator = sessionCreator;
-    }
-
-    private static KConnection createConnection(Server s) {
-        return sessionCreator.createConnection(s);
-    }
-
-    public boolean isBusy() {
-        return busy;
-    }
-
-    public void setFree() {
-        busy = false;
-    }
-
-    public void setBusy() {
-        busy = true;
     }
 
     public K.KBase execute(K.KBase x, ProgressCallback progress) throws K4Exception, IOException, InterruptedException {
@@ -124,27 +102,33 @@ public class Session implements ConnectionStateListener {
         }
     }
 
-    public static class SessionCreator {
-        public KConnection createConnection(Server s) {
-            try {
-                Class<?> clazz = AuthenticationManager.getInstance().lookup(s.getAuthenticationMechanism());
-                IAuthenticationMechanism authenticationMechanism = (IAuthenticationMechanism) clazz.newInstance();
+    @Override
+    public String getUserPassword() throws IOException {
+        try {
+            log.info("Getting authentication credential for {} with auth.method {}",
+                    server.getDescription(true), server.getAuthenticationMechanism());
 
-                authenticationMechanism.setProperties(s.getAsProperties());
-                Credentials credentials = authenticationMechanism.getCredentials();
+            Class<?> clazz = AuthenticationManager.getInstance().lookup(server.getAuthenticationMechanism());
+            IAuthenticationMechanism authenticationMechanism = (IAuthenticationMechanism) clazz.newInstance();
 
-                KConnection kConn;
-                if (credentials.getUsername().length() > 0) {
-                    String p = credentials.getPassword();
-                    kConn = new KConnection(s.getHost(), s.getPort(), credentials.getUsername() + ((p.length() == 0) ? "" : ":" + p), s.getUseTLS());
-                } else {
-                    kConn = new KConnection(s.getHost(), s.getPort(), "", s.getUseTLS());
-                }
-                return kConn;
-            } catch (InstantiationException | IllegalAccessException | IllegalArgumentException ex) {
-                log.error("Failed to initialize connection", ex);
-                return null;
+            authenticationMechanism.setProperties(server.getAsProperties());
+            Credentials credentials = authenticationMechanism.getCredentials();
+
+            if (credentials.getUsername().length() > 0) {
+                String p = credentials.getPassword();
+                return credentials.getUsername() + ((p.length() == 0) ? "" : ":" + p);
+            } else {
+                return "";
             }
+        } catch (InstantiationException | IllegalAccessException | IllegalArgumentException ex) {
+            log.error("Failed to initialize connection", ex);
+            throw new IOException("Failed to get credentials", ex);
+        }
+    }
+
+    public static class SessionCreator {
+        public KConnection createConnection(Server s, KAuthentication authentication) {
+            return new KConnection(s.getHost(), s.getPort(), s.getUseTLS(), authentication);
         }
     }
 
