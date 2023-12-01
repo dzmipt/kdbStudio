@@ -7,6 +7,7 @@ import java.sql.Time;
 import java.sql.Timestamp;
 import java.text.DecimalFormat;
 import java.text.SimpleDateFormat;
+import java.time.Clock;
 import java.util.*;
 import java.util.stream.Stream;
 
@@ -141,12 +142,13 @@ public class K {
     }
 
     private abstract static class KIntBase extends KBase implements ToDouble {
-        protected int value;
+        protected final int value;
 
         KIntBase(int type, int value) {
             super(type);
             this.value = value;
         }
+
         public boolean isNull() {
             return value == Integer.MIN_VALUE;
         }
@@ -185,14 +187,17 @@ public class K {
     }
 
     private abstract static class KLongBase extends KBase implements ToDouble {
-        protected long value;
+        protected final static long NULL_VALUE = Long.MIN_VALUE;
+
+        protected final long value;
 
         KLongBase(int type, long value) {
             super(type);
             this.value = value;
         }
+
         public boolean isNull() {
-            return value == Long.MIN_VALUE;
+            return value == NULL_VALUE;
         }
 
         public double toDouble() {
@@ -675,12 +680,18 @@ public class K {
     }
 
     public static class KInteger extends KIntBase {
+        public final static KInteger ZERO = new KInteger(0);
+
         public String getDataType() {
             return "Integer";
         }
 
         public KInteger(int i) {
             super(-6, i);
+        }
+
+        public KInteger add(int increment) {
+            return new KInteger(value + increment);
         }
 
         @Override
@@ -737,12 +748,19 @@ public class K {
     }
 
     public static class KLong extends KLongBase {
+        public final static KLong NULL = new KLong(NULL_VALUE);
+        public final static KLong ZERO = new KLong(0);
+
         public String getDataType() {
             return "Long";
         }
 
         public KLong(long j) {
             super(-7, j);
+        }
+
+        public KLong add(long increment) {
+            return new KLong(value + increment);
         }
 
         @Override
@@ -1009,6 +1027,21 @@ public class K {
 
 
     public static class KTimestamp extends KLongBase {
+
+        public final static KTimestamp NULL = new KTimestamp(NULL_VALUE);
+
+        private final static Clock systemClock = Clock.systemDefaultZone();
+        // 946_684_800_000L is a number of millisecond between 01-Jan-1970 and 01-Jan-2000
+        private final static long MILLIS_OFFSET = 946_684_800_000L;
+
+        static KTimestamp now(Clock clock) {
+            return new K.KTimestamp( (clock.instant().toEpochMilli() - MILLIS_OFFSET) * 1_000_000);
+        }
+
+        public static KTimestamp now() {
+            return now(systemClock);
+        }
+
         public String getDataType() {
             return "Timestamp";
         }
@@ -1287,8 +1320,19 @@ public class K {
     }
 
     public static class KTimespan extends KLongBase {
+
+        public final static KTimespan NULL = new KTimespan(NULL_VALUE);
+
+        public static KTimespan period(KTimestamp t0, KTimestamp t1) {
+            return new KTimespan(t1.value - t0.value);
+        }
+
         public KTimespan(long x) {
             super(-16, x);
+        }
+
+        public KTimespan add(KTimespan increment) {
+            return new KTimespan(value + increment.value);
         }
 
         public String getDataType() {

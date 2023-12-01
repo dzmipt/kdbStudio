@@ -21,7 +21,9 @@ public class KConnection {
 
     private SocketReader socketReader;
     private ConnectionStateListener connectionStateListener = null;
-    private KAuthentication authentication = null;
+    private final KAuthentication authentication;
+    private final KConnectionStats stats = new KConnectionStats();
+
 
     void io(Socket s) throws IOException {
         s.setTcpNoDelay(true);
@@ -38,6 +40,8 @@ public class KConnection {
         if (closed) return;
 
         closed = true;
+        stats.disconnected();
+
         if (inputStream != null)
             try {
                 inputStream.close();
@@ -86,6 +90,7 @@ public class KConnection {
             throw new K4AccessException();
         }
         closed = false;
+        stats.connected();
 
         socketReader = new SocketReader(s);
         socketReader.setName("Reader " + host + ":" + port);
@@ -125,6 +130,7 @@ public class KConnection {
 
         outputStream.write(baosHeader.toByteArray());
         outputStream.write(baosBody.toByteArray());
+        stats.sentBytes(baosHeader.size() + baosBody.size());
     }
 
     public synchronized K.KBase k(K.KBase x, ProgressCallback progress) throws K4Exception, IOException, InterruptedException {
@@ -198,6 +204,7 @@ public class KConnection {
                     IPC ipc = new IPC(buffer, 4, false, isLittleEndian);
                     final int msgLength = ipc.ri() - 8;
 
+                    stats.receivedBytes(msgLength);
                     ProgressCallback progress = getProgressCallback();
                     if (progress!=null) {
                         progress.setCompressed(compressed);

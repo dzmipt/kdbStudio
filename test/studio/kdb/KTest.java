@@ -3,10 +3,13 @@ package studio.kdb;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
+import java.time.Clock;
+import java.time.Instant;
+import java.time.ZoneId;
 import java.util.Calendar;
 import java.util.UUID;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.*;
 
 public class KTest {
 
@@ -341,9 +344,76 @@ public class KTest {
         check(new K.Projection(new K.UnaryPrimitive(41), new K.KLong(1), new K.UnaryPrimitive(-1) ),"enlist[1;]", "enlist[1;]");
     }
 
-    @Test void testComposition() {
+    @Test
+    public void testComposition() {
         K.KBase composition = new K.FComposition(new K.Function("{2+x}"), new K.Function("{x+y}"));
         assertEquals("{2+x}{x+y}", composition.toString());
+    }
+
+
+    @Test
+    public void testNull() {
+        assertTrue(K.KLong.NULL.isNull());
+        assertTrue(K.KTimestamp.NULL.isNull());
+        assertTrue(K.KTimespan.NULL.isNull());
+    }
+
+    @Test
+    public void testAdd() {
+        K.KLong l = new K.KLong(5);
+        K.KLong l1 = l.add(10);
+        assertEquals(15, l1.toLong());
+        assertNotSame(l, l1);
+
+        K.KInteger i = new K.KInteger(-10);
+        K.KInteger i1 = i.add(1);
+        assertEquals(-9, i1.toInt());
+        assertNotSame(i, i1);
+
+        K.KTimespan t = new K.KTimespan(1234567);
+        K.KTimespan t1 = new K.KTimespan(2345678);
+        K.KTimespan t2 = t.add(t1);
+        assertEquals(1234567 + 2345678, t2.toLong());
+        assertNotSame(t1, t2);
+        assertNotSame(t, t2);
+    }
+
+    @Test
+    public void testTimestampNow() {
+        Instant i1 = Instant.parse("2023-12-01T14:18:10.123Z");
+
+        ZoneId z1 = ZoneId.of("Europe/Berlin");
+        Clock c1 = Clock.fixed(i1, z1);
+        K.KTimestamp k1 = K.KTimestamp.now(c1);
+        assertEquals(
+                "2023.12.01D14:18:10.123000000",
+                k1.toString() );
+
+
+        ZoneId z2 = ZoneId.of("Europe/Moscow");
+        Clock c2 = Clock.fixed(i1, z2);
+        K.KTimestamp k2 = K.KTimestamp.now(c2);
+        assertEquals(
+                "2023.12.01D14:18:10.123000000",
+                k2.toString() );
+
+    }
+
+
+    @Test
+    public void testTimespanPeriod() {
+        Instant i1 = Instant.parse("2023-11-30T13:10:05.123Z");
+        Instant i2 = Instant.parse("2023-12-01T14:18:10.987Z");
+        Clock c1 = Clock.fixed(i1, ZoneId.systemDefault());
+        Clock c2 = Clock.fixed(i2, ZoneId.systemDefault());
+
+        K.KTimestamp t1 = K.KTimestamp.now(c1);
+        K.KTimestamp t2 = K.KTimestamp.now(c2);
+        K.KTimespan k = K.KTimespan.period(t1, t2);
+        assertEquals(
+                "1D01:08:05.864000000",
+                k.toString() );
+
     }
 
 
