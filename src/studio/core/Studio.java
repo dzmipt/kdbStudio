@@ -42,9 +42,7 @@ public class Studio {
         initLogger();
         WindowsAppUserMode.setMainId();
 
-        TimeZone.setDefault(TimeZone.getTimeZone("GMT"));
-
-        if(System.getProperty("os.name","").contains("OS X")){ 
+        if(System.getProperty("os.name","").contains("OS X")){
             System.setProperty("apple.laf.useScreenMenuBar","true");
             //     System.setProperty("apple.awt.brushMetalLook", "true");
             System.setProperty("apple.awt.showGrowBox","true");

@@ -141,7 +141,7 @@ public class K {
         }
     }
 
-    private abstract static class KIntBase extends KBase implements ToDouble {
+    public abstract static class KIntBase extends KBase implements ToDouble {
         protected final int value;
 
         KIntBase(int type, int value) {
@@ -186,7 +186,7 @@ public class K {
         }
     }
 
-    private abstract static class KLongBase extends KBase implements ToDouble {
+    public abstract static class KLongBase extends KBase implements ToDouble {
         protected final static long NULL_VALUE = Long.MIN_VALUE;
 
         protected final long value;
@@ -1035,7 +1035,9 @@ public class K {
         private final static long MILLIS_OFFSET = 946_684_800_000L;
 
         static KTimestamp now(Clock clock) {
-            return new K.KTimestamp( (clock.instant().toEpochMilli() - MILLIS_OFFSET) * 1_000_000);
+            long epoch = clock.instant().toEpochMilli();
+            long offset = TimeZone.getTimeZone(clock.getZone()).getOffset(epoch);
+            return new K.KTimestamp( (epoch + offset - MILLIS_OFFSET) * 1_000_000);
         }
 
         public static KTimestamp now() {
@@ -1322,6 +1324,7 @@ public class K {
     public static class KTimespan extends KLongBase {
 
         public final static KTimespan NULL = new KTimespan(NULL_VALUE);
+        public final static KTimespan ZERO = new KTimespan(0);
 
         public static KTimespan period(KTimestamp t0, KTimestamp t1) {
             return new KTimespan(t1.value - t0.value);

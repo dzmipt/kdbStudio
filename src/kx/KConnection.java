@@ -25,6 +25,10 @@ public class KConnection {
     private final KConnectionStats stats = new KConnectionStats();
 
 
+    public KConnectionStats getStats() {
+        return stats;
+    }
+
     void io(Socket s) throws IOException {
         s.setTcpNoDelay(true);
         inputStream = new DataInputStream(s.getInputStream());

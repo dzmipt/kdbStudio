@@ -135,13 +135,28 @@ public class TabPanel extends JPanel {
         }
     }
 
-    public void addInto(JTabbedPane tabbedPane) {
+    private void ensureTabLimit(JTabbedPane tabbedPane) {
+        int limit = Config.getInstance().getResultTabsCount();
+        int index = 0;
+
+        while (tabbedPane.getTabCount() >= limit && index < tabbedPane.getTabCount()) {
+            TabPanel tab = (TabPanel)tabbedPane.getComponentAt(index);
+            if (!tab.isPinned()) {
+                tabbedPane.removeTabAt(index);
+            } else {
+                index++;
+            }
+        }
+    }
+
+    public void addInto(JTabbedPane tabbedPane, String tooltip) {
+        ensureTabLimit(tabbedPane);
         putClientProperty(JTabbedPane.class, tabbedPane);
         String title = makeTitle();
         tabbedPane.addTab(title, type.icon, this);
         int tabIndex = tabbedPane.getTabCount() - 1;
         tabbedPane.setSelectedIndex(tabIndex);
-        tabbedPane.setToolTipTextAt(tabIndex, "Executed at server: " + queryResult.getServer().getDescription(true));
+        tabbedPane.setToolTipTextAt(tabIndex, tooltip);
         updateToolbarLocation(tabbedPane);
     }
 

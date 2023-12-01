@@ -2,6 +2,7 @@
     * No IPC protocol downgrade in case of first attempt failure
     * Fix logic to detect server disconnect
     * Connection status added to the status bar
+    * Capturing connection statistics (new menu action)
 * File drag and drop (no support for a folder drag and drop) 
 * Persist location of editor windows
 * Keep config properties sorted on disk

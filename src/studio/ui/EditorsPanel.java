@@ -467,6 +467,7 @@ public class EditorsPanel extends JPanel {
         return (EditorTab) ((JComponent) tabbedEditors.getComponentAt(index)).getClientProperty(EditorTab.class);
     }
 
+    // @returns true if action execution should continue
     public boolean execute(EditorTabAction action) {
         List<EditorTab> editors = getAllEditors(false);
         for(EditorTab editor: editors) {

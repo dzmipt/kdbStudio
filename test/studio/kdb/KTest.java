@@ -386,7 +386,7 @@ public class KTest {
         Clock c1 = Clock.fixed(i1, z1);
         K.KTimestamp k1 = K.KTimestamp.now(c1);
         assertEquals(
-                "2023.12.01D14:18:10.123000000",
+                "2023.12.01D15:18:10.123000000",
                 k1.toString() );
 
 
@@ -394,9 +394,8 @@ public class KTest {
         Clock c2 = Clock.fixed(i1, z2);
         K.KTimestamp k2 = K.KTimestamp.now(c2);
         assertEquals(
-                "2023.12.01D14:18:10.123000000",
+                "2023.12.01D17:18:10.123000000",
                 k2.toString() );
-
     }
 
 

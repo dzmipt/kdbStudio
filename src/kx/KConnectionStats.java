@@ -27,7 +27,7 @@ public class KConnectionStats {
     KConnectionStats() {}
 
     public synchronized void connected() {
-        numberOfConnections.add(1);
+        numberOfConnections = numberOfConnections.add(1);
         lastConnectedTime = K.KTimestamp.now();
         totalBytesSentInCurrentSession = K.KLong.ZERO;
         totalBytesReceivedInCurrentSession = K.KLong.ZERO;
@@ -51,8 +51,9 @@ public class KConnectionStats {
 
     public synchronized void receivedBytes(long count) {
         lastQueryTime = K.KTimespan.period(lastQueryTimestamp, K.KTimestamp.now());
-        totalQueryTime = totalQueryTime.add(lastQueryTime);
-        totalQueryTimeInCurrentSession = totalQueryTimeInCurrentSession.add(lastQueryTime);
+        totalQueryTime = totalQueryTime.isNull() ? lastQueryTime : totalQueryTime.add(lastQueryTime);
+        totalQueryTimeInCurrentSession = totalQueryTimeInCurrentSession.isNull() ?
+                                            lastQueryTime : totalQueryTimeInCurrentSession.add(lastQueryTime);
 
         totalBytesReceived = totalBytesReceived.add(count);
         totalBytesReceivedInCurrentSession = totalBytesReceivedInCurrentSession.add(count);
@@ -79,7 +80,7 @@ public class KConnectionStats {
 
     private Pair[] pairs() {
         return new Pair[] {
-                Pair.of("numberOfConnections", numberOfConnections),
+                Pair.of("numberConnections", numberOfConnections),
                 Pair.of("lastConnected", lastConnectedTime),
                 Pair.of("lastDisconnected", lastDisconnectedTime),
                 Pair.of("lastQuerySent", lastQueryTimestamp),

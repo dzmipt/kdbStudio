@@ -8,6 +8,7 @@ import org.fife.ui.rsyntaxtextarea.RSyntaxTextAreaEditorKit;
 import studio.core.Studio;
 import studio.kdb.*;
 import studio.kdb.config.ActionOnExit;
+import studio.ui.action.ConnectionStats;
 import studio.ui.action.QPadImport;
 import studio.ui.action.QueryResult;
 import studio.ui.action.WorkspaceSaver;
@@ -125,6 +126,7 @@ public class StudioWindow extends JFrame implements WindowListener {
     private UserAction toggleDividerOrientationAction;
     private UserAction minMaxDividerAction;
     private UserAction importFromQPadAction;
+    private UserAction connectionStatsAction;
     private UserAction editServerAction;
     private UserAction addServerAction;
     private UserAction removeServerAction;
@@ -438,10 +440,19 @@ public class StudioWindow extends JFrame implements WindowListener {
         refreshAllMenus();
     }
 
-    private static void saveAll() {
-        for (StudioWindow panel: allWindows) {
-            panel.rootEditorsPanel.execute(editorTab -> editorTab.saveFileOnDisk(false));
+    public static void executeAll(EditorsPanel.EditorTabAction action) {
+        for (StudioWindow studioWindow: allWindows) {
+            studioWindow.execute(action);
         }
+    }
+
+    public boolean execute(EditorsPanel.EditorTabAction action) {
+        return rootEditorsPanel.execute(action);
+    }
+
+
+    private static void saveAll() {
+        executeAll(editorTab -> editorTab.saveFileOnDisk(false));
     }
 
     private void arrangeAll() {
@@ -526,6 +537,10 @@ public class StudioWindow extends JFrame implements WindowListener {
 
         importFromQPadAction = UserAction.create("Import Servers from QPad...", "Import from Servers.cfg",
                 KeyEvent.VK_I, null, e -> QPadImport.doImport(this));
+
+        connectionStatsAction = UserAction.create("Get Connection Statistics", "Details about all connections for all opened tabs",
+                KeyEvent.VK_S, null, e -> ConnectionStats.getStats(this));
+
 
         editServerAction = UserAction.create(I18n.getString("Edit"), Util.SERVER_INFORMATION_ICON, "Edit the server details",
                 KeyEvent.VK_E, null, e -> {
@@ -737,8 +752,7 @@ public class StudioWindow extends JFrame implements WindowListener {
     }
 
     public static void refreshEditorsSettings() {
-        for (StudioWindow window: allWindows) {
-            window.rootEditorsPanel.execute(editorTab -> {
+        executeAll(editorTab -> {
                 RSyntaxTextArea editor = editorTab.getTextArea();
                 editor.setHighlightCurrentLine(CONFIG.getBoolean(Config.RSTA_HIGHLIGHT_CURRENT_LINE));
                 editor.setAnimateBracketMatching(CONFIG.getBoolean(Config.RSTA_ANIMATE_BRACKET_MATCHING));
@@ -749,7 +763,6 @@ public class StudioWindow extends JFrame implements WindowListener {
                 editor.setTabsEmulated(CONFIG.getBoolean(Config.EDITOR_TAB_EMULATED));
                 return true;
             });
-        }
     }
 
     public static void refreshResultSettings() {
@@ -783,7 +796,7 @@ public class StudioWindow extends JFrame implements WindowListener {
             if (action != ActionOnExit.NOTHING) {
                 for (StudioWindow window : allWindows.toArray(new StudioWindow[0])) {
                     window.toFront();
-                    boolean complete = window.rootEditorsPanel.execute(editorTab -> {
+                    boolean complete = window.execute(editorTab -> {
                         if (editorTab.isModified()) {
                             if (!EditorsPanel.checkAndSaveTab(editorTab)) {
                                 return false;
@@ -815,7 +828,7 @@ public class StudioWindow extends JFrame implements WindowListener {
         if (allWindows.size() == 1) {
             quit();
         } else {
-            rootEditorsPanel.execute(editorTab -> editorTab.getEditorsPanel().closeTab(editorTab));
+            execute(editorTab -> editorTab.getEditorsPanel().closeTab(editorTab));
             //  closing the last tab would triger this code again
             if (allWindows.contains(this)) {
                 allWindows.remove(this);
@@ -986,7 +999,7 @@ public class StudioWindow extends JFrame implements WindowListener {
         addToMenu(menu, addServerAction, editServerAction, removeServerAction);
         menu.add(cloneMenu);
 
-        addToMenu(menu, null, serverListAction, serverHistoryAction, importFromQPadAction);
+        addToMenu(menu, null, serverListAction, serverHistoryAction, importFromQPadAction, null, connectionStatsAction);
 
         menubar.add(menu);
 
@@ -1641,6 +1654,11 @@ public class StudioWindow extends JFrame implements WindowListener {
         return (TabPanel) tabbedPane.getSelectedComponent();
     }
 
+    public void addResultTab(QueryResult queryResult, String tooltip) {
+        TabPanel tab = new TabPanel(this, queryResult);
+        tab.addInto(tabbedPane, tooltip);
+        tab.setToolTipText(tooltip);
+    }
 
     // if the query is cancelled execTime=-1, result and error are null's
     public static void queryExecutionComplete(EditorTab editor, QueryResult queryResult) {
@@ -1659,19 +1677,7 @@ public class StudioWindow extends JFrame implements WindowListener {
         if (error == null || error instanceof K4Exception) {
             try {
                 if (queryResult.isComplete()) {
-                    JTabbedPane tabbedPane = window.tabbedPane;
-                    if (tabbedPane.getTabCount() >= CONFIG.getResultTabsCount()) {
-                        for (int index = 0; index < tabbedPane.getTabCount(); index++) {
-                            TabPanel tab = (TabPanel)tabbedPane.getComponentAt(index);
-                            if (!tab.isPinned()) {
-                                tabbedPane.removeTabAt(index);
-                                break;
-                            }
-                        }
-                    }
-                    TabPanel tab = new TabPanel(window, queryResult);
-                    tab.addInto(tabbedPane);
-                    tab.setToolTipText(editor.getServer().getConnectionString());
+                    window.addResultTab(queryResult, "Executed at server: " + queryResult.getServer().getDescription(true) );
                 }
                 error = null;
             } catch (Throwable exc) {

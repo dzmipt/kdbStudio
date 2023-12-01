@@ -70,6 +70,10 @@ public class Session implements ConnectionStateListener, KAuthentication {
         kConn.setConnectionStateListener(this);
     }
 
+    public KConnectionStats getConnectionStats() {
+        return kConn.getStats();
+    }
+
     static void mock(SessionCreator sessionCreator) {
         log.info("Mocking kdb session creator");
         Session.sessionCreator = sessionCreator;
