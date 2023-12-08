@@ -1,6 +1,7 @@
 package studio.ui;
 
 import kx.K4Exception;
+import kx.KMessage;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.fife.ui.rsyntaxtextarea.RSyntaxTextArea;
@@ -1656,8 +1657,30 @@ public class StudioWindow extends JFrame implements WindowListener {
 
     public void addResultTab(QueryResult queryResult, String tooltip) {
         TabPanel tab = new TabPanel(this, queryResult);
-        tab.addInto(tabbedPane, tooltip);
-        tab.setToolTipText(tooltip);
+        tab.addInto(tabbedPane, getTooltipText(tooltip, queryResult.getKMessage()));
+    }
+
+    private static String getTooltipText(String tooltip, KMessage message) {
+        StringBuilder res = new StringBuilder();
+        res.append("<html>").append(tooltip);
+        if (message != null) {
+            res.append("<br/>Bytes sent: ").append(message.getBytesSent());
+            res.append("<br/>Bytes received: ").append(message.getBytesReceived());
+
+            K.KTimestamp started = message.getStarted();
+            K.KTimestamp finished = message.getFinished();
+            if (! started.isNull()) {
+                res.append("<br/>Query sent at ").append(started);
+            }
+            if (! finished.isNull()) {
+                res.append("<br/>Result received at ").append(finished);
+            }
+            if (!started.isNull() && !finished.isNull()) {
+                res.append("<br/>Duration: ").append((finished.toLong() - started.toLong()) / 1_000_000).append("ms");
+            }
+        }
+        res.append("</html>");
+        return res.toString();
     }
 
     // if the query is cancelled execTime=-1, result and error are null's
@@ -1667,8 +1690,8 @@ public class StudioWindow extends JFrame implements WindowListener {
         textArea.setCursor(textCursor);
         Throwable error = queryResult.getError();
         if (queryResult.isComplete()) {
-            long execTime = queryResult.getExecutionTime();
-            editor.getPane().setEditorStatus("Last execution time: " + (execTime > 0 ? "" + execTime : "<1") + " mS");
+            long execTime = queryResult.getExecutionTimeInMS();
+            editor.getPane().setEditorStatus("Last execution time: " + (execTime > 0 ? "" + execTime : "<1") + " ms");
         } else {
             editor.getPane().setEditorStatus("Last query was cancelled");
         }

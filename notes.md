@@ -4,6 +4,7 @@
     * Connection status added to the status bar
     * Capturing connection statistics (new menu action)
     * Limit on incoming message (new settings)
+    * Adding more details in the tooltip of the result tab
 * File drag and drop (no support for a folder drag and drop) 
 * Persist location of editor windows
 * Keep config properties sorted on disk

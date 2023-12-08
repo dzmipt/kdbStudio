@@ -46,11 +46,15 @@ public class QueryResult {
         return result.getObject();
     }
 
+    public KMessage getKMessage() {
+        return result;
+    }
+
     public Throwable getError() {
         return error;
     }
 
-    public long getExecutionTime() {
-        return result.getFinished().toLong() - result.getStarted().toLong();
+    public long getExecutionTimeInMS() {
+        return (result.getFinished().toLong() - result.getStarted().toLong()) / 1_000_000;
     }
 }
