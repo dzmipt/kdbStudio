@@ -239,14 +239,15 @@ public class KConnection {
                         setProgressCallback(null);
                     }
                 }
-            } catch (IOException e) {
+            } catch (Throwable e) {
                 synchronized (lockRead) {
-                    message = new KMessage(e);
+                    IOException io = e instanceof IOException ?
+                            (IOException) e : new IOException("Exception in message deserialization", e);
+                    message = new KMessage(io);
                     lockRead.notifyAll();
                 }
-            } catch (InterruptedException ignored) {
+                close();
             }
-            close();
         }
     }
 }
