@@ -711,7 +711,6 @@ public class StudioWindow extends JFrame implements WindowListener {
                     editor.setLineEnding(lineEnding);
                     refreshActionState();
                 } );
-             action.removeIcon();
              lineEndingActions[lineEnding.ordinal()] = action;
         }
 
@@ -852,6 +851,9 @@ public class StudioWindow extends JFrame implements WindowListener {
             if (action == null) {
                 menu.addSeparator();
             } else {
+                if (action.getValue(Action.SMALL_ICON) == null) {
+                    action.putValue(Action.SMALL_ICON, Util.BLANK_ICON);
+                }
                 menu.add(action);
             }
         }

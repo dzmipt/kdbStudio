@@ -16,10 +16,6 @@ public abstract class UserAction extends AbstractAction {
         putValue(ACCELERATOR_KEY,key);
     }
 
-    public void removeIcon() {
-        putValue(SMALL_ICON, null);
-    }
-
     public String getText() {
         return (String)getValue(NAME);
     }
@@ -46,16 +42,16 @@ public abstract class UserAction extends AbstractAction {
     public static UserAction create(String text,
                              String desc, int mnemonic,
                              KeyStroke key, ActionListener listener) {
-        return create(text, Util.BLANK_ICON, desc, mnemonic, key, listener);
+        return create(text, null, desc, mnemonic, key, listener);
     }
 
     public static UserAction create(String text,
                              String desc, int mnemonic,
                              ActionListener listener) {
-        return create(text, Util.BLANK_ICON, desc, mnemonic, null, listener);
+        return create(text, null, desc, mnemonic, null, listener);
     }
 
     public static UserAction create(String text, ActionListener listener) {
-        return create(text, Util.BLANK_ICON, null, 0, null, listener);
+        return create(text, null, null, 0, null, listener);
     }
 }
