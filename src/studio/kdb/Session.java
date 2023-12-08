@@ -111,7 +111,7 @@ public class Session implements ConnectionStateListener, KAuthentication {
         Session.sessionCreator = sessionCreator;
     }
 
-    public K.KBase execute(K.KBase x, ProgressCallback progress) throws K4Exception, IOException, InterruptedException {
+    public KMessage execute(K.KBase x, ProgressCallback progress) throws K4Exception, IOException, InterruptedException {
         return kConn.k(x, progress);
     }
 

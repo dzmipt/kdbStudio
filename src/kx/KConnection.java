@@ -123,7 +123,7 @@ public class KConnection {
 
     private final static byte[] HEADER = new byte[] {0,1,0,0};
 
-    private void send(K.KBase query) throws IOException {
+    private long send(K.KBase query) throws IOException {
         ByteArrayOutputStream baosBody = new ByteArrayOutputStream();
         query.serialise(baosBody);
 
@@ -134,22 +134,28 @@ public class KConnection {
 
         outputStream.write(baosHeader.toByteArray());
         outputStream.write(baosBody.toByteArray());
-        stats.sentBytes(baosHeader.size() + baosBody.size());
+        long sentBytes = baosHeader.size() + baosBody.size();
+        stats.sentBytes(sentBytes);
+        return sentBytes;
     }
 
-    public synchronized K.KBase k(K.KBase x, ProgressCallback progress) throws K4Exception, IOException, InterruptedException {
+    public synchronized KMessage k(K.KBase x, ProgressCallback progress) throws K4Exception, IOException, InterruptedException {
         try {
             if (isClosed()) connect();
             socketReader.setProgressCallback(progress);
-            send(x);
-            return socketReader.getResponse();
+            K.KTimestamp sentTime = K.KTimestamp.now();
+            long sentBytes = send(x);
+            KMessage message = socketReader.getResponse();
+            message.setStarted(sentTime);
+            message.setBytesSent(sentBytes);
+            return message;
         } catch (IOException e) {
             close();
             throw e;
         }
     }
 
-    public K.KBase k(K.KBase x) throws K4Exception, IOException, InterruptedException {
+    public KMessage k(K.KBase x) throws K4Exception, IOException, InterruptedException {
         return k(x, null);
     }
 
@@ -174,7 +180,7 @@ public class KConnection {
             return progress;
         }
 
-        K.KBase getResponse() throws InterruptedException, K4Exception, IOException {
+        KMessage getResponse() throws InterruptedException, IOException {
             KMessage response;
             synchronized (lockRead) {
                 while (message == null) {
@@ -187,7 +193,7 @@ public class KConnection {
                 message = null;
                 lockWrite.notifyAll();
             }
-            return response.getObject();
+            return response;
         }
 
         @Override
@@ -208,6 +214,7 @@ public class KConnection {
                     IPC ipc = new IPC(buffer, 4, false, isLittleEndian);
                     final int msgLength = ipc.ri() - 8;
 
+                    K.KTimestamp receivedTime = K.KTimestamp.now();
                     if (response && connectionStateListener != null) {
                         connectionStateListener.checkIncomingLimit(msgLength);
                     }
@@ -233,6 +240,8 @@ public class KConnection {
                     if (response) {
                         synchronized (lockRead) {
                             message = IPC.deserialise(buffer, compressed, isLittleEndian);
+                            message.setBytesReceived(msgLength);
+                            message.setFinished(receivedTime);
                             lockRead.notifyAll();
                         }
                         synchronized (lockWrite) {

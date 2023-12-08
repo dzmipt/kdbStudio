@@ -1,6 +1,7 @@
 package studio.ui.action;
 
 import kx.KConnectionStats;
+import kx.KMessage;
 import studio.kdb.K;
 import studio.kdb.Session;
 import studio.ui.StudioWindow;
@@ -12,7 +13,7 @@ public class ConnectionStats {
 
     public static void getStats(StudioWindow studioWindow) {
         QueryResult queryResult = new QueryResult(null, "");
-        queryResult.setResult(getTable());
+        queryResult.setResult(new KMessage(getTable()));
         studioWindow.addResultTab(queryResult, "Connection statistics");
     }
 

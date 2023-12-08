@@ -1,9 +1,6 @@
 package studio.kdb;
 
-import kx.K4Exception;
-import kx.KAuthentication;
-import kx.KConnection;
-import kx.ProgressCallback;
+import kx.*;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -93,7 +90,7 @@ public class MockQSession extends KConnection {
     }
 
     @Override
-    public synchronized K.KBase k(K.KBase x, ProgressCallback progress) throws K4Exception, IOException {
+    public synchronized KMessage k(K.KBase x, ProgressCallback progress) throws K4Exception, IOException {
         log.info("MockQSession.k - query execution");
         queryCount.getAndIncrement();
         closed = false;
@@ -110,7 +107,7 @@ public class MockQSession extends KConnection {
             log.info("MockQSession.k - continue after locking");
         }
 
-        if (kResponse != null) return kResponse;
+        if (kResponse != null) return new KMessage(kResponse);
         if (kError != null) throw kError;
 
         if (ioException != null) {
@@ -119,7 +116,7 @@ public class MockQSession extends KConnection {
         }
 
 
-        return x;
+        return new KMessage(x);
     }
 
     public int getQueryCount() {

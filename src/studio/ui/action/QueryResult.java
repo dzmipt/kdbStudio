@@ -1,5 +1,6 @@
 package studio.ui.action;
 
+import kx.KMessage;
 import studio.kdb.K;
 import studio.kdb.Server;
 
@@ -8,9 +9,8 @@ public class QueryResult {
     private String query;
     private Server server;
 
-    private K.KBase result = null;
+    private KMessage result = null;
     private Throwable error = null;
-    private long executionTime = -1;
     private boolean complete = false;
 
     public QueryResult(Server server, String query) {
@@ -18,18 +18,16 @@ public class QueryResult {
         this.query = query;
     }
 
-    public void setResult(K.KBase result) {
+    public void setResult(KMessage result) {
         this.result = result;
+        Throwable error = result.getError();
+        if (error != null) setError(error);
         complete = true;
     }
 
     public void setError(Throwable error) {
         this.error = error;
         complete = true;
-    }
-
-    public void setExecutionTime(long executionTime) {
-        this.executionTime = executionTime;
     }
 
     public boolean isComplete() {
@@ -45,7 +43,7 @@ public class QueryResult {
     }
 
     public K.KBase getResult() {
-        return result;
+        return result.getObject();
     }
 
     public Throwable getError() {
@@ -53,6 +51,6 @@ public class QueryResult {
     }
 
     public long getExecutionTime() {
-        return executionTime;
+        return result.getFinished().toLong() - result.getStarted().toLong();
     }
 }

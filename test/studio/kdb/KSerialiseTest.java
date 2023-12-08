@@ -32,7 +32,7 @@ public class KSerialiseTest {
 
     private void test(K.KBase k) {
         try {
-            K.KBase result = kConn.k(k);
+            K.KBase result = kConn.k(k).getObject();
             assertEquals(k, result);
         } catch (K4Exception | IOException | InterruptedException e) {
             fail(e);

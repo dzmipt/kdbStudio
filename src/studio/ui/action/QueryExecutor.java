@@ -1,6 +1,7 @@
 package studio.ui.action;
 
 import kx.K4Exception;
+import kx.KMessage;
 import kx.ProgressCallback;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -127,10 +128,9 @@ public class QueryExecutor implements ProgressCallback {
         protected QueryResult doInBackground() {
             QueryResult result = new QueryResult(server, queryText);
             queryLog.info("#{}: query {}({})\n{}",queryIndex, server.getFullName(), server.getConnectionString(), queryText);
-            long startTime = System.currentTimeMillis();
             try {
                 session = getSession();
-                K.KBase response = session.execute(query, QueryExecutor.this);
+                KMessage response = session.execute(query, QueryExecutor.this);
                 result.setResult(response);
             } catch (Throwable e) {
                 if (! (e instanceof K4Exception)) {
@@ -139,7 +139,6 @@ public class QueryExecutor implements ProgressCallback {
                 }
                 result.setError(e);
             }
-            result.setExecutionTime(System.currentTimeMillis() - startTime);
             if (result.getError() != null) {
                 if (result.getError() instanceof K4Exception) {
                     queryLog.info("#{}: server returns error {}", queryIndex, result.getError().getMessage());
