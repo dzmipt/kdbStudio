@@ -16,10 +16,9 @@ import java.util.Map;
 
 public class Session implements ConnectionStateListener, KAuthentication {
     private KConnection kConn;
-    private long created;
     private final Server server;
 
-    private static final long HOUR = 1000*3600;
+    private static final long HOUR_NS = 1_000_000_000L*3600;
     private static SessionCreator sessionCreator = new SessionCreator();
     private final List<EditorTab> editors = new ArrayList<>();
 
@@ -66,7 +65,6 @@ public class Session implements ConnectionStateListener, KAuthentication {
     private void init() {
         kConn = sessionCreator.createConnection(server, this);
         if (kConn == null) throw new RuntimeException("Failure in the authentication plugin");
-        created = System.currentTimeMillis();
         kConn.setConnectionStateListener(this);
     }
 
@@ -99,10 +97,13 @@ public class Session implements ConnectionStateListener, KAuthentication {
         if (!Config.getInstance().getBoolean(Config.SESSION_INVALIDATION_ENABLED)) return;
 
         int hours = Config.getInstance().getInt(Config.SESSION_INVALIDATION_TIMEOUT_IN_HOURS);
-        if (created + hours * HOUR < System.currentTimeMillis()) {
+
+        K.KTimestamp created = kConn.getStats().getLastConnectedTime();
+        if (created.isNull()) return;
+        K.KTimespan duration = K.KTimespan.period(created, K.KTimestamp.now());
+        if (duration.toLong() > hours * HOUR_NS) {
             log.info("Closing session to stale server: " + server.getDescription(true));
             kConn.close();
-            init();
         }
     }
 

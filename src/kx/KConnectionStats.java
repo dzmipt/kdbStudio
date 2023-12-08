@@ -60,6 +60,10 @@ public class KConnectionStats {
         lastBytesReceived = new K.KLong(count);
     }
 
+    public synchronized K.KTimestamp getLastConnectedTime() {
+        return lastConnectedTime;
+    }
+
     public static String[] getStatsHeaders() {
         Pair[] pairs = new KConnectionStats().pairs();
         String[] headers = new String[pairs.length];
