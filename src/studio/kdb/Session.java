@@ -6,13 +6,18 @@ import org.apache.logging.log4j.Logger;
 import studio.core.AuthenticationManager;
 import studio.core.Credentials;
 import studio.core.IAuthenticationMechanism;
+import studio.kdb.config.KdbMessageLimitAction;
 import studio.ui.EditorTab;
+import studio.ui.StudioOptionPane;
+import studio.ui.StudioWindow;
 
+import javax.swing.*;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicInteger;
 
 public class Session implements ConnectionStateListener, KAuthentication {
     private KConnection kConn;
@@ -54,6 +59,35 @@ public class Session implements ConnectionStateListener, KAuthentication {
     public void connectionStateChange(boolean connected) {
         for(EditorTab editor: editors) {
             editor.setSessonConnection(connected);
+        }
+    }
+
+    @Override
+    public void checkIncomingLimit(long msgLength) throws IOException {
+        KdbMessageLimitAction action = Config.getInstance().getEnum(Config.KDB_MESSAGE_SIZE_LIMIT_ACTION);
+        long limit = 1_000_000L * Config.getInstance().getInt(Config.KDB_MESSAGE_SIZE_LIMIT_MB);
+        if (msgLength < limit) return;
+        final String msg = "Incoming message size " + msgLength + " breached the limit of " + limit + ".";
+        if (action == KdbMessageLimitAction.BLOCK) {
+            throw new IOException(msg);
+        }
+
+        AtomicInteger choice = new AtomicInteger();
+        try {
+            SwingUtilities.invokeAndWait(() -> {
+                choice.set(StudioOptionPane.showYesNoDialog(StudioWindow.getActiveStudioWindow(),
+                        msg + "\n\nDownloading large amount of data can result in OutOfMemoryError.\n" +
+                                "Note: you can change the limit as well as action in the Settings menu.\n\n" +
+                                "Download?",
+                        "Too Big Incoming Message"
+                ));
+            });
+        } catch (Exception e) {
+            throw new IOException("Error during showing incoming message limit dialog", e);
+        }
+
+        if (choice.get() != JOptionPane.YES_OPTION) {
+            throw new IOException(msg);
         }
     }
 

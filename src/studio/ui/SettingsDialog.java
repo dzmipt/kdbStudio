@@ -5,6 +5,7 @@ import studio.core.Credentials;
 import studio.kdb.Config;
 import studio.kdb.KFormatContext;
 import studio.kdb.config.ActionOnExit;
+import studio.kdb.config.KdbMessageLimitAction;
 import studio.ui.settings.FontSelectionPanel;
 import studio.utils.LineEnding;
 
@@ -24,6 +25,8 @@ public class SettingsDialog extends EscapeDialog {
     private JCheckBox chBoxSessionInvalidation;
     private JFormattedTextField txtSessionInvalidation;
     private JCheckBox chBoxSessionReuse;
+    private JFormattedTextField txtKdbMessageSizeLimit;
+    private JComboBox<KdbMessageLimitAction> comboBoxKdbMessageSizeAction;
     private JCheckBox chBoxShowServerCombo;
     private JCheckBox chBoxAutoSave;
     private JComboBox<ActionOnExit> comboBoxActionOnExit;
@@ -179,6 +182,14 @@ public class SettingsDialog extends EscapeDialog {
         chBoxSessionReuse = new JCheckBox("Reuse kdb connection between tabs");
         chBoxSessionReuse.setSelected(CONFIG.getBoolean(Config.SESSION_REUSE));
 
+        JLabel lblKdbMessageSize = new JLabel("When the incoming message is greater than ");
+        txtKdbMessageSizeLimit = new JFormattedTextField(formatter);
+        txtKdbMessageSizeLimit.setValue(CONFIG.getInt(Config.KDB_MESSAGE_SIZE_LIMIT_MB));
+
+        JLabel lblKdbMessageSizeSuffix = new JLabel("MB  ");
+        comboBoxKdbMessageSizeAction = new JComboBox<>(KdbMessageLimitAction.values());
+        comboBoxKdbMessageSizeAction.setSelectedItem(CONFIG.getEnum(Config.KDB_MESSAGE_SIZE_LIMIT_ACTION));
+
         chBoxEmulateTab = new JCheckBox("Emulate tab with spaces");
         chBoxEmulateTab.setSelected(CONFIG.getBoolean(Config.EDITOR_TAB_EMULATED));
         txtEmulatedTabSize = new JFormattedTextField(formatter);
@@ -265,6 +276,7 @@ public class SettingsDialog extends EscapeDialog {
                         .addLineAndGlue(lblActionOnExit, comboBoxActionOnExit)
                         .addLineAndGlue(chBoxSessionInvalidation, txtSessionInvalidation, lblSessionInvalidationSuffix)
                         .addLineAndGlue(chBoxSessionReuse)
+                        .addLineAndGlue(lblKdbMessageSize, txtKdbMessageSizeLimit, lblKdbMessageSizeSuffix, comboBoxKdbMessageSizeAction)
                         .addLine(lblAuthMechanism, comboBoxAuthMechanism, lblUser, txtUser, lblPassword, txtPassword)
         );
 
@@ -320,6 +332,8 @@ public class SettingsDialog extends EscapeDialog {
         CONFIG.setBoolean(Config.SESSION_INVALIDATION_ENABLED, chBoxSessionInvalidation.isSelected());
         CONFIG.setInt(Config.SESSION_INVALIDATION_TIMEOUT_IN_HOURS, Math.max(1,(Integer)txtSessionInvalidation.getValue()));
         CONFIG.setBoolean(Config.SESSION_REUSE, chBoxSessionReuse.isSelected());
+        CONFIG.setInt(Config.KDB_MESSAGE_SIZE_LIMIT_MB, Math.max(1, (Integer)txtKdbMessageSizeLimit.getValue()));
+        CONFIG.setEnum(Config.KDB_MESSAGE_SIZE_LIMIT_ACTION, (KdbMessageLimitAction) comboBoxKdbMessageSizeAction.getSelectedItem());
         CONFIG.setDefaultAuthMechanism(auth);
         CONFIG.setDefaultCredentials(auth, new Credentials(getUser(), getPassword()));
 

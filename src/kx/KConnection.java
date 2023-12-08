@@ -208,6 +208,10 @@ public class KConnection {
                     IPC ipc = new IPC(buffer, 4, false, isLittleEndian);
                     final int msgLength = ipc.ri() - 8;
 
+                    if (response && connectionStateListener != null) {
+                        connectionStateListener.checkIncomingLimit(msgLength);
+                    }
+
                     stats.receivedBytes(msgLength);
                     ProgressCallback progress = getProgressCallback();
                     if (progress!=null) {

@@ -6,6 +6,7 @@ import studio.core.AuthenticationManager;
 import studio.core.Credentials;
 import studio.core.DefaultAuthenticationMechanism;
 import studio.kdb.config.ActionOnExit;
+import studio.kdb.config.KdbMessageLimitAction;
 import studio.ui.ServerList;
 import studio.ui.Util;
 import studio.utils.*;
@@ -97,6 +98,8 @@ public class Config {
     public static final String SESSION_INVALIDATION_ENABLED = configDefault("sessionInvalidationEnabled", ConfigType.BOOLEAN, false);
     public static final String SESSION_INVALIDATION_TIMEOUT_IN_HOURS = configDefault("sessionInvalidationTimeoutInHours", ConfigType.INT, 12);
     public static final String SESSION_REUSE = configDefault("sessionsReuse", ConfigType.BOOLEAN, true);
+    public static final String KDB_MESSAGE_SIZE_LIMIT_MB = configDefault("kdbMessageSizeLimitMB", ConfigType.INT, 10);
+    public static final String KDB_MESSAGE_SIZE_LIMIT_ACTION = configDefault("kdbMessageSizeLimitAction", ConfigType.ENUM, KdbMessageLimitAction.ASK);
 
     private enum FontStyle {
         Plain(Font.PLAIN), Bold(Font.BOLD), Italic(Font.ITALIC), ItalicAndBold(Font.BOLD|Font.ITALIC);
