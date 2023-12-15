@@ -89,7 +89,17 @@ public class QGrid extends JPanel implements MouseWheelListener, SearchPanelList
 
         setDoubleClickTimeout(Config.getInstance().getInt(Config.EMULATED_DOUBLE_CLICK_TIMEOUT));
 
-        table = new JTable(model);
+        table = new JTable(model) {
+            @Override
+            public int convertRowIndexToView(int modelRowIndex) {
+                throw new IllegalStateException("Not yet implemented");
+            }
+
+            @Override
+            public int convertRowIndexToModel(int viewRowIndex) {
+                return model.getIndex()[viewRowIndex];
+            }
+        };
 
         tableHeaderRenderer = new TableHeaderRenderer();
         table.getTableHeader().setDefaultRenderer(tableHeaderRenderer);

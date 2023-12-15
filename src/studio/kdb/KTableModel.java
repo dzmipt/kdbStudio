@@ -91,7 +91,6 @@ public abstract class KTableModel extends AbstractTableModel {
     }
     //@TODO: add separate method which return K.KBase
     public Object getValueAt(int row,int col) {
-        row = index[row];
         K.KBaseVector<? extends K.KBase> v = getColumn(col);
         return v.at(row);
     }

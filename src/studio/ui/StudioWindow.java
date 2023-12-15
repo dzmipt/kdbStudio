@@ -1418,6 +1418,7 @@ public class StudioWindow extends JFrame implements WindowListener {
         });
 
         resultSearchPanel.setReplaceVisible(false);
+        resultSearchPanel.setName("ResultSearchPanel");
 
         return resultSearchPanel;
     }
