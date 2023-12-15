@@ -143,6 +143,7 @@ public class StudioWindow extends JFrame implements WindowListener {
     private static int studioWindowNameIndex = 0;
     private int editorTabbedPaneNameIndex = 0;
     private int editorNameIndex = 0;
+    private int resultNameIndex = 0;
 
 
     private static List<StudioWindow> allWindows = new ArrayList<>();
@@ -160,6 +161,10 @@ public class StudioWindow extends JFrame implements WindowListener {
     
     public int nextEditorNameIndex() {
         return editorNameIndex++;
+    }
+
+    public int nextResultNameIndex() {
+        return resultNameIndex++;
     }
 
     public int nextEditorTabbedPaneNameIndex() {

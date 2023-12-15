@@ -124,6 +124,7 @@ public class TabPanel extends JPanel {
         refreshFont();
         setLayout(new BorderLayout());
         add(component, BorderLayout.CENTER);
+        setName("resultPanel" + studioWindow.nextResultNameIndex());
     }
 
     public void refreshFont() {

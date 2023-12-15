@@ -49,4 +49,10 @@ public class ResultTest extends StudioTest {
 
     }
 
+//    @Test
+//    public void testMarkersAfterSorting() {
+//        execute();
+//        frameFixture.panel("resultPanel0")
+//    }
+
 }
