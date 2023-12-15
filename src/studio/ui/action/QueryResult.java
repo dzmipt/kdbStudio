@@ -55,6 +55,7 @@ public class QueryResult {
     }
 
     public long getExecutionTimeInMS() {
+        if (result == null) return 0;
         return (result.getFinished().toLong() - result.getStarted().toLong()) / 1_000_000;
     }
 }
