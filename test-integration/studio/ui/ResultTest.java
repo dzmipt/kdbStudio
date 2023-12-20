@@ -1,10 +1,7 @@
 package studio.ui;
 
 import org.assertj.swing.data.TableCell;
-import org.assertj.swing.fixture.JPanelFixture;
-import org.assertj.swing.fixture.JTabbedPaneFixture;
-import org.assertj.swing.fixture.JTableFixture;
-import org.assertj.swing.fixture.JTextComponentFixture;
+import org.assertj.swing.fixture.*;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.BeforeClass;
@@ -19,12 +16,12 @@ public class ResultTest extends StudioTest {
     @BeforeClass
     public static void mock() {
         MockQSession.mock();
-        MockQSession.setResponse(new K.KLongVector(6, 5, 4, 3, 2, 1, 0));
     }
 
     @Before
     public void setServer() {
         setServerConnectionText("s:1");
+        MockQSession.setResponse(new K.KLongVector(6, 5, 4, 3, 2, 1, 0));
     }
 
     private void execute() {
@@ -80,6 +77,28 @@ public class ResultTest extends StudioTest {
 
         Assert.assertEquals(bgBefore, table.backgroundAt(TableCell.row(1).column(0)).target());
         Assert.assertEquals(bgAfter, table.backgroundAt(TableCell.row(5).column(0)).target());
+    }
+
+    @Test
+    public void testTableConnExtractor() {
+        MockQSession.setResponse(
+                new K.Flip(new K.KSymbolVector("host","port"),
+                            new K.KList(
+                                    new K.KSymbolVector("a","z","b"),
+                                    new K.KLongVector(1,2,3)
+                            ))  );
+
+        execute();
+        JTableFixture table = frameFixture.panel("resultPanel0").table();
+        JPopupMenuFixture popupMenu = table.showPopupMenuAt(TableCell.row(1).column(0));
+        String[] labels = popupMenu.menuLabels();
+        Assert.assertEquals("Open z:2", labels[0]);
+
+        table.tableHeader().clickColumn(0).click();
+        popupMenu = table.showPopupMenuAt(TableCell.row(1).column(0));
+        labels = popupMenu.menuLabels();
+        Assert.assertEquals("Open b:3", labels[0]);
+
     }
 
 }

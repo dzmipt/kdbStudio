@@ -316,6 +316,9 @@ public class QGrid extends JPanel implements MouseWheelListener, SearchPanelList
         int col = table.columnAtPoint(point);
         if (row == -1 || col == -1) return popupMenu;
 
+        row = table.convertRowIndexToModel(row);
+        col = table.convertColumnIndexToModel(col);
+
         String[] connections = Config.getInstance().getTableConnExtractor().getConnections(table.getModel(), row, col);
         if (connections.length == 0) return popupMenu;
 
