@@ -1,5 +1,7 @@
 package studio.ui;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import studio.kdb.Config;
 import studio.kdb.KTableModel;
 
@@ -23,6 +25,8 @@ public class WidthAdjuster extends MouseAdapter {
 
     private static final int EPSILON = 5;   //boundary sensitivity
     private final boolean[] limitWidthState;
+
+    private static final Logger log = LogManager.getLogger();
 
     public WidthAdjuster(JTable table, JScrollPane scrollPane) {
         this.table = table;
@@ -69,7 +73,9 @@ public class WidthAdjuster extends MouseAdapter {
                 int column = getModelColumn(e);
                 if (column >= 0) {
                     KTableModel ktm = (KTableModel) table.getModel();
+                    log.info("Table sorting start");
                     ktm.sort(column);
+                    log.info("Table sorting finished");
                     scrollPane.repaint();
                 }
             }

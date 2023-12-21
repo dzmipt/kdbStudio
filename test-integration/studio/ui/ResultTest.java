@@ -1,5 +1,7 @@
 package studio.ui;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.assertj.swing.data.TableCell;
 import org.assertj.swing.fixture.*;
 import org.junit.Assert;
@@ -10,8 +12,11 @@ import studio.kdb.K;
 import studio.kdb.MockQSession;
 
 import java.awt.*;
+import java.util.Arrays;
 
 public class ResultTest extends StudioTest {
+
+    private static final Logger log = LogManager.getLogger();
 
     @BeforeClass
     public static void mock() {
@@ -97,6 +102,7 @@ public class ResultTest extends StudioTest {
         table.tableHeader().clickColumn(0).click();
         popupMenu = table.showPopupMenuAt(TableCell.row(1).column(0));
         labels = popupMenu.menuLabels();
+        log.info("Got the following menu items {}", Arrays.toString(labels));
         Assert.assertEquals("Open b:3", labels[0]);
 
     }
