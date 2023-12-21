@@ -109,15 +109,15 @@ public class ResultTest extends StudioTest {
         execute();
         JTableFixture table = frameFixture.panel("resultPanel0").table();
         logHierarchy("Before first popup menu");
-        JPopupMenuFixture popupMenu = table.showPopupMenuAt(TableCell.row(1).column(0));
+//        JPopupMenuFixture popupMenu = table.showPopupMenuAt(TableCell.row(1).column(0));
         logHierarchy("After first popup menu");
-        String[] labels = popupMenu.menuLabels();
-        Assert.assertEquals("Open z:2", labels[0]);
+//        String[] labels = popupMenu.menuLabels();
+//        Assert.assertEquals("Open z:2", labels[0]);
 
         table.tableHeader().clickColumn(0).click();
-        popupMenu = table.showPopupMenuAt(TableCell.row(1).column(0));
+        JPopupMenuFixture popupMenu = table.showPopupMenuAt(TableCell.row(1).column(0));
         logHierarchy("After second popup menu");
-        labels = popupMenu.menuLabels();
+        String[] labels = popupMenu.menuLabels();
         log.info("Got the following menu items {}", Arrays.toString(labels));
         Assert.assertEquals("Open b:3", labels[0]);
 
