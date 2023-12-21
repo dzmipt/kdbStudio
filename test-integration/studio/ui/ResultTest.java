@@ -4,6 +4,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.assertj.swing.data.TableCell;
 import org.assertj.swing.fixture.*;
+import org.assertj.swing.hierarchy.SingleComponentHierarchy;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.BeforeClass;
@@ -12,6 +13,8 @@ import studio.kdb.K;
 import studio.kdb.MockQSession;
 
 import java.awt.*;
+import java.io.ByteArrayOutputStream;
+import java.io.PrintStream;
 import java.util.Arrays;
 
 public class ResultTest extends StudioTest {
@@ -84,6 +87,13 @@ public class ResultTest extends StudioTest {
         Assert.assertEquals(bgAfter, table.backgroundAt(TableCell.row(5).column(0)).target());
     }
 
+    private void logHierarchy(String str) {
+        ByteArrayOutputStream outStream = new ByteArrayOutputStream();
+        PrintStream out = new PrintStream(outStream);
+        robot().printer().printComponents(out);
+        log.info("Hierarchy [{}]:%n{}", str, outStream);
+    }
+
     @Test
     public void testTableConnExtractor() {
         MockQSession.setResponse(
@@ -95,12 +105,15 @@ public class ResultTest extends StudioTest {
 
         execute();
         JTableFixture table = frameFixture.panel("resultPanel0").table();
+        logHierarchy("Before first popup menu");
         JPopupMenuFixture popupMenu = table.showPopupMenuAt(TableCell.row(1).column(0));
+        logHierarchy("After first popup menu");
         String[] labels = popupMenu.menuLabels();
         Assert.assertEquals("Open z:2", labels[0]);
 
         table.tableHeader().clickColumn(0).click();
         popupMenu = table.showPopupMenuAt(TableCell.row(1).column(0));
+        logHierarchy("After second popup menu");
         labels = popupMenu.menuLabels();
         log.info("Got the following menu items {}", Arrays.toString(labels));
         Assert.assertEquals("Open b:3", labels[0]);
