@@ -2,6 +2,7 @@ package studio.ui;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.assertj.swing.core.KeyPressInfo;
 import org.assertj.swing.data.TableCell;
 import org.assertj.swing.fixture.*;
 import org.assertj.swing.hierarchy.SingleComponentHierarchy;
@@ -16,6 +17,8 @@ import java.awt.*;
 import java.io.ByteArrayOutputStream;
 import java.io.PrintStream;
 import java.util.Arrays;
+
+import static java.awt.event.KeyEvent.VK_ESCAPE;
 
 public class ResultTest extends StudioTest {
 
