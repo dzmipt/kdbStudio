@@ -73,9 +73,7 @@ public class WidthAdjuster extends MouseAdapter {
                 int column = getModelColumn(e);
                 if (column >= 0) {
                     KTableModel ktm = (KTableModel) table.getModel();
-                    log.info("Table sorting start");
                     ktm.sort(column);
-                    log.info("Table sorting finished");
                     scrollPane.repaint();
                 }
             }

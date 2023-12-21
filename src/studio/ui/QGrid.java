@@ -189,7 +189,6 @@ public class QGrid extends JPanel implements MouseWheelListener, SearchPanelList
             private long lastTimestamp = -1;
 
             public void mousePressed(MouseEvent e) {
-                log.info("mousePressed: popupTrigger: {}", e.isPopupTrigger());
                 if (maybeShowPopup(e)) return;
 
                 int row = table.rowAtPoint(e.getPoint());
@@ -207,7 +206,6 @@ public class QGrid extends JPanel implements MouseWheelListener, SearchPanelList
             }
 
             public void mouseReleased(MouseEvent e) {
-                log.info("mouseReleased: popupTrigger: {}", e.isPopupTrigger());
                 maybeShowPopup(e);
             }
 
@@ -318,11 +316,8 @@ public class QGrid extends JPanel implements MouseWheelListener, SearchPanelList
         int col = table.columnAtPoint(point);
         if (row == -1 || col == -1) return popupMenu;
 
-        log.info("getPopupMenu: row={}; col={}", row, col);
         row = table.convertRowIndexToModel(row);
         col = table.convertColumnIndexToModel(col);
-
-        log.info("getPopupMenu - after conversion: row={}; col={}", row, col);
 
         String[] connections = Config.getInstance().getTableConnExtractor().getConnections(table.getModel(), row, col);
         if (connections.length == 0) return popupMenu;
