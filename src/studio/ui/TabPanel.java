@@ -1,5 +1,7 @@
 package studio.ui;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import studio.kdb.ListModel;
 import studio.kdb.*;
 import studio.ui.action.QueryResult;
@@ -25,6 +27,8 @@ public class TabPanel extends JPanel {
     private KFormatContext formatContext = new KFormatContext(KFormatContext.DEFAULT);
     private ResultType type;
     private boolean pinned = false;
+
+    private final static Logger log = LogManager.getLogger();
 
     public TabPanel(StudioWindow studioWindow, QueryResult queryResult) {
         this.studioWindow = studioWindow;

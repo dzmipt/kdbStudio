@@ -1,3 +1,4 @@
+* Drill down for complex results (with double click or popup menu)
 * Rework kdb connection logic
     * No IPC protocol downgrade in case of first attempt failure
     * Fix logic to detect server disconnect

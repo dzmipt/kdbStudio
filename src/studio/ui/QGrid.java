@@ -5,6 +5,7 @@ import org.apache.logging.log4j.Logger;
 import org.fife.ui.rtextarea.SearchContext;
 import studio.kdb.*;
 import studio.ui.action.CopyTableSelectionAction;
+import studio.ui.action.TableUserAction;
 import studio.ui.search.*;
 
 import javax.swing.*;
@@ -46,6 +47,7 @@ public class QGrid extends JPanel implements MouseWheelListener, SearchPanelList
     private final JPopupMenu popupMenu = new JPopupMenu();
     private final UserAction copyExcelFormatAction;
     private final UserAction copyHtmlFormatAction;
+    private final UserAction showSeparateAction;
 
     private long doubleClickTimeout;
 
@@ -180,6 +182,9 @@ public class QGrid extends JPanel implements MouseWheelListener, SearchPanelList
                 KeyEvent.VK_H, null,
                 new CopyTableSelectionAction(CopyTableSelectionAction.Format.Html, table));
 
+        showSeparateAction = new TableUserAction.ShowSeparateAction(studioWindow, table);
+
+        popupMenu.add(showSeparateAction);
         popupMenu.add(new JMenuItem(copyExcelFormatAction));
         popupMenu.add(new JMenuItem(copyHtmlFormatAction));
 
@@ -230,10 +235,19 @@ public class QGrid extends JPanel implements MouseWheelListener, SearchPanelList
                 if (row == -1 || col == -1) return;
 
                 K.KBase b = (K.KBase) table.getValueAt(row, col);
-                //@TODO: we shouldn't duplicate the logic here.
-                KFormatContext formatContextForCell = new KFormatContext(formatContext);
-                formatContextForCell.setShowType(b instanceof K.KBaseVector);
-                Util.copyTextToClipboard(b.toString(formatContextForCell));
+
+                int type = b.getType();
+                if ( (type >= -19 && type <= -1) ||
+                        (type >= 101 && type <= 103 ) ||
+                        type == 10 ) {
+
+                    //@TODO: we shouldn't duplicate the logic here.
+                    KFormatContext formatContextForCell = new KFormatContext(formatContext);
+                    formatContextForCell.setShowType(b instanceof K.KBaseVector);
+                    Util.copyTextToClipboard(b.toString(formatContextForCell));
+                } else {
+                    showSeparateAction.actionPerformed(null);
+                }
             }
         });
 
@@ -316,25 +330,45 @@ public class QGrid extends JPanel implements MouseWheelListener, SearchPanelList
         int col = table.columnAtPoint(point);
         if (row == -1 || col == -1) return popupMenu;
 
-        row = table.convertRowIndexToModel(row);
-        col = table.convertColumnIndexToModel(col);
+        int rowModel = table.convertRowIndexToModel(row);
+        int colModel = table.convertColumnIndexToModel(col);
 
-        String[] connections = Config.getInstance().getTableConnExtractor().getConnections(table.getModel(), row, col);
-        if (connections.length == 0) return popupMenu;
+        String[] connections = Config.getInstance().getTableConnExtractor().getConnections(table.getModel(), rowModel, colModel);
 
-        JPopupMenu popupMenu = new JPopupMenu();
-        for (String connection: connections) {
-            Server server = Config.getInstance().getServerByConnectionString(connection);
-            String name = server.getName().length() == 0 ? connection : server.getName();
-            Action action = UserAction.create("Open " + connection,
-                    "Open " + name + " in a new tab", 0,
-                    e -> studioWindow.addTab(server, null) );
-            popupMenu.add(action);
+        JPopupMenu newPopupMenu;
+
+        if (connections.length == 0) newPopupMenu = popupMenu;
+        else {
+            newPopupMenu = new JPopupMenu();
+            for (String connection : connections) {
+                Server server = Config.getInstance().getServerByConnectionString(connection);
+                String name = server.getName().length() == 0 ? connection : server.getName();
+                Action action = UserAction.create("Open " + connection,
+                        "Open " + name + " in a new tab", 0,
+                        e -> studioWindow.addTab(server, null));
+                newPopupMenu.add(action);
+            }
+            newPopupMenu.add(new JSeparator());
+
+            for (Component component: popupMenu.getComponents()) {
+                if (component instanceof JSeparator) newPopupMenu.addSeparator();
+                if (component instanceof JMenuItem) {
+                    Action action = ((JMenuItem) component).getAction();
+                    if (action != null) newPopupMenu.add(action);
+                }
+            }
         }
-        popupMenu.add(new JSeparator());
-        popupMenu.add(copyExcelFormatAction);
-        popupMenu.add(copyHtmlFormatAction);
-        return popupMenu;
+
+        for (Component component: popupMenu.getComponents()) {
+            if (component instanceof JMenuItem) {
+                Action action = ((JMenuItem) component).getAction();
+                if (action instanceof TableUserAction) {
+                    ((TableUserAction)action).setLocation(row, col);
+                }
+            }
+        }
+
+        return newPopupMenu;
     }
 
     private boolean isSearchContinue(SearchContext context) {

@@ -13,6 +13,11 @@ public class QueryResult {
     private Throwable error = null;
     private boolean complete = false;
 
+    public QueryResult(K.KBase kObject) {
+        this(null, "");
+        setResult(new KMessage(kObject));
+    }
+
     public QueryResult(Server server, String query) {
         this.server = server;
         this.query = query;
