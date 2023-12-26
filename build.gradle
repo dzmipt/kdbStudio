@@ -106,9 +106,39 @@ def buildTime() {
     return df.format(new Date())
 }
 
+def getGitRevNumber = { ->
+    def stdout = new ByteArrayOutputStream()
+    def errout = new ByteArrayOutputStream()
+    def hash = ""
+    def rev = ""
+    try {
+        exec {
+            commandLine 'git', 'rev-list', '--count', 'HEAD'
+            standardOutput = stdout
+            errorOutput = errout
+        }
+        rev = stdout.toString().trim()
+
+        stdout.reset()
+        exec {
+            commandLine 'git', 'rev-parse', '--short', 'HEAD'
+            standardOutput = stdout
+            errorOutput = errout
+        }
+        hash = stdout.toString().trim()
+
+    } catch (Throwable e) {
+        println "Error getting git revision: " + e
+        println errout.toString()
+    }
+
+    if (hash == "" || rev == "") return "";
+    return ", commit number: $rev, hash: $hash"
+}
+
 task getBuildHash {
     doLast {
-        file("src/build.txt").text = buildTime()
+        file("src/build.txt").text = buildTime() + getGitRevNumber()
     }
 }
 
