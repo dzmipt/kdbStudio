@@ -4,7 +4,9 @@ import org.apache.commons.io.FileUtils;
 import org.assertj.swing.annotation.GUITest;
 import org.assertj.swing.core.EmergencyAbortListener;
 import org.assertj.swing.core.MouseButton;
+import org.assertj.swing.finder.JOptionPaneFinder;
 import org.assertj.swing.fixture.FrameFixture;
+import org.assertj.swing.fixture.JOptionPaneFixture;
 import org.assertj.swing.fixture.JTabbedPaneFixture;
 import org.assertj.swing.fixture.JTextComponentFixture;
 import org.assertj.swing.junit.runner.GUITestRunner;
@@ -233,6 +235,17 @@ abstract public class StudioTest extends AssertJSwingJUnitTestCase {
 
     protected void waitForQueryExecution(Runnable runQuery) {
         waitForQueryExecution(runQuery,1);
+    }
+
+
+    protected void optionPaneButtonClick(FrameFixture frameFixture, String btnText) {
+        JOptionPaneFixture optionPane = JOptionPaneFinder.findOptionPane().using(robot());
+        optionPane.buttonWithText(btnText).click();
+
+    }
+
+    protected void optionPaneButtonClick(String btnText) {
+        optionPaneButtonClick(frameFixture, btnText);
     }
 
 }

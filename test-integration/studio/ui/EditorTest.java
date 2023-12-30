@@ -1,5 +1,8 @@
 package studio.ui;
 
+import org.assertj.swing.core.GenericTypeMatcher;
+import org.assertj.swing.finder.WindowFinder;
+import org.assertj.swing.fixture.FrameFixture;
 import org.assertj.swing.fixture.JMenuItemFixture;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
@@ -94,6 +97,26 @@ public class EditorTest extends StudioTest {
 
         frameFixture.menuItem("Undo").requireEnabled();
         frameFixture.button("toolbarUndo").requireEnabled();
+    }
 
+    @Test
+    public void testCancelOnFrameClosure() {
+        frameFixture.menuItem("New Window").click();
+        FrameFixture newFrameFixture = WindowFinder.findFrame(
+                new GenericTypeMatcher<StudioWindow>(StudioWindow.class, true) {
+                        @Override
+                        protected boolean isMatching(StudioWindow f) {
+                            return f != studioWindow;
+                        }
+        }).using(robot());
+        newFrameFixture.textBox("editor1").enterText("x");
+        newFrameFixture.menuItem("Close Window").click();
+        optionPaneButtonClick("Cancel");
+        newFrameFixture.requireVisible();
+
+        //tear down
+        newFrameFixture.close();
+        optionPaneButtonClick("No");
+        newFrameFixture.requireNotVisible();
     }
 }
