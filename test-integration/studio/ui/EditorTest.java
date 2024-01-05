@@ -4,6 +4,8 @@ import org.assertj.swing.core.GenericTypeMatcher;
 import org.assertj.swing.finder.WindowFinder;
 import org.assertj.swing.fixture.FrameFixture;
 import org.assertj.swing.fixture.JMenuItemFixture;
+import org.assertj.swing.timing.Condition;
+import org.assertj.swing.timing.Timeout;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -121,7 +123,12 @@ public class EditorTest extends StudioTest {
         //tear down
         newFrameFixture.close();
         optionPaneButtonClick("No");
-        pause(50, TimeUnit.MILLISECONDS); // wait as closure happens asynchronously
-        newFrameFixture.requireNotVisible();
+
+        pause(new Condition("Wait till new window is closed") {
+            @Override
+            public boolean test() {
+                return !execute(newFrameFixture.target()::isVisible);
+            }
+        }, Timeout.timeout(1, TimeUnit.SECONDS));
     }
 }
