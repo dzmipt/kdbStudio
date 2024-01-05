@@ -300,6 +300,7 @@ public class EditorsPanel extends JPanel {
         int choice = StudioOptionPane.showYesNoCancelDialog(editor.getPane(),
                 editor.getTitle() + " is changed. Save changes?","Save changes?");
 
+        log.info("checkAndSaveTab choice={}", choice);
         if (choice == JOptionPane.CANCEL_OPTION || choice == JOptionPane.CLOSED_OPTION) return false;
 
         if (choice == JOptionPane.YES_OPTION) {
