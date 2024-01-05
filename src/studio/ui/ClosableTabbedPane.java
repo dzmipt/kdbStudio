@@ -1,8 +1,11 @@
 package studio.ui;
 
 import javax.swing.*;
+import java.awt.event.KeyEvent;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
+
+import static javax.swing.JComponent.WHEN_ANCESTOR_OF_FOCUSED_COMPONENT;
 
 public class ClosableTabbedPane {
 
@@ -50,6 +53,13 @@ public class ClosableTabbedPane {
                 return false;
             }
         });
+
+        tabbedPane.getInputMap(WHEN_ANCESTOR_OF_FOCUSED_COMPONENT).put(KeyStroke.getKeyStroke(KeyEvent.VK_W, StudioWindow.menuShortcutKeyMask | KeyEvent.SHIFT_MASK), "closeTab");
+        tabbedPane.getActionMap().put("closeTab",
+                UserAction.create("Close tab", e -> {
+                    int index = tabbedPane.getSelectedIndex();
+                    if (index != -1) closeTabAction.close(index, true);
+                })  );
 
     }
 
