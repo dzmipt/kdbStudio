@@ -11,8 +11,10 @@ import org.junit.Test;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
+import java.util.concurrent.TimeUnit;
 
 import static org.assertj.swing.edt.GuiActionRunner.execute;
+import static org.assertj.swing.timing.Pause.pause;
 import static org.junit.Assert.assertEquals;
 
 public class EditorTest extends StudioTest {
@@ -112,11 +114,14 @@ public class EditorTest extends StudioTest {
         newFrameFixture.textBox("editor1").enterText("x");
         newFrameFixture.menuItem("Close Window").click();
         optionPaneButtonClick("Cancel");
+
+        pause(50, TimeUnit.MILLISECONDS); // wait as closure happens asynchronously
         newFrameFixture.requireVisible();
 
         //tear down
         newFrameFixture.close();
         optionPaneButtonClick("No");
+        pause(50, TimeUnit.MILLISECONDS); // wait as closure happens asynchronously
         newFrameFixture.requireNotVisible();
     }
 }
