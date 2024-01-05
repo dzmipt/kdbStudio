@@ -122,6 +122,7 @@ public class EditorTest extends StudioTest {
 
         //tear down
         newFrameFixture.close();
+        pause(50, TimeUnit.MILLISECONDS); // wait as closure happens asynchronously
         optionPaneButtonClick("No");
 
         pause(new Condition("Wait till new window is closed") {
