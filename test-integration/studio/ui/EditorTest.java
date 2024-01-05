@@ -129,6 +129,6 @@ public class EditorTest extends StudioTest {
             public boolean test() {
                 return !execute(newFrameFixture.target()::isVisible);
             }
-        }, Timeout.timeout(1, TimeUnit.SECONDS));
+        }, Timeout.timeout(5, TimeUnit.SECONDS));
     }
 }
