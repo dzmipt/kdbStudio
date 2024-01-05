@@ -47,7 +47,7 @@ public class QGrid extends JPanel implements MouseWheelListener, SearchPanelList
     private final JPopupMenu popupMenu = new JPopupMenu();
     private final UserAction copyExcelFormatAction;
     private final UserAction copyHtmlFormatAction;
-    private final UserAction showSeparateAction;
+    private final TableUserAction showSeparateAction;
 
     private long doubleClickTimeout;
 
@@ -246,6 +246,7 @@ public class QGrid extends JPanel implements MouseWheelListener, SearchPanelList
                     formatContextForCell.setShowType(b instanceof K.KBaseVector);
                     Util.copyTextToClipboard(b.toString(formatContextForCell));
                 } else {
+                    showSeparateAction.setLocation(row, col);
                     showSeparateAction.actionPerformed(null);
                 }
             }
