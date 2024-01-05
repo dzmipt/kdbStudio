@@ -561,7 +561,7 @@ public class StudioWindow extends JFrame implements WindowListener {
                         Server newServer = f.getServer();
                         CONFIG.addServer(newServer);
                         setServer(newServer);
-                        rerfreshAll();
+                        refreshAll();
                     }
                 });
 
@@ -574,7 +574,7 @@ public class StudioWindow extends JFrame implements WindowListener {
                         Server s = f.getServer();
                         CONFIG.addServer(s);
                         setServer(s);
-                        rerfreshAll();
+                        refreshAll();
                     }
                 });
 
@@ -597,7 +597,7 @@ public class StudioWindow extends JFrame implements WindowListener {
                         if (servers.length > 0)
                             setServer(servers[0]);
 
-                        rerfreshAll();
+                        refreshAll();
                     }
                 });
 
@@ -845,7 +845,7 @@ public class StudioWindow extends JFrame implements WindowListener {
 
     }
 
-    public static void rerfreshAll() {
+    public static void refreshAll() {
         for (StudioWindow window: allWindows) {
             window.refreshMenu();
             window.refreshServerList();
@@ -926,7 +926,7 @@ public class StudioWindow extends JFrame implements WindowListener {
                     clone = f.getServer();
                     CONFIG.addServer(clone);
                     setServer(clone);
-                    rerfreshAll();
+                    refreshAll();
                 }
             });
 
