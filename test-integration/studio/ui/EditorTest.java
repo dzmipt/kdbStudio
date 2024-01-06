@@ -1,5 +1,7 @@
 package studio.ui;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.assertj.swing.core.GenericTypeMatcher;
 import org.assertj.swing.finder.WindowFinder;
 import org.assertj.swing.fixture.FrameFixture;
@@ -22,6 +24,7 @@ import static org.junit.Assert.assertEquals;
 public class EditorTest extends StudioTest {
 
     private static File unixFile, winFile, mac9File;
+    private static final Logger log = LogManager.getLogger();
 
     private static File createFile(String content) throws IOException {
         File file = File.createTempFile("kdbStudioFileLineEnding", ".q");
@@ -121,9 +124,13 @@ public class EditorTest extends StudioTest {
         newFrameFixture.requireVisible();
 
         //tear down
+        log.info("Before close");
         newFrameFixture.close();
+        log.info("After close");
         pause(50, TimeUnit.MILLISECONDS); // wait as closure happens asynchronously
+        log.info("Before No click");
         optionPaneButtonClick("No");
+        log.info("After No click");
 
         pause(new Condition("Wait till new window is closed") {
             @Override
