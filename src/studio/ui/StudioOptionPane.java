@@ -1,11 +1,14 @@
 package studio.ui;
 
-import java.awt.Component;
-import java.awt.Container;
-import java.awt.event.ActionEvent;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
 import javax.swing.*;
+import java.awt.*;
+import java.awt.event.ActionEvent;
 import java.awt.event.KeyEvent;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
 
 import static javax.swing.JComponent.WHEN_ANCESTOR_OF_FOCUSED_COMPONENT;
 
@@ -67,6 +70,22 @@ public class StudioOptionPane {
     public static final int CANCEL_RESULT = 1;
     public static final int IGNOREALL_RESULT = 2;
 
+    private static boolean mocked = false;
+    private static int mockedResult = JOptionPane.OK_OPTION;
+
+    private final static Logger log = LogManager.getLogger();
+
+    public static void setMocked(boolean isMocked) {
+        if (mocked == isMocked) return;
+        mocked = isMocked;
+        log.info("setMocked: {}", isMocked);
+    }
+
+    public static void setMockedResult(int result) {
+        setMocked(true);
+        mockedResult = result;
+    }
+
     public static void showError(String message, String title) {
         showError(null, message, title);
     }
@@ -112,6 +131,8 @@ public class StudioOptionPane {
     }
 
     public static int showOptionDialog(Component parentComponent, Object message, String title, int messageType, Icon icon, Option[] options, Option initialValue) {
+        if (mocked) return mockedResult;
+
         JOptionPane pane = new JOptionPane(message, messageType, JOptionPane.DEFAULT_OPTION, icon, options, initialValue);
         ArrayList<JButton> buttons = new ArrayList<>();
         findButtons(buttons, pane);

@@ -6,12 +6,11 @@ import org.assertj.swing.core.GenericTypeMatcher;
 import org.assertj.swing.finder.WindowFinder;
 import org.assertj.swing.fixture.FrameFixture;
 import org.assertj.swing.fixture.JMenuItemFixture;
-import org.assertj.swing.timing.Condition;
-import org.assertj.swing.timing.Timeout;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
+import javax.swing.*;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -106,8 +105,14 @@ public class EditorTest extends StudioTest {
         frameFixture.button("toolbarUndo").requireEnabled();
     }
 
+    @AfterClass
+    public static void resetMockedOptionPane() {
+        StudioOptionPane.setMocked(false);
+    }
+
     @Test
     public void testCancelOnFrameClosure() {
+        StudioOptionPane.setMocked(true);
         frameFixture.menuItem("New Window").click();
         FrameFixture newFrameFixture = WindowFinder.findFrame(
                 new GenericTypeMatcher<StudioWindow>(StudioWindow.class, true) {
@@ -117,26 +122,22 @@ public class EditorTest extends StudioTest {
                         }
         }).using(robot());
         newFrameFixture.textBox("editor1").enterText("x");
-        newFrameFixture.menuItem("Close Window").click();
-        optionPaneButtonClick("Cancel");
 
+        StudioOptionPane.setMockedResult(JOptionPane.CANCEL_OPTION);
+        newFrameFixture.menuItem("Close Window").click();
         pause(50, TimeUnit.MILLISECONDS); // wait as closure happens asynchronously
         newFrameFixture.requireVisible();
 
-        //tear down
-        log.info("Before close");
-        newFrameFixture.close();
-        log.info("After close");
+        StudioOptionPane.setMockedResult(JOptionPane.CLOSED_OPTION);
+        newFrameFixture.menuItem("Close Window").click();
         pause(50, TimeUnit.MILLISECONDS); // wait as closure happens asynchronously
-        log.info("Before No click");
-        optionPaneButtonClick("No");
-        log.info("After No click");
+        newFrameFixture.requireVisible();
 
-        pause(new Condition("Wait till new window is closed") {
-            @Override
-            public boolean test() {
-                return !execute(newFrameFixture.target()::isVisible);
-            }
-        }, Timeout.timeout(5, TimeUnit.SECONDS));
+
+        //tear down
+        StudioOptionPane.setMockedResult(JOptionPane.NO_OPTION);
+        newFrameFixture.close();
+        pause(50, TimeUnit.MILLISECONDS); // wait as closure happens asynchronously
+        newFrameFixture.requireNotVisible();
     }
 }
