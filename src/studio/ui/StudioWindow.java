@@ -833,14 +833,11 @@ public class StudioWindow extends JFrame implements WindowListener {
         if (allWindows.size() == 1) {
             quit();
         } else {
-//            log.info("SW: Before close tab");
             boolean result = execute(editorTab -> editorTab.getEditorsPanel().closeTab(editorTab));
             if (!result) return;
-            log.info("StudioWindow closing");
             //  closing the last tab would trigger this code again
             if (allWindows.contains(this)) {
                 allWindows.remove(this);
-                log.info("StudioWindow disposing");
                 dispose();
                 refreshAllMenus();
             }
