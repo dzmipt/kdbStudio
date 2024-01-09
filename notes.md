@@ -1,3 +1,5 @@
+ `dz4.0` 2024.01.09
+-----
 * Drill down for complex results (with double click or popup menu)
 * Rework kdb connection logic
     * No IPC protocol downgrade in case of first attempt failure
