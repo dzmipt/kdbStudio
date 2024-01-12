@@ -4,8 +4,6 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import javax.swing.*;
-import java.beans.PropertyChangeEvent;
-import java.beans.PropertyChangeListener;
 
 public class Toolbar extends JToolBar {
 
@@ -15,6 +13,12 @@ public class Toolbar extends JToolBar {
     public JButton add(Action a) {
         JButton btn = super.add(a);
         updateTooltipTest(btn);
+
+        a.addPropertyChangeListener( e-> {
+            if (e.getPropertyName() == Action.ACCELERATOR_KEY) {
+                updateTooltipTest(btn);
+            }
+        });
 
         return btn;
     }
@@ -30,15 +34,4 @@ public class Toolbar extends JToolBar {
         btn.setToolTipText(tooltip);
     }
 
-    @Override
-    protected PropertyChangeListener createActionChangeListener(JButton b) {
-        return new PropertyChangeListener() {
-            @Override
-            public void propertyChange(PropertyChangeEvent evt) {
-                if (evt.getPropertyName() == Action.ACCELERATOR_KEY) {
-                    updateTooltipTest(b);
-                }
-            }
-        };
-    }
 }
