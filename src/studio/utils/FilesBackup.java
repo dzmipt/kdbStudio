@@ -3,6 +3,7 @@ package studio.utils;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import studio.utils.log4j.EnvConfig;
 
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -20,6 +21,8 @@ import static java.nio.file.StandardCopyOption.REPLACE_EXISTING;
 
 public class FilesBackup {
 
+    private static final String BACKUP_FOLDER = "backup";
+
     protected static long BACKUP_PERIOD_MILLIS = 24*60*60*1000L; // ond day
     private final static int RETAIN_BACKUP_HISTORY_DAYS = 14; // keep the last 2 weeks
 
@@ -31,12 +34,18 @@ public class FilesBackup {
     //Useful in tests
     private static boolean enabled = true;
 
+    private static final FilesBackup instance = new FilesBackup(EnvConfig.getFilepath(BACKUP_FOLDER));
+
+    public static FilesBackup getInstance() {
+        return instance;
+    }
+
     public static void setEnabled(boolean enabled) {
         log.info("setEnabled {}", enabled);
         FilesBackup.enabled = enabled;
     }
 
-    public FilesBackup(String backupFolder) {
+    protected FilesBackup(String backupFolder) {
         backupDirPath = Paths.get(backupFolder);
         if (!enabled) return;
 
@@ -90,7 +99,7 @@ public class FilesBackup {
         };
     }
 
-    public void backup(String filename) throws IOException {
+    protected void backup(String filename) throws IOException {
         if (!enabled) return;
 
         if (Files.notExists(Paths.get(filename))) return;

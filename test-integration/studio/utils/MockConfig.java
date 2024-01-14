@@ -9,16 +9,19 @@ import org.apache.logging.log4j.core.appender.RollingFileAppender;
 import studio.kdb.Config;
 import studio.kdb.Workspace;
 
+import java.io.File;
+import java.io.IOException;
+
 public class MockConfig extends Config {
 
     private static boolean initialized = false;
 
-    public static synchronized void init() {
+    public static synchronized void init() throws IOException {
         if (initialized) return;
 
         FilesBackup.setEnabled(false);
-
-        Config.instance = new MockConfig();
+        File configFileName = File.createTempFile("kdbStudio", ".properties");
+        Config.instance = new MockConfig(configFileName.getAbsolutePath());
         LoggerContext context = LoggerContext.getContext(false);
         for (Logger logger: context.getLoggers() ) {
             Appender[] appenders = logger.getAppenders().values().toArray(new Appender[0]);
@@ -36,13 +39,8 @@ public class MockConfig extends Config {
 
     private Workspace workspace;
 
-    private MockConfig() {
-        super("");
-    }
-
-    @Override
-    protected void load(String filename) {
-        // nothing
+    private MockConfig(String filename) {
+        super(filename);
     }
 
     @Override
