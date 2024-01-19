@@ -1318,11 +1318,12 @@ public class StudioWindow extends JFrame implements WindowListener {
 
         toolbar = createToolbar();
         editorSearchPanel = new SearchPanel( () -> editor.getPane() );
+        editorSearchPanel.setName("SearchPanel");
         mainStatusBar = new MainStatusBar();
         tabbedPane = initResultPane();
         resultSearchPanel = initResultSearchPanel();
 
-        // We need to have some editor initialize to prevent NPE
+        // We need to have some editor initialized to prevent NPE
         editor = new EditorTab(this);
         initToolbar();
         topPanel = new JPanel(new BorderLayout());

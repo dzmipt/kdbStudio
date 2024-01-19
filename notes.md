@@ -1,4 +1,6 @@
- `dz4.0` 2024.01.09
+* Fixed bug with sequential replace action in the editor
+
+`dz4.0` 2024.01.09
 -----
 * Drill down for complex results (with double click or popup menu)
 * Rework kdb connection logic

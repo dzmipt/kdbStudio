@@ -48,6 +48,7 @@ public class SearchPanel extends JPanel {
         txtFind = new JTextField();
         txtFind.setName("FindField");
         txtReplace = new JTextField();
+        txtReplace.setName("ReplaceField");
 
         JLabel lblFind = new JLabel("Find: ");
         lblReplace = new JLabel("Replace: " );
@@ -62,9 +63,12 @@ public class SearchPanel extends JPanel {
         JButton btnFind = new JButton(findAction);
         btnFind.setName("FindButton");
         JButton btnFindBack = new JButton(findBackAction);
+        btnFindBack.setName("FindBackButton");
         JButton btnMarkAll = new JButton(markAllAction);
         btnReplace = new JButton(replaceAction);
+        btnReplace.setName("ReplaceButton");
         btnReplaceAll = new JButton(replaceAllAction);
+        btnReplaceAll.setName("ReplaceAllButton");
         JButton btnClose = new JButton(closeAction);
 
         ActionMap am = txtFind.getActionMap();

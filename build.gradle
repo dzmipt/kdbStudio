@@ -49,6 +49,9 @@ sourceSets {
         java {
             srcDirs 'test-integration'
         }
+        resources {
+            srcDirs 'test-resources'
+        }
         compileClasspath += main.output
         runtimeClasspath += main.output
     }

@@ -29,4 +29,9 @@ public class Position {
         Position p = (Position) obj;
         return column == p.getColumn() && row == p.getRow();
     }
+
+    @Override
+    public String toString() {
+        return "[" + row + ":" + column + "]";
+    }
 }
