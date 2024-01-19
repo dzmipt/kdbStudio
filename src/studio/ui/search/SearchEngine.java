@@ -9,50 +9,33 @@ import java.util.regex.PatternSyntaxException;
 
 public class SearchEngine {
 
-    private String what;
     private final boolean wholeWord;
-    private final boolean matchCase;
-    private Pattern pattern = null;
+    private final Pattern pattern;
 
     public SearchEngine(SearchContext context) throws PatternSyntaxException {
-        what = context.getSearchFor();
-        matchCase = context.getMatchCase();
         wholeWord = context.getWholeWord();
 
-        if (context.isRegularExpression()) {
-            pattern = Pattern.compile(what, matchCase ? 0 : Pattern.CASE_INSENSITIVE);
-        } else {
-            if (!matchCase) what = what.toLowerCase();
-        }
+        int flags = context.getMatchCase() ? 0 : Pattern.CASE_INSENSITIVE;
+        flags |= context.isRegularExpression() ? 0 : Pattern.LITERAL;
+        pattern = Pattern.compile(context.getSearchFor(), flags);
 
     }
 
-    public boolean containsIn(String text) {
+    public SearchResult search(String text) {
+        return search(text, 0);
+    }
 
-        Matcher matcher = null;
-        if (pattern != null) {
-            matcher = pattern.matcher(text);
-        } else {
-            if (!matchCase) {
-                text = text.toLowerCase();
-            }
-        }
+    public SearchResult search(String text, int from) {
+        Matcher matcher = pattern.matcher(text);
 
-        int pos = 0;
+        int pos = from;
         while (pos<text.length()) {
-            int start, end;
-            if (matcher != null) {
-                if (!matcher.find(pos)) return false;
-                start = matcher.start();
-                end = matcher.end();
-            } else {
-                start = text.indexOf(what, pos);
-                if (start == -1) return false;
-                end = start + what.length();
-            }
+            if (!matcher.find(pos)) return SearchResult.NOT_FOUND;
+            int start = matcher.start();
+            int end = matcher.end();
 
             if (!wholeWord) {
-                return true;
+                return new SearchResult(matcher);
             } else {
                 boolean startWord = true;
                 if (start > 0) {
@@ -62,11 +45,15 @@ public class SearchEngine {
                 if (end < text.length()) {
                     endWord = !Character.isLetterOrDigit(text.charAt(end));
                 }
-                if (startWord && endWord) return true;
+                if (startWord && endWord) return new SearchResult(matcher);
             }
             pos = end;
         }
 
-        return false;
+        return SearchResult.NOT_FOUND;
+    }
+
+    public boolean containsIn(String text) {
+        return search(text).found();
     }
 }

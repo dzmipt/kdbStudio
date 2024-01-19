@@ -72,4 +72,25 @@ public class SearchEngineTest {
         assertTrue(engine.containsIn("baa aa"));
     }
 
+    @Test
+    public void testSimpleWithSpecSymbols() {
+        context.setSearchFor("(aa");
+        SearchEngine engine = new SearchEngine(context);
+        assertTrue(engine.containsIn("(aa"));
+        assertTrue(engine.containsIn("(a a(aa"));
+        assertFalse(engine.containsIn("(a a(aA"));
+        assertFalse(engine.containsIn("x(a ax"));
+    }
+
+    @Test
+    public void testSimpleWithSpecSymbolsCaseInsensitive() {
+        context.setSearchFor("(aa");
+        context.setMatchCase(false);
+        SearchEngine engine = new SearchEngine(context);
+        assertTrue(engine.containsIn("(aa"));
+        assertTrue(engine.containsIn("(a a(aa"));
+        assertTrue(engine.containsIn("(a a(aA"));
+        assertFalse(engine.containsIn("x(a ax"));
+    }
+
 }
