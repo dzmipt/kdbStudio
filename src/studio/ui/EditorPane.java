@@ -113,10 +113,19 @@ public class EditorPane extends JPanel implements MouseWheelListener, SearchPane
         SearchResult result;
         if (action == SearchAction.Find) {
             result = SearchEngine.find(textArea, context);
+        } else if (action == SearchAction.FindContinues) {
+            textArea.setSelectionEnd(textArea.getSelectionStart());
+            result = SearchEngine.find(textArea, context);
         } else {
             try {
                 if (action == SearchAction.Replace) {
-                    result = SearchEngine.replace(textArea, context);
+                    int selStart = textArea.getSelectionStart();
+                    int selEnd = textArea.getSelectionEnd();
+                    textArea.setSelectionEnd(selStart);
+                    result = SearchEngine.find(textArea, context);
+                    if (selStart == textArea.getSelectionStart() && selEnd == textArea.getSelectionEnd()) {
+                        result = SearchEngine.replace(textArea, context);
+                    }
                 } else { //ReplaceAll
                     result = SearchEngine.replaceAll(textArea, context);
                 }

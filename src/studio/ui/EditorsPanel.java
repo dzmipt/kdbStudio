@@ -14,7 +14,6 @@ import studio.utils.FileReaderWriter;
 
 import javax.swing.*;
 import javax.swing.event.DocumentEvent;
-import javax.swing.event.DocumentListener;
 import javax.swing.filechooser.FileNameExtensionFilter;
 import javax.swing.text.JTextComponent;
 import java.awt.*;
@@ -481,20 +480,14 @@ public class EditorsPanel extends JPanel {
     }
 
 
-    private static class MarkingDocumentListener implements DocumentListener {
+    private static class MarkingDocumentListener extends DocumentChangeListener {
         private final EditorTab editor;
         public MarkingDocumentListener(EditorTab editor) {
             this.editor = editor;
         }
-        private void update() {
+        @Override
+        public void documentChanged(DocumentEvent e) {
             editor.setModified(true);
-        }
-        public void changedUpdate(DocumentEvent evt) { update(); }
-        public void insertUpdate(DocumentEvent evt) {
-            update();
-        }
-        public void removeUpdate(DocumentEvent evt) {
-            update();
         }
     }
 

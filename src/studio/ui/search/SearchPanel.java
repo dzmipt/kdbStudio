@@ -1,6 +1,9 @@
 package studio.ui.search;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.fife.ui.rtextarea.SearchContext;
+import studio.ui.DocumentChangeListener;
 import studio.ui.GroupLayoutSimple;
 import studio.ui.UserAction;
 import studio.ui.Util;
@@ -8,6 +11,7 @@ import studio.ui.Util;
 import javax.swing.*;
 import javax.swing.border.Border;
 import javax.swing.border.EtchedBorder;
+import javax.swing.event.DocumentEvent;
 import java.awt.event.KeyEvent;
 
 public class SearchPanel extends JPanel {
@@ -22,6 +26,8 @@ public class SearchPanel extends JPanel {
     private JTextField txtReplace;
 
     private final EditorPaneLocator editorPaneLocator;
+
+    private final static Logger log = LogManager.getLogger();
 
     private static final Border ICON_BORDER = BorderFactory.createCompoundBorder(
             BorderFactory.createEtchedBorder(EtchedBorder.LOWERED),
@@ -84,6 +90,13 @@ public class SearchPanel extends JPanel {
         am.put("closeAction", closeAction);
         im.put(KeyStroke.getKeyStroke(KeyEvent.VK_ENTER,0),"replaceAction");
         im.put(KeyStroke.getKeyStroke(KeyEvent.VK_ESCAPE,0),"closeAction");
+
+        txtFind.getDocument().addDocumentListener(new DocumentChangeListener() {
+            @Override
+            public void documentChanged(DocumentEvent e) {
+                findContinues();
+            }
+        });
 
         GroupLayoutSimple layout = new GroupLayoutSimple(this);
         layout.setAutoCreateGaps(false);
@@ -148,6 +161,11 @@ public class SearchPanel extends JPanel {
         SearchContext context = buildSearchContext();
         context.setSearchForward(forward);
         doSearch(context, SearchAction.Find);
+    }
+
+    private void findContinues() {
+        SearchContext context = buildSearchContext();
+        doSearch(context, SearchAction.FindContinues);
     }
 
     private void markAll() {

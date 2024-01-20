@@ -1,4 +1,5 @@
-* Fixed bug with sequential replace action in the editor
+* Implement continuous search
+    * Fixed the bug with sequential replace action in the editor
 
 `dz4.0` 2024.01.09
 -----

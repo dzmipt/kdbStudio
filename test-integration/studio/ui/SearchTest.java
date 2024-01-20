@@ -71,9 +71,7 @@ public class SearchTest  extends StudioTest {
 
     @Test
     public void testSequentialSearch() throws BadLocationException {
-        searchPanel.textBox("FindField").setText("select");
-
-        searchPanel.button("FindButton").click();
+        searchPanel.textBox("FindField").enterText("select");
         Selection selection = getSelection(editor);
         assertEquals(new Selection(1,0,1,6), selection);
 
