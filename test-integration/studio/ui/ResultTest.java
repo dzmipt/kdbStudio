@@ -72,7 +72,6 @@ public class ResultTest extends StudioTest {
 
         JPanelFixture resultSearchPanel = frameFixture.panel("ResultSearchPanel");
         resultSearchPanel.textBox("FindField").enterText("5");
-        resultSearchPanel.button("FindButton").click();
 
         Color bgAfter = table.backgroundAt(TableCell.row(1).column(0)).target();
 
