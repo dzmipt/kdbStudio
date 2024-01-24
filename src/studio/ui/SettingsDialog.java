@@ -33,6 +33,7 @@ public class SettingsDialog extends EscapeDialog {
     private JCheckBox chBoxRTSAAnimateBracketMatching;
     private JCheckBox chBoxRTSAHighlightCurrentLine;
     private JCheckBox chBoxRTSAWordWrap;
+    private JCheckBox chBoxRTSAInsertPairedChar;
     private JComboBox<CustomiszedLookAndFeelInfo> comboBoxLookAndFeel;
     private JFormattedTextField txtTabsCount;
     private JFormattedTextField txtMaxCharsInResult;
@@ -169,6 +170,9 @@ public class SettingsDialog extends EscapeDialog {
         chBoxRTSAWordWrap = new JCheckBox("Word wrap");
         chBoxRTSAWordWrap.setSelected(CONFIG.getBoolean(Config.RSTA_WORD_WRAP));
 
+        chBoxRTSAInsertPairedChar = new JCheckBox("Insert paired () {} [] \"\" on selection");
+        chBoxRTSAInsertPairedChar.setSelected(CONFIG.getBoolean(Config.RSTA_INSERT_PAIRED_CHAR));
+
         NumberFormatter formatter = new NumberFormatter();
         formatter.setMinimum(1);
 
@@ -284,7 +288,8 @@ public class SettingsDialog extends EscapeDialog {
         layout = new GroupLayoutSimple(pnlEditor);
         layout.setStacks(
                 new GroupLayoutSimple.Stack()
-                        .addLineAndGlue(chBoxRTSAAnimateBracketMatching, chBoxRTSAHighlightCurrentLine, chBoxRTSAWordWrap)
+                        .addLineAndGlue(chBoxRTSAAnimateBracketMatching, chBoxRTSAHighlightCurrentLine,
+                                        chBoxRTSAWordWrap, chBoxRTSAInsertPairedChar)
                         .addLineAndGlue(chBoxEmulateTab, txtEmulatedTabSize, chBoxReplaceTabOnOpen)
                         .addLineAndGlue(lblDefaultLineEnding, comboBoxLineEnding)
                         .addLineAndGlue(lblExecAll, comboBoxExecAll)
@@ -359,6 +364,7 @@ public class SettingsDialog extends EscapeDialog {
         boolean changedEditor = CONFIG.setBoolean(Config.RSTA_ANIMATE_BRACKET_MATCHING, isAnimateBracketMatching());
         changedEditor |= CONFIG.setBoolean(Config.RSTA_HIGHLIGHT_CURRENT_LINE, isHighlightCurrentLine());
         changedEditor |= CONFIG.setBoolean(Config.RSTA_WORD_WRAP, isWordWrap());
+        changedEditor |= CONFIG.setBoolean(Config.RSTA_INSERT_PAIRED_CHAR, chBoxRTSAInsertPairedChar.isSelected());
         changedEditor |= editorFontSelection.saveSettings();
         changedEditor |= CONFIG.setBoolean(Config.EDITOR_TAB_EMULATED, chBoxEmulateTab.isSelected());
         changedEditor |= CONFIG.setInt(Config.EDITOR_TAB_SIZE, (Integer)txtEmulatedTabSize.getValue());

@@ -1,3 +1,4 @@
+* New setting to disable insert of paired character into the editor
 * Implement continuous search
     * Fixed the bug with sequential replace action in the editor
 

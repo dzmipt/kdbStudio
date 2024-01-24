@@ -21,6 +21,11 @@ import java.awt.event.InputEvent;
 import java.awt.event.KeyEvent;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
+import java.util.ListIterator;
+import java.util.stream.Collectors;
+
+import static org.fife.ui.rsyntaxtextarea.RSyntaxTextAreaEditorKit.*;
 
 public class RSTextAreaFactory {
 
@@ -29,9 +34,36 @@ public class RSTextAreaFactory {
 
     private static final ActionMap actionMap;
 
+
     static {
         java.util.List<Action> actions = new ArrayList<>();
         actions.addAll(Arrays.asList(new RSyntaxTextAreaEditorKit().getActions()));
+
+        List<String> wrongInsPairCharActionName = new ArrayList<>();
+        for (ListIterator<Action> iterator = actions.listIterator(); iterator.hasNext(); ) {
+            Action action = iterator.next();
+            if (action instanceof InsertPairedCharacterAction) {
+                wrongInsPairCharActionName.add(((InsertPairedCharacterAction) action).getName());
+                iterator.remove();
+            }
+        }
+
+        List<InsertPairedCharacterAction> insertPairedActions = Arrays.asList(
+                new InsertPairedCharacterAction(rstaOpenParenAction, '(', ')'),
+                new InsertPairedCharacterAction(rstaOpenSquareBracketAction, '[', ']'),
+                new InsertPairedCharacterAction(rstaOpenCurlyAction, '{', '}'),
+                new InsertQuoteAction(rstaDoubleQuoteAction, InsertQuoteAction.QuoteType.DOUBLE_QUOTE)
+// We should not wrap ` and '
+//                new InsertQuoteAction(rstaSingleQuoteAction, RSyntaxTextAreaEditorKit.InsertQuoteAction.QuoteType.SINGLE_QUOTE),
+//                new InsertQuoteAction(rstaBacktickAction, RSyntaxTextAreaEditorKit.InsertQuoteAction.QuoteType.BACKTICK)
+        );
+
+        wrongInsPairCharActionName.removeAll(
+                insertPairedActions.stream().map(RecordableTextAction::getName).collect(Collectors.toList())
+        );
+
+        actions.addAll(insertPairedActions);
+
         actions.add(new CopyCutAsStyledTextAction(false));
         actions.add(new CopyCutAsStyledTextAction(true));
 
@@ -73,6 +105,14 @@ public class RSTextAreaFactory {
         inputMap.put(KeyStroke.getKeyStroke(KeyEvent.VK_R,      defaultModifier), FindReplaceAction.replaceAction);
         inputMap.put(KeyStroke.getKeyStroke(KeyEvent.VK_ESCAPE,      0), HideSearchPanelAction.action);
 
+
+        for (KeyStroke ks: inputMap.allKeys() ) {
+            Object action = inputMap.get(ks);
+            if (wrongInsPairCharActionName.contains(action)) {
+                inputMap.remove(ks);
+            }
+        }
+
         UIManager.put("RSyntaxTextAreaUI.inputMap", inputMap);
 
         FoldParserManager.get().addFoldParserMapping(RSTokenMaker.CONTENT_TYPE, new CurlyFoldParser());
@@ -106,6 +146,7 @@ public class RSTextAreaFactory {
         textArea.setTabsEmulated(Config.getInstance().getBoolean(Config.EDITOR_TAB_EMULATED));
         textArea.setTabSize(Config.getInstance().getInt(Config.EDITOR_TAB_SIZE));
 
+        textArea.setInsertPairedCharacters(Config.getInstance().getBoolean(Config.RSTA_INSERT_PAIRED_CHAR));
         return textArea;
     }
 
@@ -158,7 +199,7 @@ public class RSTextAreaFactory {
                 try {
                     textArea.getDocument().remove(selStart, selEnd - selStart);
                 } catch (BadLocationException ex) {
-                    System.err.println("Ups... That's not expected: " + ex);
+                    System.err.println("Oops... That's not expected: " + ex);
                     ex.printStackTrace();
                 }
             }

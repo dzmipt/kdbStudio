@@ -766,6 +766,8 @@ public class StudioWindow extends JFrame implements WindowListener {
 
                 editor.setTabSize(CONFIG.getInt(Config.EDITOR_TAB_SIZE));
                 editor.setTabsEmulated(CONFIG.getBoolean(Config.EDITOR_TAB_EMULATED));
+
+                editor.setInsertPairedCharacters(CONFIG.getBoolean(Config.RSTA_INSERT_PAIRED_CHAR));
                 return true;
             });
     }
