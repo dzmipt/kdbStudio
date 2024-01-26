@@ -1,4 +1,5 @@
-* New setting to disable insert of paired character into the editor
+* Added line inspection (new popup menu in the table result)
+* New setting to disable insert of paired character in the editor
 * Implement continuous search
     * Fixed the bug with sequential replace action in the editor
 

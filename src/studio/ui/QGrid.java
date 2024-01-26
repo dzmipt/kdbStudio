@@ -47,7 +47,8 @@ public class QGrid extends JPanel implements MouseWheelListener, SearchPanelList
     private final JPopupMenu popupMenu = new JPopupMenu();
     private final UserAction copyExcelFormatAction;
     private final UserAction copyHtmlFormatAction;
-    private final TableUserAction showSeparateAction;
+    private final TableUserAction inspectCellAction;
+    private final TableUserAction inspectLineAction;
 
     private long doubleClickTimeout;
 
@@ -172,19 +173,21 @@ public class QGrid extends JPanel implements MouseWheelListener, SearchPanelList
         setLayout(new BorderLayout());
         add(scrollPane, BorderLayout.CENTER);
 
-        copyExcelFormatAction = UserAction.create("Copy (Excel format)",
+        copyExcelFormatAction = UserAction.create("Copy selection (Excel format)",
                 Util.COPY_ICON,"Copy the selected cells to the clipboard using Excel format",
                 KeyEvent.VK_E,null,
                 new CopyTableSelectionAction(CopyTableSelectionAction.Format.Excel, table));
 
-        copyHtmlFormatAction = UserAction.create("Copy (HTML)",
+        copyHtmlFormatAction = UserAction.create("Copy selection (HTML)",
                 Util.COPY_ICON, "Copy the selected cells to the clipboard using HTML",
                 KeyEvent.VK_H, null,
                 new CopyTableSelectionAction(CopyTableSelectionAction.Format.Html, table));
 
-        showSeparateAction = new TableUserAction.ShowSeparateAction(studioWindow, table);
+        inspectCellAction = new TableUserAction.InspectCellAction(studioWindow, table);
+        inspectLineAction = new TableUserAction.InspectLineAction(studioWindow, table);
 
-        popupMenu.add(showSeparateAction);
+        popupMenu.add(inspectCellAction);
+        popupMenu.add(inspectLineAction);
         popupMenu.add(new JMenuItem(copyExcelFormatAction));
         popupMenu.add(new JMenuItem(copyHtmlFormatAction));
 
@@ -246,8 +249,8 @@ public class QGrid extends JPanel implements MouseWheelListener, SearchPanelList
                     formatContextForCell.setShowType(b instanceof K.KBaseVector);
                     Util.copyTextToClipboard(b.toString(formatContextForCell));
                 } else {
-                    showSeparateAction.setLocation(row, col);
-                    showSeparateAction.actionPerformed(null);
+                    inspectCellAction.setLocation(row, col);
+                    inspectCellAction.actionPerformed(null);
                 }
             }
         });
