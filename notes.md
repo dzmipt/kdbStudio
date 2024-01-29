@@ -1,3 +1,5 @@
+`dz4.1` 2024.01.29
+-----
 * Added line inspection (new popup menu in the table result)
 * New setting to disable insert of paired character in the editor
 * Implement continuous search
