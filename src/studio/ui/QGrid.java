@@ -242,7 +242,8 @@ public class QGrid extends JPanel implements MouseWheelListener, SearchPanelList
                 int type = b.getType();
                 if ( (type >= -19 && type <= -1) ||
                         (type >= 101 && type <= 103 ) ||
-                        type == 10 ) {
+                        type == 10 ||
+                        type == 4) {
 
                     //@TODO: we shouldn't duplicate the logic here.
                     KFormatContext formatContextForCell = new KFormatContext(formatContext);
