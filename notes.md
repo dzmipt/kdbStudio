@@ -1,3 +1,5 @@
+* Persist location of the server list frame for every Studio window
+
 `dz4.1` 2024.01.29
 -----
 * Added line inspection (new popup menu in the table result)

@@ -8,7 +8,6 @@ import studio.core.DefaultAuthenticationMechanism;
 import studio.kdb.config.AbstractConfig;
 import studio.kdb.config.ActionOnExit;
 import studio.kdb.config.KdbMessageLimitAction;
-import studio.ui.ServerList;
 import studio.utils.*;
 import studio.utils.log4j.EnvConfig;
 
@@ -34,7 +33,6 @@ public class Config extends AbstractConfig {
     public static final String SHOW_SERVER_COMBOBOX = configDefault("showServerComboBox", ConfigType.BOOLEAN, true);
     public static final String AUTO_SAVE = configDefault("isAutoSave", ConfigType.BOOLEAN, false);
     public static final String ACTION_ON_EXIT = configDefault("actionOnExit", ConfigType.ENUM, ActionOnExit.SAVE);
-    public static final String SERVER_LIST_BOUNDS = configDefault("serverList", ConfigType.BOUNDS, new Dimension(ServerList.DEFAULT_WIDTH, ServerList.DEFAULT_HEIGHT));
     public static final String CHART_BOUNDS = configDefault("chartBounds", ConfigType.BOUNDS, 0.5);
     public static final String CELL_RIGHT_PADDING = configDefault("cellRightPadding", ConfigType.DOUBLE, 0.5);
     public static final String CELL_MAX_WIDTH = configDefault("cellMaxWidth", ConfigType.INT, 200);
@@ -368,6 +366,13 @@ public class Config extends AbstractConfig {
         }
     }
 
+    private void removeServerListConfig() {
+        config.remove("serverList.x");
+        config.remove("serverList.y");
+        config.remove("serverList.width");
+        config.remove("serverList.height");
+    }
+
     private void checkForUpgrade() {
         if (config.size() == 0) {
             log.info("Found no or empty config");
@@ -391,6 +396,7 @@ public class Config extends AbstractConfig {
         }
         initServerHistory();
         migrateSaveOnExit();
+        removeServerListConfig();
 
         config.setProperty("version", VERSION);
     }

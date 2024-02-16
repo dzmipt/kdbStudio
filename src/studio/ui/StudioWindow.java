@@ -1061,22 +1061,13 @@ public class StudioWindow extends JFrame implements WindowListener {
         }
     }
 
+    public ServerList getServerList() {
+        return serverList;
+    }
+
     private void showServerList(boolean selectHistory) {
-        if (serverList == null) {
-            serverList = new ServerList(this);
-        }
-        Rectangle bounds = Config.getInstance().getBounds(Config.SERVER_LIST_BOUNDS);
-        serverList.setBounds(bounds);
+        Server selectedServer = serverList.showServerTree(editor.getServer(), serverHistory, selectHistory);
 
-        serverList.updateServerTree(CONFIG.getServerTree(), editor.getServer());
-        serverList.updateServerHistory(serverHistory);
-        serverList.selectHistoryTab(selectHistory);
-        serverList.setVisible(true);
-
-        bounds = serverList.getBounds();
-        CONFIG.setBounds(Config.SERVER_LIST_BOUNDS, bounds);
-
-        Server selectedServer = serverList.getSelectedServer();
         if (selectedServer == null || selectedServer.equals(editor.getServer())) return;
 
         setServer(selectedServer);
@@ -1355,6 +1346,7 @@ public class StudioWindow extends JFrame implements WindowListener {
         topPanel.add(rootEditorsPanel, BorderLayout.CENTER);
 
         initFrame(workspaceWindow.getLocation(), toolbar, splitpane, mainStatusBar);
+        serverList = new ServerList(this, workspaceWindow.getServerListBounds());
         splitpane.setDividerLocation(workspaceWindow.getResultDividerLocation());
 
         rootEditorsPanel.loadDividerLocation(workspaceWindow);
@@ -1743,6 +1735,7 @@ public class StudioWindow extends JFrame implements WindowListener {
             Workspace.TopWindow workspaceWindow = workspace.addWindow(window == activeWindow);
             workspaceWindow.setResultDividerLocation(Util.getDividerLocation(window.splitpane));
             workspaceWindow.setLocation(window.getBounds());
+            workspaceWindow.setServerListBounds(window.getServerList().getBounds());
             window.rootEditorsPanel.getWorkspace(workspaceWindow);
         }
         return workspace;

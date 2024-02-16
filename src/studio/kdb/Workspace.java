@@ -22,6 +22,7 @@ public class Workspace {
     private final static String Y = "y";
     private final static String WIDTH = "width";
     private final static String HEIGHT = "height";
+    private final static String SERVER_LIST = "serverlist.";
     private final static String WINDOW = "window";
     private final static String TAB = "tab";
     private final static String LEFT = "left";
@@ -37,6 +38,7 @@ public class Workspace {
     private final static String LINE_ENDING = "lineEnding";
     private final static String CARET = "caret";
 
+    private final static Rectangle DEFAULT_BOUNDS = new Rectangle(-1,-1,0,0);
 
     private final static Logger log = LogManager.getLogger();
 
@@ -64,12 +66,36 @@ public class Workspace {
         }
     }
 
+    private static void setInt(Properties p, String key, int value) {
+        p.setProperty(key, Integer.toString(value));
+    }
+
     private static double getDouble(Properties p, String key, double defValue) {
         try {
             return Double.parseDouble(p.getProperty(key, "" + defValue));
         } catch (NumberFormatException e) {
             return defValue;
         }
+    }
+
+    private static void setDouble(Properties p, String key, double value) {
+        p.setProperty(key, Double.toString(value));
+    }
+
+    private static Rectangle getBounds(Properties p, String prefix, Rectangle defValue) {
+        int x = getInt(p, prefix + X, defValue.x);
+        int y = getInt(p, prefix + Y, defValue.y);
+        int width = getInt(p, prefix + WIDTH, defValue.width);
+        int height = getInt(p, prefix + HEIGHT, defValue.height);
+
+        return new Rectangle(x, y, width, height);
+    }
+
+    public static void setBounds(Properties p, String prefix, Rectangle value) {
+        setInt(p, prefix + X, value.x);
+        setInt(p, prefix + Y, value.y);
+        setInt(p, prefix + WIDTH, value.width);
+        setInt(p, prefix + HEIGHT, value.height);
     }
 
     private static boolean hasKeysWithPrefix(Properties p, String prefix) {
@@ -220,6 +246,7 @@ public class Workspace {
     public static class TopWindow extends Window {
         private double resultDividerLocation = 0.5;
         private Rectangle location;
+        private Rectangle serverListBounds;
 
         public TopWindow() {}
 
@@ -244,24 +271,28 @@ public class Workspace {
             this.location = location;
         }
 
-        protected void load(String prefix, Properties p) {
-            resultDividerLocation = Double.parseDouble(p.getProperty(prefix + RESULT_DIVIDER_LOCATION, "0.5"));
-            int x = Integer.parseInt(p.getProperty(prefix + X, "-1"));
-            int y = Integer.parseInt(p.getProperty(prefix + Y, "-1"));
-            int width = Integer.parseInt(p.getProperty(prefix + WIDTH, "0"));
-            int height = Integer.parseInt(p.getProperty(prefix + HEIGHT, "0"));
-            location = new Rectangle(x,y, width, height);
+        public Rectangle getServerListBounds() {
+            return serverListBounds;
+        }
 
+        public void setServerListBounds(Rectangle serverListBounds) {
+            this.serverListBounds = serverListBounds;
+        }
+
+        protected void load(String prefix, Properties p) {
+            resultDividerLocation = getDouble(p, prefix + RESULT_DIVIDER_LOCATION, 0.5);
+            location = getBounds(p, prefix, DEFAULT_BOUNDS);
+            serverListBounds = getBounds(p, prefix + SERVER_LIST, DEFAULT_BOUNDS);
             super.load(prefix, p);
         }
 
         protected void save(String prefix, Properties p) {
             p.setProperty(prefix + RESULT_DIVIDER_LOCATION, Double.toString(resultDividerLocation));
             if (location != null) {
-                p.setProperty(prefix + X, Integer.toString(location.x));
-                p.setProperty(prefix + Y, Integer.toString(location.y));
-                p.setProperty(prefix + WIDTH, Integer.toString(location.width));
-                p.setProperty(prefix + HEIGHT, Integer.toString(location.height));
+                setBounds(p, prefix, location);
+            }
+            if (serverListBounds != null) {
+                setBounds(p, prefix + SERVER_LIST, serverListBounds);
             }
 
             super.save(prefix, p);

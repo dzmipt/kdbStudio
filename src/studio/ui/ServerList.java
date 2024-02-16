@@ -58,9 +58,27 @@ public class ServerList extends EscapeDialog implements TreeExpansionListener  {
     private static final int menuShortcutKeyMask = java.awt.Toolkit.getDefaultToolkit().getMenuShortcutKeyMask();
     private final KeyStroke TREE_VIEW_KEYSTROKE = KeyStroke.getKeyStroke(KeyEvent.VK_T, menuShortcutKeyMask);
 
-    public ServerList(JFrame parent) {
+    public ServerList(JFrame parent, Rectangle bounds) {
         super(parent, "Server List");
         initComponents();
+
+        if (bounds != null && Util.fitToScreen(bounds)) {
+            setBounds(bounds);
+        } else {
+            setBounds(0, 0, DEFAULT_WIDTH, DEFAULT_HEIGHT);
+            setPreferredSize(new Dimension(DEFAULT_WIDTH, DEFAULT_HEIGHT));
+            Util.centerChildOnParent(this, parent);
+        }
+    }
+
+
+    public Server showServerTree(Server activeServer, List<Server> serverHistory, boolean selectHistoryTab) {
+        updateServerTree(Config.getInstance().getServerTree(), activeServer);
+        updateServerHistory(serverHistory);
+        selectHistoryTab(selectHistoryTab);
+        setVisible(true);
+
+        return getSelectedServer();
     }
 
     public void updateServerTree(ServerTreeNode serverTree, Server activeServer) {
