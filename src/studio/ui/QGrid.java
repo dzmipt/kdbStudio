@@ -199,13 +199,15 @@ public class QGrid extends JPanel implements MouseWheelListener, SearchPanelList
             public void mousePressed(MouseEvent e) {
                 if (maybeShowPopup(e)) return;
 
+                if (! SwingUtilities.isLeftMouseButton(e)) return;
+
                 int row = table.rowAtPoint(e.getPoint());
                 int col = table.columnAtPoint(e.getPoint());
 
-                if ((e.getModifiers() & InputEvent.ALT_MASK) == InputEvent.ALT_MASK ) copy(row, col);
+                if ((e.getModifiers() & InputEvent.ALT_MASK) == InputEvent.ALT_MASK ) doubleClick(row, col);
                 else if (row == lastRow && col == lastCol &&
                         System.currentTimeMillis() - lastTimestamp < doubleClickTimeout) {
-                    copy(row, col);
+                    doubleClick(row, col);
                 } else {
                     lastRow = row;
                     lastCol = col;
@@ -228,11 +230,13 @@ public class QGrid extends JPanel implements MouseWheelListener, SearchPanelList
             @Override
             public void mouseClicked(MouseEvent e) {
                 if (e.getClickCount() != 2) return;
-                copy(lastRow, lastCol);
+                if (! SwingUtilities.isLeftMouseButton(e)) return;
+
+                doubleClick(lastRow, lastCol);
             }
 
 
-            private void copy(int row, int col) {
+            private void doubleClick(int row, int col) {
                 lastCol = lastRow = -1;
                 lastTimestamp = -1;
                 if (row == -1 || col == -1) return;
@@ -242,7 +246,7 @@ public class QGrid extends JPanel implements MouseWheelListener, SearchPanelList
                 int type = b.getType();
                 if ( (type >= -19 && type <= -1) ||
                         (type >= 101 && type <= 103 ) ||
-                        type == 10 ) {
+                        type == 10 || type == 4) {
 
                     //@TODO: we shouldn't duplicate the logic here.
                     KFormatContext formatContextForCell = new KFormatContext(formatContext);
