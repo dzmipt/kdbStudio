@@ -5,6 +5,7 @@ import studio.core.AuthenticationManager;
 import studio.core.Credentials;
 import studio.kdb.Config;
 import studio.kdb.Server;
+import studio.kdb.ServerTreeNode;
 
 import javax.swing.*;
 import java.awt.*;
@@ -25,6 +26,14 @@ public class ServerForm extends EscapeDialog {
         initComponents();
 
         txtName.setText(this.server.getName());
+
+        ServerTreeNode folder = server.getFolder();
+        if (folder == null || folder.getParent() == null) {
+            folderTextLabel.setText("/");
+        } else {
+            folderTextLabel.setText(folder.fullPath());
+        }
+
         txtHostname.setText(this.server.getHost());
         txtUsername.setText(this.server.getUsername());
         txtPort.setText(""+ this.server.getPort());
@@ -67,6 +76,10 @@ public class ServerForm extends EscapeDialog {
     }
         
   private void initComponents() {
+
+        folderLabel = new JLabel("Folder");
+        folderTextLabel = new JLabel();
+        folderChangeButton = new JButton("...");
 
     logicalNameLabel = new javax.swing.JLabel();
     txtName = new javax.swing.JTextField();
@@ -142,6 +155,7 @@ public class ServerForm extends EscapeDialog {
         .addContainerGap()
         .addGroup(layout.createParallelGroup(LEADING)
           .addComponent(logicalNameLabel)
+          .addComponent(folderLabel)
           .addComponent(hostnameLabel)
           .addComponent(portLabel)
           .addComponent(tlsLabel)
@@ -158,6 +172,11 @@ public class ServerForm extends EscapeDialog {
             .addPreferredGap(RELATED)
             .addComponent(okButton)
             .addGap(6, 6, 6))
+          .addGroup(layout.createSequentialGroup()
+                  .addComponent(folderTextLabel)
+                  .addPreferredGap(RELATED, DEFAULT_SIZE, Short.MAX_VALUE)
+                  .addComponent(folderChangeButton)
+                  .addGap(6, 6, 6))
           .addGroup(layout.createSequentialGroup()
             .addGroup(layout.createParallelGroup(LEADING)
               .addComponent(sampleTextOnBackgroundTextField, DEFAULT_SIZE, 418, Short.MAX_VALUE)
@@ -189,6 +208,12 @@ public class ServerForm extends EscapeDialog {
         .addGroup(layout.createParallelGroup(BASELINE)
           .addComponent(logicalNameLabel)
           .addComponent(txtName, PREFERRED_SIZE, DEFAULT_SIZE, PREFERRED_SIZE))
+              .addPreferredGap(RELATED)
+              .addGroup(layout.createParallelGroup(BASELINE)
+                      .addComponent(folderLabel)
+                      .addComponent(folderTextLabel)
+                      .addComponent(folderChangeButton)
+              )
         .addPreferredGap(RELATED)
         .addComponent(jSeparator1, PREFERRED_SIZE, 10, PREFERRED_SIZE)
         .addPreferredGap(RELATED)
@@ -298,5 +323,7 @@ private void onColor(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_onColor
   private javax.swing.JTextField txtUsername;
   private javax.swing.JLabel usernameLabel;
 
-
+    private JLabel folderLabel;
+    private JLabel folderTextLabel;
+    private JButton folderChangeButton;
 }
