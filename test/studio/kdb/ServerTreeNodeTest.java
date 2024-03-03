@@ -1,8 +1,10 @@
 package studio.kdb;
 
 import org.junit.jupiter.api.Test;
+import studio.core.DefaultAuthenticationMechanism;
 
 import javax.swing.tree.TreeNode;
+import java.awt.*;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -38,4 +40,31 @@ public class ServerTreeNodeTest {
         assertEquals("d", serverTree.getChild(3).getFolder());
 
     }
+
+    @Test
+    public void getFullName() {
+        String name1 = "serverName1";
+        String name2 = "serverName2";
+        Server server1 = new Server(name1, "testHost", 1111, "user", "password", Color.WHITE,
+                DefaultAuthenticationMechanism.NAME, false);
+        Server server2 = new Server(name2, "testHost", 1111, "user", "password", Color.WHITE,
+                DefaultAuthenticationMechanism.NAME, false);
+
+        assertEquals(name1, server1.getFullName());
+        Server s1 = new Server(server1);
+
+        assertEquals(name1, s1.getFullName());
+
+        ServerTreeNode root = new ServerTreeNode();
+        ServerTreeNode parent = root.add("parent");
+        ServerTreeNode childFolder = parent.add("childFolder");
+        s1 = s1.newFolder(childFolder);
+
+        assertEquals("parent/childFolder/" + name1, s1.getFullName());
+
+        Server s2 = new Server(server2);
+        s2 = s2.newFolder(root);
+        assertEquals(name2, s2.getFullName());
+    }
+
 }

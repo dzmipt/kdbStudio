@@ -41,20 +41,20 @@ public class ConfigTest {
         config = new Config(tmpFile.getPath());
         System.out.println("temp file " + tmpFile.getPath());
 
+        ServerTreeNode parent = config.getServerTree().add("testFolder");
         server = new Server("testServer", "localhost",1111,
-                "user", "pwd", Color.WHITE, DefaultAuthenticationMechanism.NAME, false);
-        server.setFolder(config.getServerTree().add("testFolder"));
+                "user", "pwd", Color.WHITE, DefaultAuthenticationMechanism.NAME, false, parent);
     }
 
     @Test
     public void addServerDifferentTreeNode() {
+        ServerTreeNode parent1 = new ServerTreeNode().add("addServerTestFolder");
         Server server1 = new Server("testServer1", "localhost",1112,
-                "user", "pwd", Color.WHITE, DefaultAuthenticationMechanism.NAME, false);
-        server1.setFolder(new ServerTreeNode().add("addServerTestFolder"));
+                "user", "pwd", Color.WHITE, DefaultAuthenticationMechanism.NAME, false, parent1);
 
+        ServerTreeNode parent2 = new ServerTreeNode().add("addServerTestFolder");
         Server server2 = new Server("testServer2", "localhost",1113,
-                "user", "pwd", Color.WHITE, DefaultAuthenticationMechanism.NAME, false);
-        server2.setFolder(new ServerTreeNode().add("addServerTestFolder"));
+                "user", "pwd", Color.WHITE, DefaultAuthenticationMechanism.NAME, false, parent2);
 
         config.addServers(false, server1, server2);
         assertEquals(2, config.getServerNames().size());
@@ -63,13 +63,13 @@ public class ConfigTest {
 
     @Test
     public void addServerSameName() {
+        ServerTreeNode parent1 = config.getServerTree().add("sameNameTestFolder");
         Server server1 = new Server("testServer1", "localhost",1112,
-                "user", "pwd", Color.WHITE, DefaultAuthenticationMechanism.NAME, false);
-        server1.setFolder(config.getServerTree().add("sameNameTestFolder"));
+                "user", "pwd", Color.WHITE, DefaultAuthenticationMechanism.NAME, false, parent1);
 
+        //ServerTreeNode parent2 = config.getServerTree().add("sameNameTestFolder");
         Server server2 = new Server("testServer1", "localhost",1113,
-                "user", "pwd", Color.WHITE, DefaultAuthenticationMechanism.NAME, false);
-        server2.setFolder(config.getServerTree().add("sameNameTestFolder"));
+                "user", "pwd", Color.WHITE, DefaultAuthenticationMechanism.NAME, false, parent1);
 
         config.addServers(false, server1);
         assertThrows(IllegalArgumentException.class, ()->config.addServer(server2) );

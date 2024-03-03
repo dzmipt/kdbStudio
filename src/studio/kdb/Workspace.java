@@ -38,7 +38,7 @@ public class Workspace {
     private final static String LINE_ENDING = "lineEnding";
     private final static String CARET = "caret";
 
-    private final static Rectangle DEFAULT_BOUNDS = new Rectangle(-1,-1,0,0);
+    public final static Rectangle DEFAULT_BOUNDS = new Rectangle(-1,-1,0,0);
 
     private final static Logger log = LogManager.getLogger();
 
@@ -361,7 +361,7 @@ public class Workspace {
         public Tab addServer(Server server) {
             if (server == Server.NO_SERVER) return this;
 
-            if (server.getFolder() == null) {
+            if (server.getFolderPath().size() == 0) {
                 serverFullName = null;
             } else {
                 serverFullName = server.getFullName();

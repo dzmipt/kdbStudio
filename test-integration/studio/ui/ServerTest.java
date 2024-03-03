@@ -20,17 +20,18 @@ public class ServerTest extends StudioTest {
 
     private static Server server1, server2;
 
+    private final static String NAME1 = "bgServerTest1";
+    private final static String NAME2 = "bgServerTest2";
+
     @BeforeClass
     public static void initServer() {
         Color color1 = new Color(255, 127, 127);
-        String name1 = "bgServerTest1";
 
         Color color2 = new Color(158, 215, 246);
-        String name2 = "bgServerTest2";
 
-        server1 = new Server(name1, "testHost", 1111, "user", "password", color1,
+        server1 = new Server(NAME1, "testHost", 1111, "user", "password", color1,
                 DefaultAuthenticationMechanism.NAME, false);
-        server2 = new Server(name2, "testHost", 1111, "user", "password", color2,
+        server2 = new Server(NAME2, "testHost", 1111, "user", "password", color2,
                 DefaultAuthenticationMechanism.NAME, false);
         Config.getInstance().addServers(false, server1, server2);
     }

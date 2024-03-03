@@ -3,6 +3,7 @@ package studio.kdb;
 import javax.swing.tree.DefaultMutableTreeNode;
 import javax.swing.tree.TreeNode;
 import java.util.Collections;
+import java.util.List;
 import java.util.Vector;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -26,11 +27,11 @@ public class ServerTreeNode extends DefaultMutableTreeNode {
             ServerTreeNode parent = new ServerTreeNode(getFolder());
             for (ServerTreeNode child: childNodes()) {
                 parent.add(child.copy());
-            }
-            return parent;
+    }
+        return parent;
         } else {
             return new ServerTreeNode(getServer());
-        }
+    }
     }
 
     public boolean isFolder() {
@@ -158,6 +159,48 @@ public class ServerTreeNode extends DefaultMutableTreeNode {
         return child.findPath(nodes, head+1, true);
     }
 
+    public List<String> getFolderPath() {
+        if (! isFolder()) {
+            throw new IllegalArgumentException("getFolderPath() can be called on folders only");
+        }
+        return Collections.unmodifiableList(
+                Stream.of(getPath())
+                        .map(node -> node.toString())
+                        .collect(Collectors.toList())
+        );
+    }
+
+    public ServerTreeNode findPath(List<String> folderPath, boolean create) {
+        if (! isFolder()) {
+            throw new IllegalArgumentException("findPath() can be called on folders only");
+        }
+
+        ServerTreeNode folder = this;
+
+
+        for(int index = 1; index < folderPath.size(); index++) {
+            String folderName = folderPath.get(index);
+            ServerTreeNode next = null;
+            for(ServerTreeNode child: folder.childNodes() ) {
+                if (! child.isFolder()) continue;
+                if (child.getFolder().equals(folderName)) {
+                    next = child;
+                    break;
+                }
+            }
+
+            if (next == null) {
+                if (create) {
+                    next = folder.add(folderName);
+                } else {
+                    return null;
+                }
+            }
+            folder = next;
+        }
+
+        return folder;
+    }
 
     public boolean theSame(ServerTreeNode that) {
         if (isFolder()) {

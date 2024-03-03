@@ -15,9 +15,9 @@ public class WorkspaceTest {
 
     @BeforeEach
     public void setup() {
+        ServerTreeNode parent = new ServerTreeNode("").add("testFolder");
         Server server = new Server("testName","someHost",1111, "", "",
-                                    Color.red, "auth", false);
-        server.setFolder(new ServerTreeNode("").add("testFolder"));
+                                    Color.red, "auth", false, parent);
 
         workspace = new Workspace();
         Workspace.Window w1 = workspace.addWindow(false);

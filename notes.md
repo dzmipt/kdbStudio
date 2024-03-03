@@ -1,3 +1,4 @@
+* Parent folder can be specified in the server form (in add and edit server)
 * Persist location of the server list frame for every Studio window
 
 `dz4.1` 2024.01.29

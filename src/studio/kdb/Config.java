@@ -11,7 +11,6 @@ import studio.kdb.config.KdbMessageLimitAction;
 import studio.utils.*;
 import studio.utils.log4j.EnvConfig;
 
-import javax.swing.tree.TreeNode;
 import java.awt.*;
 import java.io.File;
 import java.io.FileInputStream;
@@ -320,7 +319,7 @@ public class Config extends AbstractConfig {
                 name = name.trim();
                 if (name.equals("")) continue;
                 try {
-                    Server server = initServerFromKey(name).newName(name);
+                    Server server = initServerFromKey(name, null).newName(name);
                     list.add(server);
                 } catch (IllegalArgumentException e) {
                     log.warn("Error during parsing server " + name, e);
@@ -539,7 +538,7 @@ public class Config extends AbstractConfig {
         return serverTree;
     }
 
-    private Server initServerFromKey(String key) {
+    private Server initServerFromKey(String key, ServerTreeNode parent) {
         String host = config.getProperty("server." + key + ".host", "");
         int port = Integer.parseInt(config.getProperty("server." + key + ".port", "-1"));
         String username = config.getProperty("server." + key + ".user", "");
@@ -547,11 +546,11 @@ public class Config extends AbstractConfig {
         Color backgroundColor = get("server." + key + ".backgroundColor", Color.WHITE);
         String authenticationMechanism = config.getProperty("server." + key + ".authenticationMechanism", DefaultAuthenticationMechanism.NAME);
         boolean useTLS = Boolean.parseBoolean(config.getProperty("server." + key + ".useTLS", "false"));
-        return new Server("", host, port, username, password, backgroundColor, authenticationMechanism, useTLS);
+        return new Server("", host, port, username, password, backgroundColor, authenticationMechanism, useTLS, parent);
     }
 
-    private Server initServerFromProperties(int number) {
-        return initServerFromKey("" + number);
+    private Server initServerFromProperties(int number, ServerTreeNode parent) {
+        return initServerFromKey("" + number, parent);
     }
 
     private void initServers() {
@@ -571,8 +570,7 @@ public class Config extends AbstractConfig {
                 number = initServerTree(key + ".", node, number);
             } else if (config.containsKey(key)) {
                 String name = config.getProperty(key);
-                Server server = initServerFromProperties(number).newName(name);
-                server.setFolder(parent);
+                Server server = initServerFromProperties(number, parent).newName(name);
                 String fullName = server.getFullName();
                 servers.put(fullName, server);
                 serverNames.add(fullName);
@@ -625,7 +623,8 @@ public class Config extends AbstractConfig {
         String name = server.getFullName();
         serverNames.remove(name);
         servers.remove(name);
-        ServerTreeNode folder = server.getFolder();
+
+        ServerTreeNode folder = serverTree.findPath(server.getFolderPath(), false);
         if (folder != null) {
             folder.remove(server);
         }
@@ -663,13 +662,15 @@ public class Config extends AbstractConfig {
             throw new IllegalArgumentException("Unknown Authentication Mechanism: " + server.getAuthenticationMechanism());
         }
 
-        TreeNode[] path = server.getFolder().getPath();
-        for (int index = 1; index<path.length; index++) {
-            ServerTreeNode node = (ServerTreeNode) path[index];
-            if (node.getFolder().trim().length() == 0) {
-                throw new IllegalArgumentException("Folder name can't be empty");
-            }
-        }
+        server.getFolderPath()
+                .stream()
+                .skip(1)
+                .forEach(folderName -> {
+                    if (folderName.trim().length() == 0) {
+                        throw new IllegalArgumentException("Folder name can't be empty");
+                    }
+                });
+
         servers.put(fullName, server);
         serverNames.add(fullName);
     }
@@ -687,13 +688,8 @@ public class Config extends AbstractConfig {
             for (Server server : newServers) {
                 index++;
                 try {
-                    ServerTreeNode folder = server.getFolder();
-                    if (folder == null) {
-                        server.setFolder(serverTree);
-                        folder = serverTree;
-                    }
                     addServerInternal(server);
-                    serverTree.findPath(folder.getPath(), true).add(server);
+                    serverTree.findPath(server.getFolderPath(), true).add(server);
                 } catch (IllegalArgumentException e) {
                     if (tryAll) {
                         result[index] = e.getMessage();
@@ -735,7 +731,10 @@ public class Config extends AbstractConfig {
                     }
                 } else {
                     Server server = node.getServer();
-                    server.setFolder((ServerTreeNode) node.getParent());
+                    ServerTreeNode parent = (ServerTreeNode) node.getParent();
+                    if (!server.getFolderPath().equals(parent.getFolderPath()) ) {
+                        server = server.newFolder(parent);
+                    }
                     addServerInternal(server);
                 }
             }

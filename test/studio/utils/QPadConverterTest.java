@@ -108,7 +108,7 @@ public class QPadConverterTest {
     @Test
     public void testEmptyFolder() {
         Server server = convert("`:server.com:11223`folder``server");
-        assertEquals("[empty]", server.getFolder().getFolder());
+        assertEquals("folder/[empty]", server.getFolderName());
     }
 
     @Test

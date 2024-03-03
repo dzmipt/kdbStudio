@@ -3,8 +3,11 @@ package studio.kdb;
 import studio.core.Credentials;
 
 import java.awt.*;
+import java.util.Collections;
+import java.util.List;
 import java.util.Objects;
 import java.util.Properties;
+import java.util.stream.Collectors;
 
 public class Server {
     private String authenticationMechanism;
@@ -15,7 +18,7 @@ public class Server {
     private String username;
     private String password;
     private boolean useTLS = false;
-    private ServerTreeNode folder = null;
+    private List<String> folderPath = (List<String>) Collections.EMPTY_LIST;
 
     public static final Server NO_SERVER = new Server();
 
@@ -84,7 +87,7 @@ public class Server {
         this.backgroundColor = s.backgroundColor;
         this.authenticationMechanism = s.authenticationMechanism;
         this.useTLS = s.useTLS;
-        this.setFolder(s.getFolder());
+        this.folderPath = s.folderPath;
     }
 
     public Server(String name, String host, int port, String username, String password, Color backgroundColor, String authenticationMechanism, boolean useTLS) {
@@ -96,6 +99,14 @@ public class Server {
         this.backgroundColor = backgroundColor;
         this.authenticationMechanism = authenticationMechanism;
         this.useTLS = useTLS;
+    }
+
+    public Server(String name, String host, int port, String username, String password, Color backgroundColor,
+                  String authenticationMechanism, boolean useTLS, ServerTreeNode parent) {
+        this(name, host, port, username, password, backgroundColor, authenticationMechanism, useTLS);
+        if (parent != null) {
+            folderPath = parent.getFolderPath();
+        }
     }
 
     public Server newName(String name) {
@@ -115,10 +126,12 @@ public class Server {
     }
 
     public String getFullName() {
-        if (folder == null) return name;
-        String path = folder.fullPath();
-        if (path.length() == 0) return name;
-        return path + "/" + name;
+        if (folderPath.size() < 2) return  name;
+        return getFolderName() + "/" + name;
+    }
+
+    public String getFolderName() {
+        return folderPath.stream().skip(1).collect(Collectors.joining("/"));
     }
 
     public String getHost() {
@@ -153,13 +166,14 @@ public class Server {
       return useTLS;
     }
 
-    public ServerTreeNode getFolder() {
-        return folder;
+    public List<String> getFolderPath() {
+        return folderPath;
     }
 
-    //@TODO: all other properties are immutable. May be we need to do this one non-modifiable as well?
-    public void setFolder(ServerTreeNode folder) {
-        this.folder = folder;
+    public Server newFolder(ServerTreeNode folder) {
+        Server newServer = new Server(this);
+        newServer.folderPath = folder.getFolderPath();
+        return newServer;
     }
 
 }
