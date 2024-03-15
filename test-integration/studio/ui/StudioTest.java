@@ -51,6 +51,7 @@ abstract public class StudioTest extends AssertJSwingJUnitTestCase {
     protected StudioWindow studioWindow;
 
     private static Path tmpConfigFolder;
+    private int expectedNumberOfErrors;
 
     @BeforeClass
     public static void initLogErrors() {
@@ -82,8 +83,13 @@ abstract public class StudioTest extends AssertJSwingJUnitTestCase {
 
     }
 
+    protected void setExpectedNumberOfLogErrors(int count) {
+        expectedNumberOfErrors = count;
+    }
+
     @Override
     protected void onSetUp() {
+        expectedNumberOfErrors = 0;
         LogErrors.reset();
 
         studio.ui.I18n.setLocale(Locale.getDefault());
@@ -98,8 +104,9 @@ abstract public class StudioTest extends AssertJSwingJUnitTestCase {
         super.onTearDown();
 
         String[] errors = LogErrors.get();
-        if (errors.length > 0) {
-            fail("Error logs were detected:\n" + String.join("\n", errors));
+        if (errors.length != expectedNumberOfErrors) {
+            fail("There were " + errors.length + " errors instead of expected number: " + expectedNumberOfErrors + "\n"
+                     + String.join("\n", errors));
         }
     }
 

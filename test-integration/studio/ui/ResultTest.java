@@ -13,6 +13,8 @@ import studio.kdb.K;
 import studio.kdb.MockQSession;
 
 import java.awt.*;
+import java.io.EOFException;
+import java.io.IOException;
 import java.util.Arrays;
 import java.util.regex.Pattern;
 
@@ -110,6 +112,26 @@ public class ResultTest extends StudioTest {
 
         JTextComponentFixture textArea = frameFixture.panel("resultPanel0").textBox();
         textArea.requireText(Pattern.compile(".*error.*Authentication failed.*", Pattern.DOTALL));
+    }
+
+    @Test
+    public void testEOFException() {
+        setExpectedNumberOfLogErrors(1);
+        MockQSession.setResponse(new EOFException());
+        execute();
+
+        JTextComponentFixture textArea = frameFixture.panel("resultPanel0").textBox();
+        textArea.requireText(Pattern.compile(".*Error: java.io.EOFException", Pattern.DOTALL));
+    }
+
+    @Test
+    public void testIOException() {
+        setExpectedNumberOfLogErrors(1);
+        MockQSession.setResponse(new IOException("ioMessageHere"));
+        execute();
+
+        JTextComponentFixture textArea = frameFixture.panel("resultPanel0").textBox();
+        textArea.requireText(Pattern.compile(".*Error: java.io.IOException.*ioMessageHere.*", Pattern.DOTALL));
     }
 
 

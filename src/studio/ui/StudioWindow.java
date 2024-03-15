@@ -1,6 +1,5 @@
 package studio.ui;
 
-import kx.K4Exception;
 import kx.KMessage;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -1690,7 +1689,6 @@ public class StudioWindow extends JFrame implements WindowListener {
         editor.getPane().stopClock();
         JTextComponent textArea = editor.getTextArea();
         textArea.setCursor(textCursor);
-        Throwable error = queryResult.getError();
         if (queryResult.isComplete()) {
             long execTime = queryResult.getExecutionTimeInMS();
             editor.getPane().setEditorStatus("Last execution time: " + (execTime > 0 ? "" + execTime : "<1") + " ms");
@@ -1699,19 +1697,13 @@ public class StudioWindow extends JFrame implements WindowListener {
         }
 
         StudioWindow window = editor.getStudioWindow();
-        if (error == null || error instanceof K4Exception) {
-            try {
-                if (queryResult.isComplete()) {
-                    window.addResultTab(queryResult, "Executed at server: " + queryResult.getServer().getDescription(true) );
-                }
-                error = null;
-            } catch (Throwable exc) {
-                error = new RuntimeException("Error during result rendering", exc);
-                log.error("Error during result rendering", exc);
+        try {
+            if (queryResult.isComplete()) {
+                window.addResultTab(queryResult, "Executed at server: " + queryResult.getServer().getDescription(true) );
             }
-        }
+        } catch (Throwable error) {
+            log.error("Error during result rendering", error);
 
-        if (error != null) {
             String message = error.getMessage();
             if ((message == null) || (message.length() == 0))
                 message = "No message with exception. Exception is " + error;

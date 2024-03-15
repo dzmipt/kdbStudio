@@ -1,5 +1,6 @@
 package studio.ui;
 
+import kx.K4Exception;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import studio.kdb.ListModel;
@@ -118,9 +119,17 @@ public class TabPanel extends JPanel {
             updateFormatting();
         } else {
             textArea = new JTextPane();
-            String hint = QErrors.lookup(queryResult.getError().getMessage());
-            hint = hint == null ? "" : "\nStudio Hint: Possibly this error refers to " + hint;
-            textArea.setText("An error occurred during execution of the query.\nThe server sent the response:\n" + queryResult.getError().getMessage() + hint);
+            Throwable error = queryResult.getError();
+            String msg;
+            if (error instanceof K4Exception) {
+                msg = "An error occurred during execution of the query.\nThe server sent the response:\n" + error.getMessage();
+            } else {
+                msg = "An unexpected error occurred whilst communicating with server.\nError: " + error.toString();
+                if (error.getMessage() != null) {
+                    msg += "\nMessage: " + error.getMessage();
+                }
+            }
+            textArea.setText(msg);
             textArea.setForeground(Color.RED);
             textArea.setEditable(false);
             component = new JScrollPane(textArea);

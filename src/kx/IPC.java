@@ -49,11 +49,11 @@ public class IPC {
         }
     }
 
-    public KMessage deserialise(){
+    public KMessage deserialise() {
         try {
             if (b[0] == -128) {
                 j = 1;
-                return new KMessage(new K4Exception(rs().toString()));
+                return new KMessage(new K4Exception("'" + rs().s));
             }
             return new KMessage(r());
         } catch (UnsupportedEncodingException e) {
