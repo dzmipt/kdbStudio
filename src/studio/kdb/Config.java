@@ -632,6 +632,31 @@ public class Config extends AbstractConfig {
         saveAllServers();
     }
 
+    public void replaceServer(Server oldServer, Server newServer) {
+        ServerTreeNode oldFolder = serverTree.findPath(oldServer.getFolderPath(), false);
+        if (oldFolder == null) {
+            // ?? Is it possible
+            return;
+        }
+        ServerTreeNode newFolder = serverTree.findPath(newServer.getFolderPath(), true);
+
+        String name = oldServer.getFullName();
+        serverNames.remove(name);
+        servers.remove(name);
+        int index = oldFolder.remove(oldServer);
+        if (index == -1 || oldFolder!=newFolder) {
+            index = newFolder.getChildCount();
+        }
+
+        try {
+            addServerInternal(newServer);
+            newFolder.add(index, newServer);
+        } catch (IllegalArgumentException e) {
+            log.error("Failed to add server", e);
+            addServer(oldServer);
+        }
+    }
+
     private void purgeAll() {
         servers.clear();
         serverNames.clear();

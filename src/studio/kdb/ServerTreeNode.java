@@ -79,7 +79,7 @@ public class ServerTreeNode extends DefaultMutableTreeNode {
     }
 
     // Remove direct child
-    public boolean remove(Server server) {
+    public int remove(Server server) {
         if (!isFolder()) {
             throw new IllegalArgumentException("This is not folder");
         }
@@ -89,10 +89,10 @@ public class ServerTreeNode extends DefaultMutableTreeNode {
             if (treeNode.isFolder()) continue;
             if (treeNode.getServer().equals(server)) {
                 remove(index);
-                return true;
+                return index;
             }
         }
-        return false;
+        return -1;
     }
 
     public ServerTreeNode getChild(String folder) {

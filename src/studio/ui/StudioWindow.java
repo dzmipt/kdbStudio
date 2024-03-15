@@ -556,10 +556,8 @@ public class StudioWindow extends JFrame implements WindowListener {
                         if (stopAction.isEnabled())
                             stopAction.actionPerformed(e);
 
-                        CONFIG.removeServer(editor.getServer());
-
                         Server newServer = f.getServer();
-                        CONFIG.addServer(newServer);
+                        CONFIG.replaceServer(editor.getServer(), newServer);
                         setServer(newServer);
                         refreshAll();
                     }
