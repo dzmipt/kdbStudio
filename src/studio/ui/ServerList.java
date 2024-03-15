@@ -94,6 +94,7 @@ public class ServerList extends EscapeDialog implements TreeExpansionListener  {
     }
 
     public ServerTreeNode showFolders(ServerTreeNode activeNode) {
+        tree.setRootVisible(true);
         showServerNodes = false;
         updateServerTree(activeNode);
         selectHistoryTab(false);
