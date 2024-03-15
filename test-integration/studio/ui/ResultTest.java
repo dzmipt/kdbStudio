@@ -1,5 +1,6 @@
 package studio.ui;
 
+import kx.K4AccessException;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.assertj.swing.data.TableCell;
@@ -13,6 +14,7 @@ import studio.kdb.MockQSession;
 
 import java.awt.*;
 import java.util.Arrays;
+import java.util.regex.Pattern;
 
 public class ResultTest extends StudioTest {
 
@@ -99,7 +101,16 @@ public class ResultTest extends StudioTest {
         String[] labels = popupMenu.menuLabels();
         log.info("Got the following menu items {}", Arrays.toString(labels));
         Assert.assertEquals("Open b:3", labels[0]);
-
     }
+
+    @Test
+    public void testAuthenticationException() {
+        MockQSession.setResponse(new K4AccessException());
+        execute();
+
+        JTextComponentFixture textArea = frameFixture.panel("resultPanel0").textBox();
+        textArea.requireText(Pattern.compile(".*error.*Authentication failed.*", Pattern.DOTALL));
+    }
+
 
 }

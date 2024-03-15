@@ -33,7 +33,7 @@ public class TabPanel extends JPanel {
     public TabPanel(StudioWindow studioWindow, QueryResult queryResult) {
         this.studioWindow = studioWindow;
         this.queryResult = queryResult;
-        if (queryResult != null) {
+        if (queryResult != null && queryResult.getError() == null ) {
             this.result = queryResult.getResult();
         }
         initComponents();
