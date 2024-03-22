@@ -1156,6 +1156,7 @@ public class StudioWindow extends JFrame implements WindowListener {
         refreshServerList();
         refreshServer();
 
+        toolbar.add(Box.createRigidArea(new Dimension(3,0)));
         toolbar.add(new JLabel(I18n.getString("Server")));
         toolbar.add(comboServer);
         toolbar.add(txtServer);

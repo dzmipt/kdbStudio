@@ -23,8 +23,8 @@ public class AuthenticationManager {
     private static AuthenticationManager instance;
     private Map classMap = new HashMap();
 
-    public Class lookup(String autheticationMethod) {
-        return (Class) classMap.get(autheticationMethod);
+    public Class lookup(String authenticationMethod) {
+        return (Class) classMap.get(authenticationMethod);
     }
 
     public String[] getAuthenticationMechanisms() {
