@@ -37,10 +37,19 @@ public class ServerForm extends EscapeDialog {
         DefaultComboBoxModel<String> dcbm = (DefaultComboBoxModel<String>) authenticationMechanism.getModel();
         String[] am;
         am = AuthenticationManager.getInstance().getAuthenticationMechanisms();
+        boolean foundAuth = false;
         for (int i = 0; i < am.length; i++) {
             dcbm.addElement(am[i]);
-            if (this.server.getAuthenticationMechanism().equals(am[i]))
+            if (this.server.getAuthenticationMechanism().equals(am[i])) {
                 dcbm.setSelectedItem(am[i]);
+                foundAuth = true;
+            }
+        }
+
+        if (!foundAuth) {
+            String authMethod = server.getAuthenticationMechanism();
+            dcbm.addElement(authMethod);
+            dcbm.setSelectedItem(authMethod);
         }
 
         authenticationMechanism.addItemListener(e -> {
