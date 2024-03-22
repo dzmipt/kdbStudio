@@ -48,7 +48,6 @@ public class ServerForm extends EscapeDialog {
 
         if (!foundAuth) {
             String authMethod = server.getAuthenticationMechanism();
-            dcbm.addElement(authMethod);
             dcbm.setSelectedItem(authMethod);
         }
 
