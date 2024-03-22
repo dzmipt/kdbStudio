@@ -43,6 +43,7 @@ sourceSets {
         resources {
             srcDirs 'test'
             include 'syntax.csv'
+            include 'studio13.properties'
         }
     }
     intTest {
