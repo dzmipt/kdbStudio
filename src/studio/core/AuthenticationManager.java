@@ -17,7 +17,8 @@ public class AuthenticationManager {
 
     private static final Logger log = LogManager.getLogger();
 
-    private static AuthenticationManager instance;
+    private static final AuthenticationManager instance = new AuthenticationManager();
+
     private Map classMap = new HashMap();
     private String[] authMechanisms;
 
@@ -30,8 +31,6 @@ public class AuthenticationManager {
     }
 
     public synchronized static AuthenticationManager getInstance() {
-        if (instance == null)
-            instance = new AuthenticationManager();
         return instance;
     }
 
