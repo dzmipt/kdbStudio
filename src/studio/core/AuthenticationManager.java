@@ -35,6 +35,8 @@ public class AuthenticationManager {
     }
 
     private void init() {
+        loadPlugins();
+
         List<String> auths = new ArrayList<>(classMap.keySet());
         auths.remove(DefaultAuthenticationMechanism.NAME);
         Collections.sort(auths);
@@ -42,7 +44,8 @@ public class AuthenticationManager {
         authMechanisms = auths.toArray(new String[0]);
     }
 
-    private AuthenticationManager() {
+
+    private void loadPlugins() {
         DefaultAuthenticationMechanism dam = new DefaultAuthenticationMechanism();
         classMap.put(dam.getMechanismName(),dam.getClass());
 
@@ -92,7 +95,9 @@ public class AuthenticationManager {
                     log.error("Error loading plugin {}", filename, e);
                 }
             }
+    }
 
+    private AuthenticationManager() {
         init();
     }
 }
