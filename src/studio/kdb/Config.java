@@ -21,6 +21,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
 import java.util.*;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -98,11 +99,13 @@ public class Config extends AbstractConfig {
     private static final String CONFIG_FILENAME = "studio.properties";
     private static final String WORKSPACE_FILENAME = "workspace.properties";
 
+    private static final String OLD_DEF_AUTHMETHOD = "Username and password";
+    private static final String VERSION14 = "1.4";
     private static final String VERSION13 = "1.3";
     private static final String VERSION12 = "1.2";
     private static final String OLD_VERSION = "1.1";
 
-    private static final String VERSION = VERSION13;
+    private static final String VERSION = VERSION14;
 
 
     private PropertiesConfig workspaceConfig;
@@ -310,6 +313,32 @@ public class Config extends AbstractConfig {
         initTableConnExtractor();
     }
 
+    private void upgradeTo14() {
+        log.info("Upgrading config to version 1.4");
+        String defAuth = DefaultAuthenticationMechanism.NAME;
+        if (getDefaultAuthMechanism().equals(OLD_DEF_AUTHMETHOD) ) {
+            setDefaultAuthMechanism(defAuth);
+        }
+
+        setDefaultCredentials(defAuth, getDefaultCredentials(OLD_DEF_AUTHMETHOD));
+        config.remove("auth." + OLD_DEF_AUTHMETHOD + ".user");
+        config.remove("auth." + OLD_DEF_AUTHMETHOD + ".password");
+
+        //server.1.authenticationMechanism
+        Pattern pattern = Pattern.compile("server\\.[0-9]+\\.authenticationMechanism");
+        for (String key: config.keySet().toArray(new String[0]) ) {
+            if (pattern.matcher(key).matches() ) {
+                String value = config.getProperty(key);
+                if (value.equals(OLD_DEF_AUTHMETHOD)) {
+                    config.setProperty(key, defAuth);
+                }
+            }
+        }
+
+        config.setProperty("version", VERSION);
+        save();
+    }
+
     private void upgradeTo12() {
         try {
             log.info("Found old config. Converting...");
@@ -385,6 +414,11 @@ public class Config extends AbstractConfig {
         if (config.getProperty("version", OLD_VERSION).equals(OLD_VERSION)) {
             upgradeTo12();
             config.setProperty("version", VERSION12);
+        }
+
+
+        if (config.getProperty("version", VERSION).equals(VERSION13)) {
+            upgradeTo14();
         }
 
         initServers();
@@ -469,8 +503,11 @@ public class Config extends AbstractConfig {
     // host:port
     // If user and password are not found, defaults form default AuthenticationMechanism are used
     public Server getServerByConnectionString(String connectionString) {
-        String defaultAuth = getDefaultAuthMechanism();
-        return QConnection.getByConnection(connectionString, defaultAuth, getDefaultCredentials(defaultAuth), servers.values());
+        return getServerByConnectionString(connectionString, getDefaultAuthMechanism());
+    }
+
+    public Server getServerByConnectionString(String connectionString, String authMethod) {
+        return QConnection.getByConnection(connectionString, authMethod, getDefaultCredentials(authMethod), servers.values());
     }
 
     public Credentials getDefaultCredentials(String authenticationMechanism) {
@@ -655,6 +692,7 @@ public class Config extends AbstractConfig {
             log.error("Failed to add server", e);
             addServer(oldServer);
         }
+        saveAllServers();
     }
 
     private void purgeAll() {

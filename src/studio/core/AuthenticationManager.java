@@ -9,10 +9,7 @@ import java.io.IOException;
 import java.net.JarURLConnection;
 import java.net.URL;
 import java.net.URLClassLoader;
-import java.util.Enumeration;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
 
@@ -22,20 +19,28 @@ public class AuthenticationManager {
 
     private static AuthenticationManager instance;
     private Map classMap = new HashMap();
+    private String[] authMechanisms;
 
     public Class lookup(String authenticationMethod) {
         return (Class) classMap.get(authenticationMethod);
     }
 
     public String[] getAuthenticationMechanisms() {
-        Set s = classMap.keySet();
-        return (String[]) s.toArray(new String[0]);
+        return authMechanisms;
     }
 
     public synchronized static AuthenticationManager getInstance() {
         if (instance == null)
             instance = new AuthenticationManager();
         return instance;
+    }
+
+    private void init() {
+        List<String> auths = new ArrayList<>(classMap.keySet());
+        auths.remove(DefaultAuthenticationMechanism.NAME);
+        Collections.sort(auths);
+        auths.add(0, DefaultAuthenticationMechanism.NAME);
+        authMechanisms = auths.toArray(new String[0]);
     }
 
     private AuthenticationManager() {
@@ -88,5 +93,7 @@ public class AuthenticationManager {
                     log.error("Error loading plugin {}", filename, e);
                 }
             }
+
+        init();
     }
 }

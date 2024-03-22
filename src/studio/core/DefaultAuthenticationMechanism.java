@@ -8,7 +8,7 @@ public class DefaultAuthenticationMechanism implements IAuthenticationMechanism 
     private static final String[] PROP_NAMES = new String[]{USERNAME,PASSWORD};
     private Properties props;
 
-    public final static String NAME = "Username and password";
+    public final static String NAME = "Plain";
 
     public String getMechanismName() {
         return NAME;

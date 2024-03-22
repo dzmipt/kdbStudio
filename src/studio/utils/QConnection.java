@@ -46,7 +46,8 @@ public class QConnection {
         Color bgColor = Config.getInstance().getColor(Config.COLOR_BACKGROUND);
 
         for (Server s: servers) {
-            if (s.getHost().equals(host) && s.getPort() == port && s.getUsername().equals(user) && s.getPassword().equals(password)) {
+            if (s.getHost().equals(host) && s.getPort() == port && s.getUsername().equals(user) && s.getPassword().equals(password)
+                        && s.getAuthenticationMechanism().equals(auth) ) {
                 return s;
             }
         }

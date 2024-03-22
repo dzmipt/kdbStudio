@@ -1,6 +1,7 @@
 package studio.kdb;
 
 import studio.core.Credentials;
+import studio.core.DefaultAuthenticationMechanism;
 
 import java.awt.*;
 import java.util.Collections;
@@ -10,7 +11,7 @@ import java.util.Properties;
 import java.util.stream.Collectors;
 
 public class Server {
-    private String authenticationMechanism;
+    private String authenticationMechanism = DefaultAuthenticationMechanism.NAME;
     private Color backgroundColor = Color.white;
     private String name = "";
     private String host = "";
