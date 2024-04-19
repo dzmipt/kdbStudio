@@ -66,7 +66,7 @@ public class ServerTest extends StudioTest {
 
         Color newColor = new Color (171, 255, 171);
         ColorChooser.mock(newColor);
-        serverDialog.button("editColor").click();
+        sample.click();
         bgColor = execute(() -> sample.target().getBackground());
         assertEquals(newColor, bgColor);
 

@@ -10,6 +10,8 @@ import studio.kdb.Workspace;
 
 import javax.swing.*;
 import java.awt.*;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 
@@ -120,8 +122,6 @@ public class ServerForm extends EscapeDialog {
         txtPassword = new javax.swing.JPasswordField();
         colorLabel = new javax.swing.JLabel();
         jSeparator3 = new javax.swing.JSeparator();
-        btnEditColor = new javax.swing.JButton();
-        btnEditColor.setName("editColor");
         sampleTextOnBackgroundTextField = new javax.swing.JTextField();
         sampleTextOnBackgroundTextField.setName("sampleTextOnBackground");
         authenticationMechanism = new javax.swing.JComboBox();
@@ -155,15 +155,13 @@ public class ServerForm extends EscapeDialog {
 
         colorLabel.setText("Color");
 
-        btnEditColor.setText("Edit Color");
-        btnEditColor.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                onColor(evt);
+        sampleTextOnBackgroundTextField.setText("Sample text on background (click to modify)");
+        sampleTextOnBackgroundTextField.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mouseClicked(MouseEvent e) {
+                onColorAction();
             }
         });
-
-        sampleTextOnBackgroundTextField.setText("Sample text on background");
-
 
         authMethodLabel.setText("Auth. Method");
 
@@ -188,7 +186,6 @@ public class ServerForm extends EscapeDialog {
                                 .addPreferredGap(RELATED, 21, Short.MAX_VALUE)
                                 .addGroup(layout.createParallelGroup(LEADING)
                                         .addGroup(layout.createSequentialGroup()
-                                                .addComponent(btnEditColor)
                                                 .addPreferredGap(RELATED, DEFAULT_SIZE, Short.MAX_VALUE)
                                                 .addComponent(cancelButton)
                                                 .addPreferredGap(RELATED)
@@ -273,8 +270,7 @@ public class ServerForm extends EscapeDialog {
                                 .addPreferredGap(RELATED)
                                 .addGroup(layout.createParallelGroup(BASELINE)
                                         .addComponent(okButton)
-                                        .addComponent(cancelButton)
-                                        .addComponent(btnEditColor))
+                                        .addComponent(cancelButton))
                                 .addContainerGap())
         );
     }
@@ -316,7 +312,7 @@ public class ServerForm extends EscapeDialog {
         cancel();
     }
 
-    private void onColor(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_onColor
+    private void onColorAction() {//GEN-FIRST:event_onColor
         Color result = ColorChooser.chooseColor(this, "Select background color for editor",
                 sampleTextOnBackgroundTextField.getBackground());
 
@@ -325,7 +321,6 @@ public class ServerForm extends EscapeDialog {
         }
     }
 
-    private javax.swing.JButton btnEditColor;
     private javax.swing.JTextField sampleTextOnBackgroundTextField;
     private javax.swing.JComboBox<String> authenticationMechanism;
     private javax.swing.JButton cancelButton;
