@@ -8,6 +8,8 @@ import studio.core.DefaultAuthenticationMechanism;
 import studio.kdb.config.AbstractConfig;
 import studio.kdb.config.ActionOnExit;
 import studio.kdb.config.KdbMessageLimitAction;
+import studio.kdb.config.rules.Rule;
+import studio.kdb.config.rules.RuleSet;
 import studio.utils.*;
 import studio.utils.log4j.EnvConfig;
 
@@ -100,12 +102,12 @@ public class Config extends AbstractConfig {
     private static final String WORKSPACE_FILENAME = "workspace.properties";
 
     private static final String OLD_DEF_AUTHMETHOD = "Username and password";
+    private static final String VERSION15 = "1.5";
     private static final String VERSION14 = "1.4";
     private static final String VERSION13 = "1.3";
-    private static final String VERSION12 = "1.2";
-    private static final String OLD_VERSION = "1.1";
+    private static final List<String> ALL_VERSIONS = Arrays.asList(VERSION13, VERSION14, VERSION15);
 
-    private static final String VERSION = VERSION14;
+    private static final String VERSION = ALL_VERSIONS.get(ALL_VERSIONS.size() - 1);
 
 
     private PropertiesConfig workspaceConfig;
@@ -114,6 +116,8 @@ public class Config extends AbstractConfig {
     private Collection<String> serverNames;
     private ServerTreeNode serverTree;
     private HistoricalList<Server> serverHistory;
+
+    private RuleSet serverRuleSet;
 
     private static final String CONN_COL_WORDS = "server, host, connection, handle";
     private static final String HOST_COL_WORDS = "server, host";
@@ -162,6 +166,7 @@ public class Config extends AbstractConfig {
     }
 
     void saveToDisk() {
+        serverRuleSet.save(config);
         config.saveToDisk();
         workspaceConfig.saveToDisk();
     }
@@ -310,14 +315,48 @@ public class Config extends AbstractConfig {
         workspaceConfig = new PropertiesConfig(getWorkspaceFilename());
 
         checkForUpgrade();
+
+        initServers();
+        initServerHistory();
         initTableConnExtractor();
+        initServerRuleSets();
+    }
+
+    public String getDefaultAuthMechanism() {
+        return serverRuleSet.getDefaultRule().getAuthMethod().get();
+    }
+
+    public void setDefaultAuthMechanism(String authMethod) {
+        serverRuleSet.getDefaultRule().setAuthMethod(Optional.of(authMethod));
+    }
+
+
+    public Credentials getDefaultCredentials(String authenticationMechanism) {
+        String user = config.getProperty("auth." + authenticationMechanism + ".user", "");
+        String password = config.getProperty("auth." + authenticationMechanism + ".password", "");
+        return new Credentials(user, password);
+    }
+
+    public void setDefaultCredentials(String authenticationMechanism, Credentials credentials) {
+        config.setProperty("auth." + authenticationMechanism + ".user", credentials.getUsername());
+        config.setProperty("auth." + authenticationMechanism + ".password", credentials.getPassword());
+        save();
+    }
+
+    private String deprecatedGetDefaultAuthMechanism() {
+        return config.getProperty("auth", DefaultAuthenticationMechanism.NAME);
+    }
+
+    private void deprecatedSetDefaultAuthMechanism(String authMechanism) {
+        config.setProperty("auth", authMechanism);
+        save();
     }
 
     private void upgradeTo14() {
         log.info("Upgrading config to version 1.4");
         String defAuth = DefaultAuthenticationMechanism.NAME;
-        if (getDefaultAuthMechanism().equals(OLD_DEF_AUTHMETHOD) ) {
-            setDefaultAuthMechanism(defAuth);
+        if (deprecatedGetDefaultAuthMechanism().equals(OLD_DEF_AUTHMETHOD) ) {
+            deprecatedSetDefaultAuthMechanism(defAuth);
         }
 
         setDefaultCredentials(defAuth, getDefaultCredentials(OLD_DEF_AUTHMETHOD));
@@ -335,53 +374,26 @@ public class Config extends AbstractConfig {
             }
         }
 
-        config.setProperty("version", VERSION);
         save();
     }
 
-    private void upgradeTo12() {
-        try {
-            log.info("Found old config. Converting...");
-            String[] names = config.getProperty("Servers", "").split(",");
-            List<Server> list = new ArrayList<>();
-            for (String name : names) {
-                name = name.trim();
-                if (name.equals("")) continue;
-                try {
-                    Server server = initServerFromKey(name, null).newName(name);
-                    list.add(server);
-                } catch (IllegalArgumentException e) {
-                    log.warn("Error during parsing server " + name, e);
-                }
-            }
-            config.remove("Servers");
-            config.entrySet().removeIf(e -> e.getKey().toString().startsWith("server."));
-            config.setProperty("version", VERSION12);
-            initServers();
-            String[] results = addServers(true, list.toArray(new Server[0]));
-            boolean error = false;
-            for(String result: results) {
-                if (result == null) continue;
-                if (!error) {
-                    error = true;
-                    log.warn("Found errors during conversion");
-                }
-                log.warn(result);
-            }
-            log.info("Done");
-        } catch (IllegalArgumentException e) {
-            log.error("Ups... Can't convert", e);
-        }
-    }
+    private void upgradeTo15() {
+        log.info("Upgrading config to version 1.5");
 
-    private void upgradeTo13() {
-        String fullName = config.getProperty("lruServer", "");
-        config.remove("lruServer");
-        if (! fullName.equals("")) {
-            Server server = getServer(fullName);
-            if (server != Server.NO_SERVER) addServerToHistory(server);
-        }
-        save();
+        String defAuthMethod = deprecatedGetDefaultAuthMechanism();
+        Credentials creds = getDefaultCredentials(defAuthMethod);
+
+        RuleSet ruleSet = new RuleSet();
+        Rule defRule = ruleSet.getDefaultRule();
+        defRule.setAuthMethod(Optional.of(defAuthMethod));
+        defRule.setUsername(Optional.of(creds.getUsername()));
+        defRule.setPassword(Optional.of(creds.getPassword()));
+        defRule.setBgColor(Optional.of(Color.WHITE));
+        defRule.setUseTLS(Optional.of(false));
+
+        config.remove("auth");
+
+        ruleSet.save(config);
     }
 
     private void migrateSaveOnExit() {
@@ -402,36 +414,34 @@ public class Config extends AbstractConfig {
     }
 
     private void checkForUpgrade() {
-        if (config.size() == 0) {
-            log.info("Found no or empty config");
-            config.setProperty("version", VERSION);
+        String version = config.getProperty("version", "");
+        if (version.equals(VERSION)) return;
 
-            initServers();
-            initServerHistory();
+        if (! ALL_VERSIONS.contains(version)) {
+            if (config.size() == 0) {
+                log.info("Found no or empty config. Setting up new with version: " + VERSION);
+            } else {
+                log.info("Found config with unsupported version {}. Setting up new config with version: {}", version, VERSION);
+            }
+
+            config.setProperty("version", VERSION);
             return;
         }
-
-        if (config.getProperty("version", OLD_VERSION).equals(OLD_VERSION)) {
-            upgradeTo12();
-            config.setProperty("version", VERSION12);
-        }
-
-
-        if (config.getProperty("version", VERSION).equals(VERSION13)) {
-            upgradeTo14();
-        }
-
-        initServers();
-        if (config.getProperty("version").equals(VERSION12)) {
-            initServerHistory();
-            upgradeTo13();
-            config.setProperty("version", VERSION13);
-        }
-        initServerHistory();
         migrateSaveOnExit();
         removeServerListConfig();
 
+        if (config.getProperty("version", VERSION).equals(VERSION13)) {
+            upgradeTo14();
+            config.setProperty("version", VERSION14);
+        }
+
+        if (config.getProperty("version").equals(VERSION14)) {
+            upgradeTo15();
+            config.setProperty("version", VERSION15);
+        }
+
         config.setProperty("version", VERSION);
+        save();
     }
 
     // "".split(",") return {""}; we need to get zero length array
@@ -510,27 +520,6 @@ public class Config extends AbstractConfig {
         return QConnection.getByConnection(connectionString, authMethod, getDefaultCredentials(authMethod), servers.values());
     }
 
-    public Credentials getDefaultCredentials(String authenticationMechanism) {
-        String user = config.getProperty("auth." + authenticationMechanism + ".user", "");
-        String password = config.getProperty("auth." + authenticationMechanism + ".password", "");
-        return new Credentials(user, password);
-    }
-
-    public void setDefaultCredentials(String authenticationMechanism, Credentials credentials) {
-        config.setProperty("auth." + authenticationMechanism + ".user", credentials.getUsername());
-        config.setProperty("auth." + authenticationMechanism + ".password", credentials.getPassword());
-        save();
-    }
-
-    public String getDefaultAuthMechanism() {
-        return config.getProperty("auth", DefaultAuthenticationMechanism.NAME);
-    }
-
-    public void setDefaultAuthMechanism(String authMechanism) {
-        config.setProperty("auth", authMechanism);
-        save();
-    }
-
     public int getResultTabsCount() {
         return Integer.parseInt(config.getProperty("resultTabsCount","5"));
     }
@@ -556,6 +545,15 @@ public class Config extends AbstractConfig {
     public void setMaxCharsInTableCell(int value) {
         config.setProperty("maxCharsInTableCell", "" + value);
         save();
+    }
+
+    public RuleSet getServerRuleSets() {
+        return serverRuleSet;
+    }
+
+    private void initServerRuleSets() {
+        serverRuleSet = new RuleSet();
+        serverRuleSet.load(config);
     }
 
     public Collection<String> getServerNames() {

@@ -171,57 +171,7 @@ public class ConfigTest {
         return getConfig(p);
     }
 
-    @Test
-    public void upgrade13Test() throws IOException {
-        config.addServer(server);
 
-        Config newConfig = copyConfig(config, p -> {
-            p.setProperty("version", "1.2");
-        });
-        assertEquals(0, newConfig.getServerHistory().size());
-
-        newConfig = copyConfig(config, p -> {
-            p.setProperty("version", "1.2");
-            p.setProperty("lruServer", server.getFullName());
-        });
-        assertEquals(1, newConfig.getServerHistory().size());
-        assertEquals(server, newConfig.getServerHistory().get(0));
-    }
-
-    @Test
-    public void upgradeFromOldConfig() throws IOException {
-        Properties p = new Properties();
-        p.setProperty("Servers", "server1");
-        p.setProperty("server.server1.host", "host.com");
-        p.setProperty("server.server1.port", "2000");
-        p.setProperty("server.server1.user", "user");
-        p.setProperty("server.server1.password", "password");
-        p.setProperty("server.server1.backgroundColor", "001122");
-        p.setProperty("server.server1.authenticationMechanism", DefaultAuthenticationMechanism.NAME);
-
-        Config config = getConfig(p);
-        assertEquals(1, config.getServers().length);
-
-        //duplicate server
-        p.setProperty("Servers", "server1,server1");
-        config = getConfig(p);
-        assertEquals(1, config.getServers().length);
-
-        //undefined servers should be filled with defaults
-        p.setProperty("Servers", "server2,server1");
-        config = getConfig(p);
-        assertEquals(2, config.getServers().length);
-
-        //errors should not fail the whole process
-        p.setProperty("server.server1.port", "not a number");
-        p.setProperty("server.server1.backgroundColor", "very strange");
-        p.setProperty("server.server1.authenticationMechanism", "unknown auth");
-        config = getConfig(p);
-        assertEquals(1, config.getServers().length);
-        assertEquals("server2", config.getServers()[0].getFullName());
-
-    }
-    
     @Test
     public void addServersTest() {
         Server server1 = server.newName("testServer1");
