@@ -351,4 +351,6 @@ public class ServerForm extends EscapeDialog {
     private JLabel folderLabel;
     private JLabel folderTextLabel;
     private JButton folderChangeButton;
+
+    private JCheckBox defUser, defPassword, defTLS, defAuthMethod, defColor;
 }

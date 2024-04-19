@@ -4,22 +4,27 @@ import studio.core.Credentials;
 import studio.core.DefaultAuthenticationMechanism;
 
 import java.awt.*;
-import java.util.Collections;
 import java.util.List;
-import java.util.Objects;
-import java.util.Properties;
+import java.util.*;
 import java.util.stream.Collectors;
 
 public class Server {
-    private String authenticationMechanism = DefaultAuthenticationMechanism.NAME;
-    private Color backgroundColor = Color.white;
     private String name = "";
     private String host = "";
     private int port = 0;
+    private List<String> folderPath = (List<String>) Collections.EMPTY_LIST;
+
+    private Optional<String> cfgUsername;
+    private Optional<String> cfgPassword;
+    private Optional<Boolean> cfgUseTLS;
+    private Optional<String> cfgAuthMethod;
+    private Optional<Color> cfgBgColor;
+
     private String username;
     private String password;
     private boolean useTLS = false;
-    private List<String> folderPath = (List<String>) Collections.EMPTY_LIST;
+    private Color backgroundColor = Color.white;
+    private String authenticationMechanism = DefaultAuthenticationMechanism.NAME;
 
     public static final Server NO_SERVER = new Server();
 
@@ -91,23 +96,72 @@ public class Server {
         this.folderPath = s.folderPath;
     }
 
-    public Server(String name, String host, int port, String username, String password, Color backgroundColor, String authenticationMechanism, boolean useTLS) {
-        this.name = name;
-        this.host = host;
-        this.port = port;
-        this.username = username;
-        this.password = password;
-        this.backgroundColor = backgroundColor;
-        this.authenticationMechanism = authenticationMechanism;
-        this.useTLS = useTLS;
+    public Server(String name, String host, int port, String username, String password, Color backgroundColor,
+                  String authenticationMechanism, boolean useTLS) {
+        this(name, host, port, Optional.of(username), Optional.of(password), Optional.of(backgroundColor),
+                Optional.of(authenticationMechanism), Optional.of(useTLS));
+    }
+
+    public Server(String name, String host, int port, Optional<String> username, Optional<String> password, Optional<Color> backgroundColor,
+                  Optional<String> authenticationMechanism, Optional<Boolean> useTLS) {
+        this(name, host, port, username, password, backgroundColor, authenticationMechanism, useTLS, (List<String>) null);
     }
 
     public Server(String name, String host, int port, String username, String password, Color backgroundColor,
                   String authenticationMechanism, boolean useTLS, ServerTreeNode parent) {
-        this(name, host, port, username, password, backgroundColor, authenticationMechanism, useTLS);
-        if (parent != null) {
-            folderPath = parent.getFolderPath();
-        }
+        this(name, host, port, Optional.of(username), Optional.of(password), Optional.of(backgroundColor),
+                Optional.of(authenticationMechanism), Optional.of(useTLS), parent);
+    }
+
+    public Server(String name, String host, int port, Optional<String> username, Optional<String> password, Optional<Color> backgroundColor,
+                  Optional<String> authenticationMechanism, Optional<Boolean> useTLS, ServerTreeNode parent) {
+        this(name, host, port, username, password, backgroundColor, authenticationMechanism, useTLS,
+                parent == null ? null : parent.getFolderPath() );
+    }
+
+    public Server(String name, String host, int port, Optional<String> username, Optional<String> password, Optional<Color> backgroundColor,
+                  Optional<String> authenticationMechanism, Optional<Boolean> useTLS, List<String> folderPath) {
+        this.name = name;
+        this.host = host;
+        this.port = port;
+
+        cfgUsername = username;
+        cfgUsername.ifPresent(s -> this.username = s);
+
+        cfgPassword = password;
+        cfgPassword.ifPresent(s -> this.password = s);
+
+        cfgBgColor = backgroundColor;
+        cfgBgColor.ifPresent(color -> this.backgroundColor = color);
+
+        cfgAuthMethod = authenticationMechanism;
+        cfgAuthMethod.ifPresent(s -> this.authenticationMechanism = s);
+
+        cfgUseTLS = useTLS;
+        cfgUseTLS.ifPresent(aBoolean -> this.useTLS = aBoolean);
+
+        if (folderPath != null) this.folderPath = folderPath;
+
+    }
+
+    public Optional<String> getCfgUsername() {
+        return cfgUsername;
+    }
+
+    public Optional<String> getCfgPassword() {
+        return cfgPassword;
+    }
+
+    public Optional<Boolean> getCfgUseTLS() {
+        return cfgUseTLS;
+    }
+
+    public Optional<String> getCfgAuthMethod() {
+        return cfgAuthMethod;
+    }
+
+    public Optional<Color> getCfgBgColor() {
+        return cfgBgColor;
     }
 
     public Server newName(String name) {
