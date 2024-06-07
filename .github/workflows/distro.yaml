@@ -13,10 +13,12 @@ jobs:
           java-version: '21'
           distribution: 'temurin'
           cache: gradle
-      - run: |
+      - name: Execute gradle build
+        run: |
           echo ${{ github.workspace }}
           cd ${{ github.workspace }}
           gradlew.bat build
+        shell: 'cmd'
       - uses: dorny/test-reporter@v1
         if: always()
         with:
