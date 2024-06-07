@@ -166,7 +166,7 @@ public class ConfigTest {
     private Config copyConfig(Config config, Consumer<Properties> propsModification) throws IOException {
         config.saveToDisk();
         Properties p = new Properties();
-        p.load(new FileInputStream(config.getFilename()));
+        p.load(new FileInputStream(tmpFile));
         propsModification.accept(p);
         return getConfig(p);
     }
