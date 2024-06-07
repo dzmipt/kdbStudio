@@ -18,6 +18,8 @@ jobs:
           echo ${{ github.workspace }}
           cd ${{ github.workspace }}
           gradlew.bat build
+          gradlew.bat createInstaller
+          dir
         shell: 'cmd'
       - uses: dorny/test-reporter@v1
         if: always()
@@ -26,3 +28,4 @@ jobs:
           path: build/test-results/*/*.xml
           reporter: java-junit
           fail-on-error: true
+

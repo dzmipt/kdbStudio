@@ -10,7 +10,8 @@ apply plugin: 'signing'
 
 group = "com.github.dzmipt"
 archivesBaseName = "kdbStudio"
-version = "dz4.1"
+def versionNumber = "4.1"
+def version = "dz${versionNumber}"
 
 compileJava {
     sourceCompatibility = JavaVersion.VERSION_1_8
@@ -250,3 +251,13 @@ publishing {
 signing {
     sign publishing.publications.mavenJava
 }
+
+
+task createInstaller(dependsOn: installDist, type: Exec) {
+    commandLine "jpackage",
+        '--app-version',"${versionNumber}",'--name','kdbStudio',
+        '--input',"${rootDir}/build/install/kdbStudio/lib",'--main-class', 'studio.core.Studio', '--main-jar',
+        'kdbStudio.jar'
+}
+
+
