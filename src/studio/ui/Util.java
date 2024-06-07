@@ -89,12 +89,22 @@ public class Util {
     }
 
     public static void centerChildOnParent(Component child,Component parent) {
-        Point parentlocation = parent.getLocation();
-        Dimension oursize = child.getPreferredSize();
-        Dimension parentsize = parent.getSize();
+        Point parentLocation;
+        Dimension parentSize;
+        if (parent == null) {
+            GraphicsDevice device = GraphicsEnvironment.getLocalGraphicsEnvironment().getDefaultScreenDevice();
+            Rectangle bounds = device.getDefaultConfiguration().getBounds();
+            parentSize = bounds.getSize();
+            parentLocation = bounds.getLocation();
+        } else {
+            parentLocation = parent.getLocation();
+            parentSize = parent.getSize();
+        }
 
-        int x = parentlocation.x + (parentsize.width - oursize.width) / 2;
-        int y = parentlocation.y + (parentsize.height - oursize.height) / 2;
+        Dimension oursize = child.getPreferredSize();
+
+        int x = parentLocation.x + (parentSize.width - oursize.width) / 2;
+        int y = parentLocation.y + (parentSize.height - oursize.height) / 2;
 
         x = Math.max(0,x);  // keep the corner on the screen
         y = Math.max(0,y);  //
