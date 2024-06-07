@@ -5,7 +5,7 @@ name: Java CI with Gradle
 
 on:
   push:
-    branches: [ '*' ]
+    branches-ignore: [ 'build_distro' ]
   pull_request:
     branches: [ master ]
 

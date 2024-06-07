@@ -13,7 +13,7 @@ jobs:
           java-version: '21'
           distribution: 'temurin'
           cache: gradle
-      - run: gradle.bat build
+      - run: gradlew.bat build
       - uses: dorny/test-reporter@v1
         if: always()
         with:
