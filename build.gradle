@@ -254,7 +254,7 @@ signing {
 
 
 task createInstaller(dependsOn: installDist, type: Exec) {
-    commandLine "jpackage",
+    commandLine "jpackage.exe",
         '--app-version',"${versionNumber}",'--name','kdbStudio',
         '--input',"${rootDir}/build/install/kdbStudio/lib",'--main-class', 'studio.core.Studio', '--main-jar',
         'kdbStudio.jar'
