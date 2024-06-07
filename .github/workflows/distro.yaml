@@ -40,7 +40,6 @@ jobs:
           reporter: java-junit
           fail-on-error: true
 
-      - name: Upload windows binary
-        uses: actions/upload-artifact@v3.1.2
+      - uses: actions/upload-artifact@v3.1.2
           name: Windows binary
           path: kdbStudio-4.1.exe
