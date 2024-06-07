@@ -18,6 +18,12 @@ jobs:
           echo ${{ github.workspace }}
           cd ${{ github.workspace }}
           gradlew.bat build
+          dir
+        shell: 'cmd'
+      - name: Create installer
+        run: |
+          echo ${{ github.workspace }}
+          cd ${{ github.workspace }}
           gradlew.bat createInstaller
           dir
         shell: 'cmd'
