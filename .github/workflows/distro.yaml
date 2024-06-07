@@ -39,7 +39,6 @@ jobs:
           path: build/test-results/*/*.xml
           reporter: java-junit
           fail-on-error: true
-
       - uses: actions/upload-artifact@v3.1.2
-          name: Windows binary
-          path: kdbStudio-4.1.exe
+        name: Windows binary
+        path: kdbStudio-4.1.exe
