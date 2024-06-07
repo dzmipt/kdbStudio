@@ -25,6 +25,11 @@ jobs:
           echo ${{ github.workspace }}
           cd ${{ github.workspace }}
           gradlew.bat createInstaller
+        shell: 'cmd'
+      - name: Show dir content
+        run: |
+          echo ${{ github.workspace }}
+          cd ${{ github.workspace }}
           dir
         shell: 'cmd'
       - uses: dorny/test-reporter@v1
