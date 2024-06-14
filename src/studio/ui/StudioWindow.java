@@ -567,7 +567,7 @@ public class StudioWindow extends JFrame implements WindowListener {
 
         addServerAction = UserAction.create(I18n.getString("Add"), Util.ADD_SERVER_ICON, "Configure a new server",
                 KeyEvent.VK_A, null, e -> {
-                    AddServerForm f = new AddServerForm(this);
+                    AddServerForm f = new AddServerForm(this, editor.getServer());
                     f.alignAndShow();
                     if (f.getResult() == ACCEPTED) {
                         Server s = f.getServer();

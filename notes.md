@@ -1,3 +1,4 @@
+* Server Add form prepopulate details of currently selected server
 * Export as Excel
     * Fixing timezone bug
     * Adding server and query details into a separate tab

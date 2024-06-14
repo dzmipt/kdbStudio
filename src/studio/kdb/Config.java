@@ -2,7 +2,6 @@ package studio.kdb;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import studio.core.AuthenticationManager;
 import studio.core.Credentials;
 import studio.core.DefaultAuthenticationMechanism;
 import studio.kdb.config.AbstractConfig;
@@ -720,9 +719,6 @@ public class Config extends AbstractConfig {
         }
         if (name.contains("/")) {
             throw new IllegalArgumentException("Server name can't contains /");
-        }
-        if (AuthenticationManager.getInstance().lookup(server.getAuthenticationMechanism()) == null) {
-            throw new IllegalArgumentException("Unknown Authentication Mechanism: " + server.getAuthenticationMechanism());
         }
 
         server.getFolderPath()
