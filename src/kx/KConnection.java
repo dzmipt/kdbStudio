@@ -257,6 +257,7 @@ public class KConnection {
                     IOException io = e instanceof IOException ?
                             (IOException) e : new IOException("Exception in message deserialization", e);
                     message = new KMessage(io);
+                    message.setFinished(K.KTimestamp.now());
                     lockRead.notifyAll();
                 }
                 close();
