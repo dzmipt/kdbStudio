@@ -13,6 +13,8 @@ import studio.ui.StudioWindow;
 
 import javax.swing.*;
 import java.io.IOException;
+import java.text.DecimalFormat;
+import java.text.NumberFormat;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -30,6 +32,8 @@ public class Session implements ConnectionStateListener, KAuthentication {
     private static final Logger log = LogManager.getLogger();
 
     private final static Map<Server, Session> sessions = new HashMap<>();
+
+    private final static NumberFormat NUMBER_FORMAT = new DecimalFormat("#,###");
 
     public static Session newSession(EditorTab editor) {
         Server server = editor.getServer();
@@ -67,7 +71,7 @@ public class Session implements ConnectionStateListener, KAuthentication {
         KdbMessageLimitAction action = Config.getInstance().getEnum(Config.KDB_MESSAGE_SIZE_LIMIT_ACTION);
         long limit = 1_000_000L * Config.getInstance().getInt(Config.KDB_MESSAGE_SIZE_LIMIT_MB);
         if (msgLength < limit) return;
-        final String msg = "Incoming message size " + msgLength + " breached the limit of " + limit + ".";
+        final String msg = "Incoming message size " + NUMBER_FORMAT.format(msgLength) + " breached the limit of " + NUMBER_FORMAT.format(limit) + ".";
         if (action == KdbMessageLimitAction.BLOCK) {
             throw new IOException(msg);
         }
