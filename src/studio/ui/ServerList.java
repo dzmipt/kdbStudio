@@ -6,6 +6,8 @@ import studio.kdb.Config;
 import studio.kdb.Server;
 import studio.kdb.ServerTreeNode;
 
+import javax.accessibility.AccessibleContext;
+import javax.accessibility.AccessibleRole;
 import javax.swing.*;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
@@ -311,6 +313,23 @@ public class ServerList extends EscapeDialog implements TreeExpansionListener  {
     private void initComponents() {
         treeModel = new DefaultTreeModel(new ServerTreeNode(), true);
         tree = new JTree(treeModel) {
+
+            /* Override the default behaviour. This is to workaround a strange bug which I met in MacOS with
+            big tree (few thousands nodes overall). From time to time, the whole UI is frozen for minutes.
+             */
+            @Override
+            public AccessibleContext getAccessibleContext() {
+                if (accessibleContext == null) {
+                    accessibleContext = new AccessibleJTree() {
+                        @Override
+                        public AccessibleRole getAccessibleRole() {
+                            return AccessibleRole.FILLER;
+                        }
+                    };
+                }
+                return accessibleContext;
+            }
+
             @Override
             public String convertValueToText(Object nodeObj, boolean selected, boolean expanded, boolean leaf, int row, boolean hasFocus) {
                 ServerTreeNode node = (ServerTreeNode) nodeObj;
@@ -324,6 +343,7 @@ public class ServerList extends EscapeDialog implements TreeExpansionListener  {
                     value = "<html><b>" + value + "</b></html>";
                 }
                 return value;
+
             }
         };
         tree.setRootVisible(false);
