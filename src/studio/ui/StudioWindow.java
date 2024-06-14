@@ -251,7 +251,7 @@ public class StudioWindow extends JFrame implements WindowListener {
     }
 
     private void exportAsExcel(final String filename) {
-        ExcelExporter.exportTableX(this,getSelectedTable(),new File(filename),false);
+        ExcelExporter.exportTableX(this,getSelectedResultPane(),new File(filename),false);
     }
 
     private void exportAsDelimited(final TableModel model,final String filename,final char delimiter) {
@@ -625,7 +625,7 @@ public class StudioWindow extends JFrame implements WindowListener {
                 KeyEvent.VK_O, null, e -> {
                     try {
                         File file = File.createTempFile("studioExport", ".xlsx");
-                        ExcelExporter.exportTableX(this, getSelectedTable(), file, true);
+                        ExcelExporter.exportTableX(this, getSelectedResultPane(), file, true);
                     } catch (IOException ex) {
                         log.error("Failed to create temporary file", ex);
                         StudioOptionPane.showError(this, "Failed to Open in Excel " + ex.getMessage(),"Error");

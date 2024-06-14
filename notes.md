@@ -1,3 +1,6 @@
+* Export as Excel
+  * Fixing timezone bug
+  * Adding server and query details into a separate tab
 * Adding auth.method control to the toolbar
 * Any IO errors are added as Error tab (pop-up error message is used for internal bugs)
     * KX errors from servers are now display with ' (not as symbol)

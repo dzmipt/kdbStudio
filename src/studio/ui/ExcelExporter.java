@@ -4,6 +4,7 @@ import org.apache.poi.ss.usermodel.*;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import studio.kdb.K;
 import studio.kdb.KFormatContext;
+import studio.ui.action.QueryResult;
 
 import javax.swing.*;
 import javax.swing.table.TableModel;
@@ -24,10 +25,15 @@ class ExcelExporter {
         return FORMATTER.format(x);
     }
 
-    public static void exportTableX(final JFrame frame, final JTable table, final File file,
+    public static void exportTableX(final JFrame frame, final TabPanel tab, final File file,
                              final boolean openIt) {
+        if (tab == null) return;
 
-        final TableModel model = table.getModel();
+        QGrid grid = tab.getGrid();
+        if (grid == null) return;
+
+
+        final TableModel model = grid.getTable().getModel();
         final String message = "Exporting data to " + file.getAbsolutePath();
         final String note = "0% complete";
         String title = "Studio for kdb+";
@@ -43,6 +49,8 @@ class ExcelExporter {
         Runnable runner = () -> {
             try {
                 Workbook workbook = buildWorkbook(model, pm);
+                addDetails(workbook, tab);
+
                 FileOutputStream fileOut = new FileOutputStream(file);
                 workbook.write(fileOut);
                 fileOut.close();
@@ -145,6 +153,26 @@ class ExcelExporter {
             }
         }
         return workbook;
+    }
+
+    private static void addDetails(Workbook workbook, TabPanel tab) {
+        QueryResult queryResult = tab.getQueryResult();
+        String server = null;
+        String query = null;
+        if (queryResult != null) {
+            if (queryResult.getServer() != null) server = queryResult.getServer().getConnectionString();
+            query = queryResult.getQuery();
+        }
+        if (query != null && server != null) {
+            Sheet sheet = workbook.createSheet("Query Details");
+            Row row = sheet.createRow(0);
+            row.createCell(0).setCellValue("Server:");
+            row.createCell(1).setCellValue(tab.getQueryResult().getServer().getConnectionString());
+            row = sheet.createRow(1);
+            row.createCell(0).setCellValue("Query:");
+            row.createCell(1).setCellValue(tab.getQueryResult().getQuery());
+        }
+
     }
 
     public static void openTable(File file) {
