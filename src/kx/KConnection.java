@@ -69,7 +69,9 @@ public class KConnection {
         return closed;
     }
 
-    private void connect() throws IOException, K4AccessException {
+    public synchronized void connect() throws IOException, K4AccessException {
+        if ( !closed ) return;
+
         String userPassword = authentication == null ? "" : authentication.getUserPassword();
         s = new Socket();
         s.setReceiveBufferSize(1024 * 1024);
@@ -141,7 +143,7 @@ public class KConnection {
 
     public synchronized KMessage k(K.KBase x, ProgressCallback progress) throws K4Exception, IOException, InterruptedException {
         try {
-            if (isClosed()) connect();
+            connect(); // will do nothing if it is already connected
             socketReader.setProgressCallback(progress);
             K.KTimestamp sentTime = K.KTimestamp.now();
             long sentBytes = send(x);

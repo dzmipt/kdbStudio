@@ -62,7 +62,7 @@ public class Session implements ConnectionStateListener, KAuthentication {
     @Override
     public void connectionStateChange(boolean connected) {
         for(EditorTab editor: editors) {
-            editor.setSessonConnection(connected);
+            editor.setSessionConnection(connected);
         }
     }
 
