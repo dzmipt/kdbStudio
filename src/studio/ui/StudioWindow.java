@@ -9,10 +9,7 @@ import studio.core.AuthenticationManager;
 import studio.core.Studio;
 import studio.kdb.*;
 import studio.kdb.config.ActionOnExit;
-import studio.ui.action.ConnectionStats;
-import studio.ui.action.QPadImport;
-import studio.ui.action.QueryResult;
-import studio.ui.action.WorkspaceSaver;
+import studio.ui.action.*;
 import studio.ui.chart.Chart;
 import studio.ui.dndtabbedpane.DragEvent;
 import studio.ui.dndtabbedpane.DraggableTabbedPane;
@@ -153,8 +150,6 @@ public class StudioWindow extends JFrame implements WindowListener {
     private final List<Server> serverHistory;
 
     public final static int menuShortcutKeyMask = java.awt.Toolkit.getDefaultToolkit().getMenuShortcutKeyMask();
-    private final static Cursor textCursor = Cursor.getPredefinedCursor(Cursor.TEXT_CURSOR);
-    private final static Cursor waitCursor = Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR);
 
     private final static int MAX_SERVERS_TO_CLONE = 20;
 
@@ -1544,7 +1539,7 @@ public class StudioWindow extends JFrame implements WindowListener {
     }
 
     public void refreshQuery() {
-        executeK4Query(lastQuery);
+        editor.executeQuery(QueryTask.query(lastQuery));
     }
 
     public void executeQueryCurrentLine() {
@@ -1565,7 +1560,7 @@ public class StudioWindow extends JFrame implements WindowListener {
             return;
         }
 
-        executeK4Query(text);
+        editor.executeQuery(QueryTask.query(text));
         lastQuery = text;
     }
 
@@ -1651,22 +1646,6 @@ public class StudioWindow extends JFrame implements WindowListener {
         return grid.getTable();
     }
 
-    private void executeK4Query(String text) {
-        executeK4Query(new K.KCharacterVector(text), text);
-    }
-
-    void executeK4Query(K.KBase query, String queryText) {
-        if (editor.getServer() == Server.NO_SERVER) {
-            log.info("Server is not set. Can't execute the query");
-            return;
-        }
-        editor.getTextArea().setCursor(waitCursor);
-        editor.getPane().setEditorStatus("Executing: " + queryText);
-        editor.getQueryExecutor().execute(query, queryText);
-        editor.getPane().startClock();
-        refreshActionState();
-    }
-
     private TabPanel getResultPane(int index) {
         return (TabPanel)tabbedPane.getComponentAt(index);
     }
@@ -1701,39 +1680,6 @@ public class StudioWindow extends JFrame implements WindowListener {
         }
         res.append("</html>");
         return res.toString();
-    }
-
-    // if the query is cancelled execTime=-1, result and error are null's
-    public static void queryExecutionComplete(EditorTab editor, QueryResult queryResult) {
-        editor.getPane().stopClock();
-        JTextComponent textArea = editor.getTextArea();
-        textArea.setCursor(textCursor);
-        if (queryResult.isComplete()) {
-            long execTime = queryResult.getExecutionTimeInMS();
-            editor.getPane().setEditorStatus("Last execution time: " + (execTime > 0 ? "" + execTime : "<1") + " ms");
-        } else {
-            editor.getPane().setEditorStatus("Last query was cancelled");
-        }
-
-        StudioWindow window = editor.getStudioWindow();
-        try {
-            if (queryResult.isComplete()) {
-                window.addResultTab(queryResult, "Executed at server: " + queryResult.getServer().getDescription(true) );
-            }
-        } catch (Throwable error) {
-            log.error("Error during result rendering", error);
-
-            String message = error.getMessage();
-            if ((message == null) || (message.length() == 0))
-                message = "No message with exception. Exception is " + error;
-            StudioOptionPane.showError(editor.getPane(),
-                    "\nAn unexpected error occurred whilst communicating with " +
-                            editor.getServer().getConnectionString() +
-                            "\n\nError detail is\n\n" + message + "\n\n",
-                    "Studio for kdb+");
-        }
-
-        window.refreshActionState();
     }
 
     public static Workspace getWorkspace() {

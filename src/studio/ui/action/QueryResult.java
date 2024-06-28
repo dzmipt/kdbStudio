@@ -25,14 +25,20 @@ public class QueryResult {
 
     public void setResult(KMessage result) {
         this.result = result;
-        Throwable error = result.getError();
-        if (error != null) setError(error);
+        if (result != null) {
+            Throwable error = result.getError();
+            if (error != null) setError(error);
+        }
         complete = true;
     }
 
     public void setError(Throwable error) {
         this.error = error;
         complete = true;
+    }
+
+    public boolean hasResultObject() {
+        return result != null || error != null;
     }
 
     public boolean isComplete() {

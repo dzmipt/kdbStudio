@@ -1,3 +1,4 @@
+* Server connect/disconnect actions from status bar
 * Server Add form prepopulate details of currently selected server
 * Export as Excel
     * Fixing timezone bug

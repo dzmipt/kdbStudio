@@ -51,6 +51,10 @@ public abstract class UserAction extends AbstractAction {
         return create(text, null, desc, mnemonic, null, listener);
     }
 
+    public static UserAction create(String text, Icon icon, ActionListener listener) {
+        return create(text, icon, null, 0, null, listener);
+    }
+
     public static UserAction create(String text, ActionListener listener) {
         return create(text, null, null, 0, null, listener);
     }

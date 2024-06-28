@@ -127,6 +127,10 @@ public class Session implements ConnectionStateListener, KAuthentication {
         kConn.close();
     }
 
+    public void connect() throws IOException, K4Exception {
+        kConn.connect();
+    }
+
     public Server getServer() {
         return server;
     }

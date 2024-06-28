@@ -6,6 +6,7 @@ import org.apache.logging.log4j.Logger;
 import studio.kdb.ListModel;
 import studio.kdb.*;
 import studio.ui.action.QueryResult;
+import studio.ui.action.QueryTask;
 
 import javax.swing.*;
 import javax.swing.border.EtchedBorder;
@@ -65,7 +66,7 @@ public class TabPanel extends JPanel {
         String varName = StudioOptionPane.showInputDialog(studioWindow, "Enter variable name", "Upload to Server");
         if (varName == null) return;
         varName = varName.trim();
-        studioWindow.executeK4Query(new K.KList(new K.Function("{x set y}"), new K.KSymbol(varName), result), "<upload to server>");
+        studioWindow.getActiveEditor().executeQuery(QueryTask.upload(varName, result));
     }
 
     private void initComponents() {

@@ -11,6 +11,7 @@ import studio.ui.search.SearchAction;
 import studio.ui.search.SearchPanel;
 import studio.ui.search.SearchPanelListener;
 import studio.ui.statusbar.EditorStatusBar;
+import studio.ui.statusbar.EditorStatusBarCallback;
 import studio.ui.statusbar.MainStatusBar;
 
 import javax.swing.*;
@@ -69,6 +70,10 @@ public class EditorPane extends JPanel implements MouseWheelListener, SearchPane
 
     public void setSessionConnected(boolean connected) {
         editorStatusBar.setSessionConnected(connected);
+    }
+
+    public void setEditorStatusBarCallback(EditorStatusBarCallback callback) {
+        editorStatusBar.setEditorStatusBarCallback(callback);
     }
 
     @Override

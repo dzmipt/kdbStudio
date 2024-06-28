@@ -5,11 +5,9 @@ import kx.KMessage;
 import kx.ProgressCallback;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import studio.kdb.K;
 import studio.kdb.Server;
 import studio.kdb.Session;
 import studio.ui.EditorTab;
-import studio.ui.StudioWindow;
 
 import javax.swing.*;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -35,8 +33,8 @@ public class QueryExecutor implements ProgressCallback {
         this.editor = editor;
     }
 
-    public void execute(K.KBase query, String queryText) {
-        worker = new Worker(queryIndex.getAndIncrement(), editor, query, queryText);
+    public void execute(QueryTask queryTask) {
+        worker = new Worker(queryIndex.getAndIncrement(), editor, queryTask);
         worker.execute();
     }
 
@@ -99,17 +97,15 @@ public class QueryExecutor implements ProgressCallback {
 
         private volatile EditorTab editor;
         private volatile Server server;
-        private volatile K.KBase query;
-        private volatile String queryText;
+        private QueryTask queryTask;
         private final int queryIndex;
         private volatile Session session = null;
 
-        public Worker(int queryIndex, EditorTab editor, K.KBase query, String queryText) {
+        public Worker(int queryIndex, EditorTab editor, QueryTask queryTask) {
             this.queryIndex = queryIndex;
             this.editor = editor;
             this.server = editor.getServer();
-            this.query = query;
-            this.queryText = queryText;
+            this.queryTask = queryTask;
         }
 
         void closeConnection() {
@@ -126,11 +122,11 @@ public class QueryExecutor implements ProgressCallback {
 
         @Override
         protected QueryResult doInBackground() {
-            QueryResult result = new QueryResult(server, queryText);
-            queryLog.info("#{}: query {}({})\n{}",queryIndex, server.getFullName(), server.getConnectionString(), queryText);
+            QueryResult result = new QueryResult(server, queryTask.getQueryText());
+            queryLog.info("#{}: query {}({})\n{}",queryIndex, server.getFullName(), server.getConnectionString(), queryTask.getQueryText());
             try {
                 session = getSession();
-                KMessage response = session.execute(query, QueryExecutor.this);
+                KMessage response = queryTask.execute(session, QueryExecutor.this);
                 result.setResult(response);
             } catch (Throwable e) {
                 if (! (e instanceof K4Exception)) {
@@ -146,7 +142,11 @@ public class QueryExecutor implements ProgressCallback {
                     queryLog.info("#{}: error during execution {} {}", queryIndex, result.getError().getClass().getName(), result.getError().getMessage());
                 }
             } else {
-                queryLog.info("#{}: type={}, count={}, time={}", queryIndex, result.getResult().getType(), result.getResult().count(), result.getExecutionTimeInMS());
+                if (queryTask.returnResult()) {
+                    queryLog.info("#{}: type={}, count={}, time={}", queryIndex, result.getResult().getType(), result.getResult().count(), result.getExecutionTimeInMS());
+                } else {
+                    queryLog.info("#{}: task={}, time={}", queryIndex, queryTask.getQueryText(), result.getExecutionTimeInMS());
+                }
             }
             return result;
         }
@@ -159,14 +159,14 @@ public class QueryExecutor implements ProgressCallback {
             try {
                 QueryResult result;
                 if (isCancelled()) {
-                    result = new QueryResult(server, queryText);
+                    result = new QueryResult(server, queryTask.getQueryText());
                     queryLog.info("#{}: Cancelled", queryIndex);
                 } else {
                     result = get();
                 }
-                StudioWindow.queryExecutionComplete(editor, result);
+                editor.queryExecutionComplete(result);
             } catch (Exception e) {
-                log.error("Ops... It wasn't expected", e);
+                log.error("Oops... It wasn't expected", e);
             }
         }
     }

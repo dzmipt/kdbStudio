@@ -1,9 +1,14 @@
 package studio.ui.statusbar;
 
 import studio.ui.MinSizeLabel;
+import studio.ui.UserAction;
+import studio.ui.Util;
 
 import javax.swing.*;
+import java.awt.*;
 import java.awt.event.ActionEvent;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
 
 public class EditorStatusBar extends StatusBar {
 
@@ -12,7 +17,12 @@ public class EditorStatusBar extends StatusBar {
     private final Timer timer;
     private long clock;
     private boolean sessionConnected = false;
+    private EditorStatusBarCallback editorStatusBarCallback = null;
 
+    private UserAction actionConnect;
+    private UserAction actionDisconnect;
+
+    private final static Cursor cursor = Cursor.getPredefinedCursor(Cursor.HAND_CURSOR);
     private final static String CONNECTED = "Connected";
     private final static String DISCONNECTED = "Disconnected";
 
@@ -20,10 +30,39 @@ public class EditorStatusBar extends StatusBar {
         lblConnection = new MinSizeLabel("");
         lblConnection.setHorizontalAlignment(JLabel.CENTER);
         lblConnection.setMinimumWidth("1:00:00", CONNECTED, DISCONNECTED);
+        lblConnection.setCursor(cursor);
         addComponent(lblConnection);
+        lblConnection.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mousePressed(MouseEvent e) {
+                if (editorStatusBarCallback == null) return;
+
+                JPopupMenu menu = new JPopupMenu();
+                if (sessionConnected) {
+                    menu.add(actionDisconnect);
+                } else {
+                    menu.add(actionConnect);
+                }
+                menu.show(lblConnection, e.getX(), e.getY());
+            }
+        });
 
         timer =  new Timer(500, this::timerClockAction);
         refreshConnectedLabel();
+    }
+
+    public void setEditorStatusBarCallback(EditorStatusBarCallback editorStatusBarCallback) {
+        this.editorStatusBarCallback = editorStatusBarCallback;
+        if (editorStatusBarCallback == null) return;
+
+        actionConnect = UserAction.create("Connect", Util.CHECK_ICON,
+                 e -> this.editorStatusBarCallback.connect()
+        );
+
+        actionDisconnect = UserAction.create("Disconnect", Util.ERROR_SMALL_ICON,
+                e -> this.editorStatusBarCallback.disconnect()
+        );
+
     }
 
     public void startClock() {

@@ -7,7 +7,10 @@ import org.fife.ui.rsyntaxtextarea.RSyntaxTextArea;
 import studio.kdb.Server;
 import studio.kdb.Session;
 import studio.ui.action.QueryExecutor;
+import studio.ui.action.QueryResult;
+import studio.ui.action.QueryTask;
 import studio.ui.rstextarea.StudioRSyntaxTextArea;
+import studio.ui.statusbar.EditorStatusBarCallback;
 import studio.utils.Content;
 import studio.utils.FileReaderWriter;
 import studio.utils.FileWatcher;
@@ -16,6 +19,8 @@ import studio.utils.LineEnding;
 import javax.swing.*;
 import javax.swing.text.BadLocationException;
 import javax.swing.text.Document;
+import javax.swing.text.JTextComponent;
+import java.awt.*;
 import java.awt.datatransfer.DataFlavor;
 import java.awt.datatransfer.Transferable;
 import java.awt.dnd.DnDConstants;
@@ -27,7 +32,7 @@ import java.nio.file.Path;
 import java.util.Objects;
 import java.util.stream.Stream;
 
-public class EditorTab implements FileWatcher.Listener {
+public class EditorTab implements FileWatcher.Listener, EditorStatusBarCallback {
 
     private String title;
     private String filename = null;
@@ -46,6 +51,9 @@ public class EditorTab implements FileWatcher.Listener {
     private Session session = null;
 
     private static final Logger log = LogManager.getLogger();
+
+    private final static Cursor textCursor = Cursor.getPredefinedCursor(Cursor.TEXT_CURSOR);
+    private final static Cursor waitCursor = Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR);
 
     public EditorTab(StudioWindow studioWindow) {
         this.studioWindow = studioWindow;
@@ -67,6 +75,7 @@ public class EditorTab implements FileWatcher.Listener {
         if (editorPane != null) throw new IllegalStateException("The EditorTab has been already initialized");
 
         editorPane = new EditorPane(true, studioWindow.getEditorSearchPanel(), studioWindow.getMainStatusBar());
+        editorPane.setEditorStatusBarCallback(this);
         editorPane.setFocusable(false);
         RSyntaxTextArea textArea = editorPane.getTextArea();
         textArea.setName("editor" + studioWindow.nextEditorNameIndex());
@@ -104,6 +113,60 @@ public class EditorTab implements FileWatcher.Listener {
         //@TODO do we need to discard all changes??
         textArea.discardAllEdits();
         textArea.requestFocus();
+    }
+
+    public void executeQuery(QueryTask queryTask) {
+        if (server == Server.NO_SERVER) {
+            log.info("Server is not set. Can't execute the query");
+            return;
+        }
+        getTextArea().setCursor(waitCursor);
+        editorPane.setEditorStatus("Executing: " + queryTask.getQueryText());
+        getQueryExecutor().execute(queryTask);
+        editorPane.startClock();
+        studioWindow.refreshActionState();
+    }
+
+    // if the query is cancelled execTime=-1, result and error are null's
+    public void queryExecutionComplete(QueryResult queryResult) {
+        editorPane.stopClock();
+        JTextComponent textArea = getTextArea();
+        textArea.setCursor(textCursor);
+        if (queryResult.isComplete()) {
+            long execTime = queryResult.getExecutionTimeInMS();
+            editorPane.setEditorStatus("Last execution time: " + (execTime > 0 ? "" + execTime : "<1") + " ms");
+        } else {
+            editorPane.setEditorStatus("Last query was cancelled");
+        }
+
+        try {
+            if (queryResult.hasResultObject()) {
+                studioWindow.addResultTab(queryResult, "Executed at server: " + queryResult.getServer().getDescription(true) );
+            }
+        } catch (Throwable error) {
+            log.error("Error during result rendering", error);
+
+            String message = error.getMessage();
+            if ((message == null) || (message.length() == 0))
+                message = "No message with exception. Exception is " + error;
+            StudioOptionPane.showError(editorPane,
+                    "\nAn unexpected error occurred whilst communicating with " +
+                            server.getConnectionString() +
+                            "\n\nError detail is\n\n" + message + "\n\n",
+                    "Studio for kdb+");
+        }
+
+        studioWindow.refreshActionState();
+    }
+
+    @Override
+    public void connect() {
+        executeQuery(QueryTask.connect());
+    }
+
+    @Override
+    public void disconnect() {
+        session.close();
     }
 
     private void dropFiles(File... files) {
