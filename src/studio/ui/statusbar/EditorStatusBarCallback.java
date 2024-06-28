@@ -1,6 +1,6 @@
 package studio.ui.statusbar;
 
 public interface EditorStatusBarCallback {
-    void connect();
+    void connect(String authMethod);
     void disconnect();
 }

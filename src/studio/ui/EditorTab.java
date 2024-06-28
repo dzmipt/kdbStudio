@@ -4,6 +4,7 @@ import org.apache.commons.io.FilenameUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.fife.ui.rsyntaxtextarea.RSyntaxTextArea;
+import studio.kdb.Config;
 import studio.kdb.Server;
 import studio.kdb.Session;
 import studio.ui.action.QueryExecutor;
@@ -160,7 +161,12 @@ public class EditorTab implements FileWatcher.Listener, EditorStatusBarCallback 
     }
 
     @Override
-    public void connect() {
+    public void connect(String authMethod) {
+        if (! server.getAuthenticationMechanism().equals(authMethod)) {
+            Server newServer = Config.getInstance().getServerByConnectionString(server.getConnectionString(), authMethod);
+            studioWindow.setServer(newServer);
+        }
+
         executeQuery(QueryTask.connect());
     }
 
@@ -219,7 +225,7 @@ public class EditorTab implements FileWatcher.Listener, EditorStatusBarCallback 
     }
 
     public void setSessionConnection(boolean connected) {
-        editorPane.setSessionConnected(connected);
+        editorPane.setSessionConnected(connected, server.getAuthenticationMechanism());
     }
 
     public void setStudioWindow(StudioWindow studioWindow) {

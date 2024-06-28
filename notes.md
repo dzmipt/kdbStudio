@@ -1,9 +1,9 @@
-* Server connect/disconnect actions from status bar
+* Server connect/disconnect actions from the status bar
+    * adding selection of auth.method into the status bar 
 * Server Add form prepopulate details of currently selected server
 * Export as Excel
     * Fixing timezone bug
     * Adding server and query details into a separate tab
-* Adding auth.method control to the toolbar
 * Any IO errors are added as Error tab (pop-up error message is used for internal bugs)
     * KX errors from servers are now display with ' (not as symbol)
 * Parent folder can be specified in the server form (in add and edit server)

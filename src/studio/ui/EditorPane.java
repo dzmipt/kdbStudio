@@ -68,8 +68,8 @@ public class EditorPane extends JPanel implements MouseWheelListener, SearchPane
         editorStatusBar.stopClock();
     }
 
-    public void setSessionConnected(boolean connected) {
-        editorStatusBar.setSessionConnected(connected);
+    public void setSessionConnected(boolean connected, String authMethod) {
+        editorStatusBar.setSessionConnected(connected, authMethod);
     }
 
     public void setEditorStatusBarCallback(EditorStatusBarCallback callback) {

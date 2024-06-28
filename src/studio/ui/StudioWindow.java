@@ -5,7 +5,6 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.fife.ui.rsyntaxtextarea.RSyntaxTextArea;
 import org.fife.ui.rsyntaxtextarea.RSyntaxTextAreaEditorKit;
-import studio.core.AuthenticationManager;
 import studio.core.Studio;
 import studio.kdb.*;
 import studio.kdb.config.ActionOnExit;
@@ -76,7 +75,6 @@ public class StudioWindow extends JFrame implements WindowListener {
     private boolean loading = true;
 
     private JComboBox<String> comboServer;
-    private JComboBox<String> comboAuthMethod;
     private JTextField txtServer;
     private String lastQuery = null;
     private JToolBar toolbar;
@@ -1070,18 +1068,6 @@ public class StudioWindow extends JFrame implements WindowListener {
         refreshServerListAllWindows();
     }
 
-
-    private void selectAuthMethod() {
-        Object selectedItem = comboAuthMethod.getSelectedItem();
-        String newAuthMethod =  selectedItem == null ? "" : selectedItem.toString();
-        if (editor.getServer().getAuthenticationMechanism().equals(newAuthMethod)) return;
-
-        Server server = CONFIG.getServerByConnectionString(txtServer.getText().trim(), newAuthMethod);
-        setServer(server);
-        refreshServer();
-
-    }
-
     private void selectServerName() {
         String selection = comboServer.getSelectedItem().toString();
         if(! CONFIG.getServerNames().contains(selection)) return;
@@ -1133,7 +1119,6 @@ public class StudioWindow extends JFrame implements WindowListener {
         Server server = editor.getServer();
         String name = server == Server.NO_SERVER ? "" : server.getFullName();
         comboServer.setSelectedItem(name);
-        comboAuthMethod.getModel().setSelectedItem(server.getAuthenticationMechanism());
 
         refreshConnectionText();
         refreshActionState();
@@ -1148,9 +1133,6 @@ public class StudioWindow extends JFrame implements WindowListener {
         comboServer.addActionListener(e->selectServerName());
         // Cut the width if it is too wide.
         comboServer.setMinimumSize(new Dimension(0, 0));
-
-        comboAuthMethod = new JComboBox<>(AuthenticationManager.getInstance().getAuthenticationMechanisms());
-        comboAuthMethod.addActionListener(e->selectAuthMethod());
 
         txtServer = new JTextField(32);
         txtServer.setName("serverEntryTextField");
@@ -1171,7 +1153,6 @@ public class StudioWindow extends JFrame implements WindowListener {
         toolbar.add(Box.createRigidArea(new Dimension(3,0)));
         toolbar.add(new JLabel(I18n.getString("Server")));
         toolbar.add(comboServer);
-        toolbar.add(comboAuthMethod);
         toolbar.add(txtServer);
 
         Action[] actions = new Action[] {

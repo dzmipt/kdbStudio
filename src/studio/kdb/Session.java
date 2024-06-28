@@ -156,6 +156,9 @@ public class Session implements ConnectionStateListener, KAuthentication {
                     server.getDescription(true), server.getAuthenticationMechanism());
 
             Class<?> clazz = AuthenticationManager.getInstance().lookup(server.getAuthenticationMechanism());
+            if (clazz == null) {
+                throw new RuntimeException("Unknown Auth.method: " + server.getAuthenticationMechanism());
+            }
             IAuthenticationMechanism authenticationMechanism = (IAuthenticationMechanism) clazz.newInstance();
 
             authenticationMechanism.setProperties(server.getAsProperties());

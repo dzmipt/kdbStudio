@@ -20,6 +20,14 @@ public abstract class UserAction extends AbstractAction {
         return (String)getValue(NAME);
     }
 
+    public void setText(String text) {
+        putValue(NAME, text);
+    }
+
+    public void setIcon(Icon icon) {
+        putValue(SMALL_ICON, icon);
+    }
+
     public KeyStroke getKeyStroke() {
         return (KeyStroke)getValue(ACCELERATOR_KEY);
     }
