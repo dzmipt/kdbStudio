@@ -32,6 +32,7 @@ public class StatusBar extends Box {
         boxStatus.add(Box.createHorizontalGlue());
         setBorder(boxStatus);
 
+        boxStatus.setMinimumSize(new Dimension(0,0));
         add(boxStatus);
     }
 
