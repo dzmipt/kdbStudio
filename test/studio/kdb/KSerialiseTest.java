@@ -2,10 +2,12 @@ package studio.kdb;
 
 import kx.K4Exception;
 import kx.KConnection;
+import kx.KServerMock;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.condition.EnabledIfEnvironmentVariable;
 
 import java.io.IOException;
 import java.util.Arrays;
@@ -14,20 +16,43 @@ import java.util.UUID;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.fail;
 
-@EnabledIfEnvironmentVariable(named = "qTestPort", matches = "[0-9]+")
 public class KSerialiseTest {
 
-    private static KConnection kConn;
+    private static KConnection kConn = null;
+    private static KServerMock kServer = null;
+
+    private static final Logger log = LogManager.getLogger();
 
     @BeforeAll
     public static void connect() throws K4Exception, IOException, InterruptedException {
-        kConn = new KConnection("localhost", Integer.parseInt(System.getenv("qTestPort")),false);
-        kConn.k(new K.KCharacterVector(".z.pg:{$[x~\"reset\";`.z.pg set value;x]}"));
+        String qTestPort = System.getenv("qTestPort");
+        int qPort;
+        if (qTestPort == null) {
+            log.info("Starting mock server");
+            kServer = new KServerMock();
+            qPort = kServer.getPort();
+        } else {
+            qPort = Integer.parseInt(qTestPort);
+        }
+
+        log.info("Connection to port {}", qPort);
+        kConn = new KConnection("localhost", qPort, false);
+
+        if (kServer == null) {
+            kConn.k(new K.KCharacterVector(".z.pg:{$[x~\"reset\";`.z.pg set value;x]}"));
+        }
     }
 
     @AfterAll
     public static void exit() throws K4Exception, IOException, InterruptedException {
-        kConn.k(new K.KCharacterVector("reset"));
+        if (kServer == null) {
+            kConn.k(new K.KCharacterVector("reset"));
+        }
+        kConn.close();
+
+        if (kServer != null) {
+            kServer.shutdown();
+        }
     }
 
     private void test(K.KBase k) {
