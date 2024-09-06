@@ -27,6 +27,7 @@ public class MockQSession extends KConnection {
 
     public static void mock() {
         Session.mock(mockQSessionCreator);
+        setEchoMode();
     }
 
     public static void setEchoMode() {
