@@ -788,7 +788,12 @@ public class StudioWindow extends JFrame implements WindowListener {
         help.setVisible(true);
     }
 
-    public static void quit() {
+    private static volatile boolean quitting = false;
+
+    public static boolean quit() {
+        if (quitting) return true;
+        quitting = true;
+
         WorkspaceSaver.setEnabled(false);
         try {
             ActionOnExit action = CONFIG.getEnum(Config.ACTION_ON_EXIT);
@@ -803,13 +808,16 @@ public class StudioWindow extends JFrame implements WindowListener {
 
                             if (editorTab.isModified()) {
                                 if (action == ActionOnExit.CLOSE_ANONYMOUS_NOT_SAVED && editorTab.getFilename()==null) {
-                                    editorTab.getEditorsPanel().closeTab(editorTab);
+                                    editorTab.getEditorsPanel().closeTabForced(editorTab);
                                 }
                             }
                         }
                         return true;
                     });
-                    if (!complete) return;
+                    if (!complete) {
+                        quitting = false;
+                        return false;
+                    }
                 }
             }
         } finally {
@@ -820,6 +828,7 @@ public class StudioWindow extends JFrame implements WindowListener {
         }
         WorkspaceSaver.save(getWorkspace());
         CONFIG.exit();
+        return true;
     }
 
     public void close() {

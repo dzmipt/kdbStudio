@@ -296,6 +296,7 @@ public class EditorsPanel extends JPanel {
     public static boolean checkAndSaveTab(EditorTab editor) {
         if (! editor.isModified()) return true;
 
+        editor.selectEditor();
         int choice = StudioOptionPane.showYesNoCancelDialog(editor.getPane(),
                 editor.getTitle() + " is changed. Save changes?","Save changes?");
 
@@ -308,13 +309,16 @@ public class EditorsPanel extends JPanel {
         return true;
     }
 
-    public boolean closeTab(EditorTab editorTab) {
-        if (!checkAndSaveTab(editorTab)) return false;
-
+    public void closeTabForced(EditorTab editorTab) {
         editorTab.closing();
 
         tabbedEditors.remove(editorTab.getPane());
         closeIfEmpty();
+    }
+
+    public boolean closeTab(EditorTab editorTab) {
+        if (!checkAndSaveTab(editorTab)) return false;
+        closeTabForced(editorTab);
         return true;
     }
 
@@ -339,6 +343,17 @@ public class EditorsPanel extends JPanel {
             if (index == -1) index = count-1;
         }
         tabbedEditors.setSelectedIndex(index);
+    }
+
+    public void selectTab(EditorTab editorTab) {
+        int count = tabbedEditors.getTabCount();
+        for (int index = 0; index<count; index++) {
+            if ( getEditorTab(index) == editorTab) {
+                tabbedEditors.setSelectedIndex(index);
+                editorTab.getStudioWindow().refreshFrameTitle();
+                return;
+            }
+        }
     }
 
     private void removeFocusChangeKeysForWindows(JComponent component) {

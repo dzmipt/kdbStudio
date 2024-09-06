@@ -96,6 +96,8 @@ public class PropertiesConfig extends Properties {
         ByteArrayOutputStream buffer = getStreamToSave();
         if (buffer == null) return;
 
+        log.info("Saving config to file {} with number of properties {}", filename, size());
+
         try (OutputStream out = FilesBackup.getInstance().newFileOutputStream(filename)) {
             byte[] lineSeparator = System.getProperty("line.separator").getBytes(CHARSET);
 
@@ -119,6 +121,8 @@ public class PropertiesConfig extends Properties {
                 out.write(line.getBytes(CHARSET));
                 out.write(lineSeparator);
             }
+
+            propertiesToSave = null;
         } catch (IOException e) {
             log.error("Error in saving config to the file {}", filename, e);
         }

@@ -433,6 +433,10 @@ public class EditorTab implements FileWatcher.Listener, EditorStatusBarCallback 
         return (EditorsPanel) getPane().getParent().getParent();
     }
 
+    public void selectEditor() {
+        getEditorsPanel().selectTab(this);
+    }
+
     public boolean isAddedToPanel() {
         return getPane().getParent() != null;
     }

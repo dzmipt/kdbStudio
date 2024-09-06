@@ -67,6 +67,7 @@ public class FilesBackup {
         }
 
         Path tmpFile = Paths.get(filename).resolveSibling(FilenameUtils.getName(filename) + ".tmp");
+        log.info("Saving to tmp file {}", tmpFile.toString());
         Files.deleteIfExists(tmpFile);
 
         FileOutputStream outputStream = new FileOutputStream(tmpFile.toFile());
@@ -95,6 +96,7 @@ public class FilesBackup {
             public void close() throws IOException {
                 outputStream.close();
                 Files.move(tmpFile, Paths.get(filename), REPLACE_EXISTING);
+                log.info("moved {} -> {}", tmpFile.toString(), filename);
             }
         };
     }
