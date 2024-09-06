@@ -112,6 +112,16 @@ public class K {
         }
 
         @Override
+        public boolean isPositiveInfinity() {
+            return false;
+        }
+
+        @Override
+        public boolean isNegativeInfinity() {
+            return false;
+        }
+
+        @Override
         protected void serialiseData(OutputStream o) throws IOException {
             write(o, value);
         }
@@ -151,6 +161,16 @@ public class K {
 
         public boolean isNull() {
             return value == Integer.MIN_VALUE;
+        }
+
+        @Override
+        public boolean isPositiveInfinity() {
+            return value == Integer.MAX_VALUE;
+        }
+
+        @Override
+        public boolean isNegativeInfinity() {
+            return value == -Integer.MAX_VALUE;
         }
 
         public double toDouble() {
@@ -204,6 +224,16 @@ public class K {
             return value;
         }
 
+        @Override
+        public boolean isPositiveInfinity() {
+            return value == Long.MAX_VALUE;
+        }
+
+        @Override
+        public boolean isNegativeInfinity() {
+            return value == -Long.MAX_VALUE;
+        }
+
         public long toLong() {
             return value;
         }
@@ -245,6 +275,16 @@ public class K {
 
         public double toDouble() {
             return value;
+        }
+
+        @Override
+        public boolean isPositiveInfinity() {
+            return value == Double.POSITIVE_INFINITY;
+        }
+
+        @Override
+        public boolean isNegativeInfinity() {
+            return value == Double.NEGATIVE_INFINITY;
         }
 
         @Override
@@ -575,6 +615,16 @@ public class K {
             return b ? 1.0 : 0.0;
         }
 
+        @Override
+        public boolean isPositiveInfinity() {
+            return false;
+        }
+
+        @Override
+        public boolean isNegativeInfinity() {
+            return false;
+        }
+
         public boolean toBoolean() {
             return b;
         }
@@ -632,6 +682,16 @@ public class K {
 
         public double toDouble() {
             return s;
+        }
+
+        @Override
+        public boolean isPositiveInfinity() {
+            return s == Short.MAX_VALUE;
+        }
+
+        @Override
+        public boolean isNegativeInfinity() {
+            return s == -Short.MAX_VALUE;
         }
 
         public KShort(short s) {
@@ -824,6 +884,16 @@ public class K {
 
         public double toDouble() {
             return f;
+        }
+
+        @Override
+        public boolean isPositiveInfinity() {
+            return f == Float.POSITIVE_INFINITY;
+        }
+
+        @Override
+        public boolean isNegativeInfinity() {
+            return f == Float.NEGATIVE_INFINITY;
         }
 
         public KFloat(float f) {

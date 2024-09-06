@@ -307,9 +307,11 @@ public class Chart implements ComponentListener {
             K.KBase yValue = (K.KBase)table.getValueAt(row, col);
             if (xValue.isNull() || yValue.isNull()) continue;
 
-            double x = ((ToDouble)xValue).toDouble();
-            double y = ((ToDouble)yValue).toDouble();
-            series.add(x, y);
+            ToDouble x = (ToDouble)xValue;
+            ToDouble y = (ToDouble)yValue;
+            if (x.isInfinity() || y.isInfinity()) continue;
+
+            series.add(x.toDouble(), y.toDouble());
         }
         collection.addSeries(series);
         return collection;
