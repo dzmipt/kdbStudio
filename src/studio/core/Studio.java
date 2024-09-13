@@ -21,7 +21,6 @@ import java.io.IOException;
 import java.io.PrintStream;
 import java.lang.ref.Reference;
 import java.lang.reflect.Field;
-import java.lang.reflect.Proxy;
 import java.util.List;
 import java.util.*;
 
@@ -83,45 +82,22 @@ public class Studio {
     }
 
     private static void registerForMacOSMenuJava9() throws Exception {
-        // Using reflection to be compilable on Java8
-
-        Class settingsClass = Class.forName("java.awt.desktop.PreferencesHandler");
-        Class quitClass = Class.forName("java.awt.desktop.QuitHandler");
-        Class aboutClass = Class.forName("java.awt.desktop.AboutHandler");
-
-        Object handler = Proxy.newProxyInstance(Studio.class.getClassLoader(), new Class[]{settingsClass, quitClass, aboutClass},
-                (o, method, objects) -> {
-                    String name = method.getName();
-                    if (name.equals("handlePreferences")) StudioWindow.settings();
-                    else if (name.equals("handleAbout")) StudioWindow.about();
-                    else if (name.equals("handleQuitRequestWith")) {
-                        StudioWindow.quit();
-                        try {
-                            Class quiteResponseClass = Class.forName("java.awt.desktop.QuitResponse");
-                            quiteResponseClass.getDeclaredMethod("cancelQuit").invoke(objects[1]);
-                        } catch (Exception e) {
-                            log.error("Error in cancelQuit()", e);
-                        }
-                    }
-                    return null;
-                }
-        );
-
-        Class desktopClass = Class.forName("java.awt.Desktop");
-        Object desktop = desktopClass.getMethod("getDesktop").invoke(desktopClass);
-
-        desktopClass.getMethod("setPreferencesHandler", settingsClass).invoke(desktop, handler);
-        desktopClass.getMethod("setQuitHandler", quitClass).invoke(desktop, handler);
-        desktopClass.getMethod("setAboutHandler", aboutClass).invoke(desktop, handler);
+        Desktop desktop = Desktop.getDesktop();
+        desktop.setPreferencesHandler(e -> StudioWindow.settings());
+        desktop.setAboutHandler(e -> StudioWindow.about());
+        desktop.setQuitHandler( (e,response) -> {
+            StudioWindow.quit();
+            response.cancelQuit();
+        });
     }
 
     private static void registerForMacOSMenu() {
         if (!Util.MAC_OS_X) return;
 
         try {
-            if (Util.Java8Minus) registerForMacOSMenuJava8();
-            else registerForMacOSMenuJava9();
-
+//            if (Util.Java8Minus) registerForMacOSMenuJava8();
+//            else registerForMacOSMenuJava9();
+            registerForMacOSMenuJava9();
             macOSSystemMenu = true;
         } catch (Exception e) {
             log.error("Failed to set MacOS handlers", e);

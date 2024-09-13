@@ -4,12 +4,15 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import studio.kdb.K;
 
+import javax.net.ServerSocketFactory;
+import javax.net.ssl.SSLServerSocketFactory;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -27,7 +30,11 @@ public class KServerMock implements Runnable {
     }
 
     public KServerMock(int port) throws IOException {
-        serverSocket = new ServerSocket(port);
+        this(ServerSocketFactory.getDefault(), port);
+    }
+
+    public KServerMock(ServerSocketFactory ssFactory, int port) throws IOException {
+        serverSocket = ssFactory.createServerSocket(port);
         this.port = serverSocket.getLocalPort();
         new Thread(this, "Server listen port " + port).start();
         log.info("Server started on port {}", this.port);
@@ -170,7 +177,31 @@ public class KServerMock implements Runnable {
         }
     }
 
-    public static void main(String... args) throws IOException {
+    public static void main(String... args) throws IOException, NoSuchAlgorithmException {
         new KServerMock(2345);
+
+//        SSLContext sslContext = SSLContext.getInstance("SSL"); //getDefault();
+
+//        new KServerMock(sslContext.getServerSocketFactory(), 2346);
+
+        new KServerMock(SSLServerSocketFactory.getDefault(), 2346);
+//
+//        TrustManager allAcceptTrustManager = new X509TrustManager() {
+//            @Override
+//            public void checkClientTrusted(X509Certificate[] chain, String authType) throws CertificateException {
+//                log.info("checkClientTrusted for authType {}; with chain length {}", authType, chain.length);
+//            }
+//
+//            @Override
+//            public void checkServerTrusted(X509Certificate[] chain, String authType) throws CertificateException {
+//                log.info("checkServerTrusted for authType {}; with chain length {}", authType, chain.length);
+//            }
+//
+//            @Override
+//            public X509Certificate[] getAcceptedIssuers() {
+//                return null;
+//            }
+//        };
+
     }
 }
