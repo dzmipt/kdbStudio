@@ -122,6 +122,9 @@ public class PropertiesConfig extends Properties {
                 out.write(lineSeparator);
             }
 
+            String lastComment = "#Generated from process with pid " + ProcessHandle.current().pid();
+            out.write(lastComment.getBytes(CHARSET));
+
             out.writeCompleted();
 
             propertiesToSave = null;
