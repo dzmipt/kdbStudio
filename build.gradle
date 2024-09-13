@@ -13,7 +13,7 @@ archivesBaseName = "kdbStudio"
 version = "dz4.1"
 
 compileJava {
-`    sourceCompatibility = JavaVersion.VERSION_1_9
+    sourceCompatibility = JavaVersion.VERSION_1_9
     targetCompatibility = JavaVersion.VERSION_1_9
 }
 
