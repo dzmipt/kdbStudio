@@ -5,9 +5,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import studio.utils.log4j.EnvConfig;
 
-import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.OutputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -16,8 +14,6 @@ import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.HashMap;
 import java.util.Map;
-
-import static java.nio.file.StandardCopyOption.REPLACE_EXISTING;
 
 public class FilesBackup {
 
@@ -59,46 +55,14 @@ public class FilesBackup {
         }
     }
 
-    public OutputStream newFileOutputStream(String filename) throws IOException {
+    public TmpfileOutputStream newFileOutputStream(String filename) throws IOException {
         try {
             backup(filename);
         } catch (IOException e) {
             log.error("Error on backup {}", filename, e);
         }
 
-        Path tmpFile = Paths.get(filename).resolveSibling(FilenameUtils.getName(filename) + ".tmp");
-        log.info("Saving to tmp file {}", tmpFile.toString());
-        Files.deleteIfExists(tmpFile);
-
-        FileOutputStream outputStream = new FileOutputStream(tmpFile.toFile());
-        return new OutputStream() {
-            @Override
-            public void write(byte[] b) throws IOException {
-                outputStream.write(b);
-            }
-
-            @Override
-            public void write(byte[] b, int off, int len) throws IOException {
-                outputStream.write(b, off, len);
-            }
-
-            @Override
-            public void write(int b) throws IOException {
-                outputStream.write(b);
-            }
-
-            @Override
-            public void flush() throws IOException {
-                outputStream.flush();
-            }
-
-            @Override
-            public void close() throws IOException {
-                outputStream.close();
-                Files.move(tmpFile, Paths.get(filename), REPLACE_EXISTING);
-                log.info("moved {} -> {}", tmpFile.toString(), filename);
-            }
-        };
+        return new TmpfileOutputStream(filename);
     }
 
     protected void backup(String filename) throws IOException {
@@ -206,4 +170,5 @@ public class FilesBackup {
         }
 
     }
+
 }
