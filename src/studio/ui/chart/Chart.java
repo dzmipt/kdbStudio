@@ -301,7 +301,7 @@ public class Chart implements ComponentListener {
 
         XYSeriesCollection collection = new XYSeriesCollection();
         collection.setAutoWidth(true);
-        XYSeries series = new XYSeries(table.getColumnName(col));
+        XYSeries series = new XYSeries(table.getColumnName(col), false, true);
         for (int row = 0; row < table.getRowCount(); row++) {
             K.KBase xValue = (K.KBase)table.getValueAt(row, xIndex);
             K.KBase yValue = (K.KBase)table.getValueAt(row, col);
