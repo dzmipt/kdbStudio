@@ -1,6 +1,7 @@
 package studio.ui.action;
 
 import kx.K4Exception;
+import kx.KConnection;
 import kx.KMessage;
 import kx.ProgressCallback;
 import org.apache.logging.log4j.LogManager;
@@ -135,11 +136,15 @@ public class QueryExecutor implements ProgressCallback {
                 }
                 result.setError(e);
             }
-            if (result.getError() != null) {
-                if (result.getError() instanceof K4Exception) {
-                    queryLog.info("#{}: server returns error {}", queryIndex, result.getError().getMessage());
+            Throwable error = result.getError();
+            if (error != null) {
+                if (error instanceof K4Exception) {
+                    queryLog.info("#{}: server returns error {}", queryIndex, error.getMessage());
                 } else {
-                    queryLog.info("#{}: error during execution {} {}", queryIndex, result.getError().getClass().getName(), result.getError().getMessage());
+                    queryLog.info("#{}: error during execution {} {}", queryIndex, error.getClass().getName(), error.getMessage());
+                    if (error instanceof KConnection.InternalProtocolError) {
+                        log.error("Unexpected error during query execution", error);
+                    }
                 }
             } else {
                 if (queryTask.returnResult()) {

@@ -257,7 +257,7 @@ public class KConnection {
             } catch (Throwable e) {
                 synchronized (lockRead) {
                     IOException io = e instanceof IOException ?
-                            (IOException) e : new IOException("Exception in message deserialization", e);
+                            (IOException) e : new InternalProtocolError("Exception in message deserialization", e);
                     message = new KMessage(io);
                     message.setFinished(K.KTimestamp.now());
                     lockRead.notifyAll();
@@ -266,4 +266,11 @@ public class KConnection {
             }
         }
     }
+
+    public static class InternalProtocolError extends IOException {
+        public InternalProtocolError(String message, Throwable cause) {
+            super(message, cause);
+        }
+    }
+
 }
