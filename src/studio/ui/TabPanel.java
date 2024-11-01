@@ -219,6 +219,8 @@ public class TabPanel extends JPanel {
                 text = Util.limitString(result.toString(formatContext), Config.getInstance().getMaxCharsInResult());
             }
             textArea.setText(text);
+            textArea.setCaretPosition(0);
+            textArea.scrollRectToVisible(new Rectangle(0, 0, 1, 1));  // Scroll to top
         }
     }
 

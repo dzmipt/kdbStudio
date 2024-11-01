@@ -72,7 +72,7 @@ dependencies {
     implementation group: 'org.apache.logging.log4j', name: 'log4j-core', version: '2.20.0'
     implementation group: 'org.apache.logging.log4j', name: 'log4j-iostreams', version: '2.20.0'
 
-    implementation group: 'com.fifesoft', name: 'rsyntaxtextarea', version: '3.3.4'
+    implementation group: 'com.fifesoft', name: 'rsyntaxtextarea', version: '3.5.1'
     //see studio.ui.chart.patched folder for the patch for jfreechart.
     // It will require review during the jfreechart upgrade.
     implementation group: 'org.jfree', name: 'jfreechart', version: '1.5.3'
