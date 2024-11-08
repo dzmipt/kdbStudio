@@ -2,7 +2,7 @@ package studio.ui;
 
 import javax.swing.*;
 import java.awt.*;
-import java.awt.event.*;
+import java.awt.event.KeyEvent;
 
 public abstract class EscapeDialog extends JDialog {
 
@@ -10,8 +10,13 @@ public abstract class EscapeDialog extends JDialog {
 
     private DialogResult result = DialogResult.CANCELLED;
 
-    public EscapeDialog(Window owner,String title) {
-        super(owner,title, ModalityType.APPLICATION_MODAL);
+    private static Window getWindow(Component component) {
+        if (component instanceof Window) return (Window) component;
+        return SwingUtilities.getWindowAncestor(component);
+    }
+
+    public EscapeDialog(Component windowOwner, String title) {
+        super(getWindow(windowOwner), title, ModalityType.APPLICATION_MODAL);
         initComponents();
     }
 

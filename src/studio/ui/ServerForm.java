@@ -21,8 +21,8 @@ import static javax.swing.LayoutStyle.ComponentPlacement.RELATED;
 public class ServerForm extends EscapeDialog {
     private Server server;
 
-    public ServerForm(Window frame, String title, Server server) {
-        super(frame, title);
+    public ServerForm(Component windowOwner, String title, Server server) {
+        super(windowOwner, title);
         this.server = server;
         initComponents();
 

@@ -6,7 +6,7 @@ import java.awt.*;
 
 public class EditServerForm extends ServerForm {
 //@TODO Can we Server.NO_SERVER modified here??
-    public EditServerForm(Window owner, Server server) {
-        super(owner,"Edit Server Details",server);
+    public EditServerForm(Component windowOwner, Server server) {
+        super(windowOwner,"Edit Server Details",server);
     }
 }
