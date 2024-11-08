@@ -55,7 +55,7 @@ public class ServerTree extends JTree implements TreeExpansionListener {
         initActions();
         initPopupMenu();
         setDropMode(DropMode.ON_OR_INSERT);
-//        setTransferHandler(new ServerList.NodesTransferHander());
+        setTransferHandler(new NodesTransferHandler());
         setRootVisible(false);
         setEditable(false);
         getSelectionModel().setSelectionMode(TreeSelectionModel.SINGLE_TREE_SELECTION);
@@ -160,6 +160,28 @@ public class ServerTree extends JTree implements TreeExpansionListener {
         popupMenu.add(removeAction);
     }
 
+    boolean moveNode(ServerTreeNode source, ServerTreeNode folder, int index) {
+        ServerTreeNode serverTree = Config.getInstance().getServerTree();
+        ServerTreeNode sourceInConfig = serverTree.findPath(source.getPath());
+        if (sourceInConfig == null) return false;
+
+        ServerTreeNode folderInConfig = serverTree.findPath(folder.getPath());
+        if (folderInConfig == null || ! folderInConfig.isFolder()) return false;
+
+        if (index == -1) index = folderInConfig.getChildCount();
+
+        sourceInConfig.removeFromParent();
+        folderInConfig.insert(sourceInConfig, index);
+
+        Config.getInstance().setServerTree(serverTree);
+        refreshServers();
+
+        TreePath treePath = new TreePath(folderInConfig.getPath());
+        scrollPathToVisible(treePath);
+        setSelectionPath(treePath);
+        return true;
+    }
+
     private void removeNode() {
         ServerTreeNode selNode  = (ServerTreeNode) getLastSelectedPathComponent();
         if (selNode == null) return;
@@ -171,7 +193,7 @@ public class ServerTree extends JTree implements TreeExpansionListener {
             return;
         }
 
-        String message = "Are you sure you want to remove " + (node.isRoot() ? "folder" : "server") + ": " + node.fullPath();
+        String message = "Are you sure you want to remove " + (node.isFolder() ? "folder" : "server") + ": " + node.fullPath();
         int result = StudioOptionPane.showYesNoDialog(this, message, "Remove?");
         if (result != JOptionPane.YES_OPTION) return;
 

@@ -1,3 +1,4 @@
+* Adding drag&drop in the tree of servers (in the Server List dialog)
 * Server connect/disconnect actions from the status bar
     * adding selection of auth.method into the status bar 
 * Server Add form prepopulate details of currently selected server
