@@ -63,12 +63,12 @@ jobs:
       uses: dorny/test-reporter@v1
       if: always()
       with:
-        name: JUnit Tests
+        name: JUnit Tests - ${{ runner.os }}
         path: build/test-results/*/*.xml
         reporter: java-junit
         fail-on-error: true
 
-    - name: Upload repots in case of failure
+    - name: Upload reports in case of failure
       uses: actions/upload-artifact@v3.1.2
       if: ${{ failure() }}
       with:
