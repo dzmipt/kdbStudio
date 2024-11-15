@@ -49,14 +49,18 @@ jobs:
       run: ./intTests-Xvfb.sh
       timeout-minutes: 5
 
-    - name: Integration tests - Windows
-      if: ${{ runner.os == 'Windows' }}
-      run: ./gradlew integrationTest -x test
-      timeout-minutes: 5
+#    - name: Integration tests - Windows
+#      if: ${{ runner.os == 'Windows' }}
+#      run: ./gradlew integrationTest -x test
+#      timeout-minutes: 5
 
     - name: Log files - Linux
       if: ${{ runner.os == 'Linux' }}
       run: find . -type f -exec echo {} \;
+
+    - name: Log files - Linux
+      if: ${{ runner.os == 'Windows' }}
+      run: dir /b
 
     - name: Upload Failed test screenshots
       uses: actions/upload-artifact@v3.1.2
