@@ -55,6 +55,7 @@ public class TmpfileOutputStream extends OutputStream {
     }
 
     public void writeCompleted() throws IOException {
+        outputStream.close();
         Files.move(tmpFile, Paths.get(filename), REPLACE_EXISTING);
         log.info("moved {} -> {}", tmpFile.toString(), filename);
     }
