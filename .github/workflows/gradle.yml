@@ -11,8 +11,13 @@ on:
 
 jobs:
   build:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest]  # Specify OS for the matrix
+        java-version: [17]                   # Specify the Java version
 
-    runs-on: ubuntu-latest
+#    runs-on: ubuntu-latest
 
     steps:
     - name: Checkout
@@ -24,8 +29,6 @@ jobs:
         java-version: '9'
         distribution: 'zulu'
         cache: gradle
-    - name: Grant execute permission for gradlew
-      run: chmod +x gradlew
 
     - name: Build with Gradle
       run: ./gradlew build
