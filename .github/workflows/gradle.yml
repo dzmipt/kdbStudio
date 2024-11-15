@@ -84,7 +84,7 @@ jobs:
 
     - name: Upload Windows distribution
       if: ${{ runner.os == 'Windows' }}
-      uses: actions/upload-artifact@v3.1.2
+      uses: actions/upload-artifact@v4
       with:
         name: Windows distribution
         path: build/distribution/kdbStudio*.zip
