@@ -1,5 +1,6 @@
 #!/bin/bash -eu
 
+echo "Starting intTests script"
 USE_XVFB=0
 if [[ -z ${DISPLAY:-} ]]; then
     USE_XVFB=1
@@ -31,4 +32,5 @@ if [[ $USE_XVFB = 1 ]]; then
     rm -rf $TMPDIR
 fi
 
+echo "Finishing intTests script with exit code $FAIL"
 exit $FAIL
