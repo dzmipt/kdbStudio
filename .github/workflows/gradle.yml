@@ -60,7 +60,7 @@ jobs:
       run: Get-ChildItem -Path . -Recurse -File
 
     - name: Upload Failed test screenshots
-      uses: actions/upload-artifact@v3.1.2
+      uses: actions/upload-artifact@v4
       if: ${{ failure() }}
       with:
         name: Failed tests
@@ -76,7 +76,7 @@ jobs:
         fail-on-error: true
 
     - name: Upload reports in case of failure
-      uses: actions/upload-artifact@v3.1.2
+      uses: actions/upload-artifact@v4
       if: ${{ failure() }}
       with:
         name: Failed Reports - ${{ runner.os }}
