@@ -38,7 +38,7 @@ jobs:
           ${{ runner.os }}-gradle-
 
     - name: Build with Gradle
-      run: ./gradlew build
+      run: ./gradlew build installDist
       timeout-minutes: 2
 
     - name: Integration tests - Linux
@@ -87,4 +87,4 @@ jobs:
       uses: actions/upload-artifact@v4
       with:
         name: Windows distribution
-        path: build/distribution/kdbStudio*.zip
+        path: ~/build/install
