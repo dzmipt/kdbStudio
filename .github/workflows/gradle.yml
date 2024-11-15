@@ -57,7 +57,7 @@ jobs:
 
     - name: Log files - Linux
       if: ${{ runner.os == 'Windows' }}
-      run: dir /b .
+      run: Get-ChildItem -Path . -Recurse -File
 
     - name: Upload Failed test screenshots
       uses: actions/upload-artifact@v3.1.2
@@ -81,3 +81,10 @@ jobs:
       with:
         name: Failed Reports - ${{ runner.os }}
         path: ./build/reports/tests/
+
+    - name: Upload Windows distribution
+      if: ${{ runner.os == 'Windows' }}
+      uses: actions/upload-artifact@v3.1.2
+      with:
+        name: Windows distribution
+        path: build/distribution/kdbStudio.zip
