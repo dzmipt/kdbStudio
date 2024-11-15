@@ -48,17 +48,9 @@ jobs:
       run: ./intTests-Xvfb.sh
       timeout-minutes: 5
 
-    - name: Log files
-      run: |
-        echo "Listing files in the build folder:"
-        if [[ "$RUNNER_OS" == "Linux" || "$RUNNER_OS" == "macOS" ]]; then
-          # Unix-based (Linux/macOS)
-          find . -type f -exec echo {} \;
-        elif [[ "$RUNNER_OS" == "Windows" ]]; then
-          # Windows
-          dir /b .
-        fi
-
+    - name: Log files - Linux
+      if: ${{ runner.os == 'Linux' }}
+      run: find . -type f -exec echo {} \;
 
     - name: Upload Failed test screenshots
       uses: actions/upload-artifact@v3.1.2
