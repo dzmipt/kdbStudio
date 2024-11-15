@@ -44,8 +44,14 @@ jobs:
       run: ./gradlew build
       timeout-minutes: 2
 
-    - name: Integration tests
+    - name: Integration tests - Linux
+      if: ${{ runner.os == 'Linux' }}
       run: ./intTests-Xvfb.sh
+      timeout-minutes: 5
+
+    - name: Integration tests - Windows
+      if: ${{ runner.os == 'Windows' }}
+      run: ./gradlew integrationTest -x test
       timeout-minutes: 5
 
     - name: Log files - Linux
