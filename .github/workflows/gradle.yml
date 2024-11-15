@@ -15,9 +15,6 @@ jobs:
     strategy:
       matrix:
         os: [ubuntu-latest, windows-latest]  # Specify OS for the matrix
-        java-version: [17]                   # Specify the Java version
-
-#    runs-on: ubuntu-latest
 
     steps:
     - name: Checkout
@@ -60,7 +57,7 @@ jobs:
 
     - name: Log files - Linux
       if: ${{ runner.os == 'Windows' }}
-      run: dir /b
+      run: dir /b .
 
     - name: Upload Failed test screenshots
       uses: actions/upload-artifact@v3.1.2
