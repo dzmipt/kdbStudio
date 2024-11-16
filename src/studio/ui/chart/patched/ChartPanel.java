@@ -309,7 +309,7 @@ public class ChartPanel extends JPanel implements ChartChangeListener,
     /** Menu item for changing properties of the chart. */
     protected JMenuItem propertiesItem;
 
-    /** Menu item for copy the char to sysmtem clipboard. */
+    /** Menu item for copy the char to system clipboard. */
     protected JMenuItem copyItem;
 
     /** Menu item for saving the chart as PNG. */
