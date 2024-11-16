@@ -3,6 +3,7 @@ package studio.ui.chart;
 import org.jfree.chart.ChartRenderingInfo;
 import org.jfree.chart.JFreeChart;
 import org.jfree.chart.axis.ValueAxis;
+import org.jfree.chart.event.AnnotationChangeEvent;
 import org.jfree.chart.plot.*;
 import org.jfree.chart.ui.RectangleEdge;
 import studio.ui.UserAction;
@@ -14,7 +15,9 @@ import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.KeyEvent;
 import java.awt.event.MouseEvent;
+import java.awt.geom.Point2D;
 import java.awt.geom.Rectangle2D;
+import java.util.List;
 
 public class ChartPanel extends studio.ui.chart.patched.ChartPanel {
 
@@ -27,6 +30,12 @@ public class ChartPanel extends studio.ui.chart.patched.ChartPanel {
     private final Action resetZoomAction;
     private final Action zoomInAction;
     private final Action zoomOutAction;
+
+    private Line newLine = null;
+    private Line selectedLine = null;
+
+    private static final int LINE_SELECTION_SENSITIVITY = 100;
+    private static final int DRAG_LINE_MASK = java.awt.Toolkit.getDefaultToolkit().getMenuShortcutKeyMask();
 
     public ChartPanel(JFreeChart chart) {
         super(chart);
@@ -104,6 +113,7 @@ public class ChartPanel extends studio.ui.chart.patched.ChartPanel {
 
     @Override
     public void mouseMoved(MouseEvent e) {
+        checkLineSelection(e.getPoint());
         super.mouseMoved(e);
         Rectangle2D dataArea = getScreenDataArea();
         JFreeChart chart = getChart();
@@ -181,6 +191,8 @@ public class ChartPanel extends studio.ui.chart.patched.ChartPanel {
         if (popup != null && popup.isShowing()) {
             return;
         }
+
+        if (checkLineDrag(e)) return;
 
         JFreeChart chart = getChart();
         ChartRenderingInfo info = getChartRenderingInfo();
@@ -274,6 +286,90 @@ public class ChartPanel extends studio.ui.chart.patched.ChartPanel {
             displayPopupMenu(e.getX(), e.getY());
         }
 
+    }
+
+    @Override
+    public void mouseClicked(MouseEvent event) {
+        addLine(event);
+        super.mouseClicked(event);
+    }
+
+    private boolean checkLineDrag(MouseEvent event) {
+        if (selectedLine == null) return false;
+
+
+        if ((event.getModifiers() & DRAG_LINE_MASK) == DRAG_LINE_MASK) {
+            selectedLine.dragTo(event.getPoint());
+        } else {
+            selectedLine.moveTo(toPlot(event.getPoint()));
+        }
+
+        chartChanged(new AnnotationChangeEvent(this, selectedLine));
+        return true;
+    }
+
+    private void checkLineSelection(Point p) {
+        XYPlot plot = getChart().getXYPlot();
+        int selectedIndex = -1;
+        int newSelectedIndex = -1;
+        double shortestDist = Double.POSITIVE_INFINITY;
+
+        List list = plot.getAnnotations();
+        for(int index = 0; index<list.size(); index++) {
+            Line line = (Line) list.get(index);
+            if (line.isSelected()) selectedIndex = index;
+            double d = line.distanceSqr(p.x, p.y);
+            if (d < LINE_SELECTION_SENSITIVITY && d < shortestDist) {
+                shortestDist = d;
+                newSelectedIndex = index;
+            }
+        }
+
+        Line line = null;
+        if (selectedIndex != -1) {
+            line = (Line)list.get(selectedIndex);
+            line.setSelected(false);
+        }
+        if (newSelectedIndex != -1) {
+            line = selectedLine = (Line) list.get(newSelectedIndex);
+            selectedLine.setSelected(true);
+        } else {
+            selectedLine = null;
+        }
+
+        if (selectedIndex != newSelectedIndex) {
+            chartChanged(new AnnotationChangeEvent(this, line));
+        }
+    }
+
+    private void addLine(MouseEvent e) {
+        XYPlot plot = getChart().getXYPlot();
+        Point2D.Double p = toPlot(e.getPoint());
+        if (newLine == null) {
+            newLine = new Line(this, p);
+            plot.addAnnotation(newLine);
+        } else {
+            newLine.addPoint(p);
+            chartChanged(new AnnotationChangeEvent(this, newLine));
+            newLine = null;
+        }
+    }
+
+    public Point fromPlot(Point2D.Double p) {
+        XYPlot plot = getChart().getXYPlot();
+        Rectangle2D dataArea = getScreenDataArea();
+        double x = plot.getDomainAxis().valueToJava2D(p.x, dataArea, plot.getDomainAxisEdge());
+        double y = plot.getRangeAxis().valueToJava2D(p.y, dataArea, plot.getRangeAxisEdge());
+        return new Point((int)x, (int)y);
+
+    }
+
+    public Point2D.Double toPlot(Point p) {
+        XYPlot plot = getChart().getXYPlot();
+        Rectangle2D dataArea = getScreenDataArea();
+        double x = plot.getDomainAxis().java2DToValue(p.x, dataArea, plot.getDomainAxisEdge());
+        double y = plot.getRangeAxis().java2DToValue(p.y, dataArea, plot.getRangeAxisEdge());
+        return new Point2D.Double(x, y);
     }
 
 }
