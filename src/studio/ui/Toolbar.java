@@ -12,18 +12,18 @@ public class Toolbar extends JToolBar {
     @Override
     public JButton add(Action a) {
         JButton btn = super.add(a);
-        updateTooltipTest(btn);
+        updateTooltipText(btn);
 
         a.addPropertyChangeListener( e-> {
             if (e.getPropertyName() == Action.ACCELERATOR_KEY) {
-                updateTooltipTest(btn);
+                updateTooltipText(btn);
             }
         });
 
         return btn;
     }
 
-    private void updateTooltipTest(JButton btn) {
+    private void updateTooltipText(JButton btn) {
         Action a = btn.getAction();
         String tooltip = (String)a.getValue(Action.SHORT_DESCRIPTION);
 
