@@ -108,10 +108,17 @@ public class Chart implements ComponentListener {
             return;
         }
 
-        int modifier = Util.MAC_OS_X ? KeyEvent.ALT_MASK : KeyEvent.CTRL_MASK;
-        JLabel lbl = new JLabel("  Use mouse wheel or select a rectangle to zoom. " +
-                "Hold " + KeyEvent.getKeyModifiersText(modifier) + " to move the chart. " +
-                "ESC - to restore scale");
+        int plotMoveModifier = Util.MAC_OS_X ? KeyEvent.ALT_MASK : KeyEvent.CTRL_MASK;
+        int lineDragModifier = Util.MAC_OS_X ? KeyEvent.META_MASK : KeyEvent.CTRL_MASK;
+
+        String defaultLabelText = "  Use mouse wheel or select a rectangle to zoom. " +
+                "Hold " + KeyEvent.getKeyModifiersText(plotMoveModifier) + " to move the chart. " +
+                "ESC - to restore scale";
+
+        String selectedLineText = "  Move the line wih mouse drag. " +
+                "Hold " + KeyEvent.getKeyModifiersText(lineDragModifier) + " to change the slope of the line. ";
+
+        JLabel lbl = new JLabel(defaultLabelText);
 
         chartPanel = createChartPanel();
         pnlConfig = new ChartConfigPanel(this, names, xIndex, yIndex);
@@ -119,8 +126,11 @@ public class Chart implements ComponentListener {
         JToolBar toolbar = new Toolbar();
         toolbar.setLayout(new BoxLayout(toolbar, BoxLayout.X_AXIS));
         toolbar.setFloatable(false);
-        toolbar.add(chartPanel.getCopyAction());
-        toolbar.add(chartPanel.getSaveAction());
+        toolbar.add(chartPanel.getLineAction());
+        toolbar.add(chartPanel.getCopyAction()).setFocusable(false);
+        toolbar.add(chartPanel.getSaveAction()).setFocusable(false);
+        chartPanel.addNewLineListener(e -> chartPanel.getRootPane().requestFocusInWindow());
+        chartPanel.addLineSelectionListener(e -> lbl.setText(e.getLine() == null ? defaultLabelText : selectedLineText) );
 
         JPanel rightPanel = new JPanel(new BorderLayout());
         rightPanel.add(pnlConfig, BorderLayout.CENTER);

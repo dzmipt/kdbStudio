@@ -32,6 +32,21 @@ public abstract class UserAction extends AbstractAction {
         return (KeyStroke)getValue(ACCELERATOR_KEY);
     }
 
+    public String getKeyString() {
+        StringBuilder builder = new StringBuilder(getText());
+        KeyStroke keyStroke = getKeyStroke();
+        if (keyStroke != null) builder.append(" - ").append(keyStroke);
+        return builder.toString();
+    }
+
+    public UserAction addActionToComponent(JComponent component) {
+        String key = getKeyString();
+        component.getActionMap().put(key, this);
+        component.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW).put(getKeyStroke(), key);
+        return this;
+    }
+
+
     public static UserAction create(String text, Icon icon,
                                String desc, int mnemonic,
                                KeyStroke key, ActionListener listener) {

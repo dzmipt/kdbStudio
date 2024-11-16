@@ -8,9 +8,14 @@ import org.jfree.chart.plot.*;
 import org.jfree.chart.ui.RectangleEdge;
 import studio.ui.UserAction;
 import studio.ui.Util;
+import studio.ui.chart.event.LineSelectionEvent;
+import studio.ui.chart.event.LineSelectionListener;
+import studio.ui.chart.event.NewLineEvent;
+import studio.ui.chart.event.NewLineListener;
 import studio.ui.chart.patched.CrosshairOverlay;
 
 import javax.swing.*;
+import javax.swing.event.EventListenerList;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.KeyEvent;
@@ -24,6 +29,7 @@ public class ChartPanel extends studio.ui.chart.patched.ChartPanel {
     private final Crosshair xCrosshair;
     private final Crosshair yCrosshair;
 
+    private final Action lineAction;
     private final Action copyAction;
     private final Action saveAction;
     private final Action propertiesAction;
@@ -31,6 +37,8 @@ public class ChartPanel extends studio.ui.chart.patched.ChartPanel {
     private final Action zoomInAction;
     private final Action zoomOutAction;
 
+    private final EventListenerList listenerList = new EventListenerList();
+    private boolean addingLine = false;
     private Line newLine = null;
     private Line selectedLine = null;
 
@@ -54,22 +62,25 @@ public class ChartPanel extends studio.ui.chart.patched.ChartPanel {
         setMouseWheelEnabled(true);
         setMouseZoomable(true, true);
 
-        int meta = java.awt.Toolkit.getDefaultToolkit().getMenuShortcutKeyMask();
-        copyAction = addAccelerator(copyItem, KeyStroke.getKeyStroke(KeyEvent.VK_C, meta));
+        copyAction = addAccelerator(copyItem, KeyStroke.getKeyStroke(KeyEvent.VK_C, DRAG_LINE_MASK));
         copyAction.putValue(Action.SMALL_ICON, Util.COPY_ICON);
         copyAction.putValue(Action.SHORT_DESCRIPTION, "Copy the chart");
 
-        saveAction = addAccelerator(pngItem, KeyStroke.getKeyStroke(KeyEvent.VK_S, meta));
+        saveAction = addAccelerator(pngItem, KeyStroke.getKeyStroke(KeyEvent.VK_S, DRAG_LINE_MASK));
         saveAction.putValue(Action.SMALL_ICON, Util.DISKS_ICON);
         saveAction.putValue(Action.SHORT_DESCRIPTION, "Save the chart");
 
         propertiesAction = addAccelerator(propertiesItem, KeyStroke.getKeyStroke(KeyEvent.VK_ENTER, KeyEvent.ALT_MASK));
-        zoomInAction = addAccelerator(zoomInBothMenuItem, KeyStroke.getKeyStroke(KeyEvent.VK_PLUS, meta),
-                                                          KeyStroke.getKeyStroke(KeyEvent.VK_EQUALS, meta),
-                                                          KeyStroke.getKeyStroke(KeyEvent.VK_ADD, meta));
-        zoomOutAction = addAccelerator(zoomOutBothMenuItem, KeyStroke.getKeyStroke(KeyEvent.VK_MINUS, meta),
-                                                            KeyStroke.getKeyStroke(KeyEvent.VK_SUBTRACT, meta));
+        zoomInAction = addAccelerator(zoomInBothMenuItem, KeyStroke.getKeyStroke(KeyEvent.VK_PLUS, DRAG_LINE_MASK),
+                                                          KeyStroke.getKeyStroke(KeyEvent.VK_EQUALS, DRAG_LINE_MASK),
+                                                          KeyStroke.getKeyStroke(KeyEvent.VK_ADD, DRAG_LINE_MASK));
+        zoomOutAction = addAccelerator(zoomOutBothMenuItem, KeyStroke.getKeyStroke(KeyEvent.VK_MINUS, DRAG_LINE_MASK),
+                                                            KeyStroke.getKeyStroke(KeyEvent.VK_SUBTRACT, DRAG_LINE_MASK));
         resetZoomAction = addAccelerator(zoomResetBothMenuItem, KeyStroke.getKeyStroke(KeyEvent.VK_ESCAPE, 0));
+
+        lineAction = UserAction.create("Add line", Util.LINE_ICON, "Add a line", KeyEvent.VK_L,null,
+                                        e -> addLineAction() );
+//                        .addActionToComponent(this); // didn't figure out why keyStroke doesn't trigger the action
     }
 
     private Action addAccelerator(JMenuItem menuItem, KeyStroke... keyStrokes) {
@@ -85,12 +96,50 @@ public class ChartPanel extends studio.ui.chart.patched.ChartPanel {
         return action;
     }
 
+    public Action getLineAction() {
+        return lineAction;
+    }
+
     public Action getCopyAction() {
         return copyAction;
     }
 
     public Action getSaveAction() {
         return saveAction;
+    }
+
+    public void addNewLineListener(NewLineListener listener) {
+        listenerList.add(NewLineListener.class, listener);
+    }
+
+    public void removeNewLineListener(NewLineListener listener) {
+        listenerList.remove(NewLineListener.class, listener);
+    }
+
+    public void addLineSelectionListener(LineSelectionListener listener) {
+        listenerList.add(LineSelectionListener.class, listener);
+    }
+
+    public void removeLineSelectionListener(LineSelectionListener listener) {
+        listenerList.remove(LineSelectionListener.class, listener);
+    }
+
+    private void notifyListeners(NewLineEvent event) {
+        Object[] listeners = listenerList.getListenerList();
+        for (int i = listeners.length - 2; i >= 0; i -= 2) {
+            if (listeners[i] == NewLineListener.class) {
+                ((NewLineListener) listeners[i + 1]).lineAdded(event);
+            }
+        }
+    }
+
+    private void notifyListeners(LineSelectionEvent event) {
+        Object[] listeners = listenerList.getListenerList();
+        for (int i = listeners.length - 2; i >= 0; i -= 2) {
+            if (listeners[i] == LineSelectionListener.class) {
+                ((LineSelectionListener) listeners[i + 1]).lineSelected(event);
+            }
+        }
     }
 
     @Override
@@ -290,8 +339,12 @@ public class ChartPanel extends studio.ui.chart.patched.ChartPanel {
 
     @Override
     public void mouseClicked(MouseEvent event) {
-        addLine(event);
+        if (addingLine) addLine(event);
         super.mouseClicked(event);
+    }
+
+    private void addLineAction() {
+        addingLine = true;
     }
 
     private boolean checkLineDrag(MouseEvent event) {
@@ -338,6 +391,7 @@ public class ChartPanel extends studio.ui.chart.patched.ChartPanel {
         }
 
         if (selectedIndex != newSelectedIndex) {
+            notifyListeners(new LineSelectionEvent(this, selectedLine));
             chartChanged(new AnnotationChangeEvent(this, line));
         }
     }
@@ -351,7 +405,9 @@ public class ChartPanel extends studio.ui.chart.patched.ChartPanel {
         } else {
             newLine.addPoint(p);
             chartChanged(new AnnotationChangeEvent(this, newLine));
+            notifyListeners(new NewLineEvent(this, newLine));
             newLine = null;
+            addingLine = false;
         }
     }
 
