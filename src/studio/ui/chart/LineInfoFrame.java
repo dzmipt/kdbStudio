@@ -109,7 +109,7 @@ public class LineInfoFrame extends JFrame {
 
     private String fmtLabel(String text, boolean locked) {
         if (locked) {
-            return "<html><u>" + text + "</u></html>";
+            return "<html><b>" + text + "</b></html>";
         } else {
             return text;
         }
@@ -136,7 +136,7 @@ public class LineInfoFrame extends JFrame {
         else dx = line.getDX(dy);
 
         if (lockX) y = line.getY(x);
-        else x = line.getDX(y);
+        else x = line.getX(y);
 
         txtDX.setText("" + dx);
         txtDY.setText("" + dy);
