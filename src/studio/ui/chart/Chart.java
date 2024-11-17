@@ -50,6 +50,8 @@ public class Chart implements ComponentListener {
     private ChartConfigPanel pnlConfig;
 
     private final List<Integer> indexes = new ArrayList<>();
+    private int xIndex = -1;
+    private int yIndex = -1;
 
     private final String defaultTitle;
 
@@ -253,12 +255,15 @@ public class Chart implements ComponentListener {
         }
 
         int xIndex = indexes.get(pnlConfig.getDomainIndex());
-
         Class xClazz = table.getColumnClass(xIndex);
-        NumberAxis xAxis = new NumberAxis("");
-        xAxis.setNumberFormatOverride(new KFormat(xClazz));
-        xAxis.setAutoRangeIncludesZero(false);
-        plot.setDomainAxis(xAxis);
+
+        if (this.xIndex != xIndex) {
+            NumberAxis xAxis = new NumberAxis("");
+            xAxis.setNumberFormatOverride(new KFormat(xClazz));
+            xAxis.setAutoRangeIncludesZero(false);
+            plot.setDomainAxis(xAxis);
+            this.xIndex = xIndex;
+        }
 
         Class yClazz = null;
         plot.setDomainPannable(true);
@@ -272,11 +277,13 @@ public class Chart implements ComponentListener {
 
             if (yClazz == null) {
                 yClazz = table.getColumnClass(yIndex);
-                NumberAxis yAxis = new NumberAxis("");
-                yAxis.setNumberFormatOverride(new KFormat(yClazz));
-                yAxis.setAutoRangeIncludesZero(false);
-
-                plot.setRangeAxis(yAxis);
+                if (this.yIndex != yIndex) {
+                    NumberAxis yAxis = new NumberAxis("");
+                    yAxis.setNumberFormatOverride(new KFormat(yClazz));
+                    yAxis.setAutoRangeIncludesZero(false);
+                    plot.setRangeAxis(yAxis);
+                    this.yIndex = yIndex;
+                }
             }
 
             IntervalXYDataset dataset = getDateset(xIndex, yIndex);
