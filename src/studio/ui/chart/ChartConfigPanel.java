@@ -1,375 +1,117 @@
 package studio.ui.chart;
 
-import org.jfree.chart.plot.DefaultDrawingSupplier;
-import studio.ui.ColorChooser;
-
 import javax.swing.*;
-import javax.swing.border.Border;
-import javax.swing.border.EtchedBorder;
 import java.awt.*;
 import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
-import java.awt.event.MouseAdapter;
-import java.awt.event.MouseEvent;
-import java.util.List;
 
-public class ChartConfigPanel extends Box implements ActionListener {
+public class ChartConfigPanel extends Box {
 
     private final Chart chart;
-    private final List<String> names;
-    private final List<Integer> xIndex;
-    private final List<Integer> yIndex;
 
     private final JComboBox<ChartType> comboCharType;
     private final JComboBox<String> comboX;
-    private final JCheckBox chkAll;
-    private final JCheckBox[] chkY;
-    private final LegendIcon[] icons;
-    private final JPanel pnlLagend;
+    private final LegendListPanel listSeries;
 
-    private final LegendIcon colorChoosePreviewIcon;
-
-    private final static Border EMPTY_BORDER = BorderFactory.createEmptyBorder(2,0,2,0);
-    private final static Border SELECTED_BORDER = BorderFactory.createEtchedBorder(EtchedBorder.LOWERED);
-
-    private static Paint[] colors = DefaultDrawingSupplier.DEFAULT_PAINT_SEQUENCE;
-    private static Shape[] shapes = DefaultDrawingSupplier.DEFAULT_SHAPE_SEQUENCE;
-    private static BasicStroke[] strokes = new BasicStroke[] {
-            new BasicStroke(1f),
-            new BasicStroke(1f,BasicStroke.CAP_BUTT,
-                    BasicStroke.JOIN_BEVEL,1f,new float[] {10,10},0f
-            ),
-            new BasicStroke(1f,BasicStroke.CAP_BUTT,
-                    BasicStroke.JOIN_BEVEL,1f,new float[] {10,5},0f
-            ),
-            new BasicStroke(1f,BasicStroke.CAP_BUTT,
-                    BasicStroke.JOIN_BEVEL,1f,new float[] {5,5},0f
-            ),
-            new BasicStroke(1f,BasicStroke.CAP_BUTT,
-                    BasicStroke.JOIN_BEVEL,1f,new float[] {1.5f,3},0f
-            ),
-            new BasicStroke(1f,BasicStroke.CAP_BUTT,
-                    BasicStroke.JOIN_BEVEL,1f,new float[] {10,3,3,3},0f
-            ),
-    };
-
-    private static class StrokeWidth {
-        String title;
-        float width;
-        StrokeWidth(String title, float width) {
-            this.title = title;
-            this.width = width;
-        }
-    }
-
-    private static StrokeWidth[] strokeWidths = new StrokeWidth[] {
-            new StrokeWidth("x 1", 1),
-            new StrokeWidth("x 1.5", 1.5f),
-            new StrokeWidth("x 2", 2),
-            new StrokeWidth("x 3", 3),
-    };
+    private final LegendListPanel listLines;
 
 
-    //@TODO: May be it is better to have a cache of all possible strokes to avoid unneseccary garbage ?
-    private static BasicStroke strokeWithWidth(BasicStroke stroke, float width) {
-        if (stroke.getLineWidth() == width) return stroke;
-
-        return new BasicStroke(width, stroke.getEndCap(), stroke.getLineJoin(),
-                stroke.getMiterLimit(), stroke.getDashArray(), stroke.getDashPhase());
-    }
-
-    private static BasicStroke defaultStroke = strokeWithWidth(strokes[0], 2f);
-
-    public ChartConfigPanel(Chart chart, List<String> names, List<Integer> xIndex, List<Integer> yIndex) {
+    public ChartConfigPanel(Chart chart, String[] names) {
         super(BoxLayout.Y_AXIS);
         this.chart = chart;
-        this.names = names;
-        this.xIndex = xIndex;
-        this.yIndex = yIndex;
-        int count = yIndex.size();
         setBorder(BorderFactory.createEmptyBorder(5,5,5,5));
-
-        Box boxStyle = Box.createHorizontalBox();
-        boxStyle.add(new JLabel("Type: "));
 
         comboCharType = new JComboBox<>(ChartType.values());
         comboCharType.setMaximumSize(new Dimension(Integer.MAX_VALUE, comboCharType.getPreferredSize().height));
         comboCharType.addActionListener(this::charTypeSelected);
-        ChartType chartType = (ChartType) comboCharType.getSelectedItem();
 
+        Box boxStyle = Box.createHorizontalBox();
+        boxStyle.add(new JLabel("Type: "));
         boxStyle.add(comboCharType);
         boxStyle.add(Box.createHorizontalGlue());
         add(boxStyle);
 
+        comboX = new JComboBox<>(names);
+        comboX.setMaximumSize(new Dimension(Integer.MAX_VALUE, comboX.getPreferredSize().height));
+        comboX.addActionListener(e -> validateState() );
+
         Box boxDomain = Box.createHorizontalBox();
         boxDomain.add(new JLabel("Domain axis: "));
-
-        String[] xItems = xIndex.stream().map(names::get).toArray(String[]::new);
-        comboX = new JComboBox<>(xItems);
-        comboX.setMaximumSize(new Dimension(Integer.MAX_VALUE, comboX.getPreferredSize().height));
-        comboX.addActionListener(this);
         boxDomain.add(comboX);
         boxDomain.add(Box.createHorizontalGlue());
         add(boxDomain);
 
-        Box boxSeries = Box.createHorizontalBox();
-        boxSeries.add(new JLabel("Series:"));
-        boxSeries.add(Box.createHorizontalGlue());
-
-        chkAll = new JCheckBox("All", true);
-        chkAll.addActionListener(this::allSeriesClicked);
-        boxSeries.add(chkAll);
-
-        add(boxSeries);
-
-        pnlLagend = new JPanel();
-        GroupLayout layout = new GroupLayout(pnlLagend);
-        pnlLagend.setLayout(layout);
-
-        GroupLayout.ParallelGroup chkGroup = layout.createParallelGroup(GroupLayout.Alignment.LEADING);
-        GroupLayout.ParallelGroup iconGroup = layout.createParallelGroup(GroupLayout.Alignment.LEADING);
-        GroupLayout.SequentialGroup rowsGroup = layout.createSequentialGroup();
-
-        chkY = new JCheckBox[count];
-        icons = new LegendIcon[count];
-        JComponent[] iconPanels = new JComponent[count];
-        for (int i=0; i<count; i++) {
-            chkY[i] = new JCheckBox(names.get(yIndex.get(i)), true);
-            chkY[i].addActionListener(this);
-
-            icons[i] = new LegendIcon(colors[i % colors.length],shapes[i % shapes.length], defaultStroke);
-            icons[i].setChartType(chartType);
-            iconPanels[i] = new JLabel(icons[i]);
-            iconPanels[i].setBorder(EMPTY_BORDER);
-            final int theIndex = i;
-            iconPanels[i].addMouseListener(new MouseAdapter() {
-                @Override
-                public void mousePressed(MouseEvent e) {
-                    if (chkY[theIndex].isEnabled()) {
-                        legendPressed(theIndex, e);
-                    }
-                }
-
-                @Override
-                public void mouseEntered(MouseEvent e) {
-                    if (chkY[theIndex].isEnabled()) {
-                        iconPanels[theIndex].setBorder(SELECTED_BORDER);
-                    }
-                }
-
-                @Override
-                public void mouseExited(MouseEvent e) {
-                    iconPanels[theIndex].setBorder(EMPTY_BORDER);
-                }
-            });
-
-            chkGroup.addComponent(chkY[i]);
-            iconGroup.addComponent(iconPanels[i]);
-
-            rowsGroup.addGroup(layout.createParallelGroup(GroupLayout.Alignment.BASELINE)
-                                        .addComponent(chkY[i])
-                                        .addComponent(iconPanels[i]) );
+        listSeries = new LegendListPanel("Series:", true, true, true);
+        listSeries.addChangeListener(e -> refresh() );
+        for (int index = 0; index < names.length; index++) {
+            LegendIcon icon = new LegendIcon(LegendButton.BASE_COLORS[index % LegendButton.BASE_COLORS.length], LegendButton.SHAPES[index % LegendButton.SHAPES.length],
+                    LegendButton.getDefaultStroke());
+            icon.setChartType(ChartType.values()[0]);
+            listSeries.add(names[index], icon);
         }
+        listSeries.setEnabled(0, false);
 
-        Box glue = Box.createVerticalBox();
+        listLines = new LegendListPanel("Lines:", true, false, false);
+        listLines.addChangeListener(e -> refresh() );
 
-        chkGroup.addComponent(glue);
-        rowsGroup.addComponent(glue);
+        Box boxIndent = Box.createHorizontalBox();
+        boxIndent.add(Box.createRigidArea(new Dimension(5,20)));
+        JComponent filler = new Box.Filler(new Dimension(0,0), new Dimension(0, 0), new Dimension(Integer.MAX_VALUE, 1));
+        filler.setBorder(BorderFactory.createLineBorder(Color.GRAY));
+        boxIndent.add(filler);
+        boxIndent.add(Box.createRigidArea(new Dimension(5,20)));
 
-        layout.setHorizontalGroup(layout.createSequentialGroup()
-                                        .addGroup(chkGroup)
-                                        .addGroup(iconGroup)
-                                  );
 
-        layout.setVerticalGroup(rowsGroup);
+        Box scrollPaneContent = Box.createVerticalBox();
+        scrollPaneContent.add(listSeries);
+        scrollPaneContent.add(boxIndent);
+        scrollPaneContent.add(listLines);
+        scrollPaneContent.add(Box.createVerticalBox());
 
-        add(new JScrollPane(pnlLagend));
-        validateState();
-        colorChoosePreviewIcon = new LegendIcon(null, null, null);
+        scrollPaneContent.setBorder(BorderFactory.createEmptyBorder(2,2,2,2));
+        add(new JScrollPane(scrollPaneContent));
+
+        listSeries.setEnabled(0, false);
     }
 
     public int getDomainIndex() {
-        return xIndex.get(comboX.getSelectedIndex());
+        return comboX.getSelectedIndex();
     }
 
     public boolean isSeriesEnables(int index) {
-        return chkY[index].isSelected() && chkY[index].isEnabled();
+        return listSeries.isSelected(index);
     }
 
-    public Paint getColor(int index) {
-        return icons[index].getColor();
+    public LegendIcon getLegendIcon(int index) {
+        return listSeries.getIcon(index);
     }
 
-    public Shape getShape(int index) {
-        return icons[index].getShape();
+    public void addLine(Line aLine) {
+        LegendIcon icon = new LegendIcon(Color.BLACK, null, LegendButton.getDefaultStroke());
+        listLines.add("Line " + (1+ listLines.getListSize()), icon);
     }
 
-    public Stroke getStroke(int index) {
-        return icons[index].getStroke();
-    }
-
-    public ChartType getChartType(int index) {
-        return icons[index].getChartType();
-    }
-
-    @Override
-    public void actionPerformed(ActionEvent e) {
-        pnlLagend.repaint();
-        validateState();
+    private void refresh() {
+        invalidate();
+        repaint();
         chart.refreshPlot();
     }
 
     private void validateState() {
-        for (JCheckBox checkBox: chkY) {
-            checkBox.setEnabled(true);
+        int domainIndex = getDomainIndex();
+        int count = listSeries.getListSize();
+        for (int index = 0; index < count; index++) {
+            listSeries.setEnabled(index, index !=domainIndex);
         }
-        int x = xIndex.get(comboX.getSelectedIndex());
-        int index = yIndex.indexOf(x);
-        if (index > -1) {
-            chkY[index].setEnabled(false);
-        }
-    }
-
-    private void allSeriesClicked(ActionEvent e) {
-        for (JCheckBox checkBox: chkY) {
-            checkBox.setSelected(chkAll.isSelected());
-        }
-        actionPerformed(e);
+        refresh();
     }
 
     private void charTypeSelected(ActionEvent e) {
         ChartType chartType = (ChartType) comboCharType.getSelectedItem();
-        for (LegendIcon icon: icons) {
-            icon.setChartType(chartType);
+        int count = listSeries.getListSize();
+        for (int index = 0; index < count; index++) {
+            listSeries.getIcon(index).setChartType(chartType);
         }
-        actionPerformed(e);
-    }
-
-    private void legendPressed(int index, MouseEvent e) {
-        Paint theColor = icons[index].getColor();
-        Shape theShape = icons[index].getShape();
-        BasicStroke theStroke = icons[index].getStroke();
-        ChartType theChartType = icons[index].getChartType();
-
-        JPopupMenu popup = new JPopupMenu();
-
-        JMenuItem menu = new JMenuItem("Change color", new SquareIcon(theColor, 15));
-        menu.addActionListener(actionEvent -> showChangeColor(index, actionEvent));
-        popup.add(menu);
-
-        JMenu subMenu = new JMenu("Change type");
-        for (ChartType chartType : ChartType.values()) {
-            LegendIcon icon = new LegendIcon(theColor, theShape, theStroke);
-            icon.setChartType(chartType);
-
-            JCheckBoxMenuItem item = new JCheckBoxMenuItem(chartType.toString(), icon, theChartType == chartType);
-            item.addActionListener(actionEvent -> changeChartType(index, chartType, actionEvent));
-            subMenu.add(item);
-        }
-        popup.add(subMenu);
-
-        if (icons[index].getChartType().hasShape()) {
-            subMenu = new JMenu("Change shape");
-            for (Shape shape: shapes) {
-                LegendIcon icon = new LegendIcon(theColor, shape, theStroke);
-                icon.setChartType(theChartType);
-
-                JCheckBoxMenuItem item = new JCheckBoxMenuItem("", icon, theShape == shape);
-                item.addActionListener(actionEvent -> changeShape(index, shape, actionEvent));
-                subMenu.add(item);
-            }
-            popup.add(subMenu);
-
-            menu = new JMenuItem("Set this shape to all");
-            menu.addActionListener(actionEvent -> setShapeToAll(index, actionEvent));
-            popup.add(menu);
-        }
-
-        if (icons[index].getChartType().hasLine()) {
-            float theWidth = theStroke.getLineWidth();
-            subMenu = new JMenu("Change stroke");
-            for (BasicStroke stroke: strokes) {
-                BasicStroke aStroke = strokeWithWidth(stroke, theWidth);
-                LegendIcon icon = new LegendIcon(theColor, null, aStroke);
-                JCheckBoxMenuItem item = new JCheckBoxMenuItem("", icon, theStroke.equals(strokeWithWidth(stroke, theWidth)));
-                item.addActionListener(actionEvent -> changeStroke(index, aStroke, actionEvent));
-                subMenu.add(item);
-            }
-            subMenu.addSeparator();
-
-            for (StrokeWidth strokeWidth: strokeWidths) {
-                boolean selected = theWidth == strokeWidth.width;
-                LegendIcon icon = new LegendIcon(theColor, null, strokeWithWidth(theStroke, strokeWidth.width));
-
-                JCheckBoxMenuItem item = new JCheckBoxMenuItem(strokeWidth.title, icon, selected);
-                item.addActionListener(actionEvent -> changeStrokeWidth(index, strokeWidth.width, actionEvent));
-                subMenu.add(item);
-            }
-            popup.add(subMenu);
-
-            menu = new JMenuItem("Set this stroke to all");
-            menu.addActionListener(actionEvent -> setStrokeToAll(index, actionEvent));
-            popup.add(menu);
-        }
-
-        popup.show(e.getComponent(), e.getX(), e.getY());
-    }
-
-    private void showChangeColor(int index, ActionEvent e) {
-        Paint paint = icons[index].getColor();
-        Color color = Color.BLACK;
-        if (paint instanceof Color) {
-            color = (Color)paint;
-        }
-        colorChoosePreviewIcon.setColor(color);
-        colorChoosePreviewIcon.setShape(icons[index].getShape());
-        colorChoosePreviewIcon.setStroke(icons[index].getStroke());
-        colorChoosePreviewIcon.setChartType(icons[index].getChartType());
-        Color result = ColorChooser.chooseColor(pnlLagend, "Choose color", color,
-                new JLabel(colorChoosePreviewIcon, SwingConstants.CENTER),
-                newColor -> colorChoosePreviewIcon.setColor(newColor)
-                );
-
-        if (result != null) {
-            icons[index].setColor(result);
-            actionPerformed(e);
-        }
-    }
-
-    private void changeChartType(int index, ChartType chartType, ActionEvent e) {
-        icons[index].setChartType(chartType);
-        actionPerformed(e);
-    }
-
-    private void changeShape(int index, Shape shape, ActionEvent e) {
-        icons[index].setShape(shape);
-        actionPerformed(e);
-    }
-
-    private void setShapeToAll(int index, ActionEvent e) {
-        Shape shape = icons[index].getShape();
-        for (LegendIcon icon: icons) {
-            icon.setShape(shape);
-        }
-        actionPerformed(e);
-    }
-
-    private void changeStroke(int index, BasicStroke stroke, ActionEvent e) {
-        icons[index].setStroke(stroke);
-        actionPerformed(e);
-    }
-
-    private void changeStrokeWidth(int index, float width, ActionEvent e) {
-        icons[index].setStroke(strokeWithWidth(icons[index].getStroke(), width));
-        actionPerformed(e);
-    }
-
-    private void setStrokeToAll(int index, ActionEvent e) {
-        BasicStroke stroke = icons[index].getStroke();
-        for (LegendIcon icon: icons) {
-            icon.setStroke(stroke);
-        }
-        actionPerformed(e);
+        refresh();
     }
 
 }

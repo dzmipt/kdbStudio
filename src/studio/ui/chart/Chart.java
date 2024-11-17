@@ -49,7 +49,7 @@ public class Chart implements ComponentListener {
     private JPanel contentPane;
     private ChartConfigPanel pnlConfig;
 
-    private List<Integer> yIndex;
+    private final List<Integer> indexes = new ArrayList<>();
 
     private final String defaultTitle;
 
@@ -90,23 +90,21 @@ public class Chart implements ComponentListener {
     }
 
     private void initComponents() {
-        List<String> names = new ArrayList<>();
-        List<Integer> xIndex = new ArrayList<>();
-        yIndex = new ArrayList<>();
-        for (int index = 0; index<table.getColumnCount(); index++) {
-            names.add(table.getColumnName(index));
+        List<String> namesList = new ArrayList<>();
+        for (int index = 0; index < table.getColumnCount(); index++) {
             Class clazz = table.getColumnClass(index);
             if (supportedClasses.contains(clazz)) {
-                xIndex.add(index);
-                yIndex.add(index);
+                indexes.add(index);
+                namesList.add(table.getColumnName(index));
             }
         }
 
-        if (xIndex.size() == 0 || yIndex.size() ==0) {
-            log.info("Nothing to chart. Number of columns for x axes is {}. Number of columns for y axes is {}", xIndex.size(), yIndex.size());
+        if (indexes.size() < 2) {
+            log.info("Nothing to chart. Number of columns which can be casted to decimal in {}", indexes.size());
             StudioOptionPane.showWarning(null, "It turns out that nothing is found to chart.", "Nothing to chart");
             return;
         }
+        String[] names = namesList.toArray(new String[namesList.size()]);
 
         int plotMoveModifier = Util.MAC_OS_X ? KeyEvent.ALT_MASK : KeyEvent.CTRL_MASK;
         int lineDragModifier = Util.MAC_OS_X ? KeyEvent.META_MASK : KeyEvent.CTRL_MASK;
@@ -121,7 +119,7 @@ public class Chart implements ComponentListener {
         JLabel lbl = new JLabel(defaultLabelText);
 
         chartPanel = createChartPanel();
-        pnlConfig = new ChartConfigPanel(this, names, xIndex, yIndex);
+        pnlConfig = new ChartConfigPanel(this, names);
 
         JToolBar toolbar = new Toolbar();
         toolbar.setLayout(new BoxLayout(toolbar, BoxLayout.X_AXIS));
@@ -129,7 +127,10 @@ public class Chart implements ComponentListener {
         toolbar.add(chartPanel.getLineAction());
         toolbar.add(chartPanel.getCopyAction()).setFocusable(false);
         toolbar.add(chartPanel.getSaveAction()).setFocusable(false);
-        chartPanel.addNewLineListener(e -> chartPanel.getRootPane().requestFocusInWindow());
+        chartPanel.addNewLineListener(e -> {
+            chartPanel.getRootPane().requestFocusInWindow();
+            pnlConfig.addLine(e.getLine());
+        });
         chartPanel.addLineSelectionListener(e -> lbl.setText(e.getLine() == null ? defaultLabelText : selectedLineText) );
 
         JPanel rightPanel = new JPanel(new BorderLayout());
@@ -251,7 +252,7 @@ public class Chart implements ComponentListener {
             plot.setRenderer(i, null);
         }
 
-        int xIndex = pnlConfig.getDomainIndex();
+        int xIndex = indexes.get(pnlConfig.getDomainIndex());
 
         Class xClazz = table.getColumnClass(xIndex);
         NumberAxis xAxis = new NumberAxis("");
@@ -264,11 +265,13 @@ public class Chart implements ComponentListener {
         plot.setRangePannable(true);
         plot.setDatasetRenderingOrder(DatasetRenderingOrder.FORWARD);
         int datasetIndex = 0;
-        for (int index = 0; index<yIndex.size(); index++) {
+        for (int index = 0; index<indexes.size(); index++) {
             if (! pnlConfig.isSeriesEnables(index)) continue;
+            int yIndex = indexes.get(index);
+            if (yIndex == xIndex) continue;;
 
             if (yClazz == null) {
-                yClazz = table.getColumnClass(yIndex.get(index));
+                yClazz = table.getColumnClass(yIndex);
                 NumberAxis yAxis = new NumberAxis("");
                 yAxis.setNumberFormatOverride(new KFormat(yClazz));
                 yAxis.setAutoRangeIncludesZero(false);
@@ -276,22 +279,23 @@ public class Chart implements ComponentListener {
                 plot.setRangeAxis(yAxis);
             }
 
-            IntervalXYDataset dataset = getDateset(yIndex.get(index));
+            IntervalXYDataset dataset = getDateset(xIndex, yIndex);
 
             XYToolTipGenerator toolTipGenerator = new StandardXYToolTipGenerator(StandardXYToolTipGenerator.DEFAULT_TOOL_TIP_FORMAT,
                     new KFormat(xClazz), new KFormat(yClazz));
             XYItemRenderer renderer;
 
-            ChartType chartType = pnlConfig.getChartType(index);
+            LegendIcon icon = pnlConfig.getLegendIcon(index);
+            ChartType chartType = icon.getChartType();
             if (chartType == ChartType.BAR) {
                 renderer = new BarRenderer();
             } else {
                 renderer = new XYLineAndShapeRenderer(chartType.hasLine(), chartType.hasShape());
             }
             renderer.setDefaultToolTipGenerator(toolTipGenerator);
-            renderer.setSeriesPaint(0, pnlConfig.getColor(index));
-            renderer.setSeriesShape(0, pnlConfig.getShape(index));
-            renderer.setSeriesStroke(0, pnlConfig.getStroke(index));
+            renderer.setSeriesPaint(0, icon.getColor());
+            renderer.setSeriesShape(0, icon.getShape());
+            renderer.setSeriesStroke(0, icon.getStroke());
             ((AbstractRenderer)renderer).setAutoPopulateSeriesPaint(false);
             ((AbstractRenderer)renderer).setAutoPopulateSeriesShape(false);
             ((AbstractRenderer)renderer).setAutoPopulateSeriesStroke(false);
@@ -306,15 +310,13 @@ public class Chart implements ComponentListener {
         contentPane.repaint();
     }
 
-    private IntervalXYDataset getDateset(int col) {
-        int xIndex = pnlConfig.getDomainIndex();
-
+    private IntervalXYDataset getDateset(int xCol, int yCol) {
         XYSeriesCollection collection = new XYSeriesCollection();
         collection.setAutoWidth(true);
-        XYSeries series = new XYSeries(table.getColumnName(col), false, true);
+        XYSeries series = new XYSeries(table.getColumnName(yCol), false, true);
         for (int row = 0; row < table.getRowCount(); row++) {
-            K.KBase xValue = (K.KBase)table.getValueAt(row, xIndex);
-            K.KBase yValue = (K.KBase)table.getValueAt(row, col);
+            K.KBase xValue = (K.KBase)table.getValueAt(row, xCol);
+            K.KBase yValue = (K.KBase)table.getValueAt(row, yCol);
             if (xValue.isNull() || yValue.isNull()) continue;
 
             ToDouble x = (ToDouble)xValue;
