@@ -3,6 +3,8 @@ package studio.ui.chart;
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
+import java.util.ArrayList;
+import java.util.List;
 
 public class ChartConfigPanel extends Box {
 
@@ -13,6 +15,7 @@ public class ChartConfigPanel extends Box {
     private final LegendListPanel listSeries;
 
     private final LegendListPanel listLines;
+    private final List<Line> lines = new ArrayList<>();
 
 
     public ChartConfigPanel(Chart chart, String[] names) {
@@ -85,12 +88,15 @@ public class ChartConfigPanel extends Box {
         return listSeries.getIcon(index);
     }
 
-    public void addLine(Line aLine) {
-        LegendIcon icon = new LegendIcon(Color.BLACK, null, LegendButton.getDefaultStroke());
-        listLines.add("Line " + (1+ listLines.getListSize()), icon);
+    public void addLine(Line line) {
+        lines.add(line);
+        listLines.add("Line " + (1+ listLines.getListSize()), line.getIcon());
     }
 
     private void refresh() {
+        for (int index = 0; index < lines.size(); index++) {
+            lines.get(index).setVisible(listLines.isSelected(index));
+        }
         invalidate();
         repaint();
         chart.refreshPlot();

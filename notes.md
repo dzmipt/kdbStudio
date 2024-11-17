@@ -1,4 +1,4 @@
-* Lines can be added directly from the Chart panel
+* Lines tool is added to charts
 * Adding drag&drop in the tree of servers (in the Server List dialog)
 * Server connect/disconnect actions from the status bar
     * adding selection of auth.method into the status bar 

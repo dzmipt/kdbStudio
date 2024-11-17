@@ -92,7 +92,7 @@ public class LegendListPanel extends Box implements LegendChangeListener {
             chkGroup.addComponent(chk);
             iconGroup.addComponent(button);
 
-            rowsGroup.addGroup(layout.createParallelGroup(GroupLayout.Alignment.BASELINE)
+            rowsGroup.addGroup(layout.createParallelGroup(GroupLayout.Alignment.CENTER)
                     .addComponent(chk)
                     .addComponent(button) );
         }

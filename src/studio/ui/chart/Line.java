@@ -18,15 +18,18 @@ public class Line extends AbstractAnnotation implements XYAnnotation {
 
     private final ChartPanel chartPanel;
     private Point2D.Double p0, p1;
+    private LegendIcon icon;
 
     private Point screenP0, screenP1;
     private boolean selected = false;
-    private boolean visible = false;
+    private boolean off = false;
     private boolean init = false;
+    private boolean visible = true;
 
     public Line(ChartPanel chartPanel, Point2D.Double p0) {
         this.chartPanel = chartPanel;
         this.p0 = p0;
+        icon = new LegendIcon(Color.BLACK, null, LegendButton.getDefaultStroke());
         XYPlot plot = chartPanel.getChart().getXYPlot();
         plot.getDomainAxis().addChangeListener(e -> refresh());
         plot.getRangeAxis().addChangeListener(e -> refresh());
@@ -65,9 +68,9 @@ public class Line extends AbstractAnnotation implements XYAnnotation {
             Point2D.Double p1 = points.get(1);
             screenP0 = chartPanel.fromPlot(p0);
             screenP1 = chartPanel.fromPlot(p1);
-            visible = true;
+            off = true;
         } else {
-            visible = false;
+            off = false;
             selected = false;
         }
     }
@@ -85,7 +88,7 @@ public class Line extends AbstractAnnotation implements XYAnnotation {
     }
 
     public double distanceSqr(int x, int y) {
-        if (!init || !visible) return Double.POSITIVE_INFINITY;
+        if (!init || !off || !visible) return Double.POSITIVE_INFINITY;
 
         double s2 = x*(screenP0.y-screenP1.y) + screenP0.x*(screenP1.y-y) + screenP1.x*(y-screenP0.y);
         double l2 = screenDist(screenP0, screenP1);
@@ -121,6 +124,10 @@ public class Line extends AbstractAnnotation implements XYAnnotation {
         refresh();
     }
 
+    public LegendIcon getIcon() {
+        return icon;
+    }
+
     public void setSelected(boolean selected) {
         this.selected = selected;
     }
@@ -129,21 +136,37 @@ public class Line extends AbstractAnnotation implements XYAnnotation {
         return selected;
     }
 
+    public void setVisible(boolean visible) {
+        this.visible = visible;
+    }
+
     @Override
     public void draw(Graphics2D g2, XYPlot plot, Rectangle2D dataArea, ValueAxis domainAxis, ValueAxis rangeAxis, int rendererIndex, PlotRenderingInfo info) {
         if (!init) {
             Point p = chartPanel.fromPlot(p0);
             Shape shape = new Ellipse2D.Double(p.x-2, p.y-2, 4,4);
 
-            g2.setColor(Color.black);
+            g2.setPaint(icon.getColor());
             g2.fill(shape);
             return;
         }
 
-        if (!visible) return;
+        if (!off || !visible) return;
 
-        g2.setColor(Color.black);
-        g2.setStroke(new BasicStroke(selected ? 3  :1));
+        BasicStroke stroke = icon.getStroke();
+        if (selected) {
+            float width = 2 * stroke.getLineWidth();
+            float[] dash = stroke.getDashArray();
+            if (dash != null) {
+                for (int i=0; i<dash.length; i++) dash[i] = 2*dash[i];
+            }
+
+            stroke = new BasicStroke(width, stroke.getEndCap(), stroke.getLineJoin(),
+                    stroke.getMiterLimit(), dash, stroke.getDashPhase());
+        }
+
+        g2.setPaint(icon.getColor());
+        g2.setStroke(stroke);
         g2.drawLine(screenP0.x, screenP0.y, screenP1.x, screenP1.y);
 
     }

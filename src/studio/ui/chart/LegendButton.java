@@ -61,8 +61,8 @@ public class LegendButton extends JLabel implements MouseListener {
             new StrokeWidth("x 3", 3),
     };
 
-    //@TODO: May be it is better to have a cache of all possible strokes to avoid unneseccary garbage ?
-    private static BasicStroke strokeWithWidth(BasicStroke stroke, float width) {
+    //@TODO: May be it is better to have a cache of all possible strokes to avoid unnecessary garbage ?
+    public static BasicStroke strokeWithWidth(BasicStroke stroke, float width) {
         if (stroke.getLineWidth() == width) return stroke;
 
         return new BasicStroke(width, stroke.getEndCap(), stroke.getLineJoin(),
