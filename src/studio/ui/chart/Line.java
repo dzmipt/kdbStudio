@@ -19,6 +19,7 @@ public class Line extends AbstractAnnotation implements XYAnnotation {
     private final ChartPanel chartPanel;
     private Point2D.Double p0, p1;
     private LegendIcon icon;
+    private String title = "";
 
     private Point screenP0, screenP1;
     private boolean selected = false;
@@ -106,6 +107,7 @@ public class Line extends AbstractAnnotation implements XYAnnotation {
         p0 = new Point2D.Double(x0, y0);
         p1 = p;
         refresh();
+        fireAnnotationChanged();
     }
 
     public void dragTo(Point p) {
@@ -122,6 +124,31 @@ public class Line extends AbstractAnnotation implements XYAnnotation {
         p0 = chartPanel.toPlot(screenP0);
         p1 = chartPanel.toPlot(screenP1);
         refresh();
+        fireAnnotationChanged();
+    }
+
+    public double getDX(double dy) {
+        return dy * (p1.x - p0.x) / (p1.y - p0.y);
+    }
+
+    public double getDY(double dx) {
+        return dx * (p1.y - p0.y) / (p1.x - p0.x);
+    }
+
+    public double getX(double y) {
+        return intersectHorizontal(new Line2D.Double(p0, p1), y);
+    }
+
+    public double getY(double x) {
+        return intersectVertical(new Line2D.Double(p0, p1), x);
+    }
+
+    public String getTitle() {
+        return title;
+    }
+
+    public void setTitle(String title) {
+        this.title = title;
     }
 
     public LegendIcon getIcon() {
@@ -168,6 +195,6 @@ public class Line extends AbstractAnnotation implements XYAnnotation {
         g2.setPaint(icon.getColor());
         g2.setStroke(stroke);
         g2.drawLine(screenP0.x, screenP0.y, screenP1.x, screenP1.y);
-
     }
+
 }

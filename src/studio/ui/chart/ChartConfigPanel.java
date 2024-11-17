@@ -89,8 +89,12 @@ public class ChartConfigPanel extends Box {
     }
 
     public void addLine(Line line) {
+        String title = "Line " + (1+ listLines.getListSize());
+        line.setTitle(title);
         lines.add(line);
-        listLines.add("Line " + (1+ listLines.getListSize()), line.getIcon());
+        listLines.add(title, line.getIcon());
+
+        new LineInfoFrame(line);
     }
 
     private void refresh() {
