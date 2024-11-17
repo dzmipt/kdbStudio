@@ -196,6 +196,12 @@ public class ChartPanel extends studio.ui.chart.patched.ChartPanel {
         if (chart == null) {
             return;
         }
+        if (selectedLine != null) return;
+
+        if (addingLine) {
+            addLine(e);
+            return;
+        }
         Plot plot = chart.getPlot();
         int mods = e.getModifiers();
         if ((mods & this.panMask) == this.panMask) {
@@ -335,12 +341,6 @@ public class ChartPanel extends studio.ui.chart.patched.ChartPanel {
             displayPopupMenu(e.getX(), e.getY());
         }
 
-    }
-
-    @Override
-    public void mouseClicked(MouseEvent event) {
-        if (addingLine) addLine(event);
-        super.mouseClicked(event);
     }
 
     private void addLineAction() {
