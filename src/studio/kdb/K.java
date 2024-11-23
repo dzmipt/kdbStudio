@@ -3,6 +3,7 @@ package studio.kdb;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.lang.reflect.Array;
+import java.lang.reflect.ParameterizedType;
 import java.sql.Time;
 import java.sql.Timestamp;
 import java.text.DecimalFormat;
@@ -16,7 +17,10 @@ public class K {
     private final static SimpleDateFormat dateFormatter = new SimpleDateFormat("yyyy.MM.dd");
     private final static SimpleDateFormat dateTimeFormatter = new SimpleDateFormat("yyyy.MM.dd'T'HH:mm:ss.SSS");
     private final static SimpleDateFormat timestampFormatter = new SimpleDateFormat("yyyy.MM.dd'D'HH:mm:ss.");
-
+    private final static long SEC_IN_DAY = 24 * 60 * 60;
+    private final static long MS_IN_DAY = 1000 * SEC_IN_DAY;
+    private final static long NS_IN_DAY = 1000_000_000 * SEC_IN_DAY;
+    private final static long NS_IN_MONTH = (long) (NS_IN_DAY*(365*4+1)/(12*4.0));
 
     static {
         TimeZone gmtTimeZone = java.util.TimeZone.getTimeZone("GMT");
@@ -989,7 +993,11 @@ public class K {
         }
 
         public Date toDate() {
-            return new Date(86400000L * (value + 10957));
+            return new Date(MS_IN_DAY * (value + 10957));
+        }
+
+        public KTimestamp toTimestamp() {
+            return new KTimestamp(value * NS_IN_DAY);
         }
     }
 
@@ -1114,6 +1122,10 @@ public class K {
             return now(systemClock);
         }
 
+        public KTimespan span(KTimestamp t2) {
+            return new KTimespan(t2.value - value);
+        }
+
         public String getDataType() {
             return "Timestamp";
         }
@@ -1129,15 +1141,15 @@ public class K {
             else if (value == Long.MAX_VALUE) builder.append("0Wp");
             else if (value == -Long.MAX_VALUE) builder.append("-0Wp");
             else {
-                Timestamp ts = toTimestamp();
+                Timestamp ts = toJavaTimestamp();
                 builder.append(timestampFormatter.format(ts))
                                 .append(nsFormatter.format(ts.getNanos()));
             }
             return builder;
         }
 
-        public Timestamp toTimestamp() {
-            long k = 86400000L * 10957;
+        public Timestamp toJavaTimestamp() {
+            long k = MS_IN_DAY * 10957;
             long n = 1000000000L;
             long d = value < 0 ? (value + 1) / n - 1 : value / n;
             long ltime = value == Long.MIN_VALUE ? value : (k + 1000 * d);
@@ -1396,10 +1408,6 @@ public class K {
         public final static KTimespan NULL = new KTimespan(NULL_VALUE);
         public final static KTimespan ZERO = new KTimespan(0);
 
-        public static KTimespan period(KTimestamp t0, KTimestamp t1) {
-            return new KTimespan(t1.value - t0.value);
-        }
-
         public KTimespan(long x) {
             super(-16, x);
         }
@@ -1424,9 +1432,9 @@ public class K {
                     jj = -jj;
                     builder.append("-");
                 }
-                int d = ((int) (jj / 86400000000000L));
+                int d = ((int) (jj / NS_IN_DAY));
                 if (d != 0) builder.append(d).append("D");
-                builder.append(i2((int) ((jj % 86400000000000L) / 3600000000000L)))
+                builder.append(i2((int) ((jj % NS_IN_DAY) / 3600000000000L)))
                         .append(":").append(i2((int) ((jj % 3600000000000L) / 60000000000L)))
                         .append(":").append(i2((int) ((jj % 60000000000L) / 1000000000L)))
                         .append(".").append(nsFormatter.format((int) (jj % 1000000000L)));
@@ -1456,6 +1464,7 @@ public class K {
         private byte attr = 0;
         private final String typeName;
         private final String typeChar;
+        private final Class<? extends KBase> elementClass;
 
         protected KBaseVector(Object array, int type, String typeName, String typeChar) {
             super(type);
@@ -1463,6 +1472,11 @@ public class K {
             this.length = Array.getLength(array);
             this.typeName = typeName;
             this.typeChar = typeChar;
+            elementClass = (Class<? extends KBase>)((ParameterizedType)getClass().getGenericSuperclass()).getActualTypeArguments()[0];
+        }
+
+        public Class<? extends KBase> getElementClass() {
+            return elementClass;
         }
 
         public abstract E at(int i);

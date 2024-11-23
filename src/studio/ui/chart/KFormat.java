@@ -10,12 +10,12 @@ import java.text.ParsePosition;
 
 public class KFormat extends NumberFormat {
 
-    private Class kVectorClass;
+    private Class kClass;
 
     private static final DecimalFormat fractionFormat = new DecimalFormat("+0.#####;-0.#####");
 
-    public KFormat(Class kVectorClass) {
-        this.kVectorClass = kVectorClass;
+    public KFormat(Class kClass) {
+        this.kClass = kClass;
     }
 
     @Override
@@ -32,32 +32,32 @@ public class KFormat extends NumberFormat {
     public StringBuffer format(double value, StringBuffer toAppendTo, FieldPosition pos) {
         boolean addFraction = true;
         K.KBase kValue;
-        if (kVectorClass == K.KIntVector.class ||
-                kVectorClass == K.KDoubleVector.class ||
-                kVectorClass == K.KFloatVector.class ||
-                kVectorClass == K.KShortVector.class ||
-                kVectorClass == K.KLongVector.class) {
+        if (kClass == K.KInteger.class ||
+                kClass == K.KDouble.class ||
+                kClass == K.KFloat.class ||
+                kClass == K.KShort.class ||
+                kClass == K.KLong.class) {
             kValue = new K.KDouble(value);
             addFraction = false;
-        } else if (kVectorClass == K.KDatetimeVector.class) {
+        } else if (kClass == K.KDatetime.class) {
             kValue = new K.KDatetime(value);
             addFraction = false;
-        } else if (kVectorClass == K.KDateVector.class) {
+        } else if (kClass == K.KDate.class) {
             kValue = new K.KDate(getInt(value));
-        } else if (kVectorClass == K.KTimeVector.class) {
+        } else if (kClass == K.KTime.class) {
             kValue = new K.KTime(getInt(value));
-        } else if (kVectorClass == K.KTimestampVector.class) {
+        } else if (kClass == K.KTimestamp.class) {
             kValue = new K.KTimestamp(getLong(value));
-        } else if (kVectorClass == K.KTimespanVector.class) {
+        } else if (kClass == K.KTimespan.class) {
             kValue = new K.KTimespan(getLong(value));
-        } else if (kVectorClass == K.KMonthVector.class) {
+        } else if (kClass == K.Month.class) {
             kValue = new K.Month(getInt(value));
-        } else if (kVectorClass == K.KSecondVector.class) {
+        } else if (kClass == K.Second.class) {
             kValue = new K.Second(getInt(value));
-        } else if (kVectorClass == K.KMinuteVector.class) {
+        } else if (kClass == K.Minute.class) {
             kValue = new K.Minute(getInt(value));
         } else {
-            throw new IllegalArgumentException("Unsupported class: " + kVectorClass);
+            throw new IllegalArgumentException("Unsupported class: " + kClass);
         }
 
         toAppendTo.append(kValue.toString(KFormatContext.NO_TYPE));

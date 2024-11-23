@@ -63,20 +63,20 @@ public class Chart implements ComponentListener {
 
     static {
         supportedClasses.addAll(Arrays.asList(
-            K.KIntVector.class,
-            K.KDoubleVector.class,
-            K.KFloatVector.class,
-            K.KShortVector.class,
-            K.KLongVector.class,
+            K.KInteger.class,
+            K.KDouble.class,
+            K.KFloat.class,
+            K.KShort.class,
+            K.KLong.class,
 
-            K.KDateVector.class,
-            K.KTimeVector.class,
-            K.KTimestampVector.class,
-            K.KTimespanVector.class,
-            K.KDatetimeVector.class,
-            K.KMonthVector.class,
-            K.KSecondVector.class,
-            K.KMinuteVector.class) );
+            K.KDate.class,
+            K.KTime.class,
+            K.KTimestamp.class,
+            K.KTimespan.class,
+            K.KDatetime.class,
+            K.Month.class,
+            K.Second.class,
+            K.Minute.class) );
     }
 
     private static StandardChartTheme currentTheme = new StandardChartTheme("JFree");
@@ -94,7 +94,7 @@ public class Chart implements ComponentListener {
     private void initComponents() {
         List<String> namesList = new ArrayList<>();
         for (int index = 0; index < table.getColumnCount(); index++) {
-            Class clazz = table.getColumnClass(index);
+            Class clazz = table.getColumnElementClass(index);
             if (supportedClasses.contains(clazz)) {
                 indexes.add(index);
                 namesList.add(table.getColumnName(index));
@@ -255,7 +255,7 @@ public class Chart implements ComponentListener {
         }
 
         int xIndex = indexes.get(pnlConfig.getDomainIndex());
-        Class xClazz = table.getColumnClass(xIndex);
+        Class xClazz = table.getColumnElementClass(xIndex);
 
         if (this.xIndex != xIndex) {
             NumberAxis xAxis = new NumberAxis("");
@@ -276,7 +276,7 @@ public class Chart implements ComponentListener {
             if (yIndex == xIndex) continue;;
 
             if (yClazz == null) {
-                yClazz = table.getColumnClass(yIndex);
+                yClazz = table.getColumnElementClass(yIndex);
                 if (this.yIndex != yIndex) {
                     NumberAxis yAxis = new NumberAxis("");
                     yAxis.setNumberFormatOverride(new KFormat(yClazz));

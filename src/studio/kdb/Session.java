@@ -142,7 +142,7 @@ public class Session implements ConnectionStateListener, KAuthentication {
 
         K.KTimestamp created = kConn.getStats().getLastConnectedTime();
         if (created.isNull()) return;
-        K.KTimespan duration = K.KTimespan.period(created, K.KTimestamp.now());
+        K.KTimespan duration = created.span(K.KTimestamp.now());
         if (duration.toLong() > hours * HOUR_NS) {
             log.info("Closing session to stale server: " + server.getDescription(true));
             kConn.close();

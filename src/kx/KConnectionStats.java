@@ -50,7 +50,7 @@ public class KConnectionStats {
     }
 
     public synchronized void receivedBytes(long count) {
-        lastQueryTime = K.KTimespan.period(lastQueryTimestamp, K.KTimestamp.now());
+        lastQueryTime = lastQueryTimestamp.span(K.KTimestamp.now());
         totalQueryTime = totalQueryTime.isNull() ? lastQueryTime : totalQueryTime.add(lastQueryTime);
         totalQueryTimeInCurrentSession = totalQueryTimeInCurrentSession.isNull() ?
                                             lastQueryTime : totalQueryTimeInCurrentSession.add(lastQueryTime);

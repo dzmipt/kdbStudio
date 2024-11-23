@@ -103,7 +103,7 @@ class ExcelExporter {
                         cell.setCellValue(sd("HH:mm:ss.SSS", ((K.KTime) b).toTime()));
                     } else if (columnClass == K.KTimestampVector.class) {
                         char[] cs = sd("yyyy-MM-dd HH:mm:ss.SSS",
-                                ((K.KTimestamp) b).toTimestamp()).toCharArray();
+                                ((K.KTimestamp) b).toJavaTimestamp()).toCharArray();
                         cs[10] = 'T';
                         cell.setCellValue(new String(cs));
                     } else if (columnClass == K.KMonthVector.class) {

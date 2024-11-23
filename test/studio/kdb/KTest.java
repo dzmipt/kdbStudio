@@ -408,12 +408,29 @@ public class KTest {
 
         K.KTimestamp t1 = K.KTimestamp.now(c1);
         K.KTimestamp t2 = K.KTimestamp.now(c2);
-        K.KTimespan k = K.KTimespan.period(t1, t2);
+        K.KTimespan k = t1.span(t2);
         assertEquals(
                 "1D01:08:05.864000000",
                 k.toString() );
 
     }
 
+    @Test
+    public void testDateToTimestamp() {
+        K.KDate date = new K.KDate(9092);
+        assertEquals("2024.11.22", date.toString());
+
+        K.KTimestamp t = new K.KTimestamp(785548800000000000L);
+        assertEquals("2024.11.22D00:00:00.000000000", t.toString());
+
+        assertEquals(date.toTimestamp(),t);
+    }
+
+
+    @Test
+    public void testElementClass() {
+        K.KList list = new K.KList(new K.KInteger(10), K.KInteger.ZERO);
+        assertEquals(K.KBase.class, list.getElementClass());
+    }
 
 }
