@@ -1,5 +1,6 @@
 package studio.ui.chart;
 
+import studio.kdb.K;
 import studio.ui.GroupLayoutSimple;
 
 import javax.swing.*;
@@ -18,8 +19,8 @@ public class LineInfoFrame extends JFrame {
     private final JLabel lblX = new JLabel("");
     private final JLabel lblY = new JLabel("");
     private final JTextField txtTitle = new JTextField();
-    private final JTextField txtDX = new JTextField();
-    private final JTextField txtDY = new JTextField();
+    private final DurationEditor txtDX;
+    private final DurationEditor txtDY;
     private final JTextField txtX = new JTextField();
     private final JTextField txtY = new JTextField();
 
@@ -30,8 +31,11 @@ public class LineInfoFrame extends JFrame {
     private boolean lockDX = true;
     private boolean lockX = true;
 
-    public LineInfoFrame(Line line) {
+    public LineInfoFrame(Line line, Class<? extends K.KBase> xClazz, Class<? extends K.KBase> yClazz) {
         this.line = line;
+        txtDX = DurationEditor.create(xClazz);
+        txtDY = DurationEditor.create(yClazz);
+
         line.addChangeListener(e -> refresh());
         initComponents();
     }
@@ -67,6 +71,14 @@ public class LineInfoFrame extends JFrame {
             }
         });
         return textField;
+    }
+
+    private DurationEditor withAction(DurationEditor editor, DoubleConsumer action) {
+        editor.addValueChangedListener(e -> {
+            action.accept(e.getValue());
+            refresh();
+        });
+        return editor;
     }
 
     private void initComponents() {
@@ -138,8 +150,8 @@ public class LineInfoFrame extends JFrame {
         if (lockX) y = line.getY(x);
         else x = line.getX(y);
 
-        txtDX.setText("" + dx);
-        txtDY.setText("" + dy);
+        txtDX.setValue(dx);
+        txtDY.setValue(dy);
         txtX.setText("" + x);
         txtY.setText("" + y);
 

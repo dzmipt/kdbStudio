@@ -26,12 +26,13 @@ import studio.ui.Toolbar;
 import studio.ui.Util;
 import studio.utils.WindowsAppUserMode;
 
-import javax.swing.Timer;
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.*;
+import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
-import java.util.*;
+import java.util.Set;
 
 
 public class Chart implements ComponentListener {
@@ -62,21 +63,8 @@ public class Chart implements ComponentListener {
     private final static Set<Class> supportedClasses = new HashSet<>();
 
     static {
-        supportedClasses.addAll(Arrays.asList(
-            K.KInteger.class,
-            K.KDouble.class,
-            K.KFloat.class,
-            K.KShort.class,
-            K.KLong.class,
-
-            K.KDate.class,
-            K.KTime.class,
-            K.KTimestamp.class,
-            K.KTimespan.class,
-            K.KDatetime.class,
-            K.Month.class,
-            K.Second.class,
-            K.Minute.class) );
+        supportedClasses.addAll(DurationEditor.VALUE_CLASSES);
+        supportedClasses.addAll(DurationEditor.TEMPORAL_CLASSES);
     }
 
     private static StandardChartTheme currentTheme = new StandardChartTheme("JFree");
@@ -243,6 +231,14 @@ public class Chart implements ComponentListener {
     @Override
     public void componentHidden(ComponentEvent e) {
         updateFrameBounds();
+    }
+
+    public Class<? extends K.KBase> getDomainClass() {
+        return table.getColumnElementClass(xIndex);
+    }
+
+    public Class<? extends K.KBase> getRangeClass() {
+        return table.getColumnElementClass(yIndex);
     }
 
     public void refreshPlot() {

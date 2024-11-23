@@ -9,6 +9,7 @@ import java.sql.Timestamp;
 import java.text.DecimalFormat;
 import java.text.SimpleDateFormat;
 import java.time.Clock;
+import java.time.temporal.ChronoUnit;
 import java.util.*;
 import java.util.stream.Stream;
 
@@ -17,9 +18,10 @@ public class K {
     private final static SimpleDateFormat dateFormatter = new SimpleDateFormat("yyyy.MM.dd");
     private final static SimpleDateFormat dateTimeFormatter = new SimpleDateFormat("yyyy.MM.dd'T'HH:mm:ss.SSS");
     private final static SimpleDateFormat timestampFormatter = new SimpleDateFormat("yyyy.MM.dd'D'HH:mm:ss.");
+    private final static long NS_IN_SEC = 1_000_000_000;
     private final static long SEC_IN_DAY = 24 * 60 * 60;
     private final static long MS_IN_DAY = 1000 * SEC_IN_DAY;
-    private final static long NS_IN_DAY = 1000_000_000 * SEC_IN_DAY;
+    private final static long NS_IN_DAY = NS_IN_SEC * SEC_IN_DAY;
     private final static long NS_IN_MONTH = (long) (NS_IN_DAY*(365*4+1)/(12*4.0));
 
     static {
@@ -1408,6 +1410,65 @@ public class K {
         public final static KTimespan NULL = new KTimespan(NULL_VALUE);
         public final static KTimespan ZERO = new KTimespan(0);
 
+        private final static Map<Class<? extends KBase>, Long> NS_IN_TYPES = Map.of(
+                KTimestamp.class, 1L,
+                KTimespan.class, 1L,
+                KDate.class, NS_IN_DAY,
+                Month.class, NS_IN_MONTH,
+                Minute.class, 60 * NS_IN_SEC,
+                Second.class, NS_IN_SEC,
+                KTime.class, 1_000_000L,
+                KDatetime.class, NS_IN_DAY
+        );
+
+        private final static Map<ChronoUnit, Long> NS_IN_UNITS = Map.of(
+                ChronoUnit.NANOS, NS_IN_TYPES.get(KTimestamp.class),
+                ChronoUnit.MILLIS, NS_IN_TYPES.get(KTime.class),
+                ChronoUnit.SECONDS, NS_IN_TYPES.get(Second.class),
+                ChronoUnit.MINUTES, NS_IN_TYPES.get(Minute.class),
+                ChronoUnit.HOURS, 60 * NS_IN_TYPES.get(Minute.class),
+                ChronoUnit.DAYS, NS_IN_TYPES.get(KDate.class),
+                ChronoUnit.MONTHS, NS_IN_TYPES.get(Month.class),
+                ChronoUnit.YEARS, 12 * NS_IN_TYPES.get(Month.class)
+        );
+
+        private final static List<ChronoUnit> SUPPORTED_UNiTS = List.of(NS_IN_UNITS.keySet().toArray(new ChronoUnit[0]));
+
+        public final static ChronoUnit[] getSupportedUnits() {
+            return new ChronoUnit[] {
+                    ChronoUnit.NANOS, ChronoUnit.MILLIS, ChronoUnit.SECONDS, ChronoUnit.MINUTES,
+                    ChronoUnit.HOURS, ChronoUnit.DAYS, ChronoUnit.MONTHS, ChronoUnit.YEARS };
+        }
+
+        public static KTimespan duration(double duration, Class<? extends KBase> unitClass) {
+            if (! NS_IN_TYPES.containsKey(unitClass))
+                throw new IllegalArgumentException(unitClass.toString() + " is not supported");
+
+            return new KTimespan((long) (duration * NS_IN_TYPES.get(unitClass)));
+        }
+
+        public double toUnitValue(Class<? extends KBase> unitClass) {
+            if (! NS_IN_TYPES.containsKey(unitClass))
+                throw new IllegalArgumentException(unitClass.toString() + " is not supported");
+
+            return value / (double) NS_IN_TYPES.get(unitClass);
+        }
+
+        public static KTimespan duration(double duration, ChronoUnit unit) {
+            if (! NS_IN_UNITS.containsKey(unit))
+                throw new IllegalArgumentException("Unit " + unit.toString() + " is not supported");
+
+            return new KTimespan((long) (duration * NS_IN_UNITS.get(unit)) );
+
+        }
+
+        public double toUnitValue(ChronoUnit unit) {
+            if (! NS_IN_UNITS.containsKey(unit))
+                throw new IllegalArgumentException("Unit " + unit.toString() + " is not supported");
+
+            return value / (double) NS_IN_UNITS.get(unit);
+        }
+
         public KTimespan(long x) {
             super(-16, x);
         }
@@ -1445,6 +1506,7 @@ public class K {
         public Time toTime() {
             return new Time((value / 1000000));
         }
+
     }
 
     private static java.text.DecimalFormat i2Formatter = new java.text.DecimalFormat("00");
