@@ -15,21 +15,22 @@ import org.jfree.chart.renderer.xy.XYItemRenderer;
 import org.jfree.chart.renderer.xy.XYLineAndShapeRenderer;
 import org.jfree.chart.title.TextTitle;
 import org.jfree.data.xy.IntervalXYDataset;
-import org.jfree.data.xy.XYSeries;
 import org.jfree.data.xy.XYSeriesCollection;
-import studio.kdb.*;
+import studio.kdb.Config;
+import studio.kdb.KFormat;
+import studio.kdb.KTableModel;
+import studio.kdb.KType;
 import studio.ui.StudioOptionPane;
 import studio.ui.Toolbar;
 import studio.ui.Util;
 import studio.utils.WindowsAppUserMode;
 
+import javax.swing.Timer;
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.*;
-import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
+import java.util.*;
 
 
 public class Chart implements ComponentListener {
@@ -50,6 +51,7 @@ public class Chart implements ComponentListener {
     private final List<Integer> indexes = new ArrayList<>();
     private int xIndex = -1;
     private int yIndex = -1;
+    private Map<Integer, KXYSeries> series = new HashMap<>();
 
     private final String defaultTitle;
 
@@ -261,6 +263,7 @@ public class Chart implements ComponentListener {
             xAxis.setAutoRangeIncludesZero(false);
             plot.setDomainAxis(xAxis);
             this.xIndex = xIndex;
+            series.clear();
         }
 
         KType yType = null;
@@ -318,19 +321,14 @@ public class Chart implements ComponentListener {
     private IntervalXYDataset getDateset(int xCol, int yCol) {
         XYSeriesCollection collection = new XYSeriesCollection();
         collection.setAutoWidth(true);
-        XYSeries series = new XYSeries(table.getColumnName(yCol), false, true);
-        for (int row = 0; row < table.getRowCount(); row++) {
-            K.KBase xValue = (K.KBase)table.getValueAt(row, xCol);
-            K.KBase yValue = (K.KBase)table.getValueAt(row, yCol);
-            if (xValue.isNull() || yValue.isNull()) continue;
 
-            ToDouble x = (ToDouble)xValue;
-            ToDouble y = (ToDouble)yValue;
-            if (x.isInfinity() || y.isInfinity()) continue;
-
-            series.add(x.toDouble(), y.toDouble());
+        KXYSeries kxySeries = series.get(yCol);
+        if (kxySeries == null) {
+            kxySeries = new KXYSeries(table, xCol, yCol);
+            series.put(yCol, kxySeries);
         }
-        collection.addSeries(series);
+
+        collection.addSeries(kxySeries);
         return collection;
     }
 }
