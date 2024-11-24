@@ -430,7 +430,7 @@ public class KTest {
     @Test
     public void testElementClass() {
         K.KList list = new K.KList(new K.KInteger(10), K.KInteger.ZERO);
-        assertEquals(K.KBase.class, list.getElementClass());
+        assertNull(list.getType().getElementType());
     }
 
 }

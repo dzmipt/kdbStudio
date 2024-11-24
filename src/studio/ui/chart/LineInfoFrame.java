@@ -1,6 +1,6 @@
 package studio.ui.chart;
 
-import studio.kdb.K;
+import studio.kdb.KType;
 import studio.ui.GroupLayoutSimple;
 
 import javax.swing.*;
@@ -31,10 +31,10 @@ public class LineInfoFrame extends JFrame {
     private boolean lockDX = true;
     private boolean lockX = true;
 
-    public LineInfoFrame(Line line, Class<? extends K.KBase> xClazz, Class<? extends K.KBase> yClazz) {
+    public LineInfoFrame(Line line, KType xType, KType yType) {
         this.line = line;
-        txtDX = DurationEditor.create(xClazz);
-        txtDY = DurationEditor.create(yClazz);
+        txtDX = DurationEditor.create(xType);
+        txtDY = DurationEditor.create(yType);
 
         line.addChangeListener(e -> refresh());
         initComponents();

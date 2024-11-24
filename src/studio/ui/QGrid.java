@@ -243,7 +243,7 @@ public class QGrid extends JPanel implements MouseWheelListener, SearchPanelList
 
                 K.KBase b = (K.KBase) table.getValueAt(row, col);
 
-                int type = b.getType();
+                int type = b.getType().getType();
                 if ( (type >= -19 && type <= -1) ||
                         (type >= 101 && type <= 103 ) ||
                         type == 10 || type == 4) {

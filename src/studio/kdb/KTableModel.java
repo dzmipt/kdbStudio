@@ -23,7 +23,7 @@ public abstract class KTableModel extends AbstractTableModel {
             }
         }
 
-        if ((obj instanceof K.KBaseVector) && obj.getType() != 10 && obj.getType() != 4) {
+        if ((obj instanceof K.KBaseVector) && obj.getType() != KType.CharVector && obj.getType() != KType.ByteVector) {
             return new ListModel((K.KBaseVector<? extends K.KBase>)obj);
         }
         return null;
@@ -89,8 +89,8 @@ public abstract class KTableModel extends AbstractTableModel {
     public Class getColumnClass(int col) {
         return getColumn(col).getClass();
     }
-    public Class<? extends K.KBase> getColumnElementClass(int col) {
-        return getColumn(col).getElementClass();
+    public KType getColumnType(int col) {
+        return getColumn(col).getType();
     }
 
     //@TODO: add separate method which return K.KBase

@@ -3,7 +3,6 @@ package studio.kdb;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.lang.reflect.Array;
-import java.lang.reflect.ParameterizedType;
 import java.sql.Time;
 import java.sql.Timestamp;
 import java.text.DecimalFormat;
@@ -53,20 +52,19 @@ public class K {
     }
 
     public abstract static class KBase implements Comparable<KBase> {
-        public abstract String getDataType();
 
-        private final int type;
+        private final KType type;
 
-        protected KBase(int type) {
+        protected KBase(KType type) {
             this.type = type;
         }
 
-        public int getType() {
+        public KType getType() {
             return type;
         }
 
         public void serialise(OutputStream o) throws IOException {
-            write(o, (byte) type);
+            write(o, (byte) type.getType());
             serialiseData(o);
         }
 
@@ -109,7 +107,7 @@ public class K {
     private abstract static class KByteBase extends KBase implements ToDouble {
         protected byte value;
 
-        KByteBase(int type, byte value) {
+        KByteBase(KType type, byte value) {
             super(type);
             this.value = value;
         }
@@ -144,11 +142,6 @@ public class K {
         }
 
         @Override
-        public String getDataType() {
-            return null;
-        }
-
-        @Override
         public int compareTo(KBase o) {
             if (o instanceof KByteBase)  {
                 return Byte.compare(value, ((KByteBase)o).value);
@@ -160,7 +153,7 @@ public class K {
     public abstract static class KIntBase extends KBase implements ToDouble {
         protected final int value;
 
-        KIntBase(int type, int value) {
+        KIntBase(KType type, int value) {
             super(type);
             this.value = value;
         }
@@ -217,7 +210,7 @@ public class K {
 
         protected final long value;
 
-        KLongBase(int type, long value) {
+        KLongBase(KType type, long value) {
             super(type);
             this.value = value;
         }
@@ -270,7 +263,7 @@ public class K {
     private abstract static class KDoubleBase extends KBase implements ToDouble {
         protected double value;
 
-        KDoubleBase(int type, double value) {
+        KDoubleBase(KType type, double value) {
             super(type);
             this.value = value;
         }
@@ -322,7 +315,7 @@ public class K {
     private abstract static class KArrayBase extends KBase {
         protected KBase[] array;
 
-        KArrayBase(int type, KBase[] array) {
+        KArrayBase(KType type, KBase[] array) {
             super(type);
             this.array = array;
         }
@@ -349,13 +342,10 @@ public class K {
     }
 
     public abstract static class Adverb extends KBase {
-        public String getDataType() {
-            return "Adverb";
-        }
 
         protected K.KBase obj;
 
-        public Adverb(int type, K.KBase o) {
+        public Adverb(KType type, K.KBase o) {
             super(type);
             this.obj = o;
         }
@@ -389,23 +379,16 @@ public class K {
     public static class BinaryPrimitive extends Primitive {
         private final static String[] ops = {":", "+", "-", "*", "%", "&", "|", "^", "=", "<", ">", "$", ",", "#", "_", "~", "!", "?", "@", ".", "0:", "1:", "2:", "in", "within", "like", "bin", "ss", "insert", "wsum", "wavg", "div", "xexp", "setenv", "binr", "cov", "cor"};
 
-        public String getDataType() {
-            return "Binary Primitive";
-        }
-
         public BinaryPrimitive(int i) {
-            super(102, ops, i);
+            super(KType.BinaryPrimitive, ops, i);
         }
 
     }
 
     public static class FComposition extends KArrayBase {
-        public String getDataType() {
-            return "Function Composition";
-        }
 
         public FComposition(KBase... array) {
-            super(105, array);
+            super(KType.Composition, array);
         }
 
         @Override
@@ -420,7 +403,7 @@ public class K {
 
     public static class FEachLeft extends Adverb {
         public FEachLeft(K.KBase o) {
-            super(111, o);
+            super(KType.EachLeft, o);
         }
 
         @Override
@@ -431,7 +414,7 @@ public class K {
 
     public static class FEachRight extends Adverb {
         public FEachRight(K.KBase o) {
-            super(110, o);
+            super(KType.EachRight, o);
         }
 
         @Override
@@ -442,7 +425,7 @@ public class K {
 
     public static class FPrior extends Adverb {
         public FPrior(K.KBase o) {
-            super(109, o);
+            super(KType.Prior, o);
         }
 
         @Override
@@ -453,7 +436,7 @@ public class K {
 
     public static class Feach extends Adverb {
         public Feach(K.KBase o) {
-            super(106, o);
+            super(KType.Each, o);
         }
 
         @Override
@@ -464,7 +447,7 @@ public class K {
 
     public static class Fover extends Adverb {
         public Fover(K.KBase o) {
-            super(107, o);
+            super(KType.Over, o);
         }
 
         @Override
@@ -475,7 +458,7 @@ public class K {
 
     public static class Fscan extends Adverb {
         public Fscan(KBase o) {
-            super(108, o);
+            super(KType.Scan, o);
             this.obj = o;
         }
 
@@ -486,14 +469,11 @@ public class K {
     }
 
     public static class Function extends KBase {
-        public String getDataType() {
-            return "Function";
-        }
 
         private final String body;
 
         public Function(String body) {
-            super(100);
+            super(KType.Function);
             this.body = body;
         }
 
@@ -525,13 +505,10 @@ public class K {
     }
 
     public abstract static class Primitive extends KByteBase {
-        public String getDataType() {
-            return "Primitive";
-        }
 
         private String s = " ";
 
-        public Primitive(int type, String[] ops, int value) {
+        public Primitive(KType type, String[] ops, int value) {
             super(type, (byte) value);
             if (value >= 0 && value < ops.length)
                 s = ops[value];
@@ -551,12 +528,9 @@ public class K {
     }
 
     public static class Projection extends KArrayBase {
-        public String getDataType() {
-            return "Projection";
-        }
 
         public Projection(KBase... array) {
-            super(104, array);
+            super(KType.Projection, array);
         }
 
         @Override
@@ -577,12 +551,8 @@ public class K {
     public static class TernaryOperator extends Primitive {
         private final static String[] ops = {"'", "/", "\\", "':", "/:", "\\:"};
 
-        public String getDataType() {
-            return "Ternary Operator";
-        }
-
         public TernaryOperator(int i) {
-            super(103, ops, i);
+            super(KType.TernaryOperator, ops, i);
         }
     }
 
@@ -590,7 +560,7 @@ public class K {
         private static final String[] ops = {"::", "+:", "-:", "*:", "%:", "&:", "|:", "^:", "=:", "<:", ">:", "$:", ",:", "#:", "_:", "~:", "!:", "?:", "@:", ".:", "0::", "1::", "2::", "avg", "last", "sum", "prd", "min", "max", "exit", "getenv", "abs", "sqrt", "log", "exp", "sin", "asin", "cos", "acos", "tan", "atan", "enlist", "var", "dev", "hopen"};
 
         public UnaryPrimitive(int i) {
-            super(101, ops, i);
+            super(KType.UnaryPrimitive, ops, i);
         }
 
         public boolean isIdentity() {
@@ -599,14 +569,11 @@ public class K {
     }
 
     public static class KBoolean extends KBase implements ToDouble {
-        public String getDataType() {
-            return "Boolean";
-        }
 
         public boolean b;
 
         public KBoolean(boolean b) {
-            super(-1);
+            super(KType.Boolean);
             this.b = b;
         }
 
@@ -661,12 +628,9 @@ public class K {
     }
 
     public static class KByte extends KByteBase{
-        public String getDataType() {
-            return "Byte";
-        }
 
         public KByte(byte b) {
-            super(-4, b);
+            super(KType.Byte, b);
         }
 
         @Override
@@ -680,9 +644,6 @@ public class K {
     }
 
     public static class KShort extends KBase implements ToDouble {
-        public String getDataType() {
-            return "Short";
-        }
 
         public short s;
 
@@ -701,7 +662,7 @@ public class K {
         }
 
         public KShort(short s) {
-            super(-5);
+            super(KType.Short);
             this.s = s;
         }
 
@@ -748,12 +709,8 @@ public class K {
     public static class KInteger extends KIntBase {
         public final static KInteger ZERO = new KInteger(0);
 
-        public String getDataType() {
-            return "Integer";
-        }
-
         public KInteger(int i) {
-            super(-6, i);
+            super(KType.Int, i);
         }
 
         public KInteger add(int increment) {
@@ -773,19 +730,16 @@ public class K {
     }
 
     public static class KSymbol extends KBase {
-        public String getDataType() {
-            return "Symbol";
-        }
 
         public String s;
 
         public KSymbol(String s) {
-            super(-11);
+            super(KType.Symbol);
             this.s = s;
         }
 
         public boolean isNull() {
-            return s.length() == 0;
+            return s.isEmpty();
         }
 
         @Override
@@ -817,12 +771,8 @@ public class K {
         public final static KLong NULL = new KLong(NULL_VALUE);
         public final static KLong ZERO = new KLong(0);
 
-        public String getDataType() {
-            return "Long";
-        }
-
         public KLong(long j) {
-            super(-7, j);
+            super(KType.Long, j);
         }
 
         public KLong add(long increment) {
@@ -841,14 +791,11 @@ public class K {
     }
 
     public static class KCharacter extends KBase {
-        public String getDataType() {
-            return "Character";
-        }
 
         public char c;
 
         public KCharacter(char c) {
-            super(-10);
+            super(KType.Char);
             this.c = c;
         }
 
@@ -882,9 +829,6 @@ public class K {
     }
 
     public static class KFloat extends KBase implements ToDouble {
-        public String getDataType() {
-            return "Float";
-        }
 
         public float f;
 
@@ -903,7 +847,7 @@ public class K {
         }
 
         public KFloat(float f) {
-            super(-8);
+            super(KType.Float);
             this.f = f;
         }
 
@@ -949,12 +893,9 @@ public class K {
     }
 
     public static class KDouble extends KDoubleBase {
-        public String getDataType() {
-            return "Double";
-        }
 
         public KDouble(double d) {
-            super(-9, d);
+            super(KType.Double, d);
         }
 
         @Override
@@ -968,20 +909,12 @@ public class K {
             return builder;
         }
 
-        @Override
-        public void serialiseData(OutputStream o) throws IOException {
-            long j = Double.doubleToLongBits(value);
-            write(o, j);
-        }
     }
 
     public static class KDate extends KIntBase {
-        public String getDataType() {
-            return "Date";
-        }
 
         public KDate(int date) {
-            super(-14, date);
+            super(KType.Date, date);
         }
 
         @Override
@@ -1006,14 +939,10 @@ public class K {
     public static class KGuid extends KBase {
         static UUID nuuid = new UUID(0, 0);
 
-        public String getDataType() {
-            return "Guid";
-        }
-
         UUID uuid;
 
         public KGuid(UUID uuid) {
-            super(-2);
+            super(KType.Guid);
             this.uuid = uuid;
         }
 
@@ -1046,12 +975,9 @@ public class K {
     }
 
     public static class KTime extends KIntBase {
-        public String getDataType() {
-            return "Time";
-        }
 
         public KTime(int time) {
-            super(-19, time);
+            super(KType.Time, time);
         }
 
         @Override
@@ -1082,12 +1008,9 @@ public class K {
     }
 
     public static class KDatetime extends KDoubleBase {
-        public String getDataType() {
-            return "Datetime";
-        }
 
         public KDatetime(double time) {
-            super(-15, time);
+            super(KType.Datetime, time);
         }
 
         @Override
@@ -1128,12 +1051,8 @@ public class K {
             return new KTimespan(t2.value - value);
         }
 
-        public String getDataType() {
-            return "Timestamp";
-        }
-
         public KTimestamp(long time) {
-            super(-12, time);
+            super(KType.Timestamp, time);
         }
 
         @Override
@@ -1163,9 +1082,6 @@ public class K {
     }
 
     public static class Dict extends KBase {
-        public String getDataType() {
-            return "Dictionary";
-        }
 
         private byte attr = 0;
 
@@ -1173,7 +1089,7 @@ public class K {
         public K.KBase y;
 
         public Dict(K.KBase X, K.KBase Y) {
-            super(99);
+            super(KType.Dict);
             x = X;
             y = Y;
         }
@@ -1221,12 +1137,9 @@ public class K {
     }
 
     abstract private static class FlipBase extends KBase {
-        public String getDataType() {
-            return "Flip";
-        }
 
         public FlipBase() {
-            super(98);
+            super(KType.Table);
         }
 
         abstract public K.KBase getX();
@@ -1285,7 +1198,7 @@ public class K {
     }
 
     public static class MappedTable extends FlipBase {
-        private K.Dict dict;
+        private final K.Dict dict;
 
         public MappedTable(K.Dict dict) {
             super();
@@ -1305,12 +1218,9 @@ public class K {
 
     //@TODO: rename to KMonth
     public static class Month extends KIntBase {
-        public String getDataType() {
-            return "Month";
-        }
 
         public Month(int x) {
-            super(-13, x);
+            super(KType.Month, x);
         }
 
         @Override
@@ -1340,12 +1250,9 @@ public class K {
 
     //@TODO: rename to Minute
     public static class Minute extends KIntBase {
-        public String getDataType() {
-            return "Minute";
-        }
 
         public Minute(int x) {
-            super(-17, x);
+            super(KType.Minute, x);
         }
 
         @Override
@@ -1371,12 +1278,9 @@ public class K {
 
     //@TODO: rename to KSecond
     public static class Second extends KIntBase {
-        public String getDataType() {
-            return "Second";
-        }
 
         public Second(int x) {
-            super(-18, x);
+            super(KType.Second, x);
         }
 
         @Override
@@ -1410,48 +1314,48 @@ public class K {
         public final static KTimespan NULL = new KTimespan(NULL_VALUE);
         public final static KTimespan ZERO = new KTimespan(0);
 
-        private final static Map<Class<? extends KBase>, Long> NS_IN_TYPES = Map.of(
-                KTimestamp.class, 1L,
-                KTimespan.class, 1L,
-                KDate.class, NS_IN_DAY,
-                Month.class, NS_IN_MONTH,
-                Minute.class, 60 * NS_IN_SEC,
-                Second.class, NS_IN_SEC,
-                KTime.class, 1_000_000L,
-                KDatetime.class, NS_IN_DAY
+        private final static Map<KType, Long> NS_IN_TYPES = Map.of(
+                KType.Timestamp, 1L,
+                KType.Timespan, 1L,
+                KType.Date, NS_IN_DAY,
+                KType.Month, NS_IN_MONTH,
+                KType.Minute, 60 * NS_IN_SEC,
+                KType.Second, NS_IN_SEC,
+                KType.Time, 1_000_000L,
+                KType.Datetime, NS_IN_DAY
         );
 
         private final static Map<ChronoUnit, Long> NS_IN_UNITS = Map.of(
-                ChronoUnit.NANOS, NS_IN_TYPES.get(KTimestamp.class),
-                ChronoUnit.MILLIS, NS_IN_TYPES.get(KTime.class),
-                ChronoUnit.SECONDS, NS_IN_TYPES.get(Second.class),
-                ChronoUnit.MINUTES, NS_IN_TYPES.get(Minute.class),
-                ChronoUnit.HOURS, 60 * NS_IN_TYPES.get(Minute.class),
-                ChronoUnit.DAYS, NS_IN_TYPES.get(KDate.class),
-                ChronoUnit.MONTHS, NS_IN_TYPES.get(Month.class),
-                ChronoUnit.YEARS, 12 * NS_IN_TYPES.get(Month.class)
+                ChronoUnit.NANOS, NS_IN_TYPES.get(KType.Timestamp),
+                ChronoUnit.MILLIS, NS_IN_TYPES.get(KType.Time),
+                ChronoUnit.SECONDS, NS_IN_TYPES.get(KType.Second),
+                ChronoUnit.MINUTES, NS_IN_TYPES.get(KType.Minute),
+                ChronoUnit.HOURS, 60 * NS_IN_TYPES.get(KType.Minute),
+                ChronoUnit.DAYS, NS_IN_TYPES.get(KType.Date),
+                ChronoUnit.MONTHS, NS_IN_TYPES.get(KType.Month),
+                ChronoUnit.YEARS, 12 * NS_IN_TYPES.get(KType.Month)
         );
 
         private final static List<ChronoUnit> SUPPORTED_UNiTS = List.of(NS_IN_UNITS.keySet().toArray(new ChronoUnit[0]));
 
-        public final static ChronoUnit[] getSupportedUnits() {
+        public static ChronoUnit[] getSupportedUnits() {
             return new ChronoUnit[] {
                     ChronoUnit.NANOS, ChronoUnit.MILLIS, ChronoUnit.SECONDS, ChronoUnit.MINUTES,
                     ChronoUnit.HOURS, ChronoUnit.DAYS, ChronoUnit.MONTHS, ChronoUnit.YEARS };
         }
 
-        public static KTimespan duration(double duration, Class<? extends KBase> unitClass) {
-            if (! NS_IN_TYPES.containsKey(unitClass))
-                throw new IllegalArgumentException(unitClass.toString() + " is not supported");
+        public static KTimespan duration(double duration, KType unitType) {
+            if (! NS_IN_TYPES.containsKey(unitType))
+                throw new IllegalArgumentException(unitType.toString() + " is not supported");
 
-            return new KTimespan((long) (duration * NS_IN_TYPES.get(unitClass)));
+            return new KTimespan((long) (duration * NS_IN_TYPES.get(unitType)));
         }
 
-        public double toUnitValue(Class<? extends KBase> unitClass) {
-            if (! NS_IN_TYPES.containsKey(unitClass))
-                throw new IllegalArgumentException(unitClass.toString() + " is not supported");
+        public double toUnitValue(KType unitType) {
+            if (! NS_IN_TYPES.containsKey(unitType))
+                throw new IllegalArgumentException(unitType.toString() + " is not supported");
 
-            return value / (double) NS_IN_TYPES.get(unitClass);
+            return value / (double) NS_IN_TYPES.get(unitType);
         }
 
         public static KTimespan duration(double duration, ChronoUnit unit) {
@@ -1470,15 +1374,11 @@ public class K {
         }
 
         public KTimespan(long x) {
-            super(-16, x);
+            super(KType.Timespan, x);
         }
 
         public KTimespan add(KTimespan increment) {
             return new KTimespan(value + increment.value);
-        }
-
-        public String getDataType() {
-            return "Timespan";
         }
 
         @Override
@@ -1509,8 +1409,8 @@ public class K {
 
     }
 
-    private static java.text.DecimalFormat i2Formatter = new java.text.DecimalFormat("00");
-    private static java.text.DecimalFormat i3Formatter = new java.text.DecimalFormat("000");
+    private static final java.text.DecimalFormat i2Formatter = new java.text.DecimalFormat("00");
+    private static final java.text.DecimalFormat i3Formatter = new java.text.DecimalFormat("000");
 
     private static String i2(int i) {
         return i2Formatter.format(i);
@@ -1522,23 +1422,13 @@ public class K {
 
     public static abstract class KBaseVector<E extends KBase> extends KBase {
         protected Object array;
-        private int length;
+        private final int length;
         private byte attr = 0;
-        private final String typeName;
-        private final String typeChar;
-        private final Class<? extends KBase> elementClass;
 
-        protected KBaseVector(Object array, int type, String typeName, String typeChar) {
+        protected KBaseVector(Object array, KType type) {
             super(type);
             this.array = array;
             this.length = Array.getLength(array);
-            this.typeName = typeName;
-            this.typeChar = typeChar;
-            elementClass = (Class<? extends KBase>)((ParameterizedType)getClass().getGenericSuperclass()).getActualTypeArguments()[0];
-        }
-
-        public Class<? extends KBase> getElementClass() {
-            return elementClass;
         }
 
         public abstract E at(int i);
@@ -1569,7 +1459,7 @@ public class K {
 
         //default implementation
         protected StringBuilder formatVector(StringBuilder builder, KFormatContext context) {
-            if (getLength() == 0) builder.append("`").append(typeName).append("$()");
+            if (getLength() == 0) builder.append("`").append(getType().getName()).append("$()");
             else {
                 if (getLength() == 1) builder.append(enlist);
                 KFormatContext childContext = context.showType() ? new KFormatContext(context).setShowType(false) : context;
@@ -1577,7 +1467,7 @@ public class K {
                     if (i > 0) builder.append(" ");
                     at(i).format(builder, childContext);
                 }
-                if (context.showType()) builder.append(typeChar);
+                if (context.showType()) builder.append(getType().getVectorFormatEnding());
             }
             return builder;
         }
@@ -1600,7 +1490,7 @@ public class K {
 
         @Override
         public int hashCode() {
-            return length*getType();
+            return length * getType().getType();
         }
 
         @Override
@@ -1612,12 +1502,9 @@ public class K {
     }
 
     public static class KShortVector extends KBaseVector<KShort> {
-        public String getDataType() {
-            return "Short Vector";
-        }
 
         public KShortVector(short... array) {
-            super(array, 5, "short", "h");
+            super(array, KType.ShortVector);
         }
 
         public KShort at(int i) {
@@ -1626,12 +1513,9 @@ public class K {
     }
 
     public static class KIntVector extends KBaseVector<KInteger> {
-        public String getDataType() {
-            return "Int Vector";
-        }
 
         public KIntVector(int... array) {
-            super(array, 6, "int", "i");
+            super(array, KType.IntVector);
         }
 
         public KInteger at(int i) {
@@ -1640,12 +1524,9 @@ public class K {
     }
 
     public static class KList extends KBaseVector<KBase> {
-        public String getDataType() {
-            return "List";
-        }
 
         public KList(KBase... array) {
-            super(array, 0, "", "");
+            super(array, KType.List);
         }
 
         public KBase at(int i) {
@@ -1676,12 +1557,9 @@ public class K {
     }
 
     public static class KDoubleVector extends KBaseVector<KDouble> {
-        public String getDataType() {
-            return "Double Vector";
-        }
 
         public KDoubleVector(double... array) {
-            super(array, 9, "float", "f");
+            super(array, KType.DoubleVector);
         }
 
         public KDouble at(int i) {
@@ -1690,12 +1568,9 @@ public class K {
     }
 
     public static class KFloatVector extends KBaseVector<KFloat> {
-        public String getDataType() {
-            return "Float Vector";
-        }
 
         public KFloatVector(float... array) {
-            super(array, 8, "real", "e");
+            super(array, KType.FloatVector);
         }
 
         public KFloat at(int i) {
@@ -1705,12 +1580,9 @@ public class K {
     }
 
     public static class KLongVector extends KBaseVector<KLong> {
-        public String getDataType() {
-            return "Long Vector";
-        }
 
         public KLongVector(long... array) {
-            super(array, 7, "long", "");
+            super(array, KType.LongVector);
         }
 
         public KLong at(int i) {
@@ -1719,12 +1591,9 @@ public class K {
     }
 
     public static class KMonthVector extends KBaseVector<Month> {
-        public String getDataType() {
-            return "Month Vector";
-        }
 
         public KMonthVector(int... array) {
-            super(array, 13, "month", "m");
+            super(array, KType.MonthVector);
         }
 
         public Month at(int i) {
@@ -1733,12 +1602,9 @@ public class K {
     }
 
     public static class KDateVector extends KBaseVector<KDate> {
-        public String getDataType() {
-            return "Date Vector";
-        }
 
         public KDateVector(int... array) {
-            super(array, 14, "date", "");
+            super(array, KType.DateVector);
         }
 
         public KDate at(int i) {
@@ -1747,12 +1613,9 @@ public class K {
     }
 
     public static class KGuidVector extends KBaseVector<KGuid> {
-        public String getDataType() {
-            return "Guid Vector";
-        }
 
         public KGuidVector(UUID... array) {
-            super(array, 2, "guid", "");
+            super(array, KType.GuidVector);
         }
 
         public KGuid at(int i) {
@@ -1761,12 +1624,9 @@ public class K {
     }
 
     public static class KMinuteVector extends KBaseVector<Minute> {
-        public String getDataType() {
-            return "Minute Vector";
-        }
 
         public KMinuteVector(int... array) {
-            super(array, 17, "minute", "");
+            super(array, KType.MinuteVector);
         }
 
         public Minute at(int i) {
@@ -1775,12 +1635,9 @@ public class K {
     }
 
     public static class KDatetimeVector extends KBaseVector<KDatetime> {
-        public String getDataType() {
-            return "Datetime Vector";
-        }
 
         public KDatetimeVector(double... array) {
-            super(array, 15, "datetime", "");
+            super(array, KType.DatetimeVector);
         }
 
         public KDatetime at(int i) {
@@ -1789,12 +1646,9 @@ public class K {
     }
 
     public static class KTimestampVector extends KBaseVector<KTimestamp> {
-        public String getDataType() {
-            return "Timestamp Vector";
-        }
 
         public KTimestampVector(long... array) {
-            super(array, 12, "timestamp", "");
+            super(array, KType.TimestampVector);
         }
 
         public KTimestamp at(int i) {
@@ -1803,12 +1657,9 @@ public class K {
     }
 
     public static class KTimespanVector extends KBaseVector<KTimespan> {
-        public String getDataType() {
-            return "Timespan Vector";
-        }
 
         public KTimespanVector(long... array) {
-            super(array, 16, "timespan", "");
+            super(array, KType.TimespanVector);
         }
 
         public KTimespan at(int i) {
@@ -1817,12 +1668,9 @@ public class K {
     }
 
     public static class KSecondVector extends KBaseVector<Second> {
-        public String getDataType() {
-            return "Second Vector";
-        }
 
         public KSecondVector(int... array) {
-            super(array, 18, "second", "");
+            super(array, KType.SecondVector);
         }
 
         public Second at(int i) {
@@ -1831,12 +1679,9 @@ public class K {
     }
 
     public static class KTimeVector extends KBaseVector<KTime> {
-        public String getDataType() {
-            return "Time Vector";
-        }
 
         public KTimeVector(int... array) {
-            super(array, 19, "time", "");
+            super(array, KType.TimeVector);
         }
 
         public KTime at(int i) {
@@ -1845,12 +1690,9 @@ public class K {
     }
 
     public static class KBooleanVector extends KBaseVector<KBoolean> {
-        public String getDataType() {
-            return "Boolean Vector";
-        }
 
         public KBooleanVector(boolean... array) {
-            super(array, 1, "boolean", "b");
+            super(array, KType.BooleanVector);
         }
 
         public KBoolean at(int i) {
@@ -1871,12 +1713,9 @@ public class K {
     }
 
     public static class KByteVector extends KBaseVector<KByte> {
-        public String getDataType() {
-            return "Byte Vector";
-        }
 
         public KByteVector(byte... array) {
-            super(array, 4, "byte", "x");
+            super(array, KType.ByteVector);
         }
 
         public KByte at(int i) {
@@ -1900,12 +1739,9 @@ public class K {
     }
 
     public static class KSymbolVector extends KBaseVector<KSymbol> {
-        public String getDataType() {
-            return "Symbol Vector";
-        }
 
         public KSymbolVector(String... array) {
-            super(array, 11, "symbol", "s");
+            super(array, KType.SymbolVector);
         }
 
         public KSymbol at(int i) {
@@ -1925,12 +1761,9 @@ public class K {
     }
 
     public static class KCharacterVector extends KBaseVector<KCharacter> {
-        public String getDataType() {
-            return "Character Vector";
-        }
 
         public KCharacterVector(String value) {
-            super(value.toCharArray(), 10, "char", "c");
+            super(value.toCharArray(), KType.CharVector);
         }
 
         public KCharacter at(int i) {

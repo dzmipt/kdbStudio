@@ -94,7 +94,7 @@ public class ChartConfigPanel extends Box {
         lines.add(line);
         listLines.add(title, line.getIcon());
 
-        new LineInfoFrame(line, chart.getDomainClass(), chart.getRangeClass());
+        new LineInfoFrame(line, chart.getDomainKType(), chart.getRangeKType());
     }
 
     private void refresh() {

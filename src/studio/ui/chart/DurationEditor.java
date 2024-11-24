@@ -1,6 +1,6 @@
 package studio.ui.chart;
 
-import studio.kdb.K;
+import studio.kdb.KType;
 import studio.ui.chart.event.ValueChangedEvent;
 import studio.ui.chart.event.ValueChangedListener;
 
@@ -15,34 +15,34 @@ import java.util.List;
 
 public class DurationEditor extends JPanel {
 
-    public static final List<Class<? extends K.KBase>> VALUE_CLASSES =
+    public static final List<KType> VALUE_CLASSES =
             List.of(
-                    K.KInteger.class,
-                    K.KDouble.class,
-                    K.KFloat.class,
-                    K.KShort.class,
-                    K.KLong.class
+                    KType.Int,
+                    KType.Double,
+                    KType.Float,
+                    KType.Short,
+                    KType.Long
             );
 
-    public static final List<Class<? extends K.KBase>> TEMPORAL_CLASSES =
+    public static final List<KType> TEMPORAL_CLASSES =
             List.of(
-                    K.KDate.class,
-                    K.KTime.class,
-                    K.KTimestamp.class,
-                    K.KTimespan.class,
-                    K.KDatetime.class,
-                    K.Month.class,
-                    K.Second.class,
-                    K.Minute.class
+                    KType.Date,
+                    KType.Time,
+                    KType.Timestamp,
+                    KType.Timespan,
+                    KType.Datetime,
+                    KType.Month,
+                    KType.Second,
+                    KType.Minute
             );
 
     private final EventListenerList listenerList = new EventListenerList();
 
-    public static DurationEditor create(Class<? extends K.KBase> unitClass) {
-        if (VALUE_CLASSES.contains(unitClass)) return new DurationEditor();
-        if (TEMPORAL_CLASSES.contains(unitClass)) return new TimespanEditor(unitClass);
+    public static DurationEditor create(KType unitType) {
+        if (VALUE_CLASSES.contains(unitType)) return new DurationEditor();
+        if (TEMPORAL_CLASSES.contains(unitType)) return new TimespanEditor(unitType);
 
-        throw new UnsupportedOperationException("DurationEditor for class " + unitClass + " is not supported");
+        throw new UnsupportedOperationException("DurationEditor for type " + unitType + " is not supported");
     }
 
 

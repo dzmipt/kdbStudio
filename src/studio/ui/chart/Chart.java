@@ -17,10 +17,7 @@ import org.jfree.chart.title.TextTitle;
 import org.jfree.data.xy.IntervalXYDataset;
 import org.jfree.data.xy.XYSeries;
 import org.jfree.data.xy.XYSeriesCollection;
-import studio.kdb.Config;
-import studio.kdb.K;
-import studio.kdb.KTableModel;
-import studio.kdb.ToDouble;
+import studio.kdb.*;
 import studio.ui.StudioOptionPane;
 import studio.ui.Toolbar;
 import studio.ui.Util;
@@ -60,7 +57,7 @@ public class Chart implements ComponentListener {
     private static final List<Chart> charts = new ArrayList<>();
 
 
-    private final static Set<Class> supportedClasses = new HashSet<>();
+    private final static Set<KType> supportedClasses = new HashSet<>();
 
     static {
         supportedClasses.addAll(DurationEditor.VALUE_CLASSES);
@@ -82,8 +79,8 @@ public class Chart implements ComponentListener {
     private void initComponents() {
         List<String> namesList = new ArrayList<>();
         for (int index = 0; index < table.getColumnCount(); index++) {
-            Class clazz = table.getColumnElementClass(index);
-            if (supportedClasses.contains(clazz)) {
+            KType type = table.getColumnType(index).getElementType();
+            if (supportedClasses.contains(type)) {
                 indexes.add(index);
                 namesList.add(table.getColumnName(index));
             }
@@ -233,12 +230,12 @@ public class Chart implements ComponentListener {
         updateFrameBounds();
     }
 
-    public Class<? extends K.KBase> getDomainClass() {
-        return table.getColumnElementClass(xIndex);
+    public KType getDomainKType() {
+        return table.getColumnType(xIndex).getElementType();
     }
 
-    public Class<? extends K.KBase> getRangeClass() {
-        return table.getColumnElementClass(yIndex);
+    public KType getRangeKType() {
+        return table.getColumnType(yIndex).getElementType();
     }
 
     public void refreshPlot() {
@@ -251,17 +248,17 @@ public class Chart implements ComponentListener {
         }
 
         int xIndex = indexes.get(pnlConfig.getDomainIndex());
-        Class xClazz = table.getColumnElementClass(xIndex);
+        KType xType = table.getColumnType(xIndex).getElementType();
 
         if (this.xIndex != xIndex) {
             NumberAxis xAxis = new NumberAxis("");
-            xAxis.setNumberFormatOverride(new KFormat(xClazz));
+            xAxis.setNumberFormatOverride(new KFormat(xType));
             xAxis.setAutoRangeIncludesZero(false);
             plot.setDomainAxis(xAxis);
             this.xIndex = xIndex;
         }
 
-        Class yClazz = null;
+        KType yType = null;
         plot.setDomainPannable(true);
         plot.setRangePannable(true);
         plot.setDatasetRenderingOrder(DatasetRenderingOrder.FORWARD);
@@ -271,11 +268,11 @@ public class Chart implements ComponentListener {
             int yIndex = indexes.get(index);
             if (yIndex == xIndex) continue;;
 
-            if (yClazz == null) {
-                yClazz = table.getColumnElementClass(yIndex);
+            if (yType == null) {
+                yType = table.getColumnType(yIndex).getElementType();
                 if (this.yIndex != yIndex) {
                     NumberAxis yAxis = new NumberAxis("");
-                    yAxis.setNumberFormatOverride(new KFormat(yClazz));
+                    yAxis.setNumberFormatOverride(new KFormat(yType));
                     yAxis.setAutoRangeIncludesZero(false);
                     plot.setRangeAxis(yAxis);
                     this.yIndex = yIndex;
@@ -285,7 +282,7 @@ public class Chart implements ComponentListener {
             IntervalXYDataset dataset = getDateset(xIndex, yIndex);
 
             XYToolTipGenerator toolTipGenerator = new StandardXYToolTipGenerator(StandardXYToolTipGenerator.DEFAULT_TOOL_TIP_FORMAT,
-                    new KFormat(xClazz), new KFormat(yClazz));
+                    new KFormat(xType), new KFormat(yType));
             XYItemRenderer renderer;
 
             LegendIcon icon = pnlConfig.getLegendIcon(index);
@@ -308,7 +305,7 @@ public class Chart implements ComponentListener {
             datasetIndex++;
         }
 
-        chartPanel.setVisible(yClazz!=null);
+        chartPanel.setVisible(yType!=null);
         contentPane.revalidate();
         contentPane.repaint();
     }

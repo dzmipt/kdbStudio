@@ -2,6 +2,7 @@ package studio.ui.chart;
 
 import studio.kdb.K;
 import studio.kdb.KFormatContext;
+import studio.kdb.KType;
 
 import java.text.DecimalFormat;
 import java.text.FieldPosition;
@@ -10,12 +11,12 @@ import java.text.ParsePosition;
 
 public class KFormat extends NumberFormat {
 
-    private Class kClass;
+    private KType type;
 
     private static final DecimalFormat fractionFormat = new DecimalFormat("+0.#####;-0.#####");
 
-    public KFormat(Class kClass) {
-        this.kClass = kClass;
+    public KFormat(KType type) {
+        this.type = type;
     }
 
     @Override
@@ -32,32 +33,32 @@ public class KFormat extends NumberFormat {
     public StringBuffer format(double value, StringBuffer toAppendTo, FieldPosition pos) {
         boolean addFraction = true;
         K.KBase kValue;
-        if (kClass == K.KInteger.class ||
-                kClass == K.KDouble.class ||
-                kClass == K.KFloat.class ||
-                kClass == K.KShort.class ||
-                kClass == K.KLong.class) {
+        if (type == KType.Int ||
+                type == KType.Double ||
+                type == KType.Float ||
+                type == KType.Short ||
+                type == KType.Long) {
             kValue = new K.KDouble(value);
             addFraction = false;
-        } else if (kClass == K.KDatetime.class) {
+        } else if (type == KType.Datetime) {
             kValue = new K.KDatetime(value);
             addFraction = false;
-        } else if (kClass == K.KDate.class) {
+        } else if (type == KType.Date) {
             kValue = new K.KDate(getInt(value));
-        } else if (kClass == K.KTime.class) {
+        } else if (type == KType.Time) {
             kValue = new K.KTime(getInt(value));
-        } else if (kClass == K.KTimestamp.class) {
+        } else if (type == KType.Timestamp) {
             kValue = new K.KTimestamp(getLong(value));
-        } else if (kClass == K.KTimespan.class) {
+        } else if (type == KType.Timespan) {
             kValue = new K.KTimespan(getLong(value));
-        } else if (kClass == K.Month.class) {
+        } else if (type == KType.Month) {
             kValue = new K.Month(getInt(value));
-        } else if (kClass == K.Second.class) {
+        } else if (type == KType.Second) {
             kValue = new K.Second(getInt(value));
-        } else if (kClass == K.Minute.class) {
+        } else if (type == KType.Minute) {
             kValue = new K.Minute(getInt(value));
         } else {
-            throw new IllegalArgumentException("Unsupported class: " + kClass);
+            throw new IllegalArgumentException("Unsupported type: " + type);
         }
 
         toAppendTo.append(kValue.toString(KFormatContext.NO_TYPE));
