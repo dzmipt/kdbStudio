@@ -951,7 +951,7 @@ public class K {
         }
 
         public KTimestamp toTimestamp(double fraction) {
-            return new KTimestamp((long) (value + fraction) * NS_IN_DAY);
+            return new KTimestamp((long) ((value + fraction) * NS_IN_DAY));
         }
 
     }
