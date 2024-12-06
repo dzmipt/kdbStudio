@@ -3,9 +3,7 @@ package studio.kdb;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
-import java.time.Clock;
-import java.time.Instant;
-import java.time.ZoneId;
+import java.time.*;
 import java.util.Calendar;
 import java.util.UUID;
 
@@ -433,4 +431,78 @@ public class KTest {
         assertNull(list.getType().getElementType());
     }
 
+
+    @Test
+    public void testLocalDateTimeToTimestamp() {
+        LocalDateTime localDateTime =
+            LocalDateTime.of(2024,12,6,17,10,53,123456789);
+        K.KTimestamp k = K.KTimestamp.of(localDateTime);
+        assertEquals("2024.12.06D17:10:53.123456789", k.toString());
+    }
+
+    @Test
+    public void testMonthToLocalDateTime() {
+        K.Month month = new K.Month(299);
+        assertEquals("2024.12m", month.toString());
+
+        LocalDateTime expected = LocalDateTime.of(2024,12,1,0,0);
+        LocalDateTime actual = month.toLocalDateTime();
+        assertEquals(expected,actual);
+    }
+
+    @Test
+    public void testTimestampAddDuration() {
+        LocalDateTime localDateTime =
+                LocalDateTime.of(2024,12,6,17,10,53,123456789);
+        K.KTimestamp k = K.KTimestamp.of(localDateTime);
+
+
+        K.KTimestamp k2 = k.add(Duration.ofDays(1)
+                        .plusHours(1)
+                        .plusMinutes(3)
+                        .plusSeconds(2)
+                        .plusNanos(123456789) );
+
+        assertEquals("2024.12.07D18:13:55.246913578", k2.toString());
+    }
+
+    @Test
+    public void testTimestampAddTimespan() {
+        LocalDateTime localDateTime =
+                LocalDateTime.of(2024,12,6,17,10,53,123456789);
+        K.KTimestamp k1 = K.KTimestamp.of(localDateTime);
+
+        localDateTime =
+                LocalDateTime.of(2024,12,7,18,12,56,234567899);
+        K.KTimestamp k2 = K.KTimestamp.of(localDateTime);
+
+        K.KTimespan span = k1.span(k2);
+        assertEquals("1D01:02:03.111111110", span.toString());
+
+        assertEquals(k2, k1.add(span));
+    }
+
+    @Test
+    public void testDurationToTimespan() {
+        Duration duration = Duration.ofDays(1)
+                .plusHours(1)
+                .plusMinutes(3)
+                .plusSeconds(2)
+                .plusNanos(123456789);
+        K.KTimespan span = K.KTimespan.of(duration);
+        assertEquals("1D01:03:02.123456789", span.toString());
+    }
+
+    @Test
+    public void testKTimeLong() {
+        Duration duration = Duration.ofDays(1)
+                .plusHours(1)
+                .plusMinutes(3)
+                .plusSeconds(2)
+                .plusNanos(123456789);
+        K.KTimespan span = K.KTimespan.of(duration);
+        long value = span.toLong();
+        K.KTimeLong k = new K.KTimeLong(value);
+        assertEquals("25:03:02.123456789" ,k.toString());
+    }
 }

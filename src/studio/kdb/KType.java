@@ -20,6 +20,8 @@ public enum KType {
     Second(-18, "second", 'v'),
     Time(-19, "time", 't'),
 
+    TimeLong(-19000,"timeLong", 'l'),
+
     List(0),
     BooleanVector(Boolean, true),
     GuidVector(Guid),

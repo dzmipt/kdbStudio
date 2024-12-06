@@ -7,7 +7,7 @@ import java.sql.Time;
 import java.sql.Timestamp;
 import java.text.DecimalFormat;
 import java.text.SimpleDateFormat;
-import java.time.Clock;
+import java.time.*;
 import java.time.temporal.ChronoUnit;
 import java.util.*;
 import java.util.stream.Stream;
@@ -17,11 +17,26 @@ public class K {
     private final static SimpleDateFormat dateFormatter = new SimpleDateFormat("yyyy.MM.dd");
     private final static SimpleDateFormat dateTimeFormatter = new SimpleDateFormat("yyyy.MM.dd'T'HH:mm:ss.SSS");
     private final static SimpleDateFormat timestampFormatter = new SimpleDateFormat("yyyy.MM.dd'D'HH:mm:ss.");
-    private final static long NS_IN_SEC = 1_000_000_000;
-    private final static long SEC_IN_DAY = 24 * 60 * 60;
-    private final static long MS_IN_DAY = 1000 * SEC_IN_DAY;
-    private final static long NS_IN_DAY = NS_IN_SEC * SEC_IN_DAY;
-    private final static long NS_IN_MONTH = (long) (NS_IN_DAY*(365*4+1)/(12*4.0));
+    private static final java.text.DecimalFormat i2Formatter = new java.text.DecimalFormat("00");
+    private static final java.text.DecimalFormat i3Formatter = new java.text.DecimalFormat("000");
+
+    private static String i2(int i) {
+        return i2Formatter.format(i);
+    }
+    private static String i3(int i) {
+        return i3Formatter.format(i);
+    }
+    private static String l2(long i) {
+        return i2Formatter.format(i);
+    }
+
+    public final static long NS_IN_SEC = 1_000_000_000;
+    public final static long NS_IN_MLS = 1_000_000;
+    public final static long NS_IN_MIN = 60 * NS_IN_SEC;
+    public final static long SEC_IN_DAY = 24 * 60 * 60;
+    public final static long MS_IN_DAY = 1000 * SEC_IN_DAY;
+    public final static long NS_IN_DAY = NS_IN_SEC * SEC_IN_DAY;
+    public final static long NS_IN_MONTH = (long) (NS_IN_DAY*(365*4+1)/(12*4.0));
 
     static {
         TimeZone gmtTimeZone = java.util.TimeZone.getTimeZone("GMT");
@@ -934,6 +949,11 @@ public class K {
         public KTimestamp toTimestamp() {
             return new KTimestamp(value * NS_IN_DAY);
         }
+
+        public KTimestamp toTimestamp(double fraction) {
+            return new KTimestamp((long) (value + fraction) * NS_IN_DAY);
+        }
+
     }
 
     public static class KGuid extends KBase {
@@ -1007,6 +1027,30 @@ public class K {
         }
     }
 
+    // Artificial class need to represent time in the charts.
+    public static class KTimeLong extends KLongBase {
+
+        public KTimeLong(long value) {
+            super(KType.TimeLong, value);
+        }
+
+        @Override
+        public StringBuilder format(StringBuilder builder, KFormatContext context) {
+            builder = super.format(builder, context);
+            long ns = value % NS_IN_SEC;
+            long v = value / NS_IN_SEC;
+            long sec = v % 60;
+            v = v / 60;
+            long min = v % 60;
+            long hh = v / 60;
+            builder.append(l2(hh))
+                    .append(':').append(i2((int)min))
+                    .append(':').append(i2((int)sec))
+                    .append(".").append(nsFormatter.format(ns));
+            return builder;
+        }
+    }
+
     public static class KDatetime extends KDoubleBase {
 
         public KDatetime(double time) {
@@ -1040,15 +1084,32 @@ public class K {
         static KTimestamp now(Clock clock) {
             long epoch = clock.instant().toEpochMilli();
             long offset = TimeZone.getTimeZone(clock.getZone()).getOffset(epoch);
-            return new K.KTimestamp( (epoch + offset - MILLIS_OFFSET) * 1_000_000);
+            return new K.KTimestamp( (epoch + offset - MILLIS_OFFSET) * NS_IN_MLS);
+        }
+
+        public static KTimestamp of(LocalDateTime dateTime) {
+            Instant instant = dateTime.toInstant(ZoneOffset.UTC);
+            long ns = instant.getEpochSecond() * NS_IN_SEC + instant.getNano() - MILLIS_OFFSET * NS_IN_MLS;
+            return new KTimestamp(ns);
         }
 
         public static KTimestamp now() {
             return now(systemClock);
         }
 
+        /**
+         * Equivalent to t2 - this
+         */
         public KTimespan span(KTimestamp t2) {
             return new KTimespan(t2.value - value);
+        }
+
+        public KTimestamp add(Duration duration) {
+            return new KTimestamp( value + duration.getNano() + NS_IN_SEC * duration.getSeconds() );
+        }
+
+        public KTimestamp add(K.KTimespan duration) {
+            return new KTimestamp( value + duration.value);
         }
 
         public KTimestamp(long time) {
@@ -1246,6 +1307,12 @@ public class K {
             cal.set(y, m, 1);
             return cal.getTime();
         }
+
+        public LocalDateTime toLocalDateTime() {
+            int m = value + 24000, y = m / 12;
+            m %= 12;
+            return LocalDateTime.of(y, m+1, 1,0,0);
+        }
     }
 
     //@TODO: rename to Minute
@@ -1314,14 +1381,14 @@ public class K {
         public final static KTimespan NULL = new KTimespan(NULL_VALUE);
         public final static KTimespan ZERO = new KTimespan(0);
 
-        private final static Map<KType, Long> NS_IN_TYPES = Map.of(
+        final static Map<KType, Long> NS_IN_TYPES = Map.of(
                 KType.Timestamp, 1L,
                 KType.Timespan, 1L,
                 KType.Date, NS_IN_DAY,
                 KType.Month, NS_IN_MONTH,
-                KType.Minute, 60 * NS_IN_SEC,
+                KType.Minute, NS_IN_MIN,
                 KType.Second, NS_IN_SEC,
-                KType.Time, 1_000_000L,
+                KType.Time, NS_IN_MLS,
                 KType.Datetime, NS_IN_DAY
         );
 
@@ -1373,6 +1440,10 @@ public class K {
             return value / (double) NS_IN_UNITS.get(unit);
         }
 
+        public static KTimespan of(Duration duration) {
+            return new KTimespan(duration.getSeconds()*NS_IN_SEC + duration.getNano());
+        }
+
         public KTimespan(long x) {
             super(KType.Timespan, x);
         }
@@ -1407,17 +1478,6 @@ public class K {
             return new Time((value / 1000000));
         }
 
-    }
-
-    private static final java.text.DecimalFormat i2Formatter = new java.text.DecimalFormat("00");
-    private static final java.text.DecimalFormat i3Formatter = new java.text.DecimalFormat("000");
-
-    private static String i2(int i) {
-        return i2Formatter.format(i);
-    }
-
-    private static String i3(int i) {
-        return i3Formatter.format(i);
     }
 
     public static abstract class KBaseVector<E extends KBase> extends KBase {
