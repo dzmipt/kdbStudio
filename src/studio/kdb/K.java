@@ -1037,12 +1037,13 @@ public class K {
         @Override
         public StringBuilder format(StringBuilder builder, KFormatContext context) {
             builder = super.format(builder, context);
-            long ns = value % NS_IN_SEC;
-            long v = value / NS_IN_SEC;
+            long ns = Math.abs(value % NS_IN_SEC);
+            long v = Math.abs(value / NS_IN_SEC);
             long sec = v % 60;
             v = v / 60;
             long min = v % 60;
             long hh = v / 60;
+            if (value < 0) builder.append('-');
             builder.append(l2(hh))
                     .append(':').append(i2((int)min))
                     .append(':').append(i2((int)sec))
