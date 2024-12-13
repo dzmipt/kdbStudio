@@ -1068,7 +1068,7 @@ public class K {
         }
 
         public Timestamp toTimestamp() {
-            return new Timestamp(((long) (.5 + 8.64e7 * (value + 10957))));
+            return new Timestamp(Math.round(8.64e7 * (value + 10957)));
         }
     }
 
@@ -1415,7 +1415,7 @@ public class K {
             if (! NS_IN_TYPES.containsKey(unitType))
                 throw new IllegalArgumentException(unitType.toString() + " is not supported");
 
-            return new KTimespan((long) (duration * NS_IN_TYPES.get(unitType)));
+            return new KTimespan(Math.round (duration * NS_IN_TYPES.get(unitType)));
         }
 
         public double toUnitValue(KType unitType) {
@@ -1429,7 +1429,7 @@ public class K {
             if (! NS_IN_UNITS.containsKey(unit))
                 throw new IllegalArgumentException("Unit " + unit.toString() + " is not supported");
 
-            return new KTimespan((long) (duration * NS_IN_UNITS.get(unit)) );
+            return new KTimespan(Math.round (duration * NS_IN_UNITS.get(unit)) );
 
         }
 

@@ -6,7 +6,6 @@ import java.text.NumberFormat;
 import java.text.ParsePosition;
 import java.time.Duration;
 import java.time.LocalDateTime;
-import java.time.temporal.ChronoUnit;
 
 public class KFormat extends NumberFormat {
 
@@ -58,7 +57,7 @@ public class KFormat extends NumberFormat {
                 if (hasFraction) {
                     LocalDateTime dateTime = ((K.Month)kValue).toLocalDateTime();
 
-                    LocalDateTime next = dateTime.plus((int)Math.signum(fraction), ChronoUnit.MONTHS);
+                    LocalDateTime next = dateTime.plusMonths((int)Math.signum(fraction));
                     long days = Duration.between(dateTime, next).toDays();
                     long ns = (long) (Math.abs(fraction) * days * K.NS_IN_DAY);
                     kValue = K.KTimestamp.of(dateTime).add(new K.KTimespan(ns));

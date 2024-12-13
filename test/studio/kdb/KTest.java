@@ -284,7 +284,7 @@ public class KTest {
 
     @Test
     public void testDatetimeToString() throws Exception {
-        check(new K.KDatetime(-123456.789), "1661.12.26T05:03:50.401", "1661.12.26T05:03:50.401");
+        check(new K.KDatetime(-123456.789), "1661.12.26T05:03:50.400", "1661.12.26T05:03:50.400");
         check(new K.KDatetime(123.456), "2000.05.03T10:56:38.400", "2000.05.03T10:56:38.400");
         check(new K.KDatetime(Double.NEGATIVE_INFINITY), "-0wz", "-0wz");
         check(new K.KDatetime(Double.POSITIVE_INFINITY), "0wz", "0wz");
