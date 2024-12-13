@@ -19,6 +19,7 @@ public class K {
     private final static SimpleDateFormat timestampFormatter = new SimpleDateFormat("yyyy.MM.dd'D'HH:mm:ss.");
     private static final java.text.DecimalFormat i2Formatter = new java.text.DecimalFormat("00");
     private static final java.text.DecimalFormat i3Formatter = new java.text.DecimalFormat("000");
+    private static final java.text.DecimalFormat i4Formatter = new java.text.DecimalFormat("0000");
 
     private static String i2(int i) {
         return i2Formatter.format(i);
@@ -26,13 +27,18 @@ public class K {
     private static String i3(int i) {
         return i3Formatter.format(i);
     }
+    private static String i4(int i) {
+        return i4Formatter.format(i);
+    }
     private static String l2(long i) {
         return i2Formatter.format(i);
     }
 
+    public final static int JAVA_DAY_OFFSET = 10957;
     public final static long NS_IN_SEC = 1_000_000_000;
     public final static long NS_IN_MLS = 1_000_000;
     public final static long NS_IN_MIN = 60 * NS_IN_SEC;
+    public final static long NS_IN_HOUR = 60 * NS_IN_MIN;
     public final static long SEC_IN_DAY = 24 * 60 * 60;
     public final static long MS_IN_DAY = 1000 * SEC_IN_DAY;
     public final static long NS_IN_DAY = NS_IN_SEC * SEC_IN_DAY;
@@ -943,7 +949,7 @@ public class K {
         }
 
         public Date toDate() {
-            return new Date(MS_IN_DAY * (value + 10957));
+            return new Date(MS_IN_DAY * (value + JAVA_DAY_OFFSET));
         }
 
         public KTimestamp toTimestamp() {
@@ -1029,13 +1035,14 @@ public class K {
 
     // Artificial class need to represent time in the charts.
     public static class KTimeLong extends KLongBase {
-
         public KTimeLong(long value) {
             super(KType.TimeLong, value);
         }
 
         @Override
         public StringBuilder format(StringBuilder builder, KFormatContext context) {
+            KFormatContext.Rounding rounding = context.getRounding();
+
             builder = super.format(builder, context);
             long ns = Math.abs(value % NS_IN_SEC);
             long v = Math.abs(value / NS_IN_SEC);
@@ -1045,9 +1052,18 @@ public class K {
             long hh = v / 60;
             if (value < 0) builder.append('-');
             builder.append(l2(hh))
-                    .append(':').append(i2((int)min))
-                    .append(':').append(i2((int)sec))
-                    .append(".").append(nsFormatter.format(ns));
+                    .append(':').append(l2(min));
+
+            if (rounding.minutes() && sec == 0 && ns == 0) return builder;
+            builder.append(':').append(l2(sec));
+
+            if (rounding.seconds() && ns == 0) return builder;
+
+            if (rounding.millis() && ns % NS_IN_MLS == 0) {
+                builder.append(".").append(i3Formatter.format(ns/NS_IN_MLS));
+            } else {
+                builder.append(".").append(nsFormatter.format(ns));
+            }
             return builder;
         }
     }
@@ -1069,7 +1085,7 @@ public class K {
         }
 
         public Timestamp toTimestamp() {
-            return new Timestamp(Math.round(8.64e7 * (value + 10957)));
+            return new Timestamp(Math.round(8.64e7 * (value + JAVA_DAY_OFFSET)));
         }
     }
 
@@ -1119,20 +1135,54 @@ public class K {
 
         @Override
         public StringBuilder format(StringBuilder builder, KFormatContext context) {
+            KFormatContext.Rounding rounding = context.getRounding();
+
             builder = super.format(builder, context);
             if (isNull()) builder.append("0Np");
             else if (value == Long.MAX_VALUE) builder.append("0Wp");
             else if (value == -Long.MAX_VALUE) builder.append("-0Wp");
             else {
-                Timestamp ts = toJavaTimestamp();
-                builder.append(timestampFormatter.format(ts))
-                                .append(nsFormatter.format(ts.getNanos()));
+                long v = value % NS_IN_DAY;
+                long epochDays = JAVA_DAY_OFFSET + value / NS_IN_DAY;
+                if (v < 0) {
+                    v += NS_IN_DAY;
+                    epochDays--;
+                }
+                LocalDate localDate = LocalDate.ofEpochDay(epochDays);
+
+                builder.append(i4(localDate.getYear()))
+                        .append('.').append(i2(localDate.getMonthValue()))
+                        .append('.').append(i2(localDate.getDayOfMonth()));
+
+                if (rounding.days() && v == 0) return builder;
+
+                long hh = v / NS_IN_HOUR;
+                v = v % NS_IN_HOUR;
+                long mm = v / NS_IN_MIN;
+                v = v % NS_IN_MIN;
+
+                builder.append('D').append(l2(hh))
+                        .append(':').append(l2(mm));
+
+                if (rounding.minutes() && v == 0) return builder;
+                long ss = v / NS_IN_SEC;
+                long ns = v % NS_IN_SEC;
+
+                builder.append(':').append(l2(ss));
+
+                if(rounding.seconds() && ns == 0) return builder;
+
+                if (rounding.millis() && ns % NS_IN_MLS == 0) {
+                    builder.append('.').append(i3Formatter.format(ns / NS_IN_MLS));
+                } else {
+                    builder.append('.').append(nsFormatter.format(ns));
+                }
             }
             return builder;
         }
 
         public Timestamp toJavaTimestamp() {
-            long k = MS_IN_DAY * 10957;
+            long k = MS_IN_DAY * JAVA_DAY_OFFSET;
             long n = 1000000000L;
             long d = value < 0 ? (value + 1) / n - 1 : value / n;
             long ltime = value == Long.MIN_VALUE ? value : (k + 1000 * d);

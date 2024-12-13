@@ -15,6 +15,8 @@ public class KFormat extends NumberFormat {
     }
 
     public static String format(KType type, double value) {
+        KFormatContext fmtContext = KFormatContext.NO_TYPE;
+
         K.KBase kValue;
         if (type == KType.Int ||
                 type == KType.Double ||
@@ -23,6 +25,7 @@ public class KFormat extends NumberFormat {
                 type == KType.Long) {
             kValue = new K.KDouble(value);
         } else if (type == KType.Datetime) {
+            fmtContext = KFormatContext.MILLIS;
             kValue = new K.KDatetime(value);
         } else if (type == KType.Timestamp) {
             kValue = new K.KTimestamp(getLong(value));
@@ -34,11 +37,13 @@ public class KFormat extends NumberFormat {
             boolean hasFraction = Math.abs(fraction) >= 1e-5;
 
             if (type == KType.Date) {
+                fmtContext = KFormatContext.DAY;
                 kValue = new K.KDate(intValue);
                 if (hasFraction) {
                     kValue = ((K.KDate)kValue).toTimestamp(fraction);
                 }
             } else if (type == KType.Month) {
+                fmtContext = KFormatContext.DAY;
                 kValue = new K.Month(intValue);
                 if (hasFraction) {
                     LocalDateTime dateTime = ((K.Month)kValue).toLocalDateTime();
@@ -50,6 +55,7 @@ public class KFormat extends NumberFormat {
                 }
 
             } else if (type == KType.Time) {
+                fmtContext = KFormatContext.MILLIS;
                 if (hasFraction) {
                     kValue = new K.KTimeLong((long) (value * K.NS_IN_MLS));
                 } else {
@@ -57,12 +63,14 @@ public class KFormat extends NumberFormat {
                 }
                 System.out.printf("KFormat KTime: value: %f, hasFraction: %b; kValue: %s\n", value, hasFraction, kValue);
             } else if (type == KType.Second) {
+                fmtContext = KFormatContext.SECOND;
                 if (hasFraction) {
                     kValue = new K.KTimeLong((long) (value * K.NS_IN_SEC));
                 } else {
                     kValue = new K.Second(intValue);
                 }
             } else if (type == KType.Minute) {
+                fmtContext = KFormatContext.MINUTE;
                 if (hasFraction) {
                     kValue = new K.KTimeLong((long) (value * K.NS_IN_MIN));
                 } else {
@@ -73,7 +81,7 @@ public class KFormat extends NumberFormat {
             }
         }
 
-        return kValue.toString(KFormatContext.NO_TYPE);
+        return kValue.toString(fmtContext);
     }
 
     @Override

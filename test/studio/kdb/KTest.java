@@ -32,10 +32,10 @@ public class KTest {
     public void testIntegerToString() throws Exception {
         check(new K.KInteger(-123), "-123", "-123i");
         check(new K.KInteger(-Integer.MAX_VALUE), "-0W", "-0Wi");
-        check(new K.KInteger(Integer. MAX_VALUE), "0W", "0Wi");
+        check(new K.KInteger(Integer.MAX_VALUE), "0W", "0Wi");
         check(new K.KInteger(Integer.MIN_VALUE), "0N", "0Ni");
 
-        check(new K.KIntVector( -10, 10, 3), "-10 10 3", "-10 10 3i");
+        check(new K.KIntVector(-10, 10, 3), "-10 10 3", "-10 10 3i");
         check(new K.KIntVector(), "`int$()", "`int$()");
         check(new K.KIntVector(0), "enlist 0", "enlist 0i");
         check(new K.KIntVector(5, Integer.MIN_VALUE, Integer.MAX_VALUE, -Integer.MAX_VALUE), "5 0N 0W -0W", "5 0N 0W -0Wi");
@@ -45,7 +45,7 @@ public class KTest {
     public void testLongToString() throws Exception {
         check(new K.KLong(-123456789), "-123456789", "-123456789");
         check(new K.KLong(-Long.MAX_VALUE), "-0W", "-0W");
-        check(new K.KLong(Long. MAX_VALUE), "0W", "0W");
+        check(new K.KLong(Long.MAX_VALUE), "0W", "0W");
         check(new K.KLong(Long.MIN_VALUE), "0N", "0N");
 
         check(new K.KLongVector(-10, 10, 3), "-10 10 3", "-10 10 3");
@@ -56,30 +56,30 @@ public class KTest {
 
     @Test
     public void testShortToString() throws Exception {
-        check(new K.KShort((short)-123), "-123", "-123h");
-        check(new K.KShort((short) -32767 ), "-0W", "-0Wh");
+        check(new K.KShort((short) -123), "-123", "-123h");
+        check(new K.KShort((short) -32767), "-0W", "-0Wh");
         check(new K.KShort(Short.MAX_VALUE), "0W", "0Wh");
         check(new K.KShort(Short.MIN_VALUE), "0N", "0Nh");
 
-        check(new K.KShortVector((short)-10, (short)10, (short)3), "-10 10 3", "-10 10 3h");
+        check(new K.KShortVector((short) -10, (short) 10, (short) 3), "-10 10 3", "-10 10 3h");
         check(new K.KShortVector(), "`short$()", "`short$()");
-        check(new K.KShortVector((short)0), "enlist 0", "enlist 0h");
-        check(new K.KShortVector((short)5, Short.MIN_VALUE, Short.MAX_VALUE, (short)-Short.MAX_VALUE), "5 0N 0W -0W", "5 0N 0W -0Wh");
+        check(new K.KShortVector((short) 0), "enlist 0", "enlist 0h");
+        check(new K.KShortVector((short) 5, Short.MIN_VALUE, Short.MAX_VALUE, (short) -Short.MAX_VALUE), "5 0N 0W -0W", "5 0N 0W -0Wh");
     }
 
     @Test
     public void testByteToString() throws Exception {
-        check(new K.KByte((byte)123), "0x7b", "0x7b");
-        check(new K.KByte((byte)0 ), "0x00", "0x00");
-        check(new K.KByte((byte)-1 ), "0xff", "0xff");
-        check(new K.KByte((byte)127), "0x7f", "0x7f");
-        check(new K.KByte((byte)-128), "0x80", "0x80");
-        check(new K.KByte((byte)-127), "0x81", "0x81");
+        check(new K.KByte((byte) 123), "0x7b", "0x7b");
+        check(new K.KByte((byte) 0), "0x00", "0x00");
+        check(new K.KByte((byte) -1), "0xff", "0xff");
+        check(new K.KByte((byte) 127), "0x7f", "0x7f");
+        check(new K.KByte((byte) -128), "0x80", "0x80");
+        check(new K.KByte((byte) -127), "0x81", "0x81");
 
-        check(new K.KByteVector((byte)-10, (byte)10, (byte)3), "0xf60a03", "0xf60a03");
+        check(new K.KByteVector((byte) -10, (byte) 10, (byte) 3), "0xf60a03", "0xf60a03");
         check(new K.KByteVector(), "`byte$()", "`byte$()");
-        check(new K.KByteVector((byte)0), "enlist 0x00", "enlist 0x00");
-        check(new K.KByteVector((byte)5, (byte)-127, (byte)128, (byte)0), "0x05818000", "0x05818000");
+        check(new K.KByteVector((byte) 0), "enlist 0x00", "enlist 0x00");
+        check(new K.KByteVector((byte) 5, (byte) -127, (byte) 128, (byte) 0), "0x05818000", "0x05818000");
     }
 
 
@@ -88,15 +88,15 @@ public class KTest {
         check(new K.KDouble(-1.23), "-1.23", "-1.23f");
         check(new K.KDouble(3), "3", "3f");
         check(new K.KDouble(0), "0", "0f");
-        check(new K.KDouble(Double.POSITIVE_INFINITY ), "0w", "0wf");
+        check(new K.KDouble(Double.POSITIVE_INFINITY), "0w", "0wf");
         check(new K.KDouble(Double.NEGATIVE_INFINITY), "-0w", "-0wf");
         check(new K.KDouble(Double.NaN), "0n", "0nf");
 
-        check(new K.KDoubleVector((double)-10, (double)10, (double)3), "-10 10 3", "-10 10 3f");
-        check(new K.KDoubleVector((double)-10, 10.1, (double)3), "-10 10.1 3", "-10 10.1 3f");
+        check(new K.KDoubleVector((double) -10, (double) 10, (double) 3), "-10 10 3", "-10 10 3f");
+        check(new K.KDoubleVector((double) -10, 10.1, (double) 3), "-10 10.1 3", "-10 10.1 3f");
         check(new K.KDoubleVector(), "`float$()", "`float$()");
-        check(new K.KDoubleVector((double)0), "enlist 0", "enlist 0f");
-        check(new K.KDoubleVector((double)5, Double.NEGATIVE_INFINITY, Double.POSITIVE_INFINITY, Double.NaN), "5 -0w 0w 0n", "5 -0w 0w 0nf");
+        check(new K.KDoubleVector((double) 0), "enlist 0", "enlist 0f");
+        check(new K.KDoubleVector((double) 5, Double.NEGATIVE_INFINITY, Double.POSITIVE_INFINITY, Double.NaN), "5 -0w 0w 0n", "5 -0w 0w 0nf");
     }
 
     @Test
@@ -114,7 +114,7 @@ public class KTest {
         check(new K.KFloat(-1.23f), "-1.23", "-1.23e");
         check(new K.KFloat(3), "3", "3e");
         check(new K.KFloat(0), "0", "0e");
-        check(new K.KFloat(Float.POSITIVE_INFINITY ), "0w", "0we");
+        check(new K.KFloat(Float.POSITIVE_INFINITY), "0w", "0we");
         check(new K.KFloat(Float.NEGATIVE_INFINITY), "-0w", "-0we");
         check(new K.KFloat(Float.NaN), "0N", "0Ne");
 
@@ -159,12 +159,12 @@ public class KTest {
 
     @Test
     public void testGuidToString() throws Exception {
-        check(new K.KGuid(new UUID(12345,-987654)), "00000000-0000-3039-ffff-fffffff0edfa", "00000000-0000-3039-ffff-fffffff0edfa");
-        check(new K.KGuid(new UUID(0,0)), "00000000-0000-0000-0000-000000000000", "00000000-0000-0000-0000-000000000000");
+        check(new K.KGuid(new UUID(12345, -987654)), "00000000-0000-3039-ffff-fffffff0edfa", "00000000-0000-3039-ffff-fffffff0edfa");
+        check(new K.KGuid(new UUID(0, 0)), "00000000-0000-0000-0000-000000000000", "00000000-0000-0000-0000-000000000000");
 
-        check(new K.KGuidVector(new UUID(1,-1), new UUID(0,1), new UUID(-1,0)), "00000000-0000-0001-ffff-ffffffffffff 00000000-0000-0000-0000-000000000001 ffffffff-ffff-ffff-0000-000000000000", "00000000-0000-0001-ffff-ffffffffffff 00000000-0000-0000-0000-000000000001 ffffffff-ffff-ffff-0000-000000000000");
+        check(new K.KGuidVector(new UUID(1, -1), new UUID(0, 1), new UUID(-1, 0)), "00000000-0000-0001-ffff-ffffffffffff 00000000-0000-0000-0000-000000000001 ffffffff-ffff-ffff-0000-000000000000", "00000000-0000-0001-ffff-ffffffffffff 00000000-0000-0000-0000-000000000001 ffffffff-ffff-ffff-0000-000000000000");
         check(new K.KGuidVector(), "`guid$()", "`guid$()");
-        check(new K.KGuidVector(new UUID(0,0)), "enlist 00000000-0000-0000-0000-000000000000", "enlist 00000000-0000-0000-0000-000000000000");
+        check(new K.KGuidVector(new UUID(0, 0)), "enlist 00000000-0000-0000-0000-000000000000", "enlist 00000000-0000-0000-0000-000000000000");
     }
 
     @Test
@@ -172,7 +172,7 @@ public class KTest {
         check(new K.KTimestamp(-123456789), "1999.12.31D23:59:59.876543211", "1999.12.31D23:59:59.876543211");
         check(new K.KTimestamp(123456), "2000.01.01D00:00:00.000123456", "2000.01.01D00:00:00.000123456");
         check(new K.KTimestamp(-Long.MAX_VALUE), "-0Wp", "-0Wp");
-        check(new K.KTimestamp(Long. MAX_VALUE), "0Wp", "0Wp");
+        check(new K.KTimestamp(Long.MAX_VALUE), "0Wp", "0Wp");
         check(new K.KTimestamp(Long.MIN_VALUE), "0Np", "0Np");
 
         check(new K.KTimestampVector(-10, 10, 3), "1999.12.31D23:59:59.999999990 2000.01.01D00:00:00.000000010 2000.01.01D00:00:00.000000003", "1999.12.31D23:59:59.999999990 2000.01.01D00:00:00.000000010 2000.01.01D00:00:00.000000003");
@@ -186,7 +186,7 @@ public class KTest {
         check(new K.KTimespan(-765432123456789l), "-8D20:37:12.123456789", "-8D20:37:12.123456789");
         check(new K.KTimespan(123456), "0D00:00:00.000123456", "0D00:00:00.000123456");
         check(new K.KTimespan(-Long.MAX_VALUE), "-0Wn", "-0Wn");
-        check(new K.KTimespan(Long. MAX_VALUE), "0Wn", "0Wn");
+        check(new K.KTimespan(Long.MAX_VALUE), "0Wn", "0Wn");
         check(new K.KTimespan(Long.MIN_VALUE), "0Nn", "0Nn");
 
         check(new K.KTimespanVector(-10, 10, 3), "-0D00:00:00.000000010 0D00:00:00.000000010 0D00:00:00.000000003", "-0D00:00:00.000000010 0D00:00:00.000000010 0D00:00:00.000000003");
@@ -200,7 +200,7 @@ public class KTest {
         check(new K.KDate(-1234), "1996.08.15", "1996.08.15");
         check(new K.KDate(123456), "2338.01.05", "2338.01.05");
         check(new K.KDate(-Integer.MAX_VALUE), "-0Wd", "-0Wd");
-        check(new K.KDate(Integer. MAX_VALUE), "0Wd", "0Wd");
+        check(new K.KDate(Integer.MAX_VALUE), "0Wd", "0Wd");
         check(new K.KDate(Integer.MIN_VALUE), "0Nd", "0Nd");
 
         check(new K.KDateVector(-10, 10, 3), "1999.12.22 2000.01.11 2000.01.04", "1999.12.22 2000.01.11 2000.01.04");
@@ -216,7 +216,7 @@ public class KTest {
         check(new K.KTime(323456789), "89:50:56.789", "89:50:56.789");
 
         check(new K.KTime(-Integer.MAX_VALUE), "-0Wt", "-0Wt");
-        check(new K.KTime(Integer. MAX_VALUE), "0Wt", "0Wt");
+        check(new K.KTime(Integer.MAX_VALUE), "0Wt", "0Wt");
         check(new K.KTime(Integer.MIN_VALUE), "0Nt", "0Nt");
 
         check(new K.KTimeVector(-10, 10, 3), "-00:00:00.010 00:00:00.010 00:00:00.003", "-00:00:00.010 00:00:00.010 00:00:00.003");
@@ -230,7 +230,7 @@ public class KTest {
         check(new K.Month(-12345), "0971.04", "0971.04m");
         check(new K.Month(123456), "12288.01", "12288.01m");
         check(new K.Month(-Integer.MAX_VALUE), "-0W", "-0Wm");
-        check(new K.Month(Integer. MAX_VALUE), "0W", "0Wm");
+        check(new K.Month(Integer.MAX_VALUE), "0W", "0Wm");
         check(new K.Month(Integer.MIN_VALUE), "0N", "0Nm");
 
         check(new K.KMonthVector(-10, 10, 3), "1999.03 2000.11 2000.04", "1999.03 2000.11 2000.04m");
@@ -257,7 +257,7 @@ public class KTest {
 
         check(new K.Minute(123456), "2057:36", "2057:36");
         check(new K.Minute(-Integer.MAX_VALUE), "-0Wu", "-0Wu");
-        check(new K.Minute(Integer. MAX_VALUE), "0Wu", "0Wu");
+        check(new K.Minute(Integer.MAX_VALUE), "0Wu", "0Wu");
         check(new K.Minute(Integer.MIN_VALUE), "0Nu", "0Nu");
 
         check(new K.KMinuteVector(-10, 10, 3), "-00:10 00:10 00:03", "-00:10 00:10 00:03");
@@ -273,7 +273,7 @@ public class KTest {
 
         check(new K.Second(123456), "34:17:36", "34:17:36");
         check(new K.Second(-Integer.MAX_VALUE), "-0Wv", "-0Wv");
-        check(new K.Second(Integer. MAX_VALUE), "0Wv", "0Wv");
+        check(new K.Second(Integer.MAX_VALUE), "0Wv", "0Wv");
         check(new K.Second(Integer.MIN_VALUE), "0Nv", "0Nv");
 
         check(new K.KSecondVector(-10, 10, 3), "-00:00:10 00:00:10 00:00:03", "-00:00:10 00:00:10 00:00:03");
@@ -314,8 +314,8 @@ public class KTest {
 
         check(new K.UnaryPrimitive(-1), "", "");
 
-        check(funcUnary,"{1+x}", "{1+x}");
-        check(funcBinary,"{x+y}", "{x+y}");
+        check(funcUnary, "{1+x}", "{1+x}");
+        check(funcBinary, "{x+y}", "{x+y}");
 
         check(new K.FEachLeft(funcBinary), "{x+y}\\:", "{x+y}\\:");
         check(new K.FEachRight(funcBinary), "{x+y}/:", "{x+y}/:");
@@ -324,7 +324,7 @@ public class KTest {
         check(new K.Fscan(funcBinary), "{x+y}\\", "{x+y}\\");
         check(new K.FPrior(funcBinary), "{x+y}':", "{x+y}':");
 
-        check(new K.FComposition(funcUnary, funcBinary), "{1+x}{x+y}","{1+x}{x+y}");
+        check(new K.FComposition(funcUnary, funcBinary), "{1+x}{x+y}", "{1+x}{x+y}");
         check(new K.Projection(funcBinary, new K.KLong(1), new K.UnaryPrimitive(-1)), "{x+y}[1;]", "{x+y}[1;]");
         check(new K.Projection(funcBinary, new K.UnaryPrimitive(-1), new K.KLong(1)), "{x+y}[;1]", "{x+y}[;1]");
 
@@ -337,9 +337,9 @@ public class KTest {
         //output from '[;]
         check(new K.Projection(new K.TernaryOperator(0), new K.UnaryPrimitive(-1), new K.UnaryPrimitive(-1)), "'[;]", "'[;]");
         //output from +/:[1;]
-        check(new K.Projection(new K.FEachRight(new K.BinaryPrimitive(1)), new K.KLong(1), new K.UnaryPrimitive(-1)  ),"+/:[1;]", "+/:[1;]");
+        check(new K.Projection(new K.FEachRight(new K.BinaryPrimitive(1)), new K.KLong(1), new K.UnaryPrimitive(-1)), "+/:[1;]", "+/:[1;]");
         //output from enlist[1;]
-        check(new K.Projection(new K.UnaryPrimitive(41), new K.KLong(1), new K.UnaryPrimitive(-1) ),"enlist[1;]", "enlist[1;]");
+        check(new K.Projection(new K.UnaryPrimitive(41), new K.KLong(1), new K.UnaryPrimitive(-1)), "enlist[1;]", "enlist[1;]");
     }
 
     @Test
@@ -385,7 +385,7 @@ public class KTest {
         K.KTimestamp k1 = K.KTimestamp.now(c1);
         assertEquals(
                 "2023.12.01D15:18:10.123000000",
-                k1.toString() );
+                k1.toString());
 
 
         ZoneId z2 = ZoneId.of("Europe/Moscow");
@@ -393,7 +393,7 @@ public class KTest {
         K.KTimestamp k2 = K.KTimestamp.now(c2);
         assertEquals(
                 "2023.12.01D17:18:10.123000000",
-                k2.toString() );
+                k2.toString());
     }
 
 
@@ -409,7 +409,7 @@ public class KTest {
         K.KTimespan k = t1.span(t2);
         assertEquals(
                 "1D01:08:05.864000000",
-                k.toString() );
+                k.toString());
 
     }
 
@@ -421,7 +421,7 @@ public class KTest {
         K.KTimestamp t = new K.KTimestamp(785548800000000000L);
         assertEquals("2024.11.22D00:00:00.000000000", t.toString());
 
-        assertEquals(date.toTimestamp(),t);
+        assertEquals(date.toTimestamp(), t);
     }
 
 
@@ -435,7 +435,7 @@ public class KTest {
     @Test
     public void testLocalDateTimeToTimestamp() {
         LocalDateTime localDateTime =
-            LocalDateTime.of(2024,12,6,17,10,53,123456789);
+                LocalDateTime.of(2024, 12, 6, 17, 10, 53, 123456789);
         K.KTimestamp k = K.KTimestamp.of(localDateTime);
         assertEquals("2024.12.06D17:10:53.123456789", k.toString());
     }
@@ -445,23 +445,23 @@ public class KTest {
         K.Month month = new K.Month(299);
         assertEquals("2024.12m", month.toString());
 
-        LocalDateTime expected = LocalDateTime.of(2024,12,1,0,0);
+        LocalDateTime expected = LocalDateTime.of(2024, 12, 1, 0, 0);
         LocalDateTime actual = month.toLocalDateTime();
-        assertEquals(expected,actual);
+        assertEquals(expected, actual);
     }
 
     @Test
     public void testTimestampAddDuration() {
         LocalDateTime localDateTime =
-                LocalDateTime.of(2024,12,6,17,10,53,123456789);
+                LocalDateTime.of(2024, 12, 6, 17, 10, 53, 123456789);
         K.KTimestamp k = K.KTimestamp.of(localDateTime);
 
 
         K.KTimestamp k2 = k.add(Duration.ofDays(1)
-                        .plusHours(1)
-                        .plusMinutes(3)
-                        .plusSeconds(2)
-                        .plusNanos(123456789) );
+                .plusHours(1)
+                .plusMinutes(3)
+                .plusSeconds(2)
+                .plusNanos(123456789));
 
         assertEquals("2024.12.07D18:13:55.246913578", k2.toString());
     }
@@ -469,11 +469,11 @@ public class KTest {
     @Test
     public void testTimestampAddTimespan() {
         LocalDateTime localDateTime =
-                LocalDateTime.of(2024,12,6,17,10,53,123456789);
+                LocalDateTime.of(2024, 12, 6, 17, 10, 53, 123456789);
         K.KTimestamp k1 = K.KTimestamp.of(localDateTime);
 
         localDateTime =
-                LocalDateTime.of(2024,12,7,18,12,56,234567899);
+                LocalDateTime.of(2024, 12, 7, 18, 12, 56, 234567899);
         K.KTimestamp k2 = K.KTimestamp.of(localDateTime);
 
         K.KTimespan span = k1.span(k2);
@@ -493,6 +493,13 @@ public class KTest {
         assertEquals("1D01:03:02.123456789", span.toString());
     }
 
+    private void assertFormatting(Duration duration, KFormatContext fmtContext, String expected) {
+        K.KTimespan span = K.KTimespan.of(duration);
+        long value = span.toLong();
+        K.KTimeLong k = new K.KTimeLong(value);
+        assertEquals(expected, k.toString(fmtContext));
+    }
+
     @Test
     public void testKTimeLong() {
         Duration duration = Duration.ofDays(1)
@@ -500,9 +507,29 @@ public class KTest {
                 .plusMinutes(3)
                 .plusSeconds(2)
                 .plusNanos(123456789);
-        K.KTimespan span = K.KTimespan.of(duration);
-        long value = span.toLong();
-        K.KTimeLong k = new K.KTimeLong(value);
-        assertEquals("25:03:02.123456789" ,k.toString());
+        assertFormatting(duration, KFormatContext.NO_TYPE, "25:03:02.123456789");
+    }
+
+
+    @Test
+    public void testKTimeLongFormatting() {
+        Duration duration = Duration.ofDays(1);
+        assertFormatting(duration, KFormatContext.MINUTE, "24:00");
+        assertFormatting(duration, KFormatContext.SECOND, "24:00:00");
+        assertFormatting(duration, KFormatContext.MILLIS, "24:00:00.000");
+
+        duration = duration.plusHours(1)
+                .plusMinutes(3)
+                .plusSeconds(2);
+
+        assertFormatting(duration, KFormatContext.MINUTE, "25:03:02");
+        assertFormatting(duration, KFormatContext.SECOND, "25:03:02");
+        assertFormatting(duration, KFormatContext.MILLIS, "25:03:02.000");
+
+        duration = duration.plusNanos(120_000_000);
+        assertFormatting(duration, KFormatContext.MINUTE, "25:03:02.120");
+        assertFormatting(duration, KFormatContext.SECOND, "25:03:02.120");
+        assertFormatting(duration, KFormatContext.MILLIS, "25:03:02.120");
+
     }
 }

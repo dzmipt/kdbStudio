@@ -100,15 +100,15 @@ public class ParserTest {
         KType type = KType.Date;
         checkParsing(type,"2024.12.09D18:37:53.123456000", "2024.12.09D18:37:53.123456000");
         checkParsing(type, "2024.12.09D18:37:53.123000064", "2024.12.09D18:37:53.123");
-        checkParsing(type, "2024.12.09D18:37:53.000000000", "2024.12.09D18:37:53");
-        checkParsing(type, "2024.12.09D18:37:00.000000000", "2024.12.09D18:37");
+        checkParsing(type, "2024.12.09D18:37:53", "2024.12.09D18:37:53");
+        checkParsing(type, "2024.12.09D18:37", "2024.12.09D18:37");
         checkParsing(type, "2024.12.09", "2024.12.09");
         checkParsing(type, "2024.12.01", "2024.12");
 
         checkParsing(type, "1950.12.09D18:37:53.123456256", "1950.12.09D18:37:53.123456000");
         checkParsing(type, "1950.12.09D18:37:53.123000064", "1950.12.09D18:37:53.123");
         checkParsing(type, "1950.12.09D18:37:53.000000256", "1950.12.09D18:37:53");
-        checkParsing(type, "1950.12.09D18:37:00.000000000", "1950.12.09D18:37");
+        checkParsing(type, "1950.12.09D18:37", "1950.12.09D18:37");
         checkParsing(type, "1950.12.09", "1950.12.09");
         checkParsing(type, "1950.12.01", "1950.12");
     }
@@ -170,11 +170,11 @@ public class ParserTest {
         checkParsing(type,"24:00", "1D");
         checkParsing(type,"34:15", "1D10:15");
         checkParsing(type,"15:38:07.123456000", "15:38:07.123456000");
-        checkParsing(type,"15:38:07.017000000", "15:38:07.017000000");
+        checkParsing(type,"15:38:07.017", "15:38:07.017000000");
         checkParsing(type,"15:38", "15:38:00");
         checkParsing(type,"15:38", "15:38");
 
-        checkParsing(type,"-00:15:00.123000000", "-00:15:00.123");
+        checkParsing(type,"-00:15:00.123", "-00:15:00.123");
         checkParsing(type,"-34:15", "-1D10:15");
     }
 
@@ -186,11 +186,11 @@ public class ParserTest {
         checkParsing(type,"24:00:00", "1D");
         checkParsing(type,"34:15:00", "1D10:15");
         checkParsing(type,"15:38:07.123456000", "15:38:07.123456000");
-        checkParsing(type,"15:38:07.017000000", "15:38:07.017000000");
+        checkParsing(type,"15:38:07.017", "15:38:07.017000000");
         checkParsing(type,"15:38:00", "15:38:00");
         checkParsing(type,"15:38:00", "15:38");
 
-        checkParsing(type,"-00:15:00.123000000", "-00:15:00.123");
+        checkParsing(type,"-00:15:00.123", "-00:15:00.123");
         checkParsing(type,"-34:15:00", "-1D10:15");
     }
 
