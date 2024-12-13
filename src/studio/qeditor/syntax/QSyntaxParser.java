@@ -1,10 +1,11 @@
 package studio.qeditor.syntax;
 
-import java.util.*;
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.Set;
 
 import static studio.qeditor.syntax.QToken.*;
 import static studio.qeditor.syntax.SyntaxStateMachine.Action.*;
-import static studio.qeditor.syntax.SyntaxStateMachine.Action.LooksLike;
 
 public class QSyntaxParser  {
 
@@ -356,7 +357,7 @@ public class QSyntaxParser  {
 
         addTemporal(State.DateLike, State.DateD1, TIMESTAMP,"pmzn","D",digits,":",digits,":",digits,".",digits);
         addTemporal(State.DateLike, State.DateT1, DATETIME,"pmzn","T",digits,":",digits,":",digits,".",digits);
-        addTemporal(s(State.Zero, State.One, State.Two, State.ZeroOnes, State.Digits), State.DigitsD1, TIMESPAN, "pmzn", "D",digits,":",digits,":",digits,".",digits);
+        addTemporal(s(State.Zero, State.One, State.MinusZero, State.Two, State.ZeroOnes, State.Digits), State.DigitsD1, TIMESPAN, "pmzn", "D",digits,":",digits,":",digits,".",digits);
 
         String d1 ="9876543210"; // to not equals to digits
         addTemporal(s(State.ZeroOnes, State.Digits), State.DigitsColon,

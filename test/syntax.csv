@@ -83,6 +83,10 @@
 0D10:12:19.000,timespan
 1D10:12:19.123456789,timespan
 0D10:12:19n,timespan
+-1D,timespan
+-01D,timespan
+-0D,timespan
+-0D00:00,timespan
 0D10:12:19z,datetime
 0D10:12:19p,timestamp
 

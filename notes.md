@@ -1,3 +1,8 @@
+* Fixes for atom formating:
+    * datetime older than 1970 year
+    * adding 0D for timespan
+    * syntax highlighting for negative timespan
+* Adding keep alive for all connections
 * Lines tool is added to charts
 * Adding drag&drop in the tree of servers (in the Server List dialog)
 * Server connect/disconnect actions from the status bar
