@@ -184,15 +184,15 @@ public class KTest {
     @Test
     public void testTimespanToString() throws Exception {
         check(new K.KTimespan(-765432123456789l), "-8D20:37:12.123456789", "-8D20:37:12.123456789");
-        check(new K.KTimespan(123456), "00:00:00.000123456", "00:00:00.000123456");
+        check(new K.KTimespan(123456), "0D00:00:00.000123456", "0D00:00:00.000123456");
         check(new K.KTimespan(-Long.MAX_VALUE), "-0Wn", "-0Wn");
         check(new K.KTimespan(Long. MAX_VALUE), "0Wn", "0Wn");
         check(new K.KTimespan(Long.MIN_VALUE), "0Nn", "0Nn");
 
-        check(new K.KTimespanVector(-10, 10, 3), "-00:00:00.000000010 00:00:00.000000010 00:00:00.000000003", "-00:00:00.000000010 00:00:00.000000010 00:00:00.000000003");
+        check(new K.KTimespanVector(-10, 10, 3), "-0D00:00:00.000000010 0D00:00:00.000000010 0D00:00:00.000000003", "-0D00:00:00.000000010 0D00:00:00.000000010 0D00:00:00.000000003");
         check(new K.KTimespanVector(), "`timespan$()", "`timespan$()");
-        check(new K.KTimespanVector(0), "enlist 00:00:00.000000000", "enlist 00:00:00.000000000");
-        check(new K.KTimespanVector(5, Long.MIN_VALUE, Long.MAX_VALUE, -Long.MAX_VALUE), "00:00:00.000000005 0Nn 0Wn -0Wn", "00:00:00.000000005 0Nn 0Wn -0Wn");
+        check(new K.KTimespanVector(0), "enlist 0D00:00:00.000000000", "enlist 0D00:00:00.000000000");
+        check(new K.KTimespanVector(5, Long.MIN_VALUE, Long.MAX_VALUE, -Long.MAX_VALUE), "0D00:00:00.000000005 0Nn 0Wn -0Wn", "0D00:00:00.000000005 0Nn 0Wn -0Wn");
     }
 
     @Test

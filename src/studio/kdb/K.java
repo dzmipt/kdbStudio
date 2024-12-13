@@ -1464,9 +1464,8 @@ public class K {
                     jj = -jj;
                     builder.append("-");
                 }
-                int d = ((int) (jj / NS_IN_DAY));
-                if (d != 0) builder.append(d).append("D");
-                builder.append(i2((int) ((jj % NS_IN_DAY) / 3600000000000L)))
+                builder.append((int) (jj / NS_IN_DAY)).append("D").
+                        append(i2((int) ((jj % NS_IN_DAY) / 3600000000000L)))
                         .append(":").append(i2((int) ((jj % 3600000000000L) / 60000000000L)))
                         .append(":").append(i2((int) ((jj % 60000000000L) / 1000000000L)))
                         .append(".").append(nsFormatter.format((int) (jj % 1000000000L)));
