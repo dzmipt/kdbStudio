@@ -1,8 +1,5 @@
 package studio.qeditor;
 
-import org.fife.ui.rsyntaxtextarea.RSyntaxTextArea;
-import org.fife.ui.rsyntaxtextarea.Style;
-import org.fife.ui.rsyntaxtextarea.SyntaxScheme;
 import org.fife.ui.rsyntaxtextarea.TokenTypes;
 import studio.kdb.Config;
 
@@ -62,39 +59,27 @@ public enum RSToken {
         return tokenType;
     }
 
-    private int tokenType;
-    private Style style;
-    public Style getStyle() {
-        return style;
+    private final int tokenType;
+
+    private final int fontStyle;
+    private final String colorTokenName;
+
+    public int getFontStyle() {
+        return fontStyle;
     }
 
+    public String getColorTokenName() {
+        return colorTokenName;
+    }
+    private
     RSToken(int tokenType, int fontStyle, String colorTokenName) {
         this.tokenType = tokenType;
-        Font font = RSyntaxTextArea.getDefaultFont();
-        if (fontStyle != Font.PLAIN) font = font.deriveFont(fontStyle);
-        Color color = Config.getInstance().getColor(colorTokenName);
-        style = new Style(color, null, font);
+        this.fontStyle = fontStyle;
+        this.colorTokenName = colorTokenName;
     }
 
     RSToken(int tokenType, String colorTokenName) {
         this(tokenType, Font.PLAIN, colorTokenName);
     }
 
-    RSToken(int tokenType) {
-        this.tokenType = tokenType;
-    }
-
-    public static SyntaxScheme getDefaulSyntaxScheme() {
-        SyntaxScheme scheme = new SyntaxScheme(false);
-        Style[] defaultStyles = scheme.getStyles();
-        Style[] styles = new Style[NUM_TOKEN_TYPES];
-        System.arraycopy(defaultStyles, 0, styles, 0, defaultStyles.length);
-        for (RSToken token: RSToken.values()) {
-            styles[token.getTokenType()] = token.getStyle();
-        }
-        scheme.setStyles(styles);
-        return scheme;
-    }
-
-    
 }

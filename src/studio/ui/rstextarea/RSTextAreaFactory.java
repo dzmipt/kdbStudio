@@ -16,6 +16,7 @@ import javax.swing.*;
 import javax.swing.plaf.ActionMapUIResource;
 import javax.swing.text.BadLocationException;
 import javax.swing.text.DefaultEditorKit;
+import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.InputEvent;
 import java.awt.event.KeyEvent;
@@ -140,7 +141,7 @@ public class RSTextAreaFactory {
         textArea.setCloseCurlyBraces(true);
 
         textArea.setSyntaxEditingStyle(RSTokenMaker.CONTENT_TYPE);
-        textArea.setSyntaxScheme(RSToken.getDefaulSyntaxScheme());
+        textArea.setSyntaxScheme(getDefaulSyntaxScheme());
         textArea.setHyperlinksEnabled(false);
 
         textArea.setTabsEmulated(Config.getInstance().getBoolean(Config.EDITOR_TAB_EMULATED));
@@ -149,6 +150,24 @@ public class RSTextAreaFactory {
         textArea.setInsertPairedCharacters(Config.getInstance().getBoolean(Config.RSTA_INSERT_PAIRED_CHAR));
         return textArea;
     }
+
+    private static SyntaxScheme getDefaulSyntaxScheme() {
+        SyntaxScheme scheme = new SyntaxScheme(false);
+        Style[] defaultStyles = scheme.getStyles();
+        Style[] styles = new Style[RSToken.NUM_TOKEN_TYPES];
+        System.arraycopy(defaultStyles, 0, styles, 0, defaultStyles.length);
+        for (RSToken token: RSToken.values()) {
+            Font font = RSyntaxTextArea.getDefaultFont();
+            if (token.getFontStyle() != Font.PLAIN) font = font.deriveFont(token.getFontStyle());
+            Color color = Config.getInstance().getColor(token.getColorTokenName());
+            Style style = new Style(color, null, font);
+
+            styles[token.getTokenType()] = style;
+        }
+        scheme.setStyles(styles);
+        return scheme;
+    }
+
 
     private static class HideOnFocusLostCaret extends ConfigurableCaret {
 
