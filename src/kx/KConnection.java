@@ -31,6 +31,11 @@ public class KConnection {
 
     void io(Socket s) throws IOException {
         s.setTcpNoDelay(true);
+        s.setKeepAlive(true);
+//        s.setOption(ExtendedSocketOptions.TCP_KEEPIDLE, 60);
+//        s.setOption(ExtendedSocketOptions.TCP_KEEPINTERVAL, 300);
+//        s.setOption(ExtendedSocketOptions.TCP_KEEPCOUNT, 5 );
+
         inputStream = new DataInputStream(s.getInputStream());
         outputStream = s.getOutputStream();
     }
