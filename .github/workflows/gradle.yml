@@ -24,7 +24,7 @@ jobs:
       uses: actions/setup-java@v2
       with:
         java-version: '9'
-        distribution: 'zulu'
+        distribution: 'adopt'
         cache: gradle
 
     - name: Cache Gradle packages
