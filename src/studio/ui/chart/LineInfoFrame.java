@@ -5,8 +5,6 @@ import studio.ui.GroupLayoutSimple;
 
 import javax.swing.*;
 import java.awt.*;
-import java.awt.event.FocusAdapter;
-import java.awt.event.FocusEvent;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.util.function.DoubleConsumer;
@@ -19,10 +17,10 @@ public class LineInfoFrame extends JFrame {
     private final JLabel lblX = new JLabel("");
     private final JLabel lblY = new JLabel("");
     private final JTextField txtTitle = new JTextField();
-    private final DurationEditor txtDX;
-    private final DurationEditor txtDY;
-    private final JTextField txtX = new JTextField();
-    private final JTextField txtY = new JTextField();
+    private final Editor txtDX;
+    private final Editor txtDY;
+    private final Editor txtX;
+    private final Editor txtY;
 
     private double dx = 1;
     private double dy = Double.NaN;
@@ -33,8 +31,11 @@ public class LineInfoFrame extends JFrame {
 
     public LineInfoFrame(Line line, KType xType, KType yType) {
         this.line = line;
-        txtDX = DurationEditor.create(xType);
-        txtDY = DurationEditor.create(yType);
+        txtDX = Editor.createDurationEditor(xType);
+        txtDY = Editor.createDurationEditor(yType);
+
+        txtX = Editor.createEditor(xType);
+        txtY = Editor.createEditor(yType);
 
         line.addChangeListener(e -> refresh());
         initComponents();
@@ -54,26 +55,7 @@ public class LineInfoFrame extends JFrame {
         return panel;
     }
 
-    private void performAction(JTextField textField, DoubleConsumer action) {
-        try {
-            double value = Double.parseDouble(textField.getText());
-            action.accept(value);
-        } catch (NumberFormatException e) {}
-        refresh();
-    }
-
-    private JTextField withAction(JTextField textField, DoubleConsumer action) {
-        textField.addActionListener(e -> performAction(textField, action));
-        textField.addFocusListener(new FocusAdapter() {
-            @Override
-            public void focusLost(FocusEvent e) {
-                performAction(textField, action);
-            }
-        });
-        return textField;
-    }
-
-    private DurationEditor withAction(DurationEditor editor, DoubleConsumer action) {
+    private Editor withAction(Editor editor, DoubleConsumer action) {
         editor.addValueChangedListener(e -> {
             action.accept(e.getValue());
             refresh();
@@ -152,8 +134,8 @@ public class LineInfoFrame extends JFrame {
 
         txtDX.setValue(dx);
         txtDY.setValue(dy);
-        txtX.setText("" + x);
-        txtY.setText("" + y);
+        txtX.setValue(x);
+        txtY.setValue(y);
 
         txtTitle.setText(line.getTitle());
 

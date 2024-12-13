@@ -55,8 +55,7 @@ public class ParserTest {
     private void checkParsing(KType type, String expected, String text) {
         double value = Parser.parse(type, text);
 
-        String formatted = new KFormat(type).format(value, new StringBuffer(), null).toString();
-
+        String formatted = KFormat.format(type,value);
         assertEquals(expected, formatted, "assert for type: " + type);
     }
 

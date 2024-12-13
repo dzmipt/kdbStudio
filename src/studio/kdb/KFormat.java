@@ -1,6 +1,5 @@
 package studio.kdb;
 
-import java.text.DecimalFormat;
 import java.text.FieldPosition;
 import java.text.NumberFormat;
 import java.text.ParsePosition;
@@ -11,24 +10,11 @@ public class KFormat extends NumberFormat {
 
     private KType type;
 
-    private static final DecimalFormat fractionFormat = new DecimalFormat("+0.#####;-0.#####");
-
     public KFormat(KType type) {
         this.type = type;
     }
 
-    @Override
-    public StringBuffer format(long number, StringBuffer toAppendTo, FieldPosition pos) {
-        return format((double)number, toAppendTo, pos);
-    }
-
-    @Override
-    public Number parse(String source, ParsePosition parsePosition) {
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public StringBuffer format(double value, StringBuffer toAppendTo, FieldPosition pos) {
+    public static String format(KType type, double value) {
         K.KBase kValue;
         if (type == KType.Int ||
                 type == KType.Double ||
@@ -87,8 +73,22 @@ public class KFormat extends NumberFormat {
             }
         }
 
-        toAppendTo.append(kValue.toString(KFormatContext.NO_TYPE));
+        return kValue.toString(KFormatContext.NO_TYPE);
+    }
 
+    @Override
+    public StringBuffer format(long number, StringBuffer toAppendTo, FieldPosition pos) {
+        return format((double)number, toAppendTo, pos);
+    }
+
+    @Override
+    public Number parse(String source, ParsePosition parsePosition) {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public StringBuffer format(double value, StringBuffer toAppendTo, FieldPosition pos) {
+        toAppendTo.append(format(type, value));
         return toAppendTo;
     }
 

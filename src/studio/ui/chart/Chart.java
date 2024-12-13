@@ -60,8 +60,8 @@ public class Chart implements ComponentListener {
     private final static Set<KType> supportedClasses = new HashSet<>();
 
     static {
-        supportedClasses.addAll(DurationEditor.VALUE_CLASSES);
-        supportedClasses.addAll(DurationEditor.TEMPORAL_CLASSES);
+        supportedClasses.addAll(Editor.VALUE_CLASSES);
+        supportedClasses.addAll(Editor.TEMPORAL_CLASSES);
     }
 
     private static StandardChartTheme currentTheme = new StandardChartTheme("JFree");

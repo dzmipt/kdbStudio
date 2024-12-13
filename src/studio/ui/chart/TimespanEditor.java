@@ -7,16 +7,15 @@ import javax.swing.*;
 import java.awt.*;
 import java.time.temporal.ChronoUnit;
 
-public class TimespanEditor extends DurationEditor {
+public class TimespanEditor extends Editor {
 
-    private final KType unittype;
     private K.KTimespan value = K.KTimespan.NULL;
     private final JComboBox<ChronoUnit> comboUnit =
             new JComboBox<>(K.KTimespan.getSupportedUnits());
 
 
     public TimespanEditor(KType unitType) {
-        this.unittype = unitType;
+        super(unitType, false);
 
         add(comboUnit, BorderLayout.EAST);
         comboUnit.addActionListener(e -> refresh());
@@ -38,7 +37,7 @@ public class TimespanEditor extends DurationEditor {
     }
 
     public void setValue(double value) {
-        K.KTimespan newValue = K.KTimespan.duration(value, unittype);
+        K.KTimespan newValue = K.KTimespan.duration(value, unitType);
         if (newValue.equals(this.value)) return;
 
         if (this.value.equals(K.KTimespan.NULL)) {
@@ -52,7 +51,7 @@ public class TimespanEditor extends DurationEditor {
     }
 
     public double getValue() {
-        return value.toUnitValue(unittype);
+        return value.toUnitValue(unitType);
     }
 
     protected void refresh() {
