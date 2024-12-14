@@ -1,10 +1,18 @@
 package studio.ui.chart;
 
+import studio.ui.UserAction;
+import studio.ui.Util;
+
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
+import java.awt.event.KeyEvent;
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 public class ChartConfigPanel extends Box {
 
@@ -16,7 +24,7 @@ public class ChartConfigPanel extends Box {
 
     private final LegendListPanel listLines;
     private final List<Line> lines = new ArrayList<>();
-
+    private final Map<Line,LineInfoFrame> infoFrameMap = new HashMap<>();
 
     public ChartConfigPanel(Chart chart, String[] names) {
         super(BoxLayout.Y_AXIS);
@@ -76,6 +84,12 @@ public class ChartConfigPanel extends Box {
         listSeries.setEnabled(0, false);
     }
 
+    public void dispose() {
+        for (LineInfoFrame frame: infoFrameMap.values()) {
+            frame.dispose();
+        }
+    }
+
     public int getDomainIndex() {
         return comboX.getSelectedIndex();
     }
@@ -89,12 +103,32 @@ public class ChartConfigPanel extends Box {
     }
 
     public void addLine(Line line) {
+        Action detailsAction = UserAction.create("Line Info", Util.BLANK_ICON, "Show line's parameters", KeyEvent.VK_I, null,
+                e->showDetails(line) );
+
         String title = "Line " + (1+ listLines.getListSize());
         line.setTitle(title);
         lines.add(line);
-        listLines.add(title, line.getIcon());
+        listLines.add(title, line.getIcon(), detailsAction);
+    }
 
-        new LineInfoFrame(line, chart.getDomainKType(), chart.getRangeKType());
+    private void showDetails(Line line) {
+        LineInfoFrame frame = infoFrameMap.get(line);
+        if (frame != null) {
+            if ((frame.getState() & Frame.NORMAL) != 0) {
+                frame.setState(Frame.NORMAL);
+            }
+            frame.toFront();
+        } else {
+            frame = new LineInfoFrame(chart, line, chart.getDomainKType(), chart.getRangeKType());
+            infoFrameMap.put(line, frame);
+            frame.addWindowListener(new WindowAdapter() {
+                @Override
+                public void windowClosed(WindowEvent e) {
+                    infoFrameMap.remove(line);
+                }
+            } );
+        }
     }
 
     private void refresh() {

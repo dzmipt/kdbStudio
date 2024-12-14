@@ -51,10 +51,17 @@ public class LegendListPanel extends Box implements LegendChangeListener {
     }
 
     public void add(String title, LegendIcon icon) {
+        add(title, icon, null);
+    }
+
+    public void add(String title, LegendIcon icon, Action ... additionalActions) {
         JCheckBox checkBox = new JCheckBox(title, true);
         checkBox.addActionListener(e -> notifyListeners() );
         LegendButton button = new LegendButton(icon, line, shape, bar);
         button.addChangeListener(this);
+        if (additionalActions != null) {
+            button.setAdditionalActions(additionalActions);
+        }
 
         checkBoxes.add(checkBox);
         buttons.add(button);

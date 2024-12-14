@@ -21,6 +21,8 @@ public class LegendButton extends JLabel implements MouseListener {
     private final EventListenerList listenerList = new EventListenerList();
     private final List<ChartType> chartTypeList = new ArrayList<>(4);
 
+    private Action[] additionalActions = null;
+
     private final static Border EMPTY_BORDER = BorderFactory.createEmptyBorder(2,2,2,2);
     private final static Border SELECTED_BORDER = BorderFactory.createEtchedBorder(EtchedBorder.LOWERED);
 
@@ -83,6 +85,10 @@ public class LegendButton extends JLabel implements MouseListener {
 
         setBorder(EMPTY_BORDER);
         addMouseListener(this);
+    }
+
+    public void setAdditionalActions(Action ... actions) {
+        this.additionalActions = actions;
     }
 
     public LegendIcon getLegendIcon() {
@@ -228,6 +234,12 @@ public class LegendButton extends JLabel implements MouseListener {
             menu = new JMenuItem("Set this stroke to all");
             menu.addActionListener(e -> notifyChangeAllStrokes() );
             popup.add(menu);
+        }
+
+        if (additionalActions != null) {
+            for (Action action: additionalActions) {
+                popup.add(action);
+            }
         }
 
         popup.show(event.getComponent(), event.getX(), event.getY());

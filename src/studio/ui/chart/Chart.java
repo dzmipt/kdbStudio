@@ -143,6 +143,7 @@ public class Chart implements ComponentListener {
                 @Override
                 public void windowClosed(WindowEvent e) {
                     charts.remove(Chart.this);
+                    pnlConfig.dispose();
                 }
             });
             frame.setIconImage(Util.CHART_BIG_ICON.getImage());
@@ -155,6 +156,10 @@ public class Chart implements ComponentListener {
         } finally {
             WindowsAppUserMode.setMainId();
         }
+    }
+
+    public JFrame getFrame() {
+        return frame;
     }
 
     private ChartPanel createChartPanel() {

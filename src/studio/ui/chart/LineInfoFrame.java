@@ -2,6 +2,7 @@ package studio.ui.chart;
 
 import studio.kdb.KType;
 import studio.ui.GroupLayoutSimple;
+import studio.utils.WindowsAppUserMode;
 
 import javax.swing.*;
 import java.awt.*;
@@ -11,6 +12,7 @@ import java.util.function.DoubleConsumer;
 
 public class LineInfoFrame extends JFrame {
 
+    private final Chart chart;
     private final Line line;
     private final JLabel lblDX = new JLabel("");
     private final JLabel lblDY = new JLabel("");
@@ -29,7 +31,8 @@ public class LineInfoFrame extends JFrame {
     private boolean lockDX = true;
     private boolean lockX = true;
 
-    public LineInfoFrame(Line line, KType xType, KType yType) {
+    public LineInfoFrame(Chart chart, Line line, KType xType, KType yType) {
+        this.chart = chart;
         this.line = line;
         txtDX = Editor.createDurationEditor(xType);
         txtDY = Editor.createDurationEditor(yType);
@@ -38,7 +41,13 @@ public class LineInfoFrame extends JFrame {
         txtY = Editor.createEditor(yType);
 
         line.addChangeListener(e -> refresh());
-        initComponents();
+
+        WindowsAppUserMode.setChartId();
+        try {
+            initComponents();
+        } finally {
+            WindowsAppUserMode.setMainId();
+        }
     }
 
 
@@ -93,7 +102,26 @@ public class LineInfoFrame extends JFrame {
         setContentPane(content);
         pack();
         setSize(getPreferredSize());
+        adjustLocation();
         setVisible(true);
+    }
+
+    private void adjustLocation() {
+        Rectangle chartBounds = chart.getFrame().getBounds();
+        double x = chartBounds.getMaxX();
+
+        double maxX = Integer.MIN_VALUE;
+
+        GraphicsDevice[] screens = GraphicsEnvironment.getLocalGraphicsEnvironment().getScreenDevices();
+        for (GraphicsDevice screen : screens) {
+            maxX = Math.max(maxX, screen.getDefaultConfiguration().getBounds().getMaxX());
+        }
+
+        if (x + getWidth() > maxX) {
+            x -= x + getWidth() - maxX;
+        }
+
+        setLocation((int) x, chartBounds.y);
     }
 
     @Override
