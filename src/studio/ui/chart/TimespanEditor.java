@@ -9,13 +9,14 @@ import java.time.temporal.ChronoUnit;
 
 public class TimespanEditor extends Editor {
 
-    private K.KTimespan value = K.KTimespan.NULL;
+    private final KType unitType;
+    private K.KTimespan timespan = K.KTimespan.NULL;
     private final JComboBox<ChronoUnit> comboUnit =
             new JComboBox<>(K.KTimespan.getSupportedUnits());
 
 
     public TimespanEditor(KType unitType) {
-        super(unitType, false);
+        this.unitType = unitType;
 
         add(comboUnit, BorderLayout.EAST);
         comboUnit.addActionListener(e -> refresh());
@@ -38,28 +39,33 @@ public class TimespanEditor extends Editor {
 
     public void setValue(double value) {
         K.KTimespan newValue = K.KTimespan.duration(value, unitType);
-        if (newValue.equals(this.value)) return;
+        if (newValue.equals(this.timespan)) return;
 
-        if (this.value.equals(K.KTimespan.NULL)) {
+        if (this.timespan.equals(K.KTimespan.NULL)) {
             unitAutoSelect(newValue);
         }
 
-        this.value = newValue;
+        this.timespan = newValue;
 
         refresh();
         notifyValueChanged();
     }
 
     public double getValue() {
-        return value.toUnitValue(unitType);
+        return timespan.toUnitValue(unitType);
     }
 
     protected void refresh() {
-        txtValue.setText("" + value.toUnitValue((ChronoUnit) comboUnit.getSelectedItem()));
+        txtValue.setText("" + timespan.toUnitValue((ChronoUnit) comboUnit.getSelectedItem()));
+    }
+
+    @Override
+    protected double parseValue(String text) throws NumberFormatException {
+        return Double.parseDouble(text);
     }
 
     protected void txtValueChanged(double newValue) {
-        value = K.KTimespan.duration(newValue, (ChronoUnit) comboUnit.getSelectedItem());
+        timespan = K.KTimespan.duration(newValue, (ChronoUnit) comboUnit.getSelectedItem());
     }
 
 }

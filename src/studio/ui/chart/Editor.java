@@ -1,8 +1,6 @@
 package studio.ui.chart;
 
-import studio.kdb.KFormat;
 import studio.kdb.KType;
-import studio.kdb.Parser;
 import studio.ui.chart.event.ValueChangedEvent;
 import studio.ui.chart.event.ValueChangedListener;
 
@@ -15,7 +13,7 @@ import java.awt.event.FocusEvent;
 import java.util.List;
 
 
-public class Editor extends JPanel {
+public abstract class Editor extends JPanel {
 
     public static final List<KType> VALUE_CLASSES =
             List.of(
@@ -41,15 +39,15 @@ public class Editor extends JPanel {
     private final EventListenerList listenerList = new EventListenerList();
 
     public static Editor createDurationEditor(KType unitType) {
-        if (VALUE_CLASSES.contains(unitType)) return new Editor(unitType, true);
+        if (VALUE_CLASSES.contains(unitType)) return new NumericEditor();
         if (TEMPORAL_CLASSES.contains(unitType)) return new TimespanEditor(unitType);
 
         throw new UnsupportedOperationException("Editor for type " + unitType + " is not supported");
     }
 
     public static Editor createEditor(KType unitType) {
-        if (VALUE_CLASSES.contains(unitType)) return new Editor(unitType, true);
-        if (TEMPORAL_CLASSES.contains(unitType)) return new Editor(unitType, false);
+        if (VALUE_CLASSES.contains(unitType)) return new NumericEditor();
+        if (TEMPORAL_CLASSES.contains(unitType)) return new KEditor(unitType);
 
         throw new UnsupportedOperationException("Editor for type " + unitType + " is not supported");
     }
@@ -75,13 +73,9 @@ public class Editor extends JPanel {
     protected final JTextField txtValue = new JTextField();
 
     private double value = Double.NaN;
-    protected final KType unitType;
-    private final boolean numeric;
 
-    protected Editor(KType uniteType, boolean numeric) {
+    protected Editor() {
         super(new BorderLayout());
-        this.unitType = uniteType;
-        this.numeric = numeric;
         add(txtValue, BorderLayout.CENTER);
 
         txtValue.addActionListener(this::txtValueChanged);
@@ -105,38 +99,22 @@ public class Editor extends JPanel {
         notifyValueChanged();
     }
 
-    protected void refresh() {
-        if (numeric) {
-            txtValue.setText("" + value);
-        } else {
-            txtValue.setText(KFormat.format(unitType, value));
-        }
-    }
+    abstract protected void refresh();
+
+    abstract protected double parseValue(String text) throws NumberFormatException;
 
     protected void txtValueChanged(double newValue) {
         this.value = newValue;
     }
 
     private void txtValueChanged(ActionEvent event) {
-        boolean error = false;
-        double v = value;
         try {
-            if (numeric) {
-                v = Double.parseDouble(txtValue.getText());
-            } else {
-                v = Parser.parse(unitType, txtValue.getText());
-                error = Double.isNaN(v);
-            }
-        } catch (NumberFormatException e) {
-            error = true;
-        }
-
-        if (error) {
-            refresh();
-        } else {
+            double v = parseValue(txtValue.getText());
             txtValueChanged(v);
             refresh();
             notifyValueChanged();
+        } catch (NumberFormatException e) {
+            refresh();
         }
     }
 
