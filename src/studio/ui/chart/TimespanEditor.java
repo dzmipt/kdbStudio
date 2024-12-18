@@ -5,9 +5,12 @@ import studio.kdb.KType;
 
 import javax.swing.*;
 import java.awt.*;
+import java.text.DecimalFormat;
 import java.time.temporal.ChronoUnit;
 
 public class TimespanEditor extends Editor {
+
+    private static final DecimalFormat df5 = new DecimalFormat("#.#####");
 
     private final KType unitType;
     private K.KTimespan timespan = K.KTimespan.NULL;
@@ -56,7 +59,7 @@ public class TimespanEditor extends Editor {
     }
 
     protected void refresh() {
-        txtValue.setText("" + timespan.toUnitValue((ChronoUnit) comboUnit.getSelectedItem()));
+        txtValue.setText(df5.format(timespan.toUnitValue((ChronoUnit) comboUnit.getSelectedItem())));
     }
 
     @Override

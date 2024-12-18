@@ -70,7 +70,7 @@ public abstract class Editor extends JPanel {
         }
     }
 
-    protected final JTextField txtValue = new JTextField();
+    protected final JTextField txtValue = new JTextField(15);
 
     private double value = Double.NaN;
 
