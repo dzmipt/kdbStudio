@@ -6,6 +6,8 @@ import studio.utils.WindowsAppUserMode;
 
 import javax.swing.*;
 import java.awt.*;
+import java.awt.event.FocusAdapter;
+import java.awt.event.FocusEvent;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.util.function.DoubleConsumer;
@@ -72,11 +74,22 @@ public class LineInfoFrame extends JFrame {
         return editor;
     }
 
+    private void updateTitle() {
+        line.setTitle(txtTitle.getText());
+    }
+
     private void initComponents() {
         setTitle(getTitle());
         setDefaultCloseOperation(DISPOSE_ON_CLOSE);
 
         JLabel lblTitle = new JLabel("Title");
+        txtTitle.addActionListener(e -> updateTitle());
+        txtTitle.addFocusListener(new FocusAdapter() {
+            @Override
+            public void focusLost(FocusEvent e) {
+                updateTitle();
+            }
+        });
 
 
 
@@ -154,6 +167,9 @@ public class LineInfoFrame extends JFrame {
     }
 
     private void refresh() {
+        if (! super.getTitle().equals(getTitle())) {
+            setTitle(getTitle());
+        }
         if (lockDX) dy = line.getDY(dx);
         else dx = line.getDX(dy);
 

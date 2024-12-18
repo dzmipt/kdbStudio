@@ -54,7 +54,7 @@ public class LegendListPanel extends Box implements LegendChangeListener {
         add(title, icon, null);
     }
 
-    public void add(String title, LegendIcon icon, Action ... additionalActions) {
+    public int add(String title, LegendIcon icon, Action ... additionalActions) {
         JCheckBox checkBox = new JCheckBox(title, true);
         checkBox.addActionListener(e -> notifyListeners() );
         LegendButton button = new LegendButton(icon, line, shape, bar);
@@ -66,6 +66,11 @@ public class LegendListPanel extends Box implements LegendChangeListener {
         checkBoxes.add(checkBox);
         buttons.add(button);
         updateLayout();
+        return checkBoxes.size()-1;
+    }
+
+    public void updateTitle(int index, String title) {
+        checkBoxes.get(index).setText(title);
     }
 
     public int getListSize() {

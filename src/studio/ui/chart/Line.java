@@ -13,6 +13,7 @@ import java.awt.geom.Point2D;
 import java.awt.geom.Rectangle2D;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 public class Line extends AbstractAnnotation implements XYAnnotation {
 
@@ -150,7 +151,10 @@ public class Line extends AbstractAnnotation implements XYAnnotation {
     }
 
     public void setTitle(String title) {
+        if (Objects.equals(this.title, title)) return;
+
         this.title = title;
+        fireAnnotationChanged();
     }
 
     public LegendIcon getIcon() {

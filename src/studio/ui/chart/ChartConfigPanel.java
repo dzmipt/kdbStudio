@@ -109,7 +109,10 @@ public class ChartConfigPanel extends Box {
         String title = "Line " + (1+ listLines.getListSize());
         line.setTitle(title);
         lines.add(line);
-        listLines.add(title, line.getIcon(), detailsAction);
+        int index = listLines.add(title, line.getIcon(), detailsAction);
+        line.addChangeListener(e -> {
+            listLines.updateTitle(index, line.getTitle());
+        });
     }
 
     private void showDetails(Line line) {
