@@ -403,7 +403,7 @@ public class ChartPanel extends studio.ui.chart.patched.ChartPanel {
             newLine = new Line(this, p);
             plot.addAnnotation(newLine);
         } else {
-            newLine.addPoint(p);
+            if (! newLine.addPoint(p) ) return;
             chartChanged(new AnnotationChangeEvent(this, newLine));
             notifyListeners(new NewLineEvent(this, newLine));
             newLine = null;

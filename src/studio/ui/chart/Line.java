@@ -23,7 +23,7 @@ public class Line extends AbstractAnnotation implements XYAnnotation {
 
     private Point screenP0, screenP1;
     private boolean selected = false;
-    private boolean off = false;
+    private boolean off = true;
     private boolean init = false;
     private boolean visible = true;
 
@@ -36,11 +36,13 @@ public class Line extends AbstractAnnotation implements XYAnnotation {
         plot.getRangeAxis().addChangeListener(e -> refresh());
     }
 
-    public void addPoint(Point2D.Double p1) {
+    public boolean addPoint(Point2D.Double p1) {
         if (init) throw new IllegalStateException("The line is already initialized");
         this.p1 = p1;
         init = true;
         refresh();
+        init = ! off;
+        return init;
     }
 
     private void refresh() {
@@ -69,9 +71,9 @@ public class Line extends AbstractAnnotation implements XYAnnotation {
             Point2D.Double p1 = points.get(1);
             screenP0 = chartPanel.fromPlot(p0);
             screenP1 = chartPanel.fromPlot(p1);
-            off = true;
-        } else {
             off = false;
+        } else {
+            off = true;
             selected = false;
         }
     }
@@ -89,7 +91,7 @@ public class Line extends AbstractAnnotation implements XYAnnotation {
     }
 
     public double distanceSqr(int x, int y) {
-        if (!init || !off || !visible) return Double.POSITIVE_INFINITY;
+        if (!init || off || !visible) return Double.POSITIVE_INFINITY;
 
         double s2 = x*(screenP0.y-screenP1.y) + screenP0.x*(screenP1.y-y) + screenP1.x*(y-screenP0.y);
         double l2 = screenDist(screenP0, screenP1);
@@ -178,7 +180,7 @@ public class Line extends AbstractAnnotation implements XYAnnotation {
             return;
         }
 
-        if (!off || !visible) return;
+        if (off || !visible) return;
 
         BasicStroke stroke = icon.getStroke();
         if (selected) {
