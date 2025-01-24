@@ -783,9 +783,10 @@ public class StudioWindow extends JFrame implements WindowListener {
     public static void about() {
         HelpDialog help = new HelpDialog(activeWindow);
         Util.centerChildOnParent(help, activeWindow);
-        // help.setTitle("About Studio for kdb+");
         help.pack();
         help.setVisible(true);
+        help.toFront();
+        help.requestFocus();
     }
 
     private static volatile boolean quitting = false;
