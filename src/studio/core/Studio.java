@@ -11,7 +11,10 @@ import studio.kdb.Workspace;
 import studio.ui.StudioWindow;
 import studio.ui.Util;
 import studio.ui.action.WorkspaceSaver;
-import studio.utils.*;
+import studio.utils.Content;
+import studio.utils.FileReaderWriter;
+import studio.utils.FileWatcher;
+import studio.utils.WindowsAppUserMode;
 
 import javax.swing.*;
 import javax.swing.text.DefaultEditorKit;
@@ -73,15 +76,7 @@ public class Studio {
         return macOSSystemMenu;
     }
 
-    private static void registerForMacOSMenuJava8() throws Exception {
-        // Generate and register the OSXAdapter, passing it a hash of all the methods we wish to
-        // use as delegates for various com.apple.eawt.ApplicationListener methods
-        OSXAdapter.setQuitHandler(StudioWindow.class, StudioWindow.class.getDeclaredMethod("quit"));
-        OSXAdapter.setAboutHandler(StudioWindow.class, StudioWindow.class.getDeclaredMethod("about"));
-        OSXAdapter.setPreferencesHandler(StudioWindow.class, StudioWindow.class.getDeclaredMethod("settings"));
-    }
-
-    private static void registerForMacOSMenuJava9() throws Exception {
+    private static void registerForMacOSMenuJava9() {
         Desktop desktop = Desktop.getDesktop();
         desktop.setPreferencesHandler(e -> StudioWindow.settings());
         desktop.setAboutHandler(e -> StudioWindow.about());
@@ -94,29 +89,19 @@ public class Studio {
     private static void registerForMacOSMenu() {
         if (!Util.MAC_OS_X) return;
 
-        try {
-//            if (Util.Java8Minus) registerForMacOSMenuJava8();
-//            else registerForMacOSMenuJava9();
-            registerForMacOSMenuJava9();
-            macOSSystemMenu = true;
-        } catch (Exception e) {
-            log.error("Failed to set MacOS handlers", e);
+        if (Util.Java8Minus) {
+            JOptionPane.showMessageDialog(null,
+                    String.format("Unfortunately java %s is not supported", System.getProperty("java.version")),
+                    "Unsupported Java Version", JOptionPane.ERROR_MESSAGE );
+            System.exit(1);
         }
+
+        registerForMacOSMenuJava9();
+        macOSSystemMenu = true;
     }
 
     private static void initTaskbarIcon() {
-        if (Util.Java8Minus) return; // we are running Java 8
-
-        try {
-            // We are using reflection to keep supporting Java 8. The code is equivalent to
-            // Taskbar.getTaskbar().setIconImage(Util.LOGO_ICON.getImage());
-
-            Class taskbarClass = Class.forName("java.awt.Taskbar");
-            Object taskbar = taskbarClass.getDeclaredMethod("getTaskbar").invoke(taskbarClass);
-            taskbarClass.getDeclaredMethod("setIconImage", Image.class).invoke(taskbar, Util.LOGO_ICON.getImage());
-        } catch (Exception e) {
-            log.error("Failed to set Taskbar icon", e);
-        }
+        Taskbar.getTaskbar().setIconImage(Util.LOGO_ICON.getImage());
     }
 
 
