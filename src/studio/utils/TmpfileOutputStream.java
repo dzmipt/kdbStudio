@@ -24,7 +24,7 @@ public class TmpfileOutputStream extends OutputStream {
         this.filename = filename;
         tmpFile = Paths.get(filename).resolveSibling(FilenameUtils.getName(filename)
                         + "." + System.currentTimeMillis() + ".tmp");
-        log.info("Saving to tmp file {}", tmpFile.toString());
+        log.debug("Saving to tmp file {}", tmpFile.toString());
         Files.deleteIfExists(tmpFile);
         outputStream = new FileOutputStream(tmpFile.toFile());
     }
@@ -57,7 +57,7 @@ public class TmpfileOutputStream extends OutputStream {
     public void writeCompleted() throws IOException {
         outputStream.close();
         Files.move(tmpFile, Paths.get(filename), REPLACE_EXISTING);
-        log.info("moved {} -> {}", tmpFile.toString(), filename);
+        log.debug("moved {} -> {}", tmpFile.toString(), filename);
     }
 
 }

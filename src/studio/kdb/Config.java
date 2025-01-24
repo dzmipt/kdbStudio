@@ -208,8 +208,13 @@ public class Config extends AbstractConfig {
 	}
 
     public void saveWorkspace(Workspace workspace) {
+        Properties previousConfig = new Properties();
+        previousConfig.putAll(workspaceConfig);
         workspaceConfig.clear();
         workspace.save(workspaceConfig);
+
+        if (previousConfig.equals(workspaceConfig)) return;
+
         workspaceConfig.save();
     }
 
