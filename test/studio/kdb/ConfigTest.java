@@ -56,8 +56,8 @@ public class ConfigTest {
         Server server2 = new Server("testServer2", "localhost",1113,
                 "user", "pwd", Color.WHITE, DefaultAuthenticationMechanism.NAME, false, parent2);
 
-        config.addServers(false, server1, server2);
-        assertEquals(2, config.getServerNames().size());
+        config.getServerConfig().addServers(false, server1, server2);
+        assertEquals(2, config.getServerConfig().getServerNames().size());
         assertEquals(2, config.getServerTree().getChild("addServerTestFolder").getChildCount() );
     }
 
@@ -71,12 +71,12 @@ public class ConfigTest {
         Server server2 = new Server("testServer1", "localhost",1113,
                 "user", "pwd", Color.WHITE, DefaultAuthenticationMechanism.NAME, false, parent1);
 
-        config.addServers(false, server1);
-        assertThrows(IllegalArgumentException.class, ()->config.addServer(server2) );
+        config.getServerConfig().addServers(false, server1);
+        assertThrows(IllegalArgumentException.class, ()->config.getServerConfig().addServer(server2) );
 
-        assertEquals(1, config.getServerNames().size());
+        assertEquals(1, config.getServerConfig().getServerNames().size());
         assertEquals(1, config.getServerTree().getChild("sameNameTestFolder").getChildCount() );
-        assertEquals(server1.getPort(), config.getServer("sameNameTestFolder/testServer1").getPort());
+        assertEquals(server1.getPort(), config.getServerConfig().getServer("sameNameTestFolder/testServer1").getPort());
     }
 
     @Test
@@ -106,7 +106,7 @@ public class ConfigTest {
     public void testServerHistory() {
         assertEquals(0, config.getServerHistory().size());
 
-        config.addServer(server);
+        config.getServerConfig().addServer(server);
         assertEquals(0, config.getServerHistory().size());
         config.addServerToHistory(server);
         assertEquals(1, config.getServerHistory().size());
@@ -119,7 +119,7 @@ public class ConfigTest {
         Server server2 = server.newName("testServer2");
         Server server3 = server.newName("testServer3");
 
-        config.addServers(false, server1, server2, server3);
+        config.getServerConfig().addServers(false, server1, server2, server3);
         config.addServerToHistory(server1);
         config.addServerToHistory(server2);
         assertEquals(3, config.getServerHistory().size());
@@ -173,7 +173,7 @@ public class ConfigTest {
 
     @Test
     public void upgrade13Test() throws IOException {
-        config.addServer(server);
+        config.getServerConfig().addServer(server);
 
         Config newConfig = copyConfig(config, p -> {
             p.setProperty("version", "1.2");
@@ -200,25 +200,25 @@ public class ConfigTest {
         p.setProperty("server.server1.authenticationMechanism", DefaultAuthenticationMechanism.NAME);
 
         Config config = getConfig(p);
-        assertEquals(1, config.getServers().length);
+        assertEquals(1, config.getServerConfig().getServers().length);
 
         //duplicate server
         p.setProperty("Servers", "server1,server1");
         config = getConfig(p);
-        assertEquals(1, config.getServers().length);
+        assertEquals(1, config.getServerConfig().getServers().length);
 
         //undefined servers should be filled with defaults
         p.setProperty("Servers", "server2,server1");
         config = getConfig(p);
-        assertEquals(2, config.getServers().length);
+        assertEquals(2, config.getServerConfig().getServers().length);
 
         //errors should not fail the whole process
         p.setProperty("server.server1.port", "not a number");
         p.setProperty("server.server1.backgroundColor", "very strange");
         p.setProperty("server.server1.authenticationMechanism", "unknown auth");
         config = getConfig(p);
-        assertEquals(1, config.getServers().length);
-        assertEquals("server2", config.getServers()[0].getFullName());
+        assertEquals(1, config.getServerConfig().getServers().length);
+        assertEquals("server2", config.getServerConfig().getServers()[0].getFullName());
 
     }
     
@@ -228,14 +228,14 @@ public class ConfigTest {
         Server server2 = server.newName("comma,name");
         Server server3 = server.newName("testServer1");
 
-        assertThrows(IllegalArgumentException.class, ()->config.addServers(false, server1, server2, server3));
-        assertEquals(0, config.getServers().length);
+        assertThrows(IllegalArgumentException.class, ()->config.getServerConfig().addServers(false, server1, server2, server3));
+        assertEquals(0, config.getServerConfig().getServers().length);
 
-        String[] errors = config.addServers(true, server1, server2, server3);
+        String[] errors = config.getServerConfig().addServers(true, server1, server2, server3);
         assertNull(errors[0]);
         assertNotNull(errors[1]);
         assertNotNull(errors[2]);
-        Collection<String> names = config.getServerNames();
+        Collection<String> names = config.getServerConfig().getServerNames();
         assertEquals(1, names.size());
         assertTrue(names.contains(server1.getFullName()));
         ServerTreeNode serverTree = config.getServerTree();

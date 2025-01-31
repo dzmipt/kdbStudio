@@ -33,7 +33,7 @@ public class ServerTest extends StudioTest {
                 DefaultAuthenticationMechanism.NAME, false);
         server2 = new Server(NAME2, "testHost", 1111, "user", "password", color2,
                 DefaultAuthenticationMechanism.NAME, false);
-        Config.getInstance().addServers(false, server1, server2);
+        Config.getInstance().getServerConfig().addServers(false, server1, server2);
     }
 
     @AfterClass

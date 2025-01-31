@@ -2,6 +2,7 @@ package studio.kdb;
 
 import studio.core.Credentials;
 import studio.core.DefaultAuthenticationMechanism;
+import studio.utils.QConnection;
 
 import java.awt.*;
 import java.util.Collections;
@@ -11,26 +12,23 @@ import java.util.Properties;
 import java.util.stream.Collectors;
 
 public class Server {
-    private String authenticationMechanism = DefaultAuthenticationMechanism.NAME;
-    private Color backgroundColor = Color.white;
-    private String name = "";
-    private String host = "";
-    private int port = 0;
-    private String username;
-    private String password;
-    private boolean useTLS = false;
-    private List<String> folderPath = (List<String>) Collections.EMPTY_LIST;
+    private final String authenticationMechanism;
+    private final Color backgroundColor;
+    private final String name;
+    private final QConnection conn;
+    private final List<String> folderPath;
+    private final static List<String> ROOT_FOLDER = (List<String>) Collections.EMPTY_LIST;
 
-    public static final Server NO_SERVER = new Server();
+    public static final Server NO_SERVER = new Server("", "", 0, "", "", Color.WHITE, DefaultAuthenticationMechanism.NAME, false);
 
     public Properties getAsProperties() {
         Properties p = new Properties();
         p.put("NAME", name);
-        p.put("HOST", host);
-        p.put("PORT", port);
-        p.put("USERNAME", username);
-        p.put("PASSWORD", password);
-        p.put("USETLS", useTLS);
+        p.put("HOST", conn.getHost());
+        p.put("PORT", conn.getPort());
+        p.put("USERNAME", conn.getUser());
+        p.put("PASSWORD", conn.getPassword());
+        p.put("USETLS", conn.isUseTLS());
         return p;
     }
 
@@ -43,35 +41,27 @@ public class Server {
     }
 
     public String getPassword() {
-        return password;
+        return conn.getPassword();
     }
 
     public String getUsername() {
-        return username;
+        return conn.getUser();
     }
 
     public static Server newServer() {
-        Server server = new Server();
-        server.authenticationMechanism = Config.getInstance().getDefaultAuthMechanism();
-        Credentials credentials = Config.getInstance().getDefaultCredentials(server.authenticationMechanism);
-        server.username = credentials.getUsername();
-        server.password = credentials.getPassword();
-        return server;
+        String authMethod = Config.getInstance().getDefaultAuthMechanism();
+        Credentials credentials = Config.getInstance().getDefaultCredentials(authMethod);
+        QConnection conn = new QConnection("", 0, credentials.getUsername(), credentials.getPassword(), false);
+        return new Server("", conn, authMethod, Color.WHITE, ROOT_FOLDER);
     }
-
-    private Server() {}
 
     @Override
     public boolean equals(Object obj) {
         if (!(obj instanceof Server)) return false;
         Server s = (Server) obj;
         return s.name.equals(name)
-                && Objects.equals(s.host, host)
-                && s.port == port
-                && Objects.equals(s.username, username)
-                && Objects.equals(s.password, password)
-                && Objects.equals(s.authenticationMechanism ,authenticationMechanism)
-                && s.useTLS == useTLS;
+                && Objects.equals(s.conn, conn)
+                && Objects.equals(s.authenticationMechanism ,authenticationMechanism);
     }
 
     @Override
@@ -79,47 +69,34 @@ public class Server {
         return name.hashCode();
     }
 
-    public Server(Server s) {
-        this.name = s.name;
-        this.host = s.host;
-        this.port = s.port;
-        this.username = s.username;
-        this.password = s.password;
-        this.backgroundColor = s.backgroundColor;
-        this.authenticationMechanism = s.authenticationMechanism;
-        this.useTLS = s.useTLS;
-        this.folderPath = s.folderPath;
-    }
-
     public Server(String name, String host, int port, String username, String password, Color backgroundColor, String authenticationMechanism, boolean useTLS) {
-        this.name = name;
-        this.host = host;
-        this.port = port;
-        this.username = username;
-        this.password = password;
-        this.backgroundColor = backgroundColor;
-        this.authenticationMechanism = authenticationMechanism;
-        this.useTLS = useTLS;
+        this(name, host, port, username, password, backgroundColor, authenticationMechanism, useTLS, null);
     }
 
     public Server(String name, String host, int port, String username, String password, Color backgroundColor,
                   String authenticationMechanism, boolean useTLS, ServerTreeNode parent) {
-        this(name, host, port, username, password, backgroundColor, authenticationMechanism, useTLS);
-        if (parent != null) {
-            folderPath = parent.getFolderPath();
-        }
+        this(name, new QConnection(host, port, username, password, useTLS), authenticationMechanism, backgroundColor, parent);
+    }
+
+    public Server(String name, QConnection conn, String authMethod, Color bgColor, ServerTreeNode parent) {
+        this(name, conn, authMethod, bgColor,
+                parent == null ? ROOT_FOLDER : parent.getFolderPath() );
+    }
+
+    public Server(String name, QConnection conn, String authMethod, Color bgColor, List<String> folderPath) {
+        this.name = name;
+        this.conn = conn;
+        this.backgroundColor = bgColor;
+        this.authenticationMechanism = authMethod;
+        this.folderPath = folderPath;
     }
 
     public Server newName(String name) {
-        Server server = new Server(this);
-        server.name = name;
-        return server;
+        return new Server(name, conn, authenticationMechanism, backgroundColor, folderPath);
     }
 
     public Server newAuthMethod(String authMethod){
-        Server server = new Server(this);
-        server.authenticationMechanism = authMethod;
-        return server;
+        return new Server(name, conn, authMethod, backgroundColor, folderPath);
     }
 
     public String getName() {
@@ -136,11 +113,11 @@ public class Server {
     }
 
     public String getHost() {
-        return host;
+        return conn.getHost();
     }
 
     public int getPort() {
-        return port;
+        return conn.getPort();
     }
 
     public String toString() {
@@ -148,23 +125,23 @@ public class Server {
     }
 
     public String getConnectionString() {
-        return "`:" + host + ":" + port;
+        return "`:" + getHost() + ":" + getPort();
     }
 
     public String getConnectionStringWithPwd() {
-        return "`:" + host + ":" + port + ":" + username + ":" + password;
+        return conn.toString();
     }
 
     public String getDescription(boolean fullName) {
         String serverName = fullName ? getFullName() : name;
-        String connection = host + ":" + port;
+        String connection = getHost() + ":" + getPort();
         if (serverName.equals("")) return connection;
 
         return serverName + " (" + connection + ")";
     }
 
     public boolean getUseTLS(){
-      return useTLS;
+      return conn.isUseTLS();
     }
 
     public List<String> getFolderPath() {
@@ -172,9 +149,7 @@ public class Server {
     }
 
     public Server newFolder(ServerTreeNode folder) {
-        Server newServer = new Server(this);
-        newServer.folderPath = folder.getFolderPath();
-        return newServer;
+        return new Server(name, conn, authenticationMechanism, backgroundColor, folder.getFolderPath());
     }
 
 }

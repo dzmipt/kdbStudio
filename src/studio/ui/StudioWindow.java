@@ -551,7 +551,7 @@ public class StudioWindow extends JFrame implements WindowListener {
                             stopAction.actionPerformed(e);
 
                         Server newServer = f.getServer();
-                        CONFIG.replaceServer(editor.getServer(), newServer);
+                        CONFIG.getServerConfig().replaceServer(editor.getServer(), newServer);
                         setServer(newServer);
                         refreshAll();
                     }
@@ -564,7 +564,7 @@ public class StudioWindow extends JFrame implements WindowListener {
                     f.alignAndShow();
                     if (f.getResult() == ACCEPTED) {
                         Server s = f.getServer();
-                        CONFIG.addServer(s);
+                        CONFIG.getServerConfig().addServer(s);
                         setServer(s);
                         refreshAll();
                     }
@@ -582,9 +582,9 @@ public class StudioWindow extends JFrame implements WindowListener {
                             null);      // no default selection
 
                     if (choice == 0) {
-                        CONFIG.removeServer(editor.getServer());
+                        CONFIG.getServerConfig().removeServer(editor.getServer());
 
-                        Server[] servers = CONFIG.getServers();
+                        Server[] servers = CONFIG.getServerConfig().getServers();
 
                         if (servers.length > 0)
                             setServer(servers[0]);
@@ -916,7 +916,7 @@ public class StudioWindow extends JFrame implements WindowListener {
         }
 
         cloneMenu.removeAll();
-        Server[] servers = CONFIG.getServers();
+        Server[] servers = CONFIG.getServerConfig().getServers();
         int count = Math.min(MAX_SERVERS_TO_CLONE, servers.length);
         for (int i = 0; i < count; i++) {
             final Server s = servers[i];
@@ -928,7 +928,7 @@ public class StudioWindow extends JFrame implements WindowListener {
 
                 if (f.getResult() == ACCEPTED) {
                     clone = f.getServer();
-                    CONFIG.addServer(clone);
+                    CONFIG.getServerConfig().addServer(clone);
                     setServer(clone);
                     refreshAll();
                 }
@@ -1080,9 +1080,9 @@ public class StudioWindow extends JFrame implements WindowListener {
 
     private void selectServerName() {
         String selection = comboServer.getSelectedItem().toString();
-        if(! CONFIG.getServerNames().contains(selection)) return;
+        if(! CONFIG.getServerConfig().getServerNames().contains(selection)) return;
 
-        setServer(CONFIG.getServer(selection));
+        setServer(CONFIG.getServerConfig().getServer(selection));
         refreshServer();
     }
 
@@ -1111,7 +1111,7 @@ public class StudioWindow extends JFrame implements WindowListener {
 
     private void refreshServerList() {
         Server server = editor.getServer();
-        Collection<String> names = CONFIG.getServerNames();
+        Collection<String> names = CONFIG.getServerConfig().getServerNames();
         String name = server == Server.NO_SERVER ? "" : server.getFullName();
         if (!names.contains(name)) {
             List<String> newNames = new ArrayList<>();

@@ -35,7 +35,7 @@ public class QPadImport {
             if (dialog.getResult() == EscapeDialog.DialogResult.CANCELLED) return;
 
             if (dialog.getImportTo() == QPadImportDialog.Location.Overwrite) {
-                Config.getInstance().setServerTree(new ServerTreeNode());
+                Config.getInstance().getServerConfig().setRoot(new ServerTreeNode());
             }
 
             String rootName = dialog.getRootName().trim();
@@ -55,7 +55,7 @@ public class QPadImport {
             List<Server> serverList = QPadConverter.importFromFiles(new File(dialog.getServersCfgLocation()),
                     rootToImport, dialog.getDefaultAuthenticationMechanism(), dialog.getCredentials());
             Server[] servers = serverList.toArray(new Server[0]);
-            String[] errors = Config.getInstance().addServers(true, servers);
+            String[] errors = Config.getInstance().getServerConfig().addServers(true, servers);
 
             StringBuilder errorBuilder = new StringBuilder();
             StringBuilder successfulBuilder = new StringBuilder();
