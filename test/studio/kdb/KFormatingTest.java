@@ -1,21 +1,13 @@
 package studio.kdb;
 
-import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-
-import java.util.Locale;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 public class KFormatingTest {
 
     private KFormatContext comma;
-
-    @BeforeAll
-    public static void initLocale() {
-        Locale.setDefault(Locale.US);
-    }
 
     @BeforeEach
     public void init() {
