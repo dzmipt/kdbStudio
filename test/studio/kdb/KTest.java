@@ -5,6 +5,7 @@ import org.junit.jupiter.api.Test;
 
 import java.time.*;
 import java.util.Calendar;
+import java.util.Locale;
 import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -12,6 +13,11 @@ import static org.junit.jupiter.api.Assertions.*;
 public class KTest {
 
     private static int maxFractionDigits = 7;
+
+    @BeforeAll
+    public static void initLocale() {
+        Locale.setDefault(Locale.US);
+    }
 
     @BeforeAll
     public static void initMaxFractionDigits() {
