@@ -110,8 +110,8 @@ public class Config extends AbstractConfig {
     private static final String VERSION = VERSION14;
 
 
-    private PropertiesConfig workspaceConfig;
-    private ServerConfig serverConfig;
+    protected PropertiesConfig workspaceConfig;
+    protected ServerConfig serverConfig;
     private HistoricalList<Server> serverHistory;
 
     private static final String CONN_COL_WORDS = "server, host, connection, handle";
@@ -175,8 +175,12 @@ public class Config extends AbstractConfig {
         return serverConfig;
     }
 
-    private String getWorkspaceFilename() {
+    protected String getWorkspaceFilename() {
         return EnvConfig.getFilepath(WORKSPACE_FILENAME);
+    }
+
+    protected String getServerConfigFilename() {
+        return EnvConfig.getFilepath(SERVERCONFIG_FILENAME);
     }
 
 	public Workspace loadWorkspace() {
@@ -314,9 +318,9 @@ public class Config extends AbstractConfig {
         return instance;
     }
 
-    private void init() {
+    protected void init() {
         workspaceConfig = new PropertiesConfig(getWorkspaceFilename());
-        serverConfig = new ServerConfig(EnvConfig.getFilepath(SERVERCONFIG_FILENAME));
+        serverConfig = new ServerConfig(getServerConfigFilename());
 
         checkForUpgrade();
         initTableConnExtractor();
@@ -348,51 +352,6 @@ public class Config extends AbstractConfig {
         save();
     }
 
-//    private void upgradeTo12() {
-//        try {
-//            log.info("Found old config. Converting...");
-//            String[] names = config.getProperty("Servers", "").split(",");
-//            List<Server> list = new ArrayList<>();
-//            for (String name : names) {
-//                name = name.trim();
-//                if (name.equals("")) continue;
-//                try {
-//                    Server server = initServerFromKey(name, null).newName(name);
-//                    list.add(server);
-//                } catch (IllegalArgumentException e) {
-//                    log.warn("Error during parsing server " + name, e);
-//                }
-//            }
-//            config.remove("Servers");
-//            config.entrySet().removeIf(e -> e.getKey().toString().startsWith("server."));
-//            config.setProperty("version", VERSION12);
-//            initServers();
-//            String[] results = addServers(true, list.toArray(new Server[0]));
-//            boolean error = false;
-//            for(String result: results) {
-//                if (result == null) continue;
-//                if (!error) {
-//                    error = true;
-//                    log.warn("Found errors during conversion");
-//                }
-//                log.warn(result);
-//            }
-//            log.info("Done");
-//        } catch (IllegalArgumentException e) {
-//            log.error("Oops... Can't convert", e);
-//        }
-//    }
-//
-//    private void upgradeTo13() {
-//        String fullName = config.getProperty("lruServer", "");
-//        config.remove("lruServer");
-//        if (! fullName.equals("")) {
-//            Server server = getServer(fullName);
-//            if (server != Server.NO_SERVER) addServerToHistory(server);
-//        }
-//        save();
-//    }
-
     private void migrateSaveOnExit() {
         String oldSaveOnExitKey = "isSaveOnExit";
         if (config.containsKey(oldSaveOnExitKey)) {
@@ -411,22 +370,18 @@ public class Config extends AbstractConfig {
     }
 
     private void checkForUpgrade() {
-        if (config.size() == 0) {
+        if (config.isEmpty()) {
             log.info("Found no or empty config");
             config.setProperty("version", VERSION);
-
-//            initServers();
             initServerHistory();
             return;
         }
 
-        if (serverConfig.tryToLoadOldConifg(config)) {
-            save();
-        }
 
-        if (config.getProperty("version", OLD_VERSION).equals(OLD_VERSION)) {
-//            upgradeTo12();
-            config.setProperty("version", VERSION12);
+        String version = config.getProperty("version", OLD_VERSION);
+        if (version.equals(OLD_VERSION) || version.equals(VERSION12)) {
+            log.warn("Very old version: {}. Will try to upgrade...", version);
+            config.setProperty("version", VERSION13);
         }
 
 
@@ -434,15 +389,13 @@ public class Config extends AbstractConfig {
             upgradeTo14();
         }
 
-//        initServers();
-        if (config.getProperty("version").equals(VERSION12)) {
-            initServerHistory();
-//            upgradeTo13();
-            config.setProperty("version", VERSION13);
-        }
         initServerHistory();
         migrateSaveOnExit();
         removeServerListConfig();
+
+        if (serverConfig.tryToLoadOldConifg(config)) {
+            save();
+        }
 
         config.setProperty("version", VERSION);
     }

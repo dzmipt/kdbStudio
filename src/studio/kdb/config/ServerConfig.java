@@ -58,6 +58,7 @@ public class ServerConfig {
         }
         try(FileReader reader = new FileReader(filename)) {
             ServerTreeNode node = gson.fromJson(reader, ServerTreeNode.class);
+            if (node == null) node = new ServerTreeNode();
             if (node.isFolder()) return node;
 
             ServerTreeNode root = new ServerTreeNode();
@@ -122,9 +123,9 @@ public class ServerConfig {
             throw new IllegalArgumentException("Server with full name " + fullName + " already exists");
         }
 
-//        if (serverNames.contains(fullName)) {
-//            throw new IllegalArgumentException("Server with full name " + fullName + " already exists");
-//        }
+        if (serverNames.contains(fullName)) {
+            throw new IllegalArgumentException("Server with full name " + fullName + " already exists");
+        }
         if (name.trim().isEmpty()) {
             throw new IllegalArgumentException("Server name can't be empty");
         }
@@ -134,9 +135,6 @@ public class ServerConfig {
         if (name.contains("/")) {
             throw new IllegalArgumentException("Server name can't contains /");
         }
-
-        servers.put(fullName, server);
-        serverNames.add(fullName);
     }
 
 

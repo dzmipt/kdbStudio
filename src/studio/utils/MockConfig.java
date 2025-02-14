@@ -16,12 +16,21 @@ public class MockConfig extends Config {
 
     private static boolean initialized = false;
 
-    public static synchronized void init() throws IOException {
+    public static File propertiesFile;
+    public static File workspaceFile;
+    public static File serversFile;
+
+    public static synchronized void mock() throws IOException {
         if (initialized) return;
 
         FilesBackup.setEnabled(false);
-        File configFileName = File.createTempFile("kdbStudio", ".properties");
-        Config.instance = new MockConfig(configFileName.getAbsolutePath());
+        propertiesFile = File.createTempFile("kdbStudio", ".properties");
+        propertiesFile.deleteOnExit();
+        workspaceFile = File.createTempFile("kdbStudioWorkspace", ".properties");
+        workspaceFile.deleteOnExit();
+        serversFile = File.createTempFile("kdbStudioServers", ".json");
+        serversFile.deleteOnExit();
+        Config.instance = new MockConfig(propertiesFile.getAbsolutePath());
         LoggerContext context = LoggerContext.getContext(false);
         for (Logger logger: context.getLoggers() ) {
             Appender[] appenders = logger.getAppenders().values().toArray(new Appender[0]);
@@ -37,15 +46,25 @@ public class MockConfig extends Config {
         initialized = true;
     }
 
+    public void reload() {
+        this.config = new PropertiesConfig(getFilename());
+        super.init();
+    }
+
+    @Override
+    protected String getWorkspaceFilename() {
+        return workspaceFile.getAbsolutePath();
+    }
+
+    @Override
+    protected String getServerConfigFilename() {
+        return serversFile.getAbsolutePath();
+    }
+
     private Workspace workspace;
 
     private MockConfig(String filename) {
         super(filename);
-    }
-
-    @Override
-    public void save() {
-        // nothing
     }
 
     @Override

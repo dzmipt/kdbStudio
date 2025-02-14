@@ -67,7 +67,7 @@ abstract public class StudioTest extends AssertJSwingJUnitTestCase {
         EnvConfig.setBaseFolder(tmpConfigFolder.toString());
         System.out.println("Setup temporary folder for configs: " + tmpConfigFolder.toString());
 
-        MockConfig.init();
+        MockConfig.mock();
     }
 
     @AfterClass

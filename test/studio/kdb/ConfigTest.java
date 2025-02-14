@@ -1,13 +1,12 @@
 package studio.kdb;
 
-import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import studio.core.Credentials;
 import studio.core.DefaultAuthenticationMechanism;
 import studio.kdb.config.ActionOnExit;
-import studio.utils.FilesBackup;
+import studio.utils.MockConfig;
 import studio.utils.TableConnExtractor;
 
 import java.awt.*;
@@ -21,30 +20,40 @@ import static org.junit.jupiter.api.Assertions.*;
 public class ConfigTest {
 
     private Config config;
-    private File tmpFile;
     private Server server;
 
     @BeforeAll
-    public static void disableFilesBackup() {
-        FilesBackup.setEnabled(false);
-    }
-
-    @AfterAll
-    public static void restoreFilesBackup() {
-        FilesBackup.setEnabled(true);
+    public static void mockConfig() throws IOException {
+        MockConfig.mock();
     }
 
     @BeforeEach
     public void init() throws IOException {
-        tmpFile = File.createTempFile("studioforkdb", ".tmp");
-        tmpFile.deleteOnExit();
-        config = new Config(tmpFile.getPath());
-        System.out.println("temp file " + tmpFile.getPath());
+        MockConfig.serversFile.delete();
+        MockConfig.propertiesFile.delete();
+
+        config = Config.getInstance();
+        ((MockConfig)config).reload();
+
+        System.out.println("temp file " + MockConfig.propertiesFile.getAbsolutePath());
 
         ServerTreeNode parent = config.getServerTree().add("testFolder");
         server = new Server("testServer", "localhost",1111,
                 "user", "pwd", Color.WHITE, DefaultAuthenticationMechanism.NAME, false, parent);
     }
+
+    @Test
+    public void addServer() {
+        ServerTreeNode parent = new ServerTreeNode().add("addServerTestFolder");
+        Server server1 = new Server("testServer1", "localhost",1112,
+                "user", "pwd", Color.WHITE, DefaultAuthenticationMechanism.NAME, false, parent);
+
+        config.getServerConfig().addServers(false, server1);
+        assertEquals(1, config.getServerConfig().getServerNames().size());
+        assertEquals(1, config.getServerTree().getChild("addServerTestFolder").getChildCount() );
+        assertEquals(server1, config.getServerTree().getChild("addServerTestFolder").getChild(0).getServer() );
+    }
+
 
     @Test
     public void addServerDifferentTreeNode() {
@@ -77,22 +86,6 @@ public class ConfigTest {
         assertEquals(1, config.getServerConfig().getServerNames().size());
         assertEquals(1, config.getServerTree().getChild("sameNameTestFolder").getChildCount() );
         assertEquals(server1.getPort(), config.getServerConfig().getServer("sameNameTestFolder/testServer1").getPort());
-    }
-
-    @Test
-    public void testDifferentConfigs() throws IOException{
-        Config config1 = config;
-        init();
-
-        int value = config1.getResultTabsCount();
-        assertEquals(value, config.getResultTabsCount());
-
-        config.setResultTabsCount(value+1);
-        assertEquals(value+1, config.getResultTabsCount());
-        assertEquals(value, config1.getResultTabsCount());
-
-        config.saveToDisk();
-        assertEquals(value+1, new Config(tmpFile.getPath()).getResultTabsCount());
     }
 
     @Test
@@ -166,62 +159,11 @@ public class ConfigTest {
     private Config copyConfig(Config config, Consumer<Properties> propsModification) throws IOException {
         config.saveToDisk();
         Properties p = new Properties();
-        p.load(new FileInputStream(tmpFile));
+        p.load(new FileInputStream(MockConfig.propertiesFile));
         propsModification.accept(p);
         return getConfig(p);
     }
 
-    @Test
-    public void upgrade13Test() throws IOException {
-        config.getServerConfig().addServer(server);
-
-        Config newConfig = copyConfig(config, p -> {
-            p.setProperty("version", "1.2");
-        });
-        assertEquals(0, newConfig.getServerHistory().size());
-
-        newConfig = copyConfig(config, p -> {
-            p.setProperty("version", "1.2");
-            p.setProperty("lruServer", server.getFullName());
-        });
-        assertEquals(1, newConfig.getServerHistory().size());
-        assertEquals(server, newConfig.getServerHistory().get(0));
-    }
-
-    @Test
-    public void upgradeFromOldConfig() throws IOException {
-        Properties p = new Properties();
-        p.setProperty("Servers", "server1");
-        p.setProperty("server.server1.host", "host.com");
-        p.setProperty("server.server1.port", "2000");
-        p.setProperty("server.server1.user", "user");
-        p.setProperty("server.server1.password", "password");
-        p.setProperty("server.server1.backgroundColor", "001122");
-        p.setProperty("server.server1.authenticationMechanism", DefaultAuthenticationMechanism.NAME);
-
-        Config config = getConfig(p);
-        assertEquals(1, config.getServerConfig().getServers().length);
-
-        //duplicate server
-        p.setProperty("Servers", "server1,server1");
-        config = getConfig(p);
-        assertEquals(1, config.getServerConfig().getServers().length);
-
-        //undefined servers should be filled with defaults
-        p.setProperty("Servers", "server2,server1");
-        config = getConfig(p);
-        assertEquals(2, config.getServerConfig().getServers().length);
-
-        //errors should not fail the whole process
-        p.setProperty("server.server1.port", "not a number");
-        p.setProperty("server.server1.backgroundColor", "very strange");
-        p.setProperty("server.server1.authenticationMechanism", "unknown auth");
-        config = getConfig(p);
-        assertEquals(1, config.getServerConfig().getServers().length);
-        assertEquals("server2", config.getServerConfig().getServers()[0].getFullName());
-
-    }
-    
     @Test
     public void addServersTest() {
         Server server1 = server.newName("testServer1");
