@@ -49,6 +49,19 @@ public class AuthenticationManagerTest {
     @BeforeAll
     public static void prepare() throws IOException {
         tmpDir = Files.createTempDirectory("kdbStudioPlugins");
+        Runtime.getRuntime().addShutdownHook(new Thread("Cleanup test plugin folder") {
+            @Override
+            public void run() {
+                try {
+                    FileUtils.deleteDirectory(tmpDir.toFile());
+                } catch (IOException e) {
+                    System.err.println("Error in deleting folder: " + tmpDir);
+                    e.printStackTrace(System.err);
+                }
+            }
+        });
+
+
         Path pluginDir = Files.createDirectory(tmpDir.resolve("plugins"));
         Path folderDir = pluginDir.resolve("folder");
         Files.createDirectory(folderDir);
@@ -104,7 +117,6 @@ public class AuthenticationManagerTest {
     @AfterAll
     public static void cleanup() throws IOException {
         System.setProperty("user.dir", userDir);
-        FileUtils.deleteDirectory(tmpDir.toFile());
     }
 
     private static void buildJar(Path jarFile, Class... classes) throws IOException {
