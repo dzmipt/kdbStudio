@@ -158,10 +158,12 @@ public class ConfigTest {
     
     private Config copyConfig(Config config, Consumer<Properties> propsModification) throws IOException {
         config.saveToDisk();
-        Properties p = new Properties();
-        p.load(new FileInputStream(MockConfig.propertiesFile));
-        propsModification.accept(p);
-        return getConfig(p);
+        try (InputStream in = new FileInputStream(MockConfig.propertiesFile)) {
+            Properties p = new Properties();
+            p.load(in);
+            propsModification.accept(p);
+            return getConfig(p);
+        }
     }
 
     @Test

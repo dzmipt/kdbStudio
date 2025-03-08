@@ -57,11 +57,9 @@ public class PropertiesConfig extends Properties {
         }
 
         if (Files.exists(file)) {
-            try {
-                InputStream in = Files.newInputStream(file);
+            try (InputStream in = Files.newInputStream(file)) {
                 load(in);
                 log.info("Loaded {} properties from config {}", size(), file);
-                in.close();
             } catch (IOException e) {
                 log.error("Can't read configuration from file {}", filename, e);
             }
