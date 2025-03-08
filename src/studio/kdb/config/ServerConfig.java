@@ -77,7 +77,6 @@ public class ServerConfig {
             Writer writer = new OutputStreamWriter(out);
             gson.toJson(serverTree, writer);
             writer.close();
-            out.writeCompleted();
         } catch (IOException e) {
             log.error("Error in writing server config to {}", filename, e);
         }

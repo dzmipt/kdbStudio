@@ -44,7 +44,7 @@ public class PropertiesConfig extends Properties {
         return config;
     }
 
-    protected void load() {
+    protected synchronized void load() {
         Path file = Paths.get(filename);
         Path dir = file.getParent();
         if (Files.notExists(dir)) {
@@ -92,7 +92,7 @@ public class PropertiesConfig extends Properties {
         return null;
     }
 
-    public void saveToDisk() {
+    public synchronized void saveToDisk() {
         ByteArrayOutputStream buffer = getStreamToSave();
         if (buffer == null) return;
 
@@ -124,8 +124,6 @@ public class PropertiesConfig extends Properties {
 
             String lastComment = "#Generated from process with pid " + ProcessHandle.current().pid();
             out.write(lastComment.getBytes(CHARSET));
-
-            out.writeCompleted();
 
             propertiesToSave = null;
         } catch (IOException e) {

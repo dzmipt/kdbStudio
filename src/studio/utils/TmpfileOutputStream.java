@@ -19,6 +19,7 @@ public class TmpfileOutputStream extends OutputStream {
     private final String filename;
     private final Path tmpFile;
     private final FileOutputStream outputStream;
+    private boolean closed = false;
 
     public TmpfileOutputStream(String filename) throws IOException {
         this.filename = filename;
@@ -51,13 +52,12 @@ public class TmpfileOutputStream extends OutputStream {
 
     @Override
     public void close() throws IOException {
-        outputStream.close();
-    }
+        if (closed) return;
 
-    public void writeCompleted() throws IOException {
         outputStream.close();
         Files.move(tmpFile, Paths.get(filename), REPLACE_EXISTING);
         log.debug("moved {} -> {}", tmpFile.toString(), filename);
+        closed = true;
     }
 
 }
