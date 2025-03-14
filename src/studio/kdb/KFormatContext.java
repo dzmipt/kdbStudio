@@ -1,12 +1,15 @@
 package studio.kdb;
 
 import java.text.DecimalFormat;
+import java.text.DecimalFormatSymbols;
 import java.text.NumberFormat;
+import java.util.Locale;
 
 public class KFormatContext {
 
-    private final static NumberFormat RAW_FORMAT = new DecimalFormat("#.#######");
-    private final static NumberFormat COMMA_FORMAT = new DecimalFormat("#,###.#######");
+    private final static DecimalFormatSymbols formatSymbols = DecimalFormatSymbols.getInstance(Locale.US);
+    private final static NumberFormat RAW_FORMAT = new DecimalFormat("#.#######", formatSymbols);
+    private final static NumberFormat COMMA_FORMAT = new DecimalFormat("#,###.#######", formatSymbols);
 
     static {
         setMaxFractionDigits(Config.getInstance().getInt(Config.MAX_FRACTION_DIGITS));

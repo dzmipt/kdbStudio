@@ -4,7 +4,6 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import java.io.File;
-import java.io.FilenameFilter;
 import java.io.IOException;
 import java.net.JarURLConnection;
 import java.net.URL;
@@ -44,6 +43,31 @@ public class AuthenticationManager {
         authMechanisms = auths.toArray(new String[0]);
     }
 
+    private void tryLoadPlugins(ClassLoader loader, URL jarFile) throws IOException {
+        JarURLConnection conn = (JarURLConnection) jarFile.openConnection();
+        JarFile jar = conn.getJarFile();
+
+        Enumeration e = jar.entries();
+        while (e.hasMoreElements()) {
+            JarEntry entry = (JarEntry) e.nextElement();
+            String name = entry.getName();
+            if (!entry.isDirectory() && name.endsWith(".class")) {
+                String externalName = name.substring(0, name.indexOf('.')).replace('/', '.');
+                try {
+                    Class c = loader.loadClass(externalName);
+                    if (IAuthenticationMechanism.class.isAssignableFrom(c)) {
+                        IAuthenticationMechanism am = (IAuthenticationMechanism) c.newInstance();
+                        classMap.put(am.getMechanismName(), c);
+                        log.info("Loaded auth. method {}", am.getMechanismName());
+                    }
+                } catch (ClassNotFoundException | IllegalAccessException | InstantiationException | Error e1) {
+                    log.info("Error in loading class {}", name, e1);
+                }
+            }
+        }
+
+    }
+
 
     private void loadPlugins() {
         DefaultAuthenticationMechanism dam = new DefaultAuthenticationMechanism();
@@ -60,41 +84,55 @@ public class AuthenticationManager {
             return;
         }
 
-        FilenameFilter filter = (dir1, name) -> name.endsWith(".jar");
-
         ClassLoader parentClassLoader = AuthenticationManager.class.getClassLoader();
-        String[] children = dir.list(filter);
-        if (children != null)
-            for (int child = 0;child < children.length;child++) {
-                String filename = dir.getAbsolutePath() + "/" + children[child];
-                try {
-                    URL url = new URL("jar:file:" + filename + "/!/");
-                    URLClassLoader loader = new URLClassLoader(new URL[]{url}, parentClassLoader);
-                    JarURLConnection conn = (JarURLConnection) url.openConnection();
-                    JarFile jarFile = conn.getJarFile();
 
-                    Enumeration e = jarFile.entries();
-                    while (e.hasMoreElements()) {
-                        JarEntry entry = (JarEntry) e.nextElement();
-                        String name = entry.getName();
-                        if (!entry.isDirectory() && name.endsWith(".class")) {
-                            String externalName = name.substring(0, name.indexOf('.')).replace('/', '.');
-                            try {
-                                Class c = loader.loadClass(externalName);
-                                if (IAuthenticationMechanism.class.isAssignableFrom(c)) {
-                                    IAuthenticationMechanism am = (IAuthenticationMechanism) c.newInstance();
-                                    classMap.put(am.getMechanismName(), c);
-                                    log.info("Loaded auth. method {}", am.getMechanismName());
-                                }
-                            } catch (ClassNotFoundException | IllegalAccessException | InstantiationException | Error e1) {
-                                log.debug("Error in loading class {}", name, e1);
-                            }
-                        }
-                    }
-                } catch (IOException e) {
-                    log.error("Error loading plugin {}", filename, e);
+        String[] children = dir.list();
+        if (children == null) return;
+        for (String child: children) {
+            String filename = dir.getAbsolutePath() + "/" + child;
+            try {
+                File file = new File(filename);
+                if (file.isHidden()) {
+                    log.debug("Skip hidden file {}", filename);
+                    continue;
                 }
+
+                List<String> pluginFilenames = new ArrayList<>();
+                if (file.isDirectory()) {
+                    String[] subChildren = file.list();
+                    if (subChildren == null) {
+                        log.debug("Folder {} returns null list. Skipping...", filename);
+                        continue;
+                    }
+                    for (String subChild: subChildren) {
+                        String subFilename = filename + "/" + subChild;
+                        File subFile = new File(subFilename);
+                        if (subFile.isHidden() || !subFile.isFile()) {
+                            log.debug("File {} is either hidden or a folder. Skipping...", subFilename);
+                            continue;
+                        }
+                        pluginFilenames.add(subFilename);
+                    }
+                } else {
+                    pluginFilenames.add(filename);
+                }
+
+                URL[] urls = new URL[pluginFilenames.size()];
+                for (int index = 0; index < urls.length; index++) {
+                    urls[index] = new URL(String.format("jar:file:%s/!/", pluginFilenames.get(index)));
+                }
+
+                URLClassLoader classLoader = new URLClassLoader(urls, parentClassLoader);
+                for(URL url: urls) {
+                    tryLoadPlugins(classLoader, url);
+                }
+
+            } catch (IOException e) {
+                log.error("Error loading plugin {}", filename, e);
             }
+
+        }
+
     }
 
     private AuthenticationManager() {

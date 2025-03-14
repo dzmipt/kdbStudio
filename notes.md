@@ -1,9 +1,11 @@
+`dz5.0` 2025.02.28
+-----
 * Fixes for atom formating:
     * datetime older than 1970 year
     * adding 0D for timespan
     * syntax highlighting for negative timespan
 * Adding keep alive for all connections
-* Lines tool is added to charts
+* Line tool is added to chart dialog
 * Adding drag&drop in the tree of servers (in the Server List dialog)
 * Server connect/disconnect actions from the status bar
     * adding selection of auth.method into the status bar 
@@ -13,8 +15,8 @@
     * Adding server and query details into a separate tab
 * Any IO errors are added as Error tab (pop-up error message is used for internal bugs)
     * KX errors from servers are now display with ' (not as symbol)
-* Parent folder can be specified in the server form (in add and edit server)
-* Persist location of the server list frame for every Studio window
+* Parent folder can be specified in the server form (into Add and Edit server forms)
+* Persist location of the server list dialog for every Studio window
 
 `dz4.1` 2024.01.29
 -----
