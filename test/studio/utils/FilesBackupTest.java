@@ -21,7 +21,6 @@ public class FilesBackupTest {
 
     private Path folder;
     private Path file;
-    private String filename;
     private FilesBackup filesBackup;
     private long backupPeriod;
 
@@ -37,9 +36,8 @@ public class FilesBackupTest {
 
         Path tmpFolder = Files.createTempDirectory("kdbStudioFilesBackupTestConfig");
         file = tmpFolder.resolve("test.tmp");
-        filename = file.toString();
 
-        log.info("Reference file " + filename);
+        log.info("Reference file {}", file);
 
         backupPeriod = FilesBackup.BACKUP_PERIOD_MILLIS;
     }
@@ -54,7 +52,7 @@ public class FilesBackupTest {
 
     private void backup(String text) throws IOException {
         Files.write(file, text.getBytes());
-        filesBackup.backup(filename);
+        filesBackup.backup(file);
     }
 
     private void assertFile(Path file, String content) throws IOException {
@@ -71,7 +69,7 @@ public class FilesBackupTest {
     public void testInit() throws IOException {
         FileUtils.deleteDirectory(folder.toFile());
         assertTrue(Files.notExists(folder));
-        filesBackup = new FilesBackup(folder.toString());
+        filesBackup = new FilesBackup(folder);
         assertTrue(Files.exists(folder));
         long count = Files.list(folder).count();
         assertEquals(0, count);
@@ -83,7 +81,7 @@ public class FilesBackupTest {
 
     @Test
     public void testBackupAgain() throws IOException {
-        filesBackup = new FilesBackup(folder.toString());
+        filesBackup = new FilesBackup(folder);
         backup("test");
 
         backup("test2");
@@ -95,7 +93,7 @@ public class FilesBackupTest {
     @Test
     public void testBackupAgainAfterBackupPeriodTimeout() throws IOException {
         FilesBackup.BACKUP_PERIOD_MILLIS = -1;
-        filesBackup = new FilesBackup(folder.toString());
+        filesBackup = new FilesBackup(folder);
         backup("test");
 
         backup("test2");
@@ -107,10 +105,10 @@ public class FilesBackupTest {
 
     @Test
     public void testBackupAfterStartup() throws IOException {
-        filesBackup = new FilesBackup(folder.toString());
+        filesBackup = new FilesBackup(folder);
         backup("test");
 
-        filesBackup = new FilesBackup(folder.toString());
+        filesBackup = new FilesBackup(folder);
         backup("test2");
         assertFile(folder.resolve("test-1.tmp"), "test2");
         assertEquals(2, Files.list(folder).count());
@@ -118,14 +116,14 @@ public class FilesBackupTest {
 
     @Test
     public void testBackupWithCleanup() throws IOException {
-        filesBackup = new FilesBackup(folder.toString());
+        filesBackup = new FilesBackup(folder);
         backup("test");
 
-        filesBackup = new FilesBackup(folder.toString());
+        filesBackup = new FilesBackup(folder);
         backup("test2");
 
         expire("test-0.tmp");
-        filesBackup = new FilesBackup(folder.toString());
+        filesBackup = new FilesBackup(folder);
         backup("test3");
 
         assertFile(folder.resolve("test-2.tmp"), "test3");
@@ -135,11 +133,11 @@ public class FilesBackupTest {
 
     @Test
     public void testBackupWithCleanupAndAllExpired() throws IOException {
-        filesBackup = new FilesBackup(folder.toString());
+        filesBackup = new FilesBackup(folder);
         backup("test");
         expire("test-0.tmp");
 
-        filesBackup = new FilesBackup(folder.toString());
+        filesBackup = new FilesBackup(folder);
         backup("test2");
         assertFile(folder.resolve("test-0.tmp"), "test2");
         assertEquals(1, Files.list(folder).count());

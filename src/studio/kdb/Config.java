@@ -12,13 +12,10 @@ import studio.utils.*;
 import studio.utils.log4j.EnvConfig;
 
 import java.awt.*;
-import java.io.File;
-import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.Collections;
 import java.util.List;
 import java.util.Properties;
@@ -125,25 +122,25 @@ public class Config extends AbstractConfig {
 
     public enum ExecAllOption {Execute, Ask, Ignore}
 
-    protected Config(String filename) {
-        super(filename);
+    protected Config(Path path) {
+        super(path);
         init();
     }
 
     private static void copyConfig(String configFileName) throws IOException {
-        Path src = Paths.get(EnvConfig.getFilepath(null, configFileName));
-        Path target = Paths.get(EnvConfig.getFilepath(configFileName));
+        Path src = EnvConfig.getFilepath(null, configFileName);
+        Path target = EnvConfig.getFilepath(configFileName);
         if (Files.exists(src)) {
             log.info("Copying from {} to {}", src, target);
             Files.copy(src, target);
         }
     }
 
-    private static String getDefaulConfigFilename() {
-        String filename = EnvConfig.getFilepath(CONFIG_FILENAME);
+    private static Path getDefaultConfigPath() {
+        Path path = EnvConfig.getFilepath(CONFIG_FILENAME);
 
         String env = EnvConfig.getEnvironment();
-        if (env != null && ! Files.exists(Paths.get(filename))) {
+        if (env != null && ! Files.exists(path)) {
             log.info("Config for environment {} is not found. Copying from default location: {}", env, EnvConfig.getBaseFolder(null));
             try {
                 copyConfig(CONFIG_FILENAME);
@@ -152,11 +149,11 @@ public class Config extends AbstractConfig {
                 log.error("Error during copying configs", e);
             }
         }
-        return filename;
+        return path;
     }
 
     private Config() {
-        super(getDefaulConfigFilename());
+        super(getDefaultConfigPath());
         init();
     }
 
@@ -175,21 +172,20 @@ public class Config extends AbstractConfig {
         return serverConfig;
     }
 
-    protected String getWorkspaceFilename() {
+    protected Path getWorkspacePath() {
         return EnvConfig.getFilepath(WORKSPACE_FILENAME);
     }
 
-    protected String getServerConfigFilename() {
+    protected Path getServerConfigPath() {
         return EnvConfig.getFilepath(SERVERCONFIG_FILENAME);
     }
 
 	public Workspace loadWorkspace() {
 		Workspace workspace = new Workspace();
-        String filename = getWorkspaceFilename();
-        log.info("Loading workspace from {}", filename);
-		File workspaceFile = new File(filename);
-		if (workspaceFile.exists()) {
-			try (InputStream inp = new FileInputStream(workspaceFile)) {
+        Path path = getWorkspacePath();
+        log.info("Loading workspace from {}", path);
+		if (Files.exists(path)) {
+			try (InputStream inp = Files.newInputStream(path)) {
 				Properties p = new Properties();
 				p.load(inp);
                 log.info("Loaded {} properties in workspace file", p.size());
@@ -319,8 +315,8 @@ public class Config extends AbstractConfig {
     }
 
     protected void init() {
-        workspaceConfig = new PropertiesConfig(getWorkspaceFilename());
-        serverConfig = new ServerConfig(getServerConfigFilename());
+        workspaceConfig = new PropertiesConfig(getWorkspacePath());
+        serverConfig = new ServerConfig(getServerConfigPath());
 
         checkForUpgrade();
         initTableConnExtractor();

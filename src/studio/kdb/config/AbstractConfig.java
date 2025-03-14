@@ -7,6 +7,7 @@ import studio.ui.Util;
 import studio.utils.PropertiesConfig;
 
 import java.awt.*;
+import java.nio.file.Path;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -32,15 +33,15 @@ public class AbstractConfig {
     private static final Map<String, ConfigType> configTypes = new HashMap();
 
     protected PropertiesConfig config;
-    private final String filename;
+    private final Path path;
 
-    protected AbstractConfig(String filename) {
-        this.filename = filename;
-        config = new PropertiesConfig(filename);
+    protected AbstractConfig(Path path) {
+        this.path = path;
+        config = new PropertiesConfig(path);
     }
 
-    public String getFilename() {
-        return filename;
+    public Path getPath() {
+        return path;
     }
 
     protected void save() {

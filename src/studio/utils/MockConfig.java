@@ -11,6 +11,7 @@ import studio.kdb.Workspace;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Path;
 
 public class MockConfig extends Config {
 
@@ -30,7 +31,7 @@ public class MockConfig extends Config {
         workspaceFile.deleteOnExit();
         serversFile = File.createTempFile("kdbStudioServers", ".json");
         serversFile.deleteOnExit();
-        Config.instance = new MockConfig(propertiesFile.getAbsolutePath());
+        Config.instance = new MockConfig(propertiesFile.toPath());
         LoggerContext context = LoggerContext.getContext(false);
         for (Logger logger: context.getLoggers() ) {
             Appender[] appenders = logger.getAppenders().values().toArray(new Appender[0]);
@@ -47,24 +48,24 @@ public class MockConfig extends Config {
     }
 
     public void reload() {
-        this.config = new PropertiesConfig(getFilename());
+        this.config = new PropertiesConfig(getPath());
         super.init();
     }
 
     @Override
-    protected String getWorkspaceFilename() {
-        return workspaceFile.getAbsolutePath();
+    protected Path getWorkspacePath() {
+        return workspaceFile.toPath();
     }
 
     @Override
-    protected String getServerConfigFilename() {
-        return serversFile.getAbsolutePath();
+    protected Path getServerConfigPath() {
+        return serversFile.toPath();
     }
 
     private Workspace workspace;
 
-    private MockConfig(String filename) {
-        super(filename);
+    private MockConfig(Path path) {
+        super(path);
     }
 
     @Override

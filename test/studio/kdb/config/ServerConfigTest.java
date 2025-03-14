@@ -29,12 +29,11 @@ public class ServerConfigTest {
 
     public void testWriteRead(ServerTreeNode node) throws IOException {
         File file = File.createTempFile("serverConfig", "json");
-        String name = file.getAbsolutePath();
         file.delete();
-        ServerConfig config = new ServerConfig(name);
+        ServerConfig config = new ServerConfig(file.toPath());
         config.setRoot(node);
 
-        ServerConfig config2 = new ServerConfig(name);
+        ServerConfig config2 = new ServerConfig(file.toPath());
         assertDeepEquals(node, config2.getServerTree());
     }
     private Server server =

@@ -153,7 +153,7 @@ public class ConfigTest {
         properties.store(out, null);
         out.close();
 
-        return new Config(newFile.getPath());
+        return new Config(newFile.toPath());
     } 
     
     private Config copyConfig(Config config, Consumer<Properties> propsModification) throws IOException {

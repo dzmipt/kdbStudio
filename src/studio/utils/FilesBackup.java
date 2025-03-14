@@ -22,8 +22,8 @@ public class FilesBackup {
     protected static long BACKUP_PERIOD_MILLIS = 24*60*60*1000L; // ond day
     private final static int RETAIN_BACKUP_HISTORY_DAYS = 14; // keep the last 2 weeks
 
-    private final Map<String, Long> lastBackupTime = new HashMap<>();
-    private final Map<String, Integer> backupIndex = new HashMap<>();
+    private final Map<Path, Long> lastBackupTime = new HashMap<>();
+    private final Map<Path, Integer> backupIndex = new HashMap<>();
     private final Path backupDirPath;
     private static final Logger log = LogManager.getLogger();
 
@@ -41,8 +41,8 @@ public class FilesBackup {
         FilesBackup.enabled = enabled;
     }
 
-    protected FilesBackup(String backupFolder) {
-        backupDirPath = Paths.get(backupFolder);
+    protected FilesBackup(Path backupFolder) {
+        backupDirPath = backupFolder;
         if (!enabled) return;
 
         if (Files.notExists(backupDirPath)) {
@@ -55,38 +55,38 @@ public class FilesBackup {
         }
     }
 
-    public TmpfileOutputStream newFileOutputStream(String filename) throws IOException {
+    public TmpfileOutputStream newFileOutputStream(Path path) throws IOException {
         try {
-            backup(filename);
+            backup(path);
         } catch (IOException e) {
-            log.error("Error on backup {}", filename, e);
+            log.error("Error on backup {}", path, e);
         }
 
-        return new TmpfileOutputStream(filename);
+        return new TmpfileOutputStream(path);
     }
 
-    protected void backup(String filename) throws IOException {
+    protected void backup(Path path) throws IOException {
         if (!enabled) return;
 
-        if (Files.notExists(Paths.get(filename))) return;
+        if (Files.notExists(path)) return;
 
         long current = System.currentTimeMillis();
-        Long lastBackup = lastBackupTime.get(filename);
+        Long lastBackup = lastBackupTime.get(path);
 
         if (lastBackup == null) {
-            initBackupIndex(filename);
-            lastBackupTime.put(filename, current);
+            initBackupIndex(path);
+            lastBackupTime.put(path, current);
             lastBackup = 0L;
         }
 
         if (current - lastBackup < BACKUP_PERIOD_MILLIS) return;
 
-        doBackup(filename);
-        lastBackupTime.put(filename, current);
+        doBackup(path);
+        lastBackupTime.put(path, current);
     }
 
-    private void initBackupIndex(String filename) throws IOException {
-        BackupFile reference = new BackupFile(filename);
+    private void initBackupIndex(Path path) throws IOException {
+        BackupFile reference = new BackupFile(path);
 
         cleanupBackupHistory(reference);
 
@@ -98,17 +98,17 @@ public class FilesBackup {
                                 .max()
                                 .orElse(-1);
 
-        backupIndex.put(filename, maxIndex);
+        backupIndex.put(path, maxIndex);
     }
 
-    private void doBackup(String filename) throws IOException {
-        BackupFile reference = new BackupFile(filename);
+    private void doBackup(Path path) throws IOException {
+        BackupFile reference = new BackupFile(path);
         cleanupBackupHistory(reference);
 
-        int index = backupIndex.get(filename) + 1;
-        backupIndex.put(filename, index);
+        int index = backupIndex.get(path) + 1;
+        backupIndex.put(path, index);
         Path dest = backupDirPath.resolve(reference.name + "-" + index + "." + reference.ext);
-        log.info("Backing up {} to {}", filename, dest);
+        log.info("Backing up {} to {}", path, dest);
         Files.copy(reference.path, dest);
     }
 

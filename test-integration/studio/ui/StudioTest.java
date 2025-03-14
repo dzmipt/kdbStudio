@@ -64,7 +64,7 @@ abstract public class StudioTest extends AssertJSwingJUnitTestCase {
         tmpConfigFolder = Files.createTempDirectory("tmpKdbStudio");
         FileUtils.deleteDirectory(tmpConfigFolder.toFile());
         Files.createDirectories(tmpConfigFolder);
-        EnvConfig.setBaseFolder(tmpConfigFolder.toString());
+        EnvConfig.setBaseFolder(tmpConfigFolder);
         System.out.println("Setup temporary folder for configs: " + tmpConfigFolder.toString());
 
         MockConfig.mock();

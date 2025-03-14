@@ -23,7 +23,7 @@ public class ConfigUpgradeTest {
         File tmpFile = File.createTempFile("studioforkdb", ".tmp");
         tmpFile.deleteOnExit();
         Files.write(tmpFile.toPath(), content);
-        Config config = new Config(tmpFile.getPath());
+        Config config = new Config(tmpFile.toPath());
 
         assertEquals(ActionOnExit.NOTHING, config.getEnum(Config.ACTION_ON_EXIT));
         assertEquals("defU", config.getDefaultCredentials(DefaultAuthenticationMechanism.NAME).getUsername());

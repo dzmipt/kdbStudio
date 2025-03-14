@@ -114,6 +114,7 @@ public class AuthenticationManager {
                         pluginFilenames.add(subFilename);
                     }
                 } else {
+                    if (! filename.endsWith(".jar")) continue;
                     pluginFilenames.add(filename);
                 }
 
