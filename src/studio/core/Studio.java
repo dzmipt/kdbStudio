@@ -104,12 +104,7 @@ public class Studio {
         try {
             Taskbar.getTaskbar().setIconImage(Util.LOGO_ICON.getImage());
         } catch (UnsupportedOperationException e) {
-            boolean headless = java.awt.GraphicsEnvironment.isHeadless();
-            if (headless) {
-                log.debug("Can't set icon on the headless system", e);
-            } else {
-                log.info("Can't set icon", e);
-            }
+            log.debug("Can't set icon", e);
         }
     }
 
