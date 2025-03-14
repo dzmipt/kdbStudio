@@ -19,6 +19,10 @@ public class EnvConfig implements StrLookup {
         return environment;
     }
 
+    public static Path getPluginFolder() {
+        return Paths.get(System.getProperty("user.dir")).resolve("plugins");
+    }
+
     //Useful method which could be used in test environment to point to a pre-configured or empty location
     public static void setBaseFolder(Path baseFolder) {
         EnvConfig.baseFolder = baseFolder;

@@ -2,15 +2,19 @@ package studio.core;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import studio.utils.log4j.EnvConfig;
 
-import java.io.File;
 import java.io.IOException;
 import java.net.JarURLConnection;
 import java.net.URL;
 import java.net.URLClassLoader;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.*;
 import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 public class AuthenticationManager {
 
@@ -44,6 +48,7 @@ public class AuthenticationManager {
     }
 
     private void tryLoadPlugins(ClassLoader loader, URL jarFile) throws IOException {
+        log.debug("scanning url {}", jarFile);
         JarURLConnection conn = (JarURLConnection) jarFile.openConnection();
         JarFile jar = conn.getJarFile();
 
@@ -54,11 +59,13 @@ public class AuthenticationManager {
             if (!entry.isDirectory() && name.endsWith(".class")) {
                 String externalName = name.substring(0, name.indexOf('.')).replace('/', '.');
                 try {
+                    log.debug("Trying to load class {}", externalName);
                     Class c = loader.loadClass(externalName);
                     if (IAuthenticationMechanism.class.isAssignableFrom(c)) {
+                        log.debug("Trying to invoke constructor for the class {}", externalName);
                         IAuthenticationMechanism am = (IAuthenticationMechanism) c.newInstance();
                         classMap.put(am.getMechanismName(), c);
-                        log.info("Loaded auth. method {}", am.getMechanismName());
+                        log.debug("Loaded auth. method {}", am.getMechanismName());
                     }
                 } catch (ClassNotFoundException | IllegalAccessException | InstantiationException | Error e1) {
                     log.debug("Error in loading class {}", name, e1);
@@ -69,69 +76,78 @@ public class AuthenticationManager {
     }
 
 
+    private void loadPluginForPath(Path child) {
+        try {
+            log.debug("loading Plugin for {}", child);
+            if (Files.isHidden(child)) {
+                log.debug("Skip hidden file {}", child);
+                return;
+            }
+
+            List<Path> pluginPaths = new ArrayList<>();
+            if (Files.isDirectory(child)) {
+                log.debug("Loading directory {}", child);
+                try (Stream<Path> stream = Files.list(child)) {
+                    pluginPaths = stream.filter(
+                                    p -> {
+                                        try {
+                                            log.debug("Checking path {}", p);
+                                            if (Files.isHidden(p) || !Files.isRegularFile(p)) return false;
+                                            if (! p.toString().endsWith(".jar")) return false;
+                                            log.debug("Adding library {} to the ClassLoader", p);
+                                            return true;
+                                        } catch (IOException e) {
+                                            log.error("Error with Filesystem on file {}", p, e);
+                                        }
+                                        return false;
+                                    })
+                            .collect(Collectors.toList());
+                }
+            } else {
+                if (! child.toString().endsWith(".jar")) {
+                    log.debug("Skip non jar file {}", child);
+                    return;
+                }
+                pluginPaths.add(child);
+            }
+
+            URL[] urls = new URL[pluginPaths.size()];
+            for (int index = 0; index < urls.length; index++) {
+                urls[index] = new URL(String.format("jar:file:%s/!/", pluginPaths.get(index)));
+            }
+
+
+            log.debug("URLClssLoader with {} url's", urls.length);
+            URLClassLoader classLoader = new URLClassLoader(urls, AuthenticationManager.class.getClassLoader());
+            for(URL url: urls) {
+                tryLoadPlugins(classLoader, url);
+            }
+        } catch (IOException e) {
+            log.error("Error loading plugin {}", child, e);
+        }
+
+    }
+
     private void loadPlugins() {
         DefaultAuthenticationMechanism dam = new DefaultAuthenticationMechanism();
         classMap.put(dam.getMechanismName(),dam.getClass());
 
-        String curDir = System.getProperty("user.dir");
-        curDir = curDir + "/plugins";
+        Path pluginFolder = EnvConfig.getPluginFolder();
 
-        log.info("Looking for plugins in the folder {}", curDir);
+        log.info("Looking for plugins in the folder {}", pluginFolder);
 
-        File dir = new File(curDir);
-        if (!dir.exists()) {
+        if (! Files.exists(pluginFolder)) {
             log.debug("Plugin folder is not exist");
             return;
         }
 
-        ClassLoader parentClassLoader = AuthenticationManager.class.getClassLoader();
-
-        String[] children = dir.list();
-        if (children == null) return;
-        for (String child: children) {
-            String filename = dir.getAbsolutePath() + "/" + child;
-            try {
-                File file = new File(filename);
-                if (file.isHidden()) {
-                    log.debug("Skip hidden file {}", filename);
-                    continue;
-                }
-
-                List<String> pluginFilenames = new ArrayList<>();
-                if (file.isDirectory()) {
-                    String[] subChildren = file.list();
-                    if (subChildren == null) {
-                        log.debug("Folder {} returns null list. Skipping...", filename);
-                        continue;
-                    }
-                    for (String subChild: subChildren) {
-                        String subFilename = filename + "/" + subChild;
-                        File subFile = new File(subFilename);
-                        if (subFile.isHidden() || !subFile.isFile()) {
-                            log.debug("File {} is either hidden or a folder. Skipping...", subFilename);
-                            continue;
-                        }
-                        pluginFilenames.add(subFilename);
-                    }
-                } else {
-                    if (! filename.endsWith(".jar")) continue;
-                    pluginFilenames.add(filename);
-                }
-
-                URL[] urls = new URL[pluginFilenames.size()];
-                for (int index = 0; index < urls.length; index++) {
-                    urls[index] = new URL(String.format("jar:file:%s/!/", pluginFilenames.get(index)));
-                }
-
-                URLClassLoader classLoader = new URLClassLoader(urls, parentClassLoader);
-                for(URL url: urls) {
-                    tryLoadPlugins(classLoader, url);
-                }
-
-            } catch (IOException e) {
-                log.error("Error loading plugin {}", filename, e);
+        try (Stream<Path> stream = Files.list(pluginFolder)) {
+            Iterator<Path> iterator = stream.iterator();
+            while (iterator.hasNext()) {
+                loadPluginForPath(iterator.next());
             }
-
+        } catch (IOException e) {
+            log.error("Error listing plugin folder", e);
         }
 
     }
