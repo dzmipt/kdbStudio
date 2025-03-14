@@ -61,7 +61,7 @@ public class AuthenticationManager {
                         log.info("Loaded auth. method {}", am.getMechanismName());
                     }
                 } catch (ClassNotFoundException | IllegalAccessException | InstantiationException | Error e1) {
-                    log.info("Error in loading class {}", name, e1);
+                    log.debug("Error in loading class {}", name, e1);
                 }
             }
         }
