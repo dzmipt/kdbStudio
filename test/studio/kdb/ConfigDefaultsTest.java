@@ -55,6 +55,8 @@ public class ConfigDefaultsTest {
     @Test
     public void test() throws IOException, ClassNotFoundException, InvocationTargetException, NoSuchMethodException, IllegalAccessException {
         String key = Config.KDB_MESSAGE_SIZE_LIMIT_MB;
+
+        Path mainConfig = configPath.resolve("studio.properties");
         AbstractConfig config = newConfig();
         assertEquals(10, config.getInt(key), "10 is a default value");
 
@@ -73,7 +75,8 @@ public class ConfigDefaultsTest {
         config.saveToDisk();
         assertEquals(10, newConfig().getInt(key), "The value is 10 as it is written to main config");
 
-        Files.delete(configPath.resolve("studio.properties"));
+        System.out.printf("Deleting %s. File exist: %b%n", mainConfig, Files.exists(mainConfig));
+        Files.delete(mainConfig);
         assertEquals(20, newConfig().getInt(key), "The value should be 20 from default");
 
     }
