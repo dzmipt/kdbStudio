@@ -10,7 +10,7 @@ import java.nio.file.Paths;
 @Plugin(name="studiobase", category = StrLookup.CATEGORY)
 public class EnvConfig implements StrLookup {
 
-    public final static String STUDIO_CONFIG_HOME = "KDBSTUDIO_CONFIG_HOME";
+    private final static String STUDIO_CONFIG_HOME = "KDBSTUDIO_CONFIG_HOME";
     private final static String environment = System.getProperty("env");
     private final static Path homeFolder = Paths.get(getValue(STUDIO_CONFIG_HOME, System.getProperty("user.home") + "/.studioforkdb"));
 

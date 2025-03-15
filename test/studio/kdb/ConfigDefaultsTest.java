@@ -18,19 +18,18 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 public class ConfigDefaultsTest {
 
     private static Path configPath;
-    private static String studioHome;
+    private static Path oldBaseConfig;
     private static String home;
     @BeforeAll
     public static void prepare() throws IOException, ClassNotFoundException, NoSuchMethodException, InvocationTargetException, IllegalAccessException {
         configPath = Files.createTempDirectory("kdbStudioConfig");
         Files.createDirectory(configPath.resolve("plugins"));
 
-        studioHome = System.getProperty(EnvConfig.STUDIO_CONFIG_HOME);
         home = System.getProperty("user.dir");
-        System.setProperty(EnvConfig.STUDIO_CONFIG_HOME, configPath.toString());
+        oldBaseConfig = EnvConfig.getBaseFolder(EnvConfig.getEnvironment());
+
+        EnvConfig.setBaseFolder(configPath);
         System.setProperty("user.dir", configPath.toString());
-
-
     }
 
     private static void setProperty(String key, String value) {
@@ -40,10 +39,11 @@ public class ConfigDefaultsTest {
             System.setProperty(key, value);
         }
     }
+
     @AfterAll
     public static void cleanup() throws IOException {
         FileUtils.deleteDirectory(configPath.toFile());
-        setProperty(EnvConfig.STUDIO_CONFIG_HOME, studioHome);
+        EnvConfig.setBaseFolder(oldBaseConfig);
         setProperty("user.dir", home);
     }
 
