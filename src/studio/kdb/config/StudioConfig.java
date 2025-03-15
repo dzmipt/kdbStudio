@@ -232,4 +232,32 @@ public class StudioConfig {
     public boolean setFileChooserConfig(String key, FileChooserConfig value) {
         return set(key, ConfigType.FILE_CHOOSER, value);
     }
+
+    public String[] getStringArray(String key) {
+        return (String[]) get(key, ConfigType.STRING_ARRAY);
+
+    }
+
+    public boolean setStringArray(String key, String[] value) {
+        return set(key, ConfigType.STRING_ARRAY, value);
+    }
+
+    public int[] getIntArray(String key) {
+        return (int[]) get(key, ConfigType.INT_ARRAY);
+
+    }
+
+    public boolean setIntArray(String key, int[] value) {
+        return set(key, ConfigType.INT_ARRAY, value);
+    }
+
+    public <T extends Enum<T>> T[] getEnumArray(String key) {
+        return (T[]) get(key, ConfigType.ENUM_ARRAY);
+
+    }
+
+    public <T extends Enum<T>> boolean setEnumArray(String key, T[] value) {
+        return set(key, ConfigType.ENUM_ARRAY, value);
+    }
+
 }

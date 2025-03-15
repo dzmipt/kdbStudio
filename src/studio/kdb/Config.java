@@ -18,7 +18,6 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Properties;
 import java.util.regex.Pattern;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 public class Config extends AbstractConfig {
@@ -27,6 +26,10 @@ public class Config extends AbstractConfig {
     //@TODO migrate all other keys under such approach
     public static final String LOOK_AND_FEEL = configDefault("lookandfeel", ConfigType.STRING, UIManager.getLookAndFeel().getClass().getName());
     public static final String EXEC_ALL = configDefault("execAllOption", ConfigType.ENUM, ExecAllOption.Ask);
+    public static final String MAX_CHARS_IN_RESULT = configDefault("maxCharsInResult", ConfigType.INT, 50000);
+    public static final String MAX_CHARS_IN_TABLE_CELL = configDefault("maxCharsInTableCell", ConfigType.INT, 256);
+    public static final String MRU_FILES = configDefault("mrufiles", ConfigType.STRING_ARRAY, new String[0]);
+
     public static final String SHOW_SERVER_COMBOBOX = configDefault("showServerComboBox", ConfigType.BOOLEAN, true);
     public static final String AUTO_SAVE = configDefault("isAutoSave", ConfigType.BOOLEAN, false);
     public static final String ACTION_ON_EXIT = configDefault("actionOnExit", ConfigType.ENUM, ActionOnExit.SAVE);
@@ -435,18 +438,6 @@ public class Config extends AbstractConfig {
         save();
     }
 
-    public String[] getMRUFiles() {
-        String mru = config.getProperty("mrufiles", "");
-        return split(mru);
-    }
-
-
-    public void saveMRUFiles(String[] mruFiles) {
-        String value = Stream.of(mruFiles).limit(9).collect(Collectors.joining(","));
-        config.put("mrufiles", value);
-        save();
-    }
-
     // Resolve or create a new server by connection string.
     // Accept possible various connectionString such as:
     // `:host:port:user:password
@@ -487,24 +478,6 @@ public class Config extends AbstractConfig {
 
     public void setResultTabsCount(int value) {
         config.setProperty("resultTabsCount", "" + value);
-        save();
-    }
-
-    public int getMaxCharsInResult() {
-        return Integer.parseInt(config.getProperty("maxCharsInResult", "50000"));
-    }
-
-    public void setMaxCharsInResult(int value) {
-        config.setProperty("maxCharsInResult", "" + value);
-        save();
-    }
-
-    public int getMaxCharsInTableCell() {
-        return Integer.parseInt(config.getProperty("maxCharsInTableCell", "256"));
-    }
-
-    public void setMaxCharsInTableCell(int value) {
-        config.setProperty("maxCharsInTableCell", "" + value);
         save();
     }
 

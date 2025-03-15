@@ -1,11 +1,13 @@
 package studio.kdb.config;
 
+import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonPrimitive;
 import studio.kdb.FileChooserConfig;
 
 import java.awt.*;
+import java.lang.reflect.Array;
 
 public enum ConfigType {
     STRING {
@@ -156,8 +158,41 @@ public enum ConfigType {
             return json;
         }
 
-    };
+    },
+    STRING_ARRAY(STRING),
+    INT_ARRAY(INT),
+    ENUM_ARRAY(ENUM);
 
-    public abstract Object fromJson(JsonElement jsonElement, Object defaultValue);
-    public abstract JsonElement toJson(Object value);
+    private final ConfigType elementType;
+
+    ConfigType() {
+        this(null);
+    }
+
+    ConfigType(ConfigType elementType) {
+        this.elementType = elementType;
+    }
+    public Object fromJson(JsonElement jsonElement, Object defaultValue) {
+        if (elementType == null) throw new IllegalStateException("ConfigType should implement fromJson: " + name());
+
+        JsonArray jsonArray = jsonElement.getAsJsonArray();
+        int count = jsonArray.size();
+
+        Object array = Array.newInstance(defaultValue.getClass().getComponentType(), count);
+        for (int i=0; i<count; i++) {
+            Array.set(array, i, elementType.fromJson(jsonArray.get(i), Array.get(defaultValue, 0)));
+        }
+        return array;
+    }
+
+    public JsonElement toJson(Object value) {
+        if (elementType == null) throw new IllegalStateException("ConfigType should implement fromJson: " + name());
+
+        int count = Array.getLength(value);
+        JsonArray jsonArray = new JsonArray(count);
+        for (int i=0; i<count; i++) {
+            jsonArray.add(elementType.toJson(Array.get(value, i)));
+        }
+        return jsonArray;
+    }
 }

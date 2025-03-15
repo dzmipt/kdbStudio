@@ -92,9 +92,9 @@ public class ConfigAllTest {
     public void testCustom() {
         assertEquals(ExecAllOption.Ignore, config.getEnum(Config.EXEC_ALL));
         assertEquals("javax.swing.plaf.nimbus.NimbusLookAndFeel", config.getString(Config.LOOK_AND_FEEL));
-        assertEquals(500000, config.getMaxCharsInResult());
-        assertEquals(1024, config.getMaxCharsInTableCell());
-        assertArrayEquals(new String[]{"file1", "/tmp/file2"}, config.getMRUFiles());
+        assertEquals(500000, config.getInt(Config.MAX_CHARS_IN_RESULT));
+        assertEquals(1024, config.getInt(Config.MAX_CHARS_IN_TABLE_CELL));
+        assertArrayEquals(new String[]{"file1", "/tmp/file2"}, config.getStringArray(Config.MRU_FILES));
         assertEquals("94a43c9badd0e2e1c2bdf3e40ded8366", config.getNotesHash());
         assertEquals(25, config.getResultTabsCount());
         //serverHistory

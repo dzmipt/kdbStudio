@@ -38,8 +38,10 @@ import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Iterator;
 import java.util.List;
-import java.util.*;
 
 import static javax.swing.JSplitPane.VERTICAL_SPLIT;
 import static studio.ui.EscapeDialog.DialogResult.ACCEPTED;
@@ -430,14 +432,17 @@ public class StudioWindow extends JFrame implements WindowListener {
     public void addToMruFiles(String filename) {
         if (filename == null)
             return;
+        String[] mruFiles = CONFIG.getStringArray(Config.MRU_FILES);
 
-        Vector v = new Vector();
-        v.add(filename);
-        String[] mru = CONFIG.getMRUFiles();
-        for (int i = 0;i < mru.length;i++)
-            if (!v.contains(mru[i]))
-                v.add(mru[i]);
-        CONFIG.saveMRUFiles((String[]) v.toArray(new String[0]));
+        List<String> list = new ArrayList<>();
+        list.add(filename);
+        for (String mruFile: mruFiles) {
+            if (list.size() == 9) break;
+
+            if (!filename.equals(mruFile)) list.add(mruFile);
+        }
+
+        CONFIG.setStringArray(Config.MRU_FILES, list.toArray(new String[list.size()]));
         refreshAllMenus();
     }
 
@@ -902,7 +907,7 @@ public class StudioWindow extends JFrame implements WindowListener {
     private void refreshMenu() {
         openMRUMenu.removeAll();
 
-        String[] mru = CONFIG.getMRUFiles();
+        String[] mru = CONFIG.getStringArray(Config.MRU_FILES);
         String mnems = "123456789";
         for (int i = 0; i < mru.length; i++) {
             final String filename = mru[i];

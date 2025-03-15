@@ -207,10 +207,10 @@ public class SettingsDialog extends EscapeDialog {
         chBoxShowServerCombo.setSelected(CONFIG.getBoolean(Config.SHOW_SERVER_COMBOBOX));
         JLabel lblMaxCharsInResult = new JLabel("Max chars in result");
         txtMaxCharsInResult = new JFormattedTextField(formatter);
-        txtMaxCharsInResult.setValue(CONFIG.getMaxCharsInResult());
+        txtMaxCharsInResult.setValue(CONFIG.getInt(Config.MAX_CHARS_IN_RESULT));
         JLabel lblMaxCharsInTableCell = new JLabel("Max chars in table cell");
         txtMaxCharsInTableCell = new JFormattedTextField(formatter);
-        txtMaxCharsInTableCell.setValue(CONFIG.getMaxCharsInTableCell());
+        txtMaxCharsInTableCell.setValue(CONFIG.getInt(Config.MAX_CHARS_IN_TABLE_CELL));
 
         JLabel lblMaxFractionDigits = new JLabel("Max number of fraction digits in output");
         formatter = new NumberFormatter();
@@ -345,8 +345,8 @@ public class SettingsDialog extends EscapeDialog {
         }
 
         CONFIG.setResultTabsCount(getResultTabsCount());
-        CONFIG.setMaxCharsInResult(getMaxCharsInResult());
-        CONFIG.setMaxCharsInTableCell(getMaxCharsInTableCell());
+        CONFIG.setInt(Config.MAX_CHARS_IN_RESULT, getMaxCharsInResult());
+        CONFIG.setInt(Config.MAX_CHARS_IN_TABLE_CELL, getMaxCharsInTableCell());
         CONFIG.setDouble(Config.CELL_RIGHT_PADDING, getCellRightPadding());
         CONFIG.setInt(Config.CELL_MAX_WIDTH, getCellMaxWidth());
         CONFIG.setEnum(Config.EXEC_ALL, getExecAllOption());

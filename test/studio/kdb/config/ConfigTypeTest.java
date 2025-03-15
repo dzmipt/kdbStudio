@@ -1,10 +1,13 @@
 package studio.kdb.config;
 
+import com.google.gson.JsonElement;
 import org.junit.jupiter.api.Test;
 import studio.kdb.FileChooserConfig;
+import studio.kdb.KType;
 
 import java.awt.*;
 
+import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 public class ConfigTypeTest {
@@ -39,5 +42,29 @@ public class ConfigTypeTest {
 
         check(ConfigType.FILE_CHOOSER, new FileChooserConfig("/folder/afile.ext", new Dimension(125, 137)), null);
 
+    }
+
+    @Test
+    public void testStringArray() {
+        String[] strings = new String[] {"one", "two", "three"};
+        JsonElement json = ConfigType.STRING_ARRAY.toJson(strings);
+        String[] parsed = (String[]) ConfigType.STRING_ARRAY.fromJson(json, new String[] {"something"});
+        assertArrayEquals(strings, parsed);
+    }
+
+    @Test
+    public void testIntArray() {
+        int[] ints = new int[] {11, 22};
+        JsonElement json = ConfigType.INT_ARRAY.toJson(ints);
+        int[] parsed = (int[]) ConfigType.INT_ARRAY.fromJson(json, new int[] {0});
+        assertArrayEquals(ints, parsed);
+    }
+
+    @Test
+    public void testEnumArray() {
+        KType[] types = new KType[] {KType.Int, KType.IntVector, KType.Function};
+        JsonElement json = ConfigType.ENUM_ARRAY.toJson(types);
+        KType[] parsed = (KType[]) ConfigType.ENUM_ARRAY.fromJson(json, new KType[] {KType.List});
+        assertArrayEquals(types, parsed);
     }
 }

@@ -8,6 +8,7 @@ import studio.utils.PropertiesConfig;
 
 import java.awt.*;
 import java.nio.file.Path;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
@@ -106,6 +107,27 @@ public class AbstractConfig {
         }
 
         config.setProperty(key, "" + value);
+        save();
+        return true;
+    }
+
+    protected String[] get(String key, String[] defaultValue) {
+        String value = config.getProperty(key);
+        if (value == null) return defaultValue;
+
+        return value.split(",");
+    }
+
+    public String[] getStringArray(String key) {
+        return get(key, (String[]) checkAndGetDefaultValue(key, ConfigType.STRING_ARRAY));
+    }
+
+    // Returns whether the value was changed
+    public boolean setStringArray(String key, String[] value) {
+        String[] currentValue = getStringArray(key);
+        if (Arrays.equals(currentValue, value)) return false;
+
+        config.setProperty(key, String.join(",", value));
         save();
         return true;
     }

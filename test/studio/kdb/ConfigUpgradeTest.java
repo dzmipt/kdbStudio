@@ -42,8 +42,8 @@ public class ConfigUpgradeTest {
         assertEquals(new Font("Arial", Font.PLAIN, 14),config.getFont(Config.FONT_TABLE));
         assertTrue(config.getBoolean(Config.AUTO_SAVE));
         assertEquals("javax.swing.plaf.nimbus.NimbusLookAndFeel",config.getString(Config.LOOK_AND_FEEL));
-        assertEquals(500000, config.getMaxCharsInResult());
-        assertEquals(1024, config.getMaxCharsInTableCell());
+        assertEquals(500000, config.getInt(Config.MAX_CHARS_IN_RESULT));
+        assertEquals(1024, config.getInt(Config.MAX_CHARS_IN_TABLE_CELL));
         assertEquals(9, config.getInt(Config.MAX_FRACTION_DIGITS));
         assertEquals(20, config.getResultTabsCount());
         assertFalse(config.getBoolean(Config.RSTA_ANIMATE_BRACKET_MATCHING));

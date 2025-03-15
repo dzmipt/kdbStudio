@@ -216,7 +216,7 @@ public class TabPanel extends JPanel {
             String text;
             if ((result instanceof K.UnaryPrimitive) && ((K.UnaryPrimitive)result).isIdentity() ) text = "";
             else {
-                text = Util.limitString(result.toString(formatContext), Config.getInstance().getMaxCharsInResult());
+                text = Util.limitString(result.toString(formatContext), Config.getInstance().getInt(Config.MAX_CHARS_IN_RESULT));
             }
             textArea.setText(text);
             textArea.setCaretPosition(0);

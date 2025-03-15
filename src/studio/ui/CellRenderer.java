@@ -58,7 +58,7 @@ class CellRenderer extends DefaultTableCellRenderer {
             K.KBase kb = (K.KBase) value;
             String text = kb.toString(
                 kb instanceof K.KBaseVector ? formatContextWithType : formatContextNoType);
-            text = Util.limitString(text, Config.getInstance().getMaxCharsInTableCell());
+            text = Util.limitString(text, Config.getInstance().getInt(Config.MAX_CHARS_IN_TABLE_CELL));
             setText(text);
             setForeground(kb.isNull() ? nullColor : fgColor);
 
