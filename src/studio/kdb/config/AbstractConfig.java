@@ -10,6 +10,7 @@ import java.awt.*;
 import java.nio.file.Path;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Properties;
 
 public class AbstractConfig {
 
@@ -35,9 +36,13 @@ public class AbstractConfig {
     protected PropertiesConfig config;
     private final Path path;
 
-    protected AbstractConfig(Path path) {
+    public AbstractConfig(Path path) {
+        this(path, null);
+    }
+
+    public AbstractConfig(Path path, Properties defaults) {
         this.path = path;
-        config = new PropertiesConfig(path);
+        config = new PropertiesConfig(path, defaults);
     }
 
     public Path getPath() {
@@ -46,6 +51,10 @@ public class AbstractConfig {
 
     protected void save() {
         config.save();
+    }
+
+    public void saveToDisk() {
+        config.saveToDisk();
     }
 
     private Object checkAndGetDefaultValue(String key, ConfigType passed) {

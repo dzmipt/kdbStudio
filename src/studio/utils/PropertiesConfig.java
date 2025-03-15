@@ -31,6 +31,11 @@ public class PropertiesConfig extends Properties {
     private Properties propertiesToSave = null;
 
     public PropertiesConfig(Path path) {
+        this(path, null);
+    }
+
+    public PropertiesConfig(Path path, Properties defaults) {
+        super(defaults);
         this.path = path;
         load();
     }

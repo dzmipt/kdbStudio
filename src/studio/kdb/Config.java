@@ -152,13 +152,28 @@ public class Config extends AbstractConfig {
         return path;
     }
 
+    private static Properties getDefaults() {
+        Path pluginProperties = EnvConfig.getPluginFolder().resolve(CONFIG_FILENAME);
+        if (! Files.exists((pluginProperties))) return null;
+
+        try (InputStream inputStream = Files.newInputStream(pluginProperties)) {
+            Properties defaults = new Properties();
+            defaults.load(inputStream);
+            log.info("Loaded {} default properties from {}", defaults.size(), pluginProperties);
+            return defaults;
+        } catch (IOException e) {
+            log.error("Error loading default config from {}", pluginProperties, e);
+        }
+        return null;
+    }
+
     private Config() {
-        super(getDefaultConfigPath());
+        super(getDefaultConfigPath(), getDefaults());
         init();
     }
 
-    void saveToDisk() {
-        config.saveToDisk();
+    public void saveToDisk() {
+        super.saveToDisk();
         workspaceConfig.saveToDisk();
     }
 
