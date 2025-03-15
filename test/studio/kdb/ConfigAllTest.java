@@ -7,6 +7,7 @@ import org.junit.jupiter.api.Test;
 import studio.core.Credentials;
 import studio.core.DefaultAuthenticationMechanism;
 import studio.kdb.config.ActionOnExit;
+import studio.kdb.config.ExecAllOption;
 import studio.kdb.config.KdbMessageLimitAction;
 import studio.ui.Util;
 import studio.utils.LineEnding;
@@ -89,8 +90,8 @@ public class ConfigAllTest {
 
     @Test
     public void testCustom() {
-        assertEquals(Config.ExecAllOption.Ignore, config.getExecAllOption());
-        assertEquals("javax.swing.plaf.nimbus.NimbusLookAndFeel", config.getLookAndFeel());
+        assertEquals(ExecAllOption.Ignore, config.getEnum(Config.EXEC_ALL));
+        assertEquals("javax.swing.plaf.nimbus.NimbusLookAndFeel", config.getString(Config.LOOK_AND_FEEL));
         assertEquals(500000, config.getMaxCharsInResult());
         assertEquals(1024, config.getMaxCharsInTableCell());
         assertArrayEquals(new String[]{"file1", "/tmp/file2"}, config.getMRUFiles());

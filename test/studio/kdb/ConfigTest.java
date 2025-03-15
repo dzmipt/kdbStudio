@@ -6,6 +6,7 @@ import org.junit.jupiter.api.Test;
 import studio.core.Credentials;
 import studio.core.DefaultAuthenticationMechanism;
 import studio.kdb.config.ActionOnExit;
+import studio.kdb.config.ExecAllOption;
 import studio.utils.MockConfig;
 import studio.utils.TableConnExtractor;
 
@@ -189,19 +190,19 @@ public class ConfigTest {
 
     @Test
     public void testExecAllOptions() throws IOException {
-        assertEquals(Config.ExecAllOption.Ask, config.getExecAllOption());
+        assertEquals(ExecAllOption.Ask, config.getEnum(Config.EXEC_ALL));
 
-        config.setExecAllOption(Config.ExecAllOption.Ignore);
-        assertEquals(Config.ExecAllOption.Ignore, config.getExecAllOption());
+        config.setEnum(Config.EXEC_ALL, ExecAllOption.Ignore);
+        assertEquals(ExecAllOption.Ignore, config.getEnum(Config.EXEC_ALL));
 
         Config newConfig = copyConfig(config, p -> {});
-        assertEquals(Config.ExecAllOption.Ignore, newConfig.getExecAllOption());
+        assertEquals(ExecAllOption.Ignore, newConfig.getEnum(Config.EXEC_ALL));
 
         newConfig = copyConfig(config, p -> {
             p.setProperty("execAllOption", "testValue");
         });
 
-        assertEquals(Config.ExecAllOption.Ask, newConfig.getExecAllOption());
+        assertEquals(ExecAllOption.Ask, newConfig.getEnum(Config.EXEC_ALL));
 
     }
 

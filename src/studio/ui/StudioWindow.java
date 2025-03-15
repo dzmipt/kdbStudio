@@ -8,6 +8,7 @@ import org.fife.ui.rsyntaxtextarea.RSyntaxTextAreaEditorKit;
 import studio.core.Studio;
 import studio.kdb.*;
 import studio.kdb.config.ActionOnExit;
+import studio.kdb.config.ExecAllOption;
 import studio.ui.action.*;
 import studio.ui.chart.Chart;
 import studio.ui.dndtabbedpane.DragEvent;
@@ -1567,12 +1568,12 @@ public class StudioWindow extends JFrame implements WindowListener {
         String text = editor.getSelectedText();
         if (text != null) return text;
 
-        Config.ExecAllOption option = CONFIG.getExecAllOption();
-        if (option == Config.ExecAllOption.Ignore) {
+        ExecAllOption option = CONFIG.getEnum(Config.EXEC_ALL);
+        if (option == ExecAllOption.Ignore) {
             log.info("Nothing is selected. Ignore execution of the whole script");
             return null;
         }
-        if (option == Config.ExecAllOption.Execute) {
+        if (option == ExecAllOption.Execute) {
             return editor.getText();
         }
         //Ask

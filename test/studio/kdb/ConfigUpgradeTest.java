@@ -3,6 +3,7 @@ package studio.kdb;
 import org.junit.jupiter.api.Test;
 import studio.core.DefaultAuthenticationMechanism;
 import studio.kdb.config.ActionOnExit;
+import studio.kdb.config.ExecAllOption;
 import studio.utils.LineEnding;
 
 import java.awt.*;
@@ -36,11 +37,11 @@ public class ConfigUpgradeTest {
         assertTrue(config.getBoolean(Config.EDITOR_TAB_EMULATED));
         assertEquals(15, config.getInt(Config.EDITOR_TAB_SIZE));
         assertEquals(1500, config.getInt(Config.EMULATED_DOUBLE_CLICK_TIMEOUT));
-        assertEquals(Config.ExecAllOption.Ignore, config.getExecAllOption());
+        assertEquals(ExecAllOption.Ignore, config.getEnum(Config.EXEC_ALL));
         assertEquals(new Font("Times New Roman", Font.PLAIN, 18),config.getFont(Config.FONT_EDITOR));
         assertEquals(new Font("Arial", Font.PLAIN, 14),config.getFont(Config.FONT_TABLE));
         assertTrue(config.getBoolean(Config.AUTO_SAVE));
-        assertEquals("javax.swing.plaf.nimbus.NimbusLookAndFeel",config.getLookAndFeel());
+        assertEquals("javax.swing.plaf.nimbus.NimbusLookAndFeel",config.getString(Config.LOOK_AND_FEEL));
         assertEquals(500000, config.getMaxCharsInResult());
         assertEquals(1024, config.getMaxCharsInTableCell());
         assertEquals(9, config.getInt(Config.MAX_FRACTION_DIGITS));

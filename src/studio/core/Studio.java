@@ -54,13 +54,12 @@ public class Studio {
             System.setProperty("com.apple.mrj.application.growbox.intrudes","false");
         }
 
-        if(Config.getInstance().getLookAndFeel()!=null){
-            try {
-                UIManager.setLookAndFeel(Config.getInstance().getLookAndFeel());
-            } catch (Exception e) {
-                // go on with default one
-                log.warn("Can't set LookAndFeel from Config {}", Config.getInstance().getLookAndFeel(), e);
-            }
+        String lookAndFeelClassName = Config.getInstance().getString(Config.LOOK_AND_FEEL);
+        try {
+            UIManager.setLookAndFeel(lookAndFeelClassName);
+        } catch (Exception e) {
+            // go on with default one
+            log.warn("Can't set LookAndFeel from Config {}", lookAndFeelClassName, e);
         }
 
         studio.ui.I18n.setLocale(Locale.getDefault());

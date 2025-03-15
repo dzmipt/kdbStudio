@@ -8,6 +8,7 @@ import studio.kdb.config.*;
 import studio.utils.*;
 import studio.utils.log4j.EnvConfig;
 
+import javax.swing.*;
 import java.awt.*;
 import java.io.IOException;
 import java.io.InputStream;
@@ -24,7 +25,8 @@ public class Config extends AbstractConfig {
     private static final Logger log = LogManager.getLogger();
 
     //@TODO migrate all other keys under such approach
-
+    public static final String LOOK_AND_FEEL = configDefault("lookandfeel", ConfigType.STRING, UIManager.getLookAndFeel().getClass().getName());
+    public static final String EXEC_ALL = configDefault("execAllOption", ConfigType.ENUM, ExecAllOption.Ask);
     public static final String SHOW_SERVER_COMBOBOX = configDefault("showServerComboBox", ConfigType.BOOLEAN, true);
     public static final String AUTO_SAVE = configDefault("isAutoSave", ConfigType.BOOLEAN, false);
     public static final String ACTION_ON_EXIT = configDefault("actionOnExit", ConfigType.ENUM, ActionOnExit.SAVE);
@@ -116,8 +118,6 @@ public class Config extends AbstractConfig {
 
     // Can be overridden in test cases
     protected static Config instance = new Config();
-
-    public enum ExecAllOption {Execute, Ask, Ignore}
 
     protected Config(Path path) {
         super(path);
@@ -294,21 +294,6 @@ public class Config extends AbstractConfig {
         initTableConnExtractor();
     }
 
-    public ExecAllOption getExecAllOption() {
-        String value = config.getProperty("execAllOption", "Ask");
-        try {
-            return ExecAllOption.valueOf(value);
-        } catch (IllegalArgumentException e) {
-            log.info(value + " - can't parse execAllOption from Config. Reset to default: Ask");
-            return ExecAllOption.Ask;
-        }
-    }
-
-    public void setExecAllOption(ExecAllOption option) {
-        config.setProperty("execAllOption", option.toString());
-        save();
-    }
-
     public String getNotesHash() {
         return config.getProperty("notesHash","");
     }
@@ -459,15 +444,6 @@ public class Config extends AbstractConfig {
     public void saveMRUFiles(String[] mruFiles) {
         String value = Stream.of(mruFiles).limit(9).collect(Collectors.joining(","));
         config.put("mrufiles", value);
-        save();
-    }
-
-    public String getLookAndFeel() {
-        return config.getProperty("lookandfeel");
-    }
-
-    public void setLookAndFeel(String lf) {
-        config.put("lookandfeel", lf);
         save();
     }
 
