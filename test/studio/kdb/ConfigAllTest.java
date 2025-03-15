@@ -8,6 +8,7 @@ import studio.core.Credentials;
 import studio.core.DefaultAuthenticationMechanism;
 import studio.kdb.config.ActionOnExit;
 import studio.kdb.config.KdbMessageLimitAction;
+import studio.ui.Util;
 import studio.utils.LineEnding;
 
 import java.awt.*;
@@ -26,6 +27,7 @@ public class ConfigAllTest {
 
     @BeforeAll
     public static void prepare() throws IOException {
+        Util.setMockFitToScreen(true);
         configPath = Files.createTempDirectory("kdbStudioConfig");
         Path path = configPath.resolve("studio.properties");
         try (InputStream inputStream = ConfigAllTest.class.getClassLoader().getResourceAsStream("studio14.properties") ) {
@@ -37,6 +39,7 @@ public class ConfigAllTest {
     @AfterAll
     public static void cleanup() throws IOException {
         FileUtils.deleteDirectory(configPath.toFile());
+        Util.setMockFitToScreen(false);
     }
 
     @Test

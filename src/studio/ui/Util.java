@@ -1,5 +1,7 @@
 package studio.ui;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import studio.utils.Transferables;
 
 import javax.swing.*;
@@ -68,6 +70,10 @@ public class Util {
     public static boolean WINDOWS = (System.getProperty("os.name").toLowerCase().contains("win"));
 
     public static boolean Java8Minus = System.getProperty("java.version").startsWith("1.");
+
+
+    private static boolean mockFitToScreen = false;
+    private final static Logger log = LogManager.getLogger();
 
     public static Color blendColors(Color... colors) {
         float ratio = 1f / ((float) colors.length);
@@ -154,12 +160,19 @@ public class Util {
     }
 
     public static boolean fitToScreen(Rectangle bounds) {
+        if (mockFitToScreen) return true;
+
         boolean fitToScreen = false;
         GraphicsDevice[] devices = GraphicsEnvironment.getLocalGraphicsEnvironment().getScreenDevices();
         for (GraphicsDevice device : devices) {
             fitToScreen |= device.getDefaultConfiguration().getBounds().contains(bounds);
         }
         return fitToScreen;
+    }
+
+    public static void setMockFitToScreen(boolean isMock) {
+        log.info("mock fitToScreen: {}", isMock);
+        mockFitToScreen = isMock;
     }
 
 }
