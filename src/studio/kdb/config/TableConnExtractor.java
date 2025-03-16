@@ -4,10 +4,7 @@ import studio.kdb.K;
 import studio.kdb.KFormatContext;
 
 import javax.swing.table.TableModel;
-import java.util.ArrayList;
-import java.util.LinkedHashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 import java.util.regex.Pattern;
 
 public class TableConnExtractor {
@@ -25,7 +22,8 @@ public class TableConnExtractor {
     private static final Pattern hostPattern = Pattern.compile("`?:?" + hostRegex);
     private static final Pattern portPattern = Pattern.compile("`?:?" + portRegex);
 
-    private int maxConn = Integer.MAX_VALUE;
+    private final static int MAX_CONNECTIONS = 20;
+    private int maxConn = MAX_CONNECTIONS;
 
     public void setHostWords(String[] hostWords) {
         this.hostWords = hostWords;
@@ -40,7 +38,36 @@ public class TableConnExtractor {
     }
 
     public void setMaxConn(int maxConn) {
-        this.maxConn = maxConn<=0 ? Integer.MAX_VALUE : maxConn;
+        this.maxConn = maxConn<=0 ? MAX_CONNECTIONS : maxConn;
+    }
+
+    public String[] getHostWords() {
+        return hostWords;
+    }
+
+    public String[] getPortWords() {
+        return portWords;
+    }
+
+    public String[] getConnWords() {
+        return connWords;
+    }
+
+    public int getMaxConn() {
+        return maxConn;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof TableConnExtractor)) return false;
+        TableConnExtractor that = (TableConnExtractor) o;
+        return maxConn == that.maxConn && Arrays.equals(hostWords, that.hostWords) && Arrays.equals(portWords, that.portWords) && Arrays.equals(connWords, that.connWords);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(Arrays.hashCode(hostWords), Arrays.hashCode(portWords), Arrays.hashCode(connWords), maxConn);
     }
 
     private static boolean contains(String header, String[] words) {

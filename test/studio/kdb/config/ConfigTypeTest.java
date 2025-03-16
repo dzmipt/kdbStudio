@@ -19,7 +19,7 @@ public class ConfigTypeTest {
     }
 
     @Test
-    public void test() {
+    public void testSimple() {
         check(ConfigType.STRING, "test", "other");
         check(ConfigType.INT, 10, 15);
 
@@ -42,7 +42,10 @@ public class ConfigTypeTest {
         check(ConfigType.SIZE, new Dimension(215, 317), null);
 
         check(ConfigType.FILE_CHOOSER, new FileChooserConfig("/folder/afile.ext", new Dimension(125, 137)), null);
+    }
 
+    @Test
+    public void testDefaultAuthConfig() {
         check(ConfigType.CREDENTIALS, Credentials.DEFAULT, null);
         check(ConfigType.CREDENTIALS, new Credentials("user",""), null);
 
@@ -54,6 +57,21 @@ public class ConfigTypeTest {
 
         config.setDefaultAuth("something");
         check(ConfigType.DEFAULT_AUTH_CONFIG, config, null);
+    }
+
+    @Test
+    public void testTableConnExtractor() {
+        TableConnExtractor extractor = new TableConnExtractor();
+        check(ConfigType.TABLE_CONN_EXTRACTOR, extractor, null);
+
+        extractor.setMaxConn(10);
+        check(ConfigType.TABLE_CONN_EXTRACTOR, extractor, null);
+
+        extractor.setConnWords(new String[] {"a", "b", "c"});
+        extractor.setHostWords(new String[] {"1", "2", });
+        extractor.setPortWords(new String[] {"aa1", "bb2", "cc3"});
+        check(ConfigType.TABLE_CONN_EXTRACTOR, extractor, null);
+
     }
 
     @Test

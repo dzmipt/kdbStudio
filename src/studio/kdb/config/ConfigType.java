@@ -203,6 +203,33 @@ public enum ConfigType {
             return json;
         }
     },
+    TABLE_CONN_EXTRACTOR {
+        @Override
+        public Object fromJson(JsonElement jsonElement, Object defaultValue) {
+            JsonObject json = jsonElement.getAsJsonObject();
+            int maxConnections = json.get("maxConnections").getAsInt();
+            String[] connWords = (String[]) STRING_ARRAY.fromJson(json.get("connectionWords"), new String[] {" "});
+            String[] hostWords = (String[]) STRING_ARRAY.fromJson(json.get("hostWords"), new String[] {" "});
+            String[] portWords = (String[]) STRING_ARRAY.fromJson(json.get("portWords"), new String[] {" "});
+            TableConnExtractor extractor = new TableConnExtractor();
+            extractor.setMaxConn(maxConnections);
+            extractor.setConnWords(connWords);
+            extractor.setHostWords(hostWords);
+            extractor.setPortWords(portWords);
+            return extractor;
+        }
+
+        @Override
+        public JsonElement toJson(Object value) {
+            TableConnExtractor extractor = (TableConnExtractor)value;
+            JsonObject json = new JsonObject();
+            json.add("maxConnections", new JsonPrimitive(extractor.getMaxConn()));
+            json.add("connectionWords", STRING_ARRAY.toJson(extractor.getConnWords()));
+            json.add("hostWords", STRING_ARRAY.toJson(extractor.getHostWords()));
+            json.add("portWords", STRING_ARRAY.toJson(extractor.getPortWords()));
+            return json;
+        }
+    },
     STRING_ARRAY(STRING),
     INT_ARRAY(INT),
     ENUM_ARRAY(ENUM);
