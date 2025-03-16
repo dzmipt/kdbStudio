@@ -95,17 +95,24 @@ public class ConfigAllTest {
         assertEquals(500000, config.getInt(Config.MAX_CHARS_IN_RESULT));
         assertEquals(1024, config.getInt(Config.MAX_CHARS_IN_TABLE_CELL));
         assertArrayEquals(new String[]{"file1", "/tmp/file2"}, config.getStringArray(Config.MRU_FILES));
-        assertEquals("94a43c9badd0e2e1c2bdf3e40ded8366", config.getNotesHash());
-        assertEquals(25, config.getResultTabsCount());
-        //serverHistory
-        //version
-        assertEquals(10, config.getTableMaxConnectionPopup());
+        assertEquals("94a43c9badd0e2e1c2bdf3e40ded8366", config.getString(Config.NOTES_HASH));
+        assertEquals(25, config.getInt(Config.RESULT_TAB_COUNTS));
 
-        assertEquals("server, host", config.getConnColWords());
-        assertEquals("s,server", config.getHostColWords());
-        assertEquals("p,port", config.getPortColWords());
-        assertEquals(30, config.getServerHistoryDepth());
-        assertEquals("UTF-8", config.getEncoding());
+        //serverHistory
+        assertEquals(30, config.getInt(Config.SERVER_HISTORY_DEPTH));
+        // We do not convert from the old format
+        assertArrayEquals(new String[0], config.getStringArray(Config.SERVER_HISTORY_LIST));
+
+        assertEquals(10, config.getInt(Config.POPUP_MAX_CONNECTIONS));
+
+        assertArrayEquals(new String[]{"server", " host"}, config.getStringArray(Config.POPUP_CONN_COLUMNS_WORDS));
+        assertArrayEquals(new String[]{"s", "server"}, config.getStringArray(Config.POPUP_HOST_COLUMNS_WORDS));
+        assertArrayEquals(new String[]{"p", "port"}, config.getStringArray(Config.POPUP_PORT_COLUMNS_WORDS));
+
+        // Removed encoding from the config
+        // assertEquals("UTF-8", config.getEncoding());
+
+        //version
 
     }
 

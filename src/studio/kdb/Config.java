@@ -29,6 +29,16 @@ public class Config extends AbstractConfig {
     public static final String MAX_CHARS_IN_RESULT = configDefault("maxCharsInResult", ConfigType.INT, 50000);
     public static final String MAX_CHARS_IN_TABLE_CELL = configDefault("maxCharsInTableCell", ConfigType.INT, 256);
     public static final String MRU_FILES = configDefault("mrufiles", ConfigType.STRING_ARRAY, new String[0]);
+    public static final String NOTES_HASH = configDefault("notesHash", ConfigType.STRING, "");
+    public static final String RESULT_TAB_COUNTS = configDefault("resultTabsCount", ConfigType.INT, 5);
+    public static final String POPUP_MAX_CONNECTIONS = configDefault("tableMaxConnectionPopup", ConfigType.INT, 5);
+
+    public static final String POPUP_CONN_COLUMNS_WORDS = configDefault("connColWords", ConfigType.STRING_ARRAY, new String[]{"server", "host", "connection", "handle"});
+    public static final String POPUP_HOST_COLUMNS_WORDS = configDefault("hostColWords", ConfigType.STRING_ARRAY, new String[]{"server", "host"});
+    public static final String POPUP_PORT_COLUMNS_WORDS = configDefault("portColWords", ConfigType.STRING_ARRAY, new String[]{"port"});
+
+    public static final String SERVER_HISTORY_DEPTH = configDefault("serverHistoryDepth", ConfigType.INT, 20);
+    public static final String SERVER_HISTORY_LIST = configDefault("serverHistory", ConfigType.STRING_ARRAY, new String[0]);
 
     public static final String SHOW_SERVER_COMBOBOX = configDefault("showServerComboBox", ConfigType.BOOLEAN, true);
     public static final String AUTO_SAVE = configDefault("isAutoSave", ConfigType.BOOLEAN, false);
@@ -112,12 +122,6 @@ public class Config extends AbstractConfig {
     protected PropertiesConfig workspaceConfig;
     protected ServerConfig serverConfig;
     private HistoricalList<Server> serverHistory;
-
-    private static final String CONN_COL_WORDS = "server, host, connection, handle";
-    private static final String HOST_COL_WORDS = "server, host";
-    private static final String PORT_COL_WORDS = "port";
-
-    private TableConnExtractor tableConnExtractor;
 
     // Can be overridden in test cases
     protected static Config instance = new Config();
@@ -237,77 +241,20 @@ public class Config extends AbstractConfig {
         workspaceConfig.save();
     }
 
-    private String[] getWords(String value) {
-        return Stream.of(value.split(","))
+    private String[] getWords(String[] values) {
+        return Stream.of(values)
                         .map(String::trim)
                         .map(String::toLowerCase)
                         .toArray(String[]::new);
     }
 
-    private void initTableConnExtractor() {
-        tableConnExtractor = new TableConnExtractor();
-        tableConnExtractor.setMaxConn(getTableMaxConnectionPopup());
-        tableConnExtractor.setConnWords(getWords(getConnColWords()));
-        tableConnExtractor.setHostWords(getWords(getHostColWords()));
-        tableConnExtractor.setPortWords(getWords(getPortColWords()));
-    }
-
     public TableConnExtractor getTableConnExtractor() {
+        TableConnExtractor tableConnExtractor = new TableConnExtractor();
+        tableConnExtractor.setMaxConn(getInt(Config.POPUP_MAX_CONNECTIONS));
+        tableConnExtractor.setConnWords(getWords(getStringArray(Config.POPUP_CONN_COLUMNS_WORDS)));
+        tableConnExtractor.setHostWords(getWords(getStringArray(Config.POPUP_HOST_COLUMNS_WORDS)));
+        tableConnExtractor.setPortWords(getWords(getStringArray(Config.POPUP_PORT_COLUMNS_WORDS)));
         return tableConnExtractor;
-    }
-
-    public int getTableMaxConnectionPopup() {
-        return Integer.parseInt(config.getProperty("tableMaxConnectionPopup","5"));
-    }
-
-    public String getConnColWords() {
-        return config.getProperty("connColWords", CONN_COL_WORDS);
-    }
-
-    public String getHostColWords() {
-        return config.getProperty("hostColWords", HOST_COL_WORDS);
-
-    }
-
-    public String getPortColWords() {
-        return config.getProperty("portColWords", PORT_COL_WORDS);
-    }
-
-    public void setTableMaxConnectionPopup(int maxConn) {
-        config.setProperty("tableMaxConnectionPopup", "" + maxConn);
-        save();
-        initTableConnExtractor();
-    }
-
-    public void setConnColWords(String words) {
-        config.setProperty("connColWords", words);
-        save();
-        initTableConnExtractor();
-    }
-
-    public void setHostColWords(String words) {
-        config.setProperty("hostColWords", words);
-        save();
-        initTableConnExtractor();
-    }
-
-    public void setPortColWords(String words) {
-        config.setProperty("portColWords", words);
-        save();
-        initTableConnExtractor();
-    }
-
-    public String getNotesHash() {
-        return config.getProperty("notesHash","");
-    }
-
-    public void setNotesHash(String notesHash) {
-        config.setProperty("notesHash", notesHash);
-        save();
-    }
-
-    public String getEncoding() {
-        return config.getProperty("encoding", "UTF-8");
     }
 
     public static Config getInstance() {
@@ -319,7 +266,6 @@ public class Config extends AbstractConfig {
         serverConfig = new ServerConfig(getServerConfigPath());
 
         checkForUpgrade();
-        initTableConnExtractor();
     }
 
     private void upgradeTo14() {
@@ -396,30 +342,12 @@ public class Config extends AbstractConfig {
         config.setProperty("version", VERSION);
     }
 
-    // "".split(",") return {""}; we need to get zero length array
-    private String[] split(String str) {
-        str = str.trim();
-        if (str.length() == 0) return new String[0];
-        return str.split(",");
-    }
-
-    public int getServerHistoryDepth() {
-        return Integer.parseInt(config.getProperty("serverHistoryDepth", "20"));
-    }
-
-    public void setServerHistoryDepth(int depth) {
-        serverHistory.setDepth(depth);
-        config.setProperty("serverHistoryDepth", "" + depth);
-        save();
-    }
-
     private void initServerHistory() {
-        int depth = getServerHistoryDepth();
+        int depth = getInt(Config.SERVER_HISTORY_DEPTH);
         serverHistory = new HistoricalList<>(depth);
-        for (int i=depth-1; i>=0; i--) {
-            String key = "serverHistory." + i;
-            if (! config.containsKey(key)) continue;
-            Server server = serverConfig.getServer(config.getProperty(key));
+        String[] serverArray = getStringArray(Config.SERVER_HISTORY_LIST);
+        for (int i = serverArray.length-1; i>=0; i--) {
+            Server server = serverConfig.getServer(serverArray[i]);
             if (server == Server.NO_SERVER) continue;
             serverHistory.add(server);
         }
@@ -431,11 +359,10 @@ public class Config extends AbstractConfig {
 
     public void addServerToHistory(Server server) {
         serverHistory.add(server);
-        for (int i=serverHistory.size()-1; i>=0; i--) {
-            String key = "serverHistory." + i;
-            config.setProperty(key, serverHistory.get(i).getFullName());
-        }
-        save();
+        String[] newArray = serverHistory.stream()
+                                        .map(Server::getFullName)
+                                        .toArray(String[]::new);
+        setStringArray(Config.SERVER_HISTORY_LIST, newArray);
     }
 
     // Resolve or create a new server by connection string.
@@ -469,15 +396,6 @@ public class Config extends AbstractConfig {
 
     public void setDefaultAuthMechanism(String authMechanism) {
         config.setProperty("auth", authMechanism);
-        save();
-    }
-
-    public int getResultTabsCount() {
-        return Integer.parseInt(config.getProperty("resultTabsCount","5"));
-    }
-
-    public void setResultTabsCount(int value) {
-        config.setProperty("resultTabsCount", "" + value);
         save();
     }
 

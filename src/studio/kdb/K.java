@@ -1,5 +1,7 @@
 package studio.kdb;
 
+import kx.IPC;
+
 import java.io.IOException;
 import java.io.OutputStream;
 import java.lang.reflect.Array;
@@ -772,7 +774,7 @@ public class K {
 
         @Override
         public void serialiseData(OutputStream o) throws IOException {
-            o.write(s.getBytes(Config.getInstance().getEncoding()));
+            o.write(s.getBytes(IPC.ENCODING));
             write(o, (byte) 0);
         }
 
@@ -1902,7 +1904,7 @@ public class K {
         @Override
         public void serialiseData(OutputStream o) throws IOException {
             write(o, getAttr());
-            byte[] b = getString().getBytes(Config.getInstance().getEncoding());
+            byte[] b = getString().getBytes(IPC.ENCODING);
             write(o, b.length);
             o.write(b);
         }

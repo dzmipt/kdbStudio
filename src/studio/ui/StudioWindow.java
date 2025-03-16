@@ -1312,7 +1312,7 @@ public class StudioWindow extends JFrame implements WindowListener {
         allWindows.add(this);
         if (activeWindow == null) activeWindow = this;
 
-        serverHistory = new HistoricalList<>(CONFIG.getServerHistoryDepth(),
+        serverHistory = new HistoricalList<>(CONFIG.getInt(Config.SERVER_HISTORY_DEPTH),
                 CONFIG.getServerHistory());
         initActions();
         createMenuBar();

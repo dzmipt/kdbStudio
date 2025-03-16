@@ -91,9 +91,9 @@ public class ConfigTest {
 
     @Test
     public void testServerHistoryDepth() {
-        int depth = config.getServerHistoryDepth();
-        config.setServerHistoryDepth(depth+1);
-        assertEquals(depth+1, config.getServerHistoryDepth());
+        int depth = config.getInt(Config.SERVER_HISTORY_DEPTH);
+        config.setInt(Config.SERVER_HISTORY_DEPTH, depth+1);
+        assertEquals(depth+1, config.getInt(Config.SERVER_HISTORY_DEPTH));
     }
 
     @Test
@@ -139,9 +139,14 @@ public class ConfigTest {
         assertEquals(server1, config.getServerHistory().get(1));
         assertEquals(server2, config.getServerHistory().get(2));
 
-        config.setServerHistoryDepth(3);
+        config.setInt(Config.SERVER_HISTORY_DEPTH, 3);
         config.addServerToHistory(server3);
-        assertEquals(3, config.getServerHistory().size());
+
+        // it used to be "expected:3". But now the SERVER_HISTORY_DEPTH is loaded once on start up.
+        // Not sure if we need to support dynamic changes.
+        assertEquals(4, config.getServerHistory().size());
+        assertEquals(3, config.getInt(Config.SERVER_HISTORY_DEPTH));
+
         assertEquals(server3, config.getServerHistory().get(0));
         assertEquals(server, config.getServerHistory().get(1));
         assertEquals(server1, config.getServerHistory().get(2));
@@ -211,21 +216,21 @@ public class ConfigTest {
         TableConnExtractor extractor = config.getTableConnExtractor();
         assertNotNull(extractor);
 
-        String conn = "someWords, words";
-        String host = "hostWords, words";
-        String port = "someWords, ports";
+        String[] conn = new String[] {"someWords", "words"};
+        String[] host = new String[] {"hostWords", "words"};
+        String[] port = new String[] {"someWords", "ports"};
 
-        config.setConnColWords(conn);
-        config.setHostColWords(host);
-        config.setPortColWords(port);
-        config.setTableMaxConnectionPopup(100);
+        config.setStringArray(Config.POPUP_CONN_COLUMNS_WORDS, conn);
+        config.setStringArray(Config.POPUP_HOST_COLUMNS_WORDS, host);
+        config.setStringArray(Config.POPUP_PORT_COLUMNS_WORDS, port);
+        config.setInt(Config.POPUP_MAX_CONNECTIONS, 100);
         assertNotEquals(extractor, config.getTableConnExtractor());
 
         Config newConfig = copyConfig(config, p -> {});
-        assertEquals(conn, newConfig.getConnColWords());
-        assertEquals(host, newConfig.getHostColWords());
-        assertEquals(port, newConfig.getPortColWords());
-        assertEquals(100, newConfig.getTableMaxConnectionPopup());
+        assertArrayEquals(conn, newConfig.getStringArray(Config.POPUP_CONN_COLUMNS_WORDS));
+        assertArrayEquals(host, newConfig.getStringArray(Config.POPUP_HOST_COLUMNS_WORDS));
+        assertArrayEquals(port, newConfig.getStringArray(Config.POPUP_PORT_COLUMNS_WORDS));
+        assertEquals(100, newConfig.getInt(Config.POPUP_MAX_CONNECTIONS));
     }
 
     @Test

@@ -45,7 +45,7 @@ public class ConfigUpgradeTest {
         assertEquals(500000, config.getInt(Config.MAX_CHARS_IN_RESULT));
         assertEquals(1024, config.getInt(Config.MAX_CHARS_IN_TABLE_CELL));
         assertEquals(9, config.getInt(Config.MAX_FRACTION_DIGITS));
-        assertEquals(20, config.getResultTabsCount());
+        assertEquals(20, config.getInt(Config.RESULT_TAB_COUNTS));
         assertFalse(config.getBoolean(Config.RSTA_ANIMATE_BRACKET_MATCHING));
         assertFalse(config.getBoolean(Config.RSTA_HIGHLIGHT_CURRENT_LINE));
         assertFalse(config.getBoolean(Config.RSTA_INSERT_PAIRED_CHAR));

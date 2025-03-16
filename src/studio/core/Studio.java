@@ -212,9 +212,9 @@ public class Studio {
         WorkspaceSaver.init();
 
         String hash = Lm.getNotesHash();
-        if (! Config.getInstance().getNotesHash().equals(hash) ) {
-            StudioWindow.getAllStudioWindows()[0].about();
-            Config.getInstance().setNotesHash(hash);
+        if (! Config.getInstance().getString(Config.NOTES_HASH).equals(hash) ) {
+            StudioWindow.about();
+            Config.getInstance().setString(Config.NOTES_HASH, hash);
         }
     }
 }

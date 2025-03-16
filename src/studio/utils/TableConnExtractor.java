@@ -27,24 +27,16 @@ public class TableConnExtractor {
 
     private int maxConn = Integer.MAX_VALUE;
 
-    private static String[] lower(String[] words) {
-        String[] result = new String[words.length];
-        for (int index = 0; index<words.length; index++) {
-            result[index] = words[index].toLowerCase();
-        }
-        return result;
-    }
-
     public void setHostWords(String[] hostWords) {
-        this.hostWords = lower(hostWords);
+        this.hostWords = hostWords;
     }
 
     public void setPortWords(String[] portWords) {
-        this.portWords = lower(portWords);
+        this.portWords = portWords;
     }
 
     public void setConnWords(String[] connWords) {
-        this.connWords = lower(connWords);
+        this.connWords = connWords;
     }
 
     public void setMaxConn(int maxConn) {

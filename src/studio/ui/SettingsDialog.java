@@ -202,7 +202,7 @@ public class SettingsDialog extends EscapeDialog {
         comboBoxLookAndFeel.setSelectedItem(lf);
         JLabel lblResultTabsCount = new JLabel("Result tabs count");
         txtTabsCount = new JFormattedTextField(formatter);
-        txtTabsCount.setValue(CONFIG.getResultTabsCount());
+        txtTabsCount.setValue(CONFIG.getInt(Config.RESULT_TAB_COUNTS));
         chBoxShowServerCombo = new JCheckBox("Show server drop down list in the toolbar");
         chBoxShowServerCombo.setSelected(CONFIG.getBoolean(Config.SHOW_SERVER_COMBOBOX));
         JLabel lblMaxCharsInResult = new JLabel("Max chars in result");
@@ -344,7 +344,7 @@ public class SettingsDialog extends EscapeDialog {
             StudioWindow.refreshComboServerVisibility();
         }
 
-        CONFIG.setResultTabsCount(getResultTabsCount());
+        CONFIG.setInt(Config.RESULT_TAB_COUNTS, getResultTabsCount());
         CONFIG.setInt(Config.MAX_CHARS_IN_RESULT, getMaxCharsInResult());
         CONFIG.setInt(Config.MAX_CHARS_IN_TABLE_CELL, getMaxCharsInTableCell());
         CONFIG.setDouble(Config.CELL_RIGHT_PADDING, getCellRightPadding());
