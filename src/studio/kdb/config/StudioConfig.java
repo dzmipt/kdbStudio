@@ -17,8 +17,10 @@ import java.io.Writer;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.Instant;
-import java.util.List;
-import java.util.*;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Objects;
+import java.util.TreeMap;
 
 public class StudioConfig {
 
@@ -58,7 +60,7 @@ public class StudioConfig {
     }
 
     private Map<String, Object> load(Path path) {
-        Map<String, Object> map = new HashMap<>();
+        Map<String, Object> map = new TreeMap<>();
         if (path == null) return map;
 
         try (Reader reader = Files.newBufferedReader(path)) {
@@ -86,23 +88,22 @@ public class StudioConfig {
             log.error("Error on parsing json {}", path, e);
         }
 
+        log.info("Loaded config {} with {} settings", path, map.size());
         return map;
     }
 
     private void save() {
         try (Writer writer = new OutputStreamWriter(FilesBackup.getInstance().newFileOutputStream(path))) {
-            List<String> keys = new ArrayList<>(config.keySet());
-            Collections.sort(keys);
 
             JsonObject json = new JsonObject();
-            for (String key: keys) {
+            String comment = String.format("Auto-generated at %s from a process with pid %d", Instant.now(), ProcessHandle.current().pid());
+            json.add(COMMENT, ConfigType.STRING.toJson(comment));
+
+            for (String key: config.keySet()) {
                 ConfigType type = configTypes.get(key);
 
                 json.add(key, type.toJson(config.get(key)));
             }
-
-            String comment = String.format("Auto-generated at %s from a process with pid %d", Instant.now(), ProcessHandle.current().pid());
-            json.add(COMMENT, ConfigType.STRING.toJson(comment));
 
             gson.toJson(json, writer);
         } catch (IOException e) {
@@ -117,7 +118,7 @@ public class StudioConfig {
         return configDefaultValues.get(key);
     }
 
-    private Object get(String key, ConfigType type) {
+    public Object get(String key, ConfigType type) {
         if (! configTypes.containsKey(key)) throw new IllegalArgumentException("Unknown key: " + key);
         if (type != configTypes.get(key)) throw new IllegalArgumentException(String.format("Unexpected type. %s != %s", type, configTypes.get(key)));
 
@@ -127,7 +128,7 @@ public class StudioConfig {
         return getDefault(key);
     }
 
-    private boolean set(String key, ConfigType type, Object value) {
+    public boolean set(String key, ConfigType type, Object value) {
         Object currentValue = get(key, type);
 
         if (Objects.equals(currentValue, value)) return false;

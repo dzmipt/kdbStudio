@@ -3,14 +3,14 @@ package studio.kdb.config;
 import studio.core.Credentials;
 import studio.core.DefaultAuthenticationMechanism;
 
-import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
+import java.util.TreeMap;
 
 public class DefaultAuthConfig {
     private String defaultAuth = DefaultAuthenticationMechanism.NAME;
-    private final Map<String, Credentials> credentials = new HashMap<>();
+    private final Map<String, Credentials> credentials = new TreeMap<>();
 
     public DefaultAuthConfig() {
     }

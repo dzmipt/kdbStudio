@@ -230,6 +230,31 @@ public enum ConfigType {
             return json;
         }
     },
+    COLOR_TOKEN_CONFIG {
+        @Override
+        public Object fromJson(JsonElement jsonElement, Object defaultValue) {
+            ColorTokenConfig config = new ColorTokenConfig();
+            JsonObject json = jsonElement.getAsJsonObject();
+            for (String key: json.keySet()) {
+                ColorToken token = ColorToken.valueOf(key.toUpperCase());
+                Color color = (Color) COLOR.fromJson(json.get(key), null);
+                config.setColor(token, color);
+            }
+            return config;
+        }
+
+        @Override
+        public JsonElement toJson(Object value) {
+            ColorTokenConfig config = (ColorTokenConfig) value;
+            JsonObject json = new JsonObject();
+            for (ColorToken token: ColorToken.values()) {
+                Color color = config.getColor(token);
+                if (color.equals(token.getColor())) continue;
+                json.add(token.name().toLowerCase(), COLOR.toJson(color));
+            }
+            return json;
+        }
+    },
     STRING_ARRAY(STRING),
     INT_ARRAY(INT),
     ENUM_ARRAY(ENUM);

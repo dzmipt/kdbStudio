@@ -75,6 +75,21 @@ public class ConfigTypeTest {
     }
 
     @Test
+    public void ColorTokenConfig() {
+        ColorTokenConfig config = new ColorTokenConfig();
+        check(ConfigType.COLOR_TOKEN_CONFIG, config, null);
+
+        config.setColor(ColorToken.DATE, new Color(11,22,33));
+        check(ConfigType.COLOR_TOKEN_CONFIG, config, null);
+
+        config.setColor(ColorToken.BACKGROUND, Color.WHITE);
+        check(ConfigType.COLOR_TOKEN_CONFIG, config, null);
+
+        config.setColor(ColorToken.BACKGROUND, new Color(10, 20, 30));
+        check(ConfigType.COLOR_TOKEN_CONFIG, config, null);
+    }
+
+    @Test
     public void testStringArray() {
         String[] strings = new String[] {"one", "two", "three"};
         JsonElement json = ConfigType.STRING_ARRAY.toJson(strings);
