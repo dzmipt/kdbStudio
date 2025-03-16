@@ -4,6 +4,7 @@ package studio.utils;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import studio.kdb.K;
+import studio.kdb.config.TableConnExtractor;
 
 import javax.swing.table.DefaultTableModel;
 import javax.swing.table.TableModel;

@@ -7,8 +7,8 @@ import studio.core.Credentials;
 import studio.core.DefaultAuthenticationMechanism;
 import studio.kdb.config.ActionOnExit;
 import studio.kdb.config.ExecAllOption;
+import studio.kdb.config.TableConnExtractor;
 import studio.utils.MockConfig;
-import studio.utils.TableConnExtractor;
 
 import java.awt.*;
 import java.io.*;

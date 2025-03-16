@@ -4,6 +4,7 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonPrimitive;
+import studio.core.Credentials;
 import studio.kdb.FileChooserConfig;
 
 import java.awt.*;
@@ -158,6 +159,49 @@ public enum ConfigType {
             return json;
         }
 
+    },
+    CREDENTIALS {
+        @Override
+        public Object fromJson(JsonElement jsonElement, Object defaultValue) {
+            JsonObject json = jsonElement.getAsJsonObject();
+            String user = json.get("user").getAsString();
+            String password = json.get("password").getAsString();
+            return new Credentials(user, password);
+        }
+
+        @Override
+        public JsonElement toJson(Object value) {
+            Credentials credentials = (Credentials) value;
+            JsonObject json = new JsonObject();
+            json.add("user", new JsonPrimitive(((Credentials) value).getUsername()));
+            json.add("password", new JsonPrimitive(((Credentials) value).getPassword()));
+            return json;
+        }
+    },
+    DEFAULT_AUTH_CONFIG {
+        @Override
+        public Object fromJson(JsonElement jsonElement, Object defaultValue) {
+            DefaultAuthConfig config = new DefaultAuthConfig();
+            JsonObject json = jsonElement.getAsJsonObject();
+            String auth = json.get("default").getAsString();
+            config.setDefaultAuth(auth);
+            for (String method: json.keySet()) {
+                if (method.equals("default")) continue;
+                config.setCredentials(method, (Credentials) CREDENTIALS.fromJson(json.get(method), null));
+            }
+            return config;
+        }
+
+        @Override
+        public JsonElement toJson(Object value) {
+            DefaultAuthConfig config = (DefaultAuthConfig) value;
+            JsonObject json = new JsonObject();
+            json.add("default", new JsonPrimitive(config.getDefaultAuth()));
+            for (String method: config.getAuthMethods()) {
+                json.add(method, CREDENTIALS.toJson(config.getCredential(method)));
+            }
+            return json;
+        }
     },
     STRING_ARRAY(STRING),
     INT_ARRAY(INT),

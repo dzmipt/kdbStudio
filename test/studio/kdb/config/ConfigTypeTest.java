@@ -2,6 +2,7 @@ package studio.kdb.config;
 
 import com.google.gson.JsonElement;
 import org.junit.jupiter.api.Test;
+import studio.core.Credentials;
 import studio.kdb.FileChooserConfig;
 import studio.kdb.KType;
 
@@ -42,6 +43,17 @@ public class ConfigTypeTest {
 
         check(ConfigType.FILE_CHOOSER, new FileChooserConfig("/folder/afile.ext", new Dimension(125, 137)), null);
 
+        check(ConfigType.CREDENTIALS, Credentials.DEFAULT, null);
+        check(ConfigType.CREDENTIALS, new Credentials("user",""), null);
+
+        DefaultAuthConfig config = new DefaultAuthConfig();
+        check(ConfigType.DEFAULT_AUTH_CONFIG, config, null);
+
+        config.setCredentials("testAuth", new Credentials("dz", "pwd"));
+        check(ConfigType.DEFAULT_AUTH_CONFIG, config, null);
+
+        config.setDefaultAuth("something");
+        check(ConfigType.DEFAULT_AUTH_CONFIG, config, null);
     }
 
     @Test

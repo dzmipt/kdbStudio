@@ -1,4 +1,4 @@
-package studio.utils;
+package studio.kdb.config;
 
 import studio.kdb.K;
 import studio.kdb.KFormatContext;
