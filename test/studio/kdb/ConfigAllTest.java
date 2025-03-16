@@ -48,10 +48,15 @@ public class ConfigAllTest {
         assertEquals(ActionOnExit.NOTHING, config.getEnum(Config.ACTION_ON_EXIT));
 
         assertEquals("Plain", DefaultAuthenticationMechanism.NAME);
+        assertEquals("testplugin", config.getDefaultAuthMechanism());
+
         Credentials c = config.getDefaultCredentials("Plain");
-        assertEquals("Plain", config.getDefaultAuthMechanism());
         assertEquals("testuser", c.getUsername());
         assertEquals("testpassword", c.getPassword());
+
+        c = config.getDefaultCredentials("testplugin");
+        assertEquals("uu", c.getUsername());
+        assertEquals("pwd", c.getPassword());
 
         assertEquals(true, config.getBoolean(Config.AUTO_REPLACE_TAB_ON_OPEN));
         assertEquals(250, config.getInt(Config.CELL_MAX_WIDTH));
