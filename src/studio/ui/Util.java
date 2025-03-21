@@ -160,6 +160,8 @@ public class Util {
     }
 
     public static Rectangle getDefaultBounds(double scale) {
+        if (GraphicsEnvironment.isHeadless()) return new Rectangle(0,0, 1,1);
+
         DisplayMode displayMode = GraphicsEnvironment.getLocalGraphicsEnvironment()
                 .getDefaultScreenDevice().getDisplayMode();
 
