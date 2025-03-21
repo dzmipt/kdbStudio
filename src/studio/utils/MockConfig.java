@@ -17,7 +17,7 @@ public class MockConfig extends Config {
 
     private static boolean initialized = false;
 
-    public static File propertiesFile;
+    public static File configFile;
     public static File workspaceFile;
     public static File serversFile;
 
@@ -25,13 +25,14 @@ public class MockConfig extends Config {
         if (initialized) return;
 
         FilesBackup.setEnabled(false);
-        propertiesFile = File.createTempFile("kdbStudio", ".properties");
-        propertiesFile.deleteOnExit();
+        configFile = File.createTempFile("kdbStudio", ".json");
+        configFile.deleteOnExit();
         workspaceFile = File.createTempFile("kdbStudioWorkspace", ".properties");
         workspaceFile.deleteOnExit();
         serversFile = File.createTempFile("kdbStudioServers", ".json");
         serversFile.deleteOnExit();
-        Config.instance = new MockConfig(propertiesFile.toPath());
+        Config.instance = new MockConfig(configFile.toPath());
+
         LoggerContext context = LoggerContext.getContext(false);
         for (Logger logger: context.getLoggers() ) {
             Appender[] appenders = logger.getAppenders().values().toArray(new Appender[0]);
@@ -48,7 +49,6 @@ public class MockConfig extends Config {
     }
 
     public void reload() {
-        this.config = new PropertiesConfig(getPath());
         super.init();
     }
 

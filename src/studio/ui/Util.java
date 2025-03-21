@@ -159,6 +159,19 @@ public class Util {
         }
     }
 
+    public static Rectangle getDefaultBounds(double scale) {
+        DisplayMode displayMode = GraphicsEnvironment.getLocalGraphicsEnvironment()
+                .getDefaultScreenDevice().getDisplayMode();
+
+        int width = displayMode.getWidth();
+        int height = displayMode.getHeight();
+        int w = (int) (width * scale);
+        int h = (int) (height * scale);
+        int x = (width - w) / 2;
+        int y = (height - h) / 2;
+        return new Rectangle(x, y, w, y);
+    }
+
     public static boolean fitToScreen(Rectangle bounds) {
         if (mockFitToScreen) return true;
 

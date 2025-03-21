@@ -5,7 +5,6 @@ import java.awt.*;
 public enum ColorToken {
     DEFAULT(Color.BLACK),
     ERROR(Color.RED),
-    BACKGROUND(Color.WHITE),
     WHITESPACE(Color.BLACK),
     BRACKET(Color.BLACK),
     OPERATOR(Color.BLACK),

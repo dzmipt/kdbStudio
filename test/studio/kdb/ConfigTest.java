@@ -1,5 +1,9 @@
 package studio.kdb;
 
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -7,13 +11,16 @@ import studio.core.Credentials;
 import studio.core.DefaultAuthenticationMechanism;
 import studio.kdb.config.ActionOnExit;
 import studio.kdb.config.ExecAllOption;
-import studio.kdb.config.TableConnExtractor;
+import studio.utils.HistoricalList;
 import studio.utils.MockConfig;
 
 import java.awt.*;
-import java.io.*;
+import java.io.File;
+import java.io.IOException;
+import java.io.Reader;
+import java.io.Writer;
+import java.nio.file.Files;
 import java.util.Collection;
-import java.util.Properties;
 import java.util.function.Consumer;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -31,12 +38,12 @@ public class ConfigTest {
     @BeforeEach
     public void init() throws IOException {
         MockConfig.serversFile.delete();
-        MockConfig.propertiesFile.delete();
+        MockConfig.configFile.delete();
 
         config = Config.getInstance();
         ((MockConfig)config).reload();
 
-        System.out.println("temp file " + MockConfig.propertiesFile.getAbsolutePath());
+        System.out.println("temp file " + MockConfig.configFile.getAbsolutePath());
 
         ServerTreeNode parent = config.getServerTree().add("testFolder");
         server = new Server("testServer", "localhost",1111,
@@ -88,24 +95,20 @@ public class ConfigTest {
         assertEquals(1, config.getServerTree().getChild("sameNameTestFolder").getChildCount() );
         assertEquals(server1.getPort(), config.getServerConfig().getServer("sameNameTestFolder/testServer1").getPort());
     }
-
-    @Test
-    public void testServerHistoryDepth() {
-        int depth = config.getInt(Config.SERVER_HISTORY_DEPTH);
-        config.setInt(Config.SERVER_HISTORY_DEPTH, depth+1);
-        assertEquals(depth+1, config.getInt(Config.SERVER_HISTORY_DEPTH));
-    }
-
     @Test
     public void testServerHistory() {
-        assertEquals(0, config.getServerHistory().size());
+        HistoricalList<Server> serverHistory = config.getServerHistory();
+
+        assertEquals(0, serverHistory.size());
 
         config.getServerConfig().addServer(server);
         assertEquals(0, config.getServerHistory().size());
-        config.addServerToHistory(server);
+        serverHistory.add(server);
+
         assertEquals(1, config.getServerHistory().size());
         assertEquals(server, config.getServerHistory().get(0));
-        config.addServerToHistory(server);
+
+        serverHistory.add(server);
         assertEquals(1, config.getServerHistory().size());
 
 
@@ -114,61 +117,51 @@ public class ConfigTest {
         Server server3 = server.newName("testServer3");
 
         config.getServerConfig().addServers(false, server1, server2, server3);
-        config.addServerToHistory(server1);
-        config.addServerToHistory(server2);
+        serverHistory.add(server1);
+        serverHistory.add(server2);
         assertEquals(3, config.getServerHistory().size());
         assertEquals(server2, config.getServerHistory().get(0));
         assertEquals(server1, config.getServerHistory().get(1));
         assertEquals(server, config.getServerHistory().get(2));
 
-        config.addServerToHistory(server1);
+        serverHistory.add(server1);
         assertEquals(3, config.getServerHistory().size());
         assertEquals(server1, config.getServerHistory().get(0));
         assertEquals(server2, config.getServerHistory().get(1));
         assertEquals(server, config.getServerHistory().get(2));
 
-        config.addServerToHistory(server);
+        serverHistory.add(server);
         assertEquals(3, config.getServerHistory().size());
         assertEquals(server, config.getServerHistory().get(0));
         assertEquals(server1, config.getServerHistory().get(1));
         assertEquals(server2, config.getServerHistory().get(2));
 
-        config.addServerToHistory(server);
+        serverHistory.add(server);
         assertEquals(3, config.getServerHistory().size());
         assertEquals(server, config.getServerHistory().get(0));
         assertEquals(server1, config.getServerHistory().get(1));
         assertEquals(server2, config.getServerHistory().get(2));
 
-        config.setInt(Config.SERVER_HISTORY_DEPTH, 3);
-        config.addServerToHistory(server3);
-
-        // it used to be "expected:3". But now the SERVER_HISTORY_DEPTH is loaded once on start up.
-        // Not sure if we need to support dynamic changes.
-        assertEquals(4, config.getServerHistory().size());
-        assertEquals(3, config.getInt(Config.SERVER_HISTORY_DEPTH));
-
-        assertEquals(server3, config.getServerHistory().get(0));
-        assertEquals(server, config.getServerHistory().get(1));
-        assertEquals(server1, config.getServerHistory().get(2));
     }
 
-    private Config getConfig(Properties properties) throws IOException {
+
+    private Config getConfig(JsonObject json) throws IOException {
         File newFile = File.createTempFile("studioforkdb", ".tmp");
         newFile.deleteOnExit();
-        OutputStream out = new FileOutputStream(newFile);
-        properties.store(out, null);
-        out.close();
+        try (Writer writer = Files.newBufferedWriter(newFile.toPath())) {
+            Gson gson = new GsonBuilder().setPrettyPrinting().create();
+            gson.toJson(json, writer);
+        }
 
         return new Config(newFile.toPath());
-    } 
+    }
     
-    private Config copyConfig(Config config, Consumer<Properties> propsModification) throws IOException {
+    private Config copyConfig(Config config, Consumer<JsonObject> configModification) throws IOException {
         config.saveToDisk();
-        try (InputStream in = new FileInputStream(MockConfig.propertiesFile)) {
-            Properties p = new Properties();
-            p.load(in);
-            propsModification.accept(p);
-            return getConfig(p);
+        try (Reader reader = Files.newBufferedReader(MockConfig.configFile.toPath())) {
+            JsonObject json = JsonParser.parseReader(reader).getAsJsonObject();
+            configModification.accept(json);
+            return getConfig(json);
         }
     }
 
@@ -203,34 +196,11 @@ public class ConfigTest {
         Config newConfig = copyConfig(config, p -> {});
         assertEquals(ExecAllOption.Ignore, newConfig.getEnum(Config.EXEC_ALL));
 
-        newConfig = copyConfig(config, p -> {
-            p.setProperty("execAllOption", "testValue");
+        newConfig = copyConfig(config, json -> {
+            json.addProperty("execAllOption", "testValue");
         });
 
         assertEquals(ExecAllOption.Ask, newConfig.getEnum(Config.EXEC_ALL));
-
-    }
-
-    @Test
-    public void testConnExtractor() throws IOException {
-        TableConnExtractor extractor = config.getTableConnExtractor();
-        assertNotNull(extractor);
-
-        String[] conn = new String[] {"someWords", "words"};
-        String[] host = new String[] {"hostWords", "words"};
-        String[] port = new String[] {"someWords", "ports"};
-
-        config.setStringArray(Config.POPUP_CONN_COLUMNS_WORDS, conn);
-        config.setStringArray(Config.POPUP_HOST_COLUMNS_WORDS, host);
-        config.setStringArray(Config.POPUP_PORT_COLUMNS_WORDS, port);
-        config.setInt(Config.POPUP_MAX_CONNECTIONS, 100);
-        assertNotEquals(extractor, config.getTableConnExtractor());
-
-        Config newConfig = copyConfig(config, p -> {});
-        assertArrayEquals(conn, newConfig.getStringArray(Config.POPUP_CONN_COLUMNS_WORDS));
-        assertArrayEquals(host, newConfig.getStringArray(Config.POPUP_HOST_COLUMNS_WORDS));
-        assertArrayEquals(port, newConfig.getStringArray(Config.POPUP_PORT_COLUMNS_WORDS));
-        assertEquals(100, newConfig.getInt(Config.POPUP_MAX_CONNECTIONS));
     }
 
     @Test

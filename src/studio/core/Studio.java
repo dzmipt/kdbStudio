@@ -201,8 +201,8 @@ public class Studio {
 
 
             if (workspace.getWindows().length == 0) {
-                String[] mruFiles = Config.getInstance().getStringArray(Config.MRU_FILES);
-                String filename = mruFiles.length == 0 ? null : mruFiles[0];
+                List<String> mruFiles = Config.getInstance().getStringArray(Config.MRU_FILES);
+                String filename = mruFiles.isEmpty() ? null : mruFiles.get(0);
                 new StudioWindow(getInitServer(), filename);
             } else {
                 StudioWindow.loadWorkspace(workspace);

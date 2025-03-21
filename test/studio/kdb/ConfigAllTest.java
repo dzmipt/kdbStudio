@@ -6,9 +6,7 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import studio.core.Credentials;
 import studio.core.DefaultAuthenticationMechanism;
-import studio.kdb.config.ActionOnExit;
-import studio.kdb.config.ExecAllOption;
-import studio.kdb.config.KdbMessageLimitAction;
+import studio.kdb.config.*;
 import studio.ui.Util;
 import studio.utils.LineEnding;
 
@@ -17,8 +15,8 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.List;
 
-import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 public class ConfigAllTest {
@@ -99,57 +97,75 @@ public class ConfigAllTest {
         assertEquals("javax.swing.plaf.nimbus.NimbusLookAndFeel", config.getString(Config.LOOK_AND_FEEL));
         assertEquals(500000, config.getInt(Config.MAX_CHARS_IN_RESULT));
         assertEquals(1024, config.getInt(Config.MAX_CHARS_IN_TABLE_CELL));
-        assertArrayEquals(new String[]{"file1", "/tmp/file2"}, config.getStringArray(Config.MRU_FILES));
+        assertEquals(List.of("file1", "/tmp/file2"), config.getStringArray(Config.MRU_FILES));
         assertEquals("94a43c9badd0e2e1c2bdf3e40ded8366", config.getString(Config.NOTES_HASH));
         assertEquals(25, config.getInt(Config.RESULT_TAB_COUNTS));
 
-        //serverHistory
-        assertEquals(30, config.getInt(Config.SERVER_HISTORY_DEPTH));
-        // We do not convert from the old format
-        assertArrayEquals(new String[0], config.getStringArray(Config.SERVER_HISTORY_LIST));
+        
+        ServerHistoryConfig serverHistoryConfig = new ServerHistoryConfig(30, List.of(
+                "",
+                "The.Last.Server",
+                "server1",
+                "Root2/innerServer2",
+                "Folder/Sub-Folder/innerServer",
+                "server1",
+                "qqq/dd5",
+                "dd2",
+                "Root2/innerServer2",
+                "Root2/innerServer2",
+                "Folder/Sub-Folder/innerServer",
+                "Folder/Sub-Folder/innerServer",
+                "Root2/innerServer2",
+                "Folder/Sub-Folder/innerServer"
+                ));
+        assertEquals(serverHistoryConfig, config.getServerHistoryConfig());
 
-        assertEquals(10, config.getInt(Config.POPUP_MAX_CONNECTIONS));
+        TableConnExtractor extractor = config.getTableConnExtractor();
+        assertEquals(10, extractor.getMaxConn());
 
-        assertArrayEquals(new String[]{"server", " host"}, config.getStringArray(Config.POPUP_CONN_COLUMNS_WORDS));
-        assertArrayEquals(new String[]{"s", "server"}, config.getStringArray(Config.POPUP_HOST_COLUMNS_WORDS));
-        assertArrayEquals(new String[]{"p", "port"}, config.getStringArray(Config.POPUP_PORT_COLUMNS_WORDS));
+        assertEquals(List.of("server", " host"), extractor.getConnWords());
+        assertEquals(List.of("s", "server"), extractor.getHostWords());
+        assertEquals(List.of("p", "port"), extractor.getPortWords());
 
         // Removed encoding from the config
         // assertEquals("UTF-8", config.getEncoding());
 
-        //version
+        assertEquals(ConfigVersion.V2_0, config.getEnum(Config.CONFIG_VERSION));
 
     }
 
     @Test
     public void testTokenColors() {
-        assertEquals(new Color(0x00ff00), config.getColor(Config.COLOR_CHARVECTOR));
-        assertEquals(new Color(0xffff00), config.getColor(Config.COLOR_EOLCOMMENT));
-        assertEquals(new Color(0xeeee00), config.getColor(Config.COLOR_IDENTIFIER));
-        assertEquals(new Color(0x010101), config.getColor(Config.COLOR_OPERATOR));
-        assertEquals(new Color(0x0000ff), config.getColor(Config.COLOR_BOOLEAN));
-        assertEquals(new Color(0x0000fe), config.getColor(Config.COLOR_BYTE));
-        assertEquals(new Color(0x0000fd), config.getColor(Config.COLOR_SHORT));
-        assertEquals(new Color(0x0000fc), config.getColor(Config.COLOR_LONG));
-        assertEquals(new Color(0x0000fb), config.getColor(Config.COLOR_REAL));
-        assertEquals(new Color(0x0000fa), config.getColor(Config.COLOR_INTEGER));
-        assertEquals(new Color(0x0000f9), config.getColor(Config.COLOR_FLOAT));
-        assertEquals(new Color(0x0000f8), config.getColor(Config.COLOR_TIMESTAMP));
-        assertEquals(new Color(0x0000f7), config.getColor(Config.COLOR_TIMESPAN));
-        assertEquals(new Color(0x0000f6), config.getColor(Config.COLOR_DATETIME));
-        assertEquals(new Color(0x0000f5), config.getColor(Config.COLOR_DATE));
-        assertEquals(new Color(0x0000f4), config.getColor(Config.COLOR_MONTH));
-        assertEquals(new Color(0x0000f3), config.getColor(Config.COLOR_MINUTE));
-        assertEquals(new Color(0x0000f2), config.getColor(Config.COLOR_SECOND));
-        assertEquals(new Color(0x0000f1), config.getColor(Config.COLOR_TIME));
-        assertEquals(new Color(0x0000f0), config.getColor(Config.COLOR_SYMBOL));
-        assertEquals(new Color(0x0000ef), config.getColor(Config.COLOR_KEYWORD));
-        assertEquals(new Color(0x0000ee), config.getColor(Config.COLOR_COMMAND));
-        assertEquals(new Color(0x0000ed), config.getColor(Config.COLOR_SYSTEM));
-        assertEquals(new Color(0x020202), config.getColor(Config.COLOR_WHITESPACE));
-        assertEquals(new Color(0x030303), config.getColor(Config.COLOR_DEFAULT));
-        assertEquals(new Color(0x040404), config.getColor(Config.COLOR_BRACKET));
-        assertEquals(new Color(0xfe0101), config.getColor(Config.COLOR_ERROR));
         assertEquals(new Color(0xfefefe), config.getColor(Config.COLOR_BACKGROUND));
+
+        ColorTokenConfig colorTokenConfig = config.getColorTokenConfig();;
+        assertEquals(new Color(0x00ff00), colorTokenConfig.getColor(ColorToken.CHARVECTOR));
+        assertEquals(new Color(0xffff00), colorTokenConfig.getColor(ColorToken.EOLCOMMENT));
+        assertEquals(new Color(0xeeee00), colorTokenConfig.getColor(ColorToken.IDENTIFIER));
+        assertEquals(new Color(0x010101), colorTokenConfig.getColor(ColorToken.OPERATOR));
+        assertEquals(new Color(0x0000ff), colorTokenConfig.getColor(ColorToken.BOOLEAN));
+        assertEquals(new Color(0x0000fe), colorTokenConfig.getColor(ColorToken.BYTE));
+        assertEquals(new Color(0x0000fd), colorTokenConfig.getColor(ColorToken.SHORT));
+        assertEquals(new Color(0x0000fc), colorTokenConfig.getColor(ColorToken.LONG));
+        assertEquals(new Color(0x0000fb), colorTokenConfig.getColor(ColorToken.REAL));
+        assertEquals(new Color(0x0000fa), colorTokenConfig.getColor(ColorToken.INTEGER));
+        assertEquals(new Color(0x0000f9), colorTokenConfig.getColor(ColorToken.FLOAT));
+        assertEquals(new Color(0x0000f8), colorTokenConfig.getColor(ColorToken.TIMESTAMP));
+        assertEquals(new Color(0x0000f7), colorTokenConfig.getColor(ColorToken.TIMESPAN));
+        assertEquals(new Color(0x0000f6), colorTokenConfig.getColor(ColorToken.DATETIME));
+        assertEquals(new Color(0x0000f5), colorTokenConfig.getColor(ColorToken.DATE));
+        assertEquals(new Color(0x0000f4), colorTokenConfig.getColor(ColorToken.MONTH));
+        assertEquals(new Color(0x0000f3), colorTokenConfig.getColor(ColorToken.MINUTE));
+        assertEquals(new Color(0x0000f2), colorTokenConfig.getColor(ColorToken.SECOND));
+        assertEquals(new Color(0x0000f1), colorTokenConfig.getColor(ColorToken.TIME));
+        assertEquals(new Color(0x0000f0), colorTokenConfig.getColor(ColorToken.SYMBOL));
+        assertEquals(new Color(0x0000ef), colorTokenConfig.getColor(ColorToken.KEYWORD));
+        assertEquals(new Color(0x0000ee), colorTokenConfig.getColor(ColorToken.COMMAND));
+        assertEquals(new Color(0x0000ed), colorTokenConfig.getColor(ColorToken.SYSTEM));
+        assertEquals(new Color(0x020202), colorTokenConfig.getColor(ColorToken.WHITESPACE));
+        assertEquals(new Color(0x030303), colorTokenConfig.getColor(ColorToken.DEFAULT));
+        assertEquals(new Color(0x040404), colorTokenConfig.getColor(ColorToken.BRACKET));
+        assertEquals(new Color(0xfe0101), colorTokenConfig.getColor(ColorToken.ERROR));
     }
+
 }

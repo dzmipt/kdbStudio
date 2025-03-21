@@ -71,4 +71,18 @@ public class HistoricalList<E> extends AbstractList<E> {
     public E set(int index, E element) {
         return list.set(index, element);
     }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof HistoricalList)) return false;
+        if (!super.equals(o)) return false;
+        HistoricalList<?> that = (HistoricalList<?>) o;
+        return depth == that.depth && Objects.equals(list, that.list);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(depth, list);
+    }
 }

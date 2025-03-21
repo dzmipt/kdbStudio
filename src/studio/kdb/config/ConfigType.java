@@ -4,11 +4,15 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonPrimitive;
+import org.apache.commons.collections4.list.UnmodifiableList;
 import studio.core.Credentials;
 import studio.kdb.FileChooserConfig;
 
 import java.awt.*;
-import java.lang.reflect.Array;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 public enum ConfigType {
     STRING {
@@ -69,14 +73,19 @@ public enum ConfigType {
         public JsonElement toJson(Object value) {
             Font font = (Font) value;
             JsonObject json = new JsonObject();
-            json.add("name", new JsonPrimitive(font.getName()));
-            json.add("size", new JsonPrimitive(font.getSize()));
+            json.addProperty("name", font.getName());
+            json.addProperty("size", font.getSize());
             FontStyle fontStyle = FontStyle.values()[font.getStyle()];
-            json.add("style", new JsonPrimitive(fontStyle.name()));
+            json.addProperty("style", fontStyle.name());
             return json;
         }
     },
     BOUNDS {
+        @Override
+        public Object clone(Object value) {
+            return ConfigType.clone( (Rectangle) value);
+        }
+
         @Override
         public Object fromJson(JsonElement jsonElement, Object defaultValue) {
             JsonObject json = jsonElement.getAsJsonObject();
@@ -91,10 +100,10 @@ public enum ConfigType {
         public JsonElement toJson(Object value) {
             Rectangle bounds = (Rectangle) value;
             JsonObject json = new JsonObject();
-            json.add("x", new JsonPrimitive(bounds.x));
-            json.add("y", new JsonPrimitive(bounds.y));
-            json.add("width", new JsonPrimitive(bounds.width));
-            json.add("height", new JsonPrimitive(bounds.height));
+            json.addProperty("x", bounds.x);
+            json.addProperty("y", bounds.y);
+            json.addProperty("width", bounds.width);
+            json.addProperty("height", bounds.height);
             return json;
         }
     },
@@ -125,6 +134,11 @@ public enum ConfigType {
     },
     SIZE {
         @Override
+        public Object clone(Object value) {
+            return ConfigType.clone( (Rectangle)value);
+        }
+
+        @Override
         public Object fromJson(JsonElement jsonElement, Object defaultValue) {
             JsonObject json = jsonElement.getAsJsonObject();
             int width = json.get("width").getAsInt();
@@ -136,12 +150,17 @@ public enum ConfigType {
         public JsonElement toJson(Object value) {
             Dimension size = (Dimension) value;
             JsonObject json = new JsonObject();
-            json.add("width", new JsonPrimitive(size.width));
-            json.add("height", new JsonPrimitive(size.height));
+            json.addProperty("width", size.width);
+            json.addProperty("height", size.height);
             return json;
         }
     },
     FILE_CHOOSER {
+        @Override
+        public Object clone(Object value) {
+            return ConfigType.clone( (FileChooserConfig)value);
+        }
+
         @Override
         public Object fromJson(JsonElement jsonElement, Object defaultValue) {
             JsonObject json = jsonElement.getAsJsonObject();
@@ -154,7 +173,7 @@ public enum ConfigType {
         public JsonElement toJson(Object value) {
             FileChooserConfig config = (FileChooserConfig) value;
             JsonObject json = new JsonObject();
-            json.add("filename", new JsonPrimitive(config.getFilename()));
+            json.addProperty("filename", config.getFilename());
             json.add("size", SIZE.toJson(config.getPreferredSize()));
             return json;
         }
@@ -181,15 +200,14 @@ public enum ConfigType {
     DEFAULT_AUTH_CONFIG {
         @Override
         public Object fromJson(JsonElement jsonElement, Object defaultValue) {
-            DefaultAuthConfig config = new DefaultAuthConfig();
             JsonObject json = jsonElement.getAsJsonObject();
-            String auth = json.get("default").getAsString();
-            config.setDefaultAuth(auth);
+            String defaultAuth = json.get("default").getAsString();
+            Map<String, Credentials> map = new HashMap<>();
             for (String method: json.keySet()) {
                 if (method.equals("default")) continue;
-                config.setCredentials(method, (Credentials) CREDENTIALS.fromJson(json.get(method), null));
+                map.put(method, (Credentials) CREDENTIALS.fromJson(json.get(method), null));
             }
-            return config;
+            return new DefaultAuthConfig(defaultAuth, map);
         }
 
         @Override
@@ -208,14 +226,10 @@ public enum ConfigType {
         public Object fromJson(JsonElement jsonElement, Object defaultValue) {
             JsonObject json = jsonElement.getAsJsonObject();
             int maxConnections = json.get("maxConnections").getAsInt();
-            String[] connWords = (String[]) STRING_ARRAY.fromJson(json.get("connectionWords"), new String[] {" "});
-            String[] hostWords = (String[]) STRING_ARRAY.fromJson(json.get("hostWords"), new String[] {" "});
-            String[] portWords = (String[]) STRING_ARRAY.fromJson(json.get("portWords"), new String[] {" "});
-            TableConnExtractor extractor = new TableConnExtractor();
-            extractor.setMaxConn(maxConnections);
-            extractor.setConnWords(connWords);
-            extractor.setHostWords(hostWords);
-            extractor.setPortWords(portWords);
+            List<String> connWords = (List<String>) STRING_ARRAY.fromJson(json.get("connectionWords"), List.of());
+            List<String> hostWords = (List<String>) STRING_ARRAY.fromJson(json.get("hostWords"), List.of());
+            List<String> portWords = (List<String>) STRING_ARRAY.fromJson(json.get("portWords"), List.of());
+            TableConnExtractor extractor = new TableConnExtractor(maxConnections, connWords, hostWords, portWords);
             return extractor;
         }
 
@@ -223,7 +237,7 @@ public enum ConfigType {
         public JsonElement toJson(Object value) {
             TableConnExtractor extractor = (TableConnExtractor)value;
             JsonObject json = new JsonObject();
-            json.add("maxConnections", new JsonPrimitive(extractor.getMaxConn()));
+            json.addProperty("maxConnections", extractor.getMaxConn());
             json.add("connectionWords", STRING_ARRAY.toJson(extractor.getConnWords()));
             json.add("hostWords", STRING_ARRAY.toJson(extractor.getHostWords()));
             json.add("portWords", STRING_ARRAY.toJson(extractor.getPortWords()));
@@ -233,14 +247,14 @@ public enum ConfigType {
     COLOR_TOKEN_CONFIG {
         @Override
         public Object fromJson(JsonElement jsonElement, Object defaultValue) {
-            ColorTokenConfig config = new ColorTokenConfig();
+            Map<ColorToken, Color> map = new HashMap<>();
             JsonObject json = jsonElement.getAsJsonObject();
             for (String key: json.keySet()) {
                 ColorToken token = ColorToken.valueOf(key.toUpperCase());
                 Color color = (Color) COLOR.fromJson(json.get(key), null);
-                config.setColor(token, color);
+                map.put(token, color);
             }
-            return config;
+            return new ColorTokenConfig(map);
         }
 
         @Override
@@ -255,9 +269,40 @@ public enum ConfigType {
             return json;
         }
     },
+    SERVER_HISTORY {
+        @Override
+        public Object fromJson(JsonElement jsonElement, Object defaultValue) {
+            JsonObject json = jsonElement.getAsJsonObject();
+            List<String> list = (List<String>) STRING_ARRAY.fromJson(json.get("names"), List.of());
+            ServerHistoryConfig config = new ServerHistoryConfig(json.get("depth").getAsInt(), list);
+            return config;
+        }
+
+        @Override
+        public JsonElement toJson(Object value) {
+            ServerHistoryConfig config = (ServerHistoryConfig) value;
+            JsonObject json = new JsonObject();
+            json.addProperty("depth", config.getDepth());
+            json.add("names", STRING_ARRAY.toJson(config.get()));
+            return json;
+        }
+    },
     STRING_ARRAY(STRING),
     INT_ARRAY(INT),
     ENUM_ARRAY(ENUM);
+
+
+    private static Rectangle clone(Rectangle r) {
+        return new Rectangle(r.x, r.y, r.width, r.height);
+    }
+
+    private static Dimension clone(Dimension d) {
+        return new Dimension(d.width, d.height);
+    }
+
+    private static FileChooserConfig clone (FileChooserConfig config) {
+        return new FileChooserConfig(config.getFilename(), clone(config.getPreferredSize()));
+    }
 
     private final ConfigType elementType;
 
@@ -268,26 +313,32 @@ public enum ConfigType {
     ConfigType(ConfigType elementType) {
         this.elementType = elementType;
     }
+
+    public Object clone(Object value) {
+        return value;
+    }
+
     public Object fromJson(JsonElement jsonElement, Object defaultValue) {
         if (elementType == null) throw new IllegalStateException("ConfigType should implement fromJson: " + name());
 
         JsonArray jsonArray = jsonElement.getAsJsonArray();
         int count = jsonArray.size();
+        List<Object> defList = (List<Object>) defaultValue;
+        Object defValue = defList.size() == 0 ? null: defList.get(0);
 
-        Object array = Array.newInstance(defaultValue.getClass().getComponentType(), count);
+        List<Object> list = new ArrayList<>();
         for (int i=0; i<count; i++) {
-            Array.set(array, i, elementType.fromJson(jsonArray.get(i), Array.get(defaultValue, 0)));
+            list.add(elementType.fromJson(jsonArray.get(i), defValue));
         }
-        return array;
+        return UnmodifiableList.unmodifiableList(list);
     }
 
     public JsonElement toJson(Object value) {
         if (elementType == null) throw new IllegalStateException("ConfigType should implement fromJson: " + name());
-
-        int count = Array.getLength(value);
-        JsonArray jsonArray = new JsonArray(count);
-        for (int i=0; i<count; i++) {
-            jsonArray.add(elementType.toJson(Array.get(value, i)));
+        List<Object> list = (List<Object>) value;
+        JsonArray jsonArray = new JsonArray(list.size());
+        for (Object element: list) {
+            jsonArray.add(elementType.toJson(element));
         }
         return jsonArray;
     }

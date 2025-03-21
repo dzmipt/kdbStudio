@@ -4,8 +4,8 @@ import java.awt.*;
 import java.util.Objects;
 
 public class FileChooserConfig {
-    private String filename;
-    private Dimension preferredSize;
+    private final String filename;
+    private final Dimension preferredSize;
 
     public FileChooserConfig() {
         filename = "";

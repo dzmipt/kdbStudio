@@ -6,13 +6,17 @@ import java.util.Map;
 
 public class ColorTokenConfig {
 
-    private Map<ColorToken, Color> colors = new HashMap<>();
+    private final Map<ColorToken, Color> colors;
 
-    public void setColor(ColorToken token, Color color) {
-        if (color.equals(token.getColor())) {
-            colors.remove(token);
-        } else {
-            colors.put(token, color);
+    public final static ColorTokenConfig DEFAULT = new ColorTokenConfig(new HashMap<>());
+
+    public ColorTokenConfig(Map<ColorToken, Color> colors) {
+        this.colors = new HashMap<>();
+        for (ColorToken token: colors.keySet()) {
+            Color color = colors.get(token);
+            if (!color.equals(token.getColor())) {
+                this.colors.put(token, color);
+            }
         }
     }
 

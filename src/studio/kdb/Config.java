@@ -1,10 +1,12 @@
 package studio.kdb;
 
+import org.apache.commons.io.FilenameUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import studio.core.Credentials;
 import studio.core.DefaultAuthenticationMechanism;
 import studio.kdb.config.*;
+import studio.ui.Util;
 import studio.utils.HistoricalList;
 import studio.utils.LineEnding;
 import studio.utils.PropertiesConfig;
@@ -15,38 +17,32 @@ import javax.swing.*;
 import java.awt.*;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.Reader;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.Collections;
 import java.util.List;
 import java.util.Properties;
 import java.util.regex.Pattern;
-import java.util.stream.Stream;
 
-public class Config extends AbstractConfig {
+import static studio.kdb.config.ConfigVersion.*;
+
+public class Config  {
     private static final Logger log = LogManager.getLogger();
 
-    //@TODO migrate all other keys under such approach
+    private static final ConfigTypeRegistry configTypeRegistry = new ConfigTypeRegistry();
+    public static final String COMMENT = configDefault("comment", ConfigType.STRING, "");
     public static final String LOOK_AND_FEEL = configDefault("lookandfeel", ConfigType.STRING, UIManager.getLookAndFeel().getClass().getName());
     public static final String EXEC_ALL = configDefault("execAllOption", ConfigType.ENUM, ExecAllOption.Ask);
     public static final String MAX_CHARS_IN_RESULT = configDefault("maxCharsInResult", ConfigType.INT, 50000);
     public static final String MAX_CHARS_IN_TABLE_CELL = configDefault("maxCharsInTableCell", ConfigType.INT, 256);
-    public static final String MRU_FILES = configDefault("mrufiles", ConfigType.STRING_ARRAY, new String[0]);
+    public static final String MRU_FILES = configDefault("mrufiles", ConfigType.STRING_ARRAY, List.of());
     public static final String NOTES_HASH = configDefault("notesHash", ConfigType.STRING, "");
     public static final String RESULT_TAB_COUNTS = configDefault("resultTabsCount", ConfigType.INT, 5);
-    public static final String POPUP_MAX_CONNECTIONS = configDefault("tableMaxConnectionPopup", ConfigType.INT, 5);
-
-    public static final String POPUP_CONN_COLUMNS_WORDS = configDefault("connColWords", ConfigType.STRING_ARRAY, new String[]{"server", "host", "connection", "handle"});
-    public static final String POPUP_HOST_COLUMNS_WORDS = configDefault("hostColWords", ConfigType.STRING_ARRAY, new String[]{"server", "host"});
-    public static final String POPUP_PORT_COLUMNS_WORDS = configDefault("portColWords", ConfigType.STRING_ARRAY, new String[]{"port"});
-
-    public static final String SERVER_HISTORY_DEPTH = configDefault("serverHistoryDepth", ConfigType.INT, 20);
-    public static final String SERVER_HISTORY_LIST = configDefault("serverHistory", ConfigType.STRING_ARRAY, new String[0]);
 
     public static final String SHOW_SERVER_COMBOBOX = configDefault("showServerComboBox", ConfigType.BOOLEAN, true);
     public static final String AUTO_SAVE = configDefault("isAutoSave", ConfigType.BOOLEAN, false);
     public static final String ACTION_ON_EXIT = configDefault("actionOnExit", ConfigType.ENUM, ActionOnExit.SAVE);
-    public static final String CHART_BOUNDS = configDefault("chartBounds", ConfigType.BOUNDS, 0.5);
+    public static final String CHART_BOUNDS = configDefault("chartBounds", ConfigType.BOUNDS, Util.getDefaultBounds(0.5));
     public static final String CELL_RIGHT_PADDING = configDefault("cellRightPadding", ConfigType.DOUBLE, 0.5);
     public static final String CELL_MAX_WIDTH = configDefault("cellMaxWidth", ConfigType.INT, 200);
 
@@ -57,36 +53,7 @@ public class Config extends AbstractConfig {
 
     public static final String DEFAULT_LINE_ENDING = configDefault("defaultLineEnding", ConfigType.ENUM, LineEnding.Unix);
 
-    public static final String COLOR_CHARVECTOR = configDefault("token.CHARVECTOR", ConfigType.COLOR, new Color(0,200,20));
-    public static final String COLOR_EOLCOMMENT = configDefault("token.EOLCOMMENT", ConfigType.COLOR,  Color.GRAY);
-    public static final String COLOR_IDENTIFIER = configDefault("token.IDENTIFIER", ConfigType.COLOR, new Color(180,160,0));
-    public static final String COLOR_OPERATOR = configDefault("token.OPERATOR", ConfigType.COLOR, Color.BLACK);
-    public static final String COLOR_BOOLEAN = configDefault("token.BOOLEAN", ConfigType.COLOR, new Color(51,204,255));
-    public static final String COLOR_BYTE = configDefault("token.BYTE", ConfigType.COLOR, new Color(51,104,255));
-    public static final String COLOR_SHORT = configDefault("token.SHORT", ConfigType.COLOR, new Color(51,104,255));
-    public static final String COLOR_LONG = configDefault("token.LONG", ConfigType.COLOR, new Color(51,104,255));
-    public static final String COLOR_REAL = configDefault("token.REAL", ConfigType.COLOR, new Color(51,104,255));
-    public static final String COLOR_INTEGER = configDefault("token.INTEGER", ConfigType.COLOR, new Color(51,104,255));
-    public static final String COLOR_FLOAT = configDefault("token.FLOAT", ConfigType.COLOR, new Color(51,104,255));
-    public static final String COLOR_TIMESTAMP = configDefault("token.TIMESTAMP", ConfigType.COLOR, new Color(184,138,0));
-    public static final String COLOR_TIMESPAN = configDefault("token.TIMESPAN", ConfigType.COLOR, new Color(184,138,0));
-    public static final String COLOR_DATETIME = configDefault("token.DATETIME", ConfigType.COLOR, new Color(184,138,0));
-    public static final String COLOR_DATE = configDefault("token.DATE", ConfigType.COLOR, new Color(184,138,0));
-    public static final String COLOR_MONTH = configDefault("token.MONTH", ConfigType.COLOR, new Color(184,138,0));
-    public static final String COLOR_MINUTE = configDefault("token.MINUTE", ConfigType.COLOR, new Color(184,138,0));
-    public static final String COLOR_SECOND = configDefault("token.SECOND", ConfigType.COLOR, new Color(184,138,0));
-    public static final String COLOR_TIME = configDefault("token.TIME", ConfigType.COLOR, new Color(184,138,0));
-    public static final String COLOR_SYMBOL = configDefault("token.SYMBOL", ConfigType.COLOR, new Color(179,0,134));
-    public static final String COLOR_KEYWORD = configDefault("token.KEYWORD", ConfigType.COLOR, new Color(0,0,255));
-    public static final String COLOR_COMMAND = configDefault("token.COMMAND", ConfigType.COLOR, new Color(240,180,0));
-    public static final String COLOR_SYSTEM = configDefault("token.SYSTEM", ConfigType.COLOR, new Color(240,180,0));
-    public static final String COLOR_WHITESPACE = configDefault("token.WHITESPACE", ConfigType.COLOR, Color.BLACK);
-    public static final String COLOR_DEFAULT = configDefault("token.DEFAULT", ConfigType.COLOR, Color.BLACK);
-    public static final String COLOR_BRACKET = configDefault("token.BRACKET", ConfigType.COLOR, Color.BLACK);
-
-    public static final String COLOR_ERROR = configDefault("token.ERROR", ConfigType.COLOR, Color.RED);
-
-    public static final String COLOR_BACKGROUND = configDefault("token.BACKGROUND", ConfigType.COLOR, Color.WHITE);
+    public static final String COLOR_BACKGROUND = configDefault("backgroundColor", ConfigType.COLOR, Color.WHITE);
 
     public static final String FONT_EDITOR = configDefault("font", ConfigType.FONT, new Font("Monospaced", Font.PLAIN, 14));
     public static final String FONT_TABLE = configDefault("fontTable", ConfigType.FONT, new Font("SansSerif", Font.PLAIN, 12));
@@ -108,59 +75,37 @@ public class Config extends AbstractConfig {
     public static final String KDB_MESSAGE_SIZE_LIMIT_MB = configDefault("kdbMessageSizeLimitMB", ConfigType.INT, 10);
     public static final String KDB_MESSAGE_SIZE_LIMIT_ACTION = configDefault("kdbMessageSizeLimitAction", ConfigType.ENUM, KdbMessageLimitAction.ASK);
 
+    public static final String DEFAULT_AUTH_CONFIG = configDefault("defaultAuthConfig", ConfigType.DEFAULT_AUTH_CONFIG, DefaultAuthConfig.DEFAULT);
+    public static final String TABLE_CONN_EXTRACTOR = configDefault("tableExtractorConfig", ConfigType.TABLE_CONN_EXTRACTOR, TableConnExtractor.DEFAULT);
+    public static final String COLOR_TOKEN_CONFIG = configDefault("tokenColors", ConfigType.COLOR_TOKEN_CONFIG, ColorTokenConfig.DEFAULT);
+    public static final String SERVER_HISTORY = configDefault("serverHistory", ConfigType.SERVER_HISTORY, new ServerHistoryConfig(20, List.of()));
+    public static final String CONFIG_VERSION = configDefault("version", ConfigType.ENUM, ConfigVersion.V2_0);
 
-    private static final String CONFIG_FILENAME = "studio.properties";
+    private static final String OLD_CONFIG_FILENAME = "studio.properties";
+    private static final String CONFIG_FILENAME = "studio.json";
     private static final String WORKSPACE_FILENAME = "workspace.properties";
     private static final String SERVERCONFIG_FILENAME = "servers.json";
 
-    private static final String OLD_DEF_AUTHMETHOD = "Username and password";
-    private static final String VERSION14 = "1.4";
-    private static final String VERSION13 = "1.3";
-    private static final String VERSION12 = "1.2";
-    private static final String OLD_VERSION = "1.1";
-
-    private static final String VERSION = VERSION14;
-
-
+    protected StudioConfig studioConfig;
     protected PropertiesConfig workspaceConfig;
     protected ServerConfig serverConfig;
     private HistoricalList<Server> serverHistory;
 
+    private Path configPath;
     // Can be overridden in test cases
     protected static Config instance = new Config();
 
     protected Config(Path path) {
-        super(path);
+        this.configPath = path;
         init();
     }
 
-    private static void copyConfig(String configFileName) throws IOException {
-        Path src = EnvConfig.getFilepath(null, configFileName);
-        Path target = EnvConfig.getFilepath(configFileName);
-        if (Files.exists(src)) {
-            log.info("Copying from {} to {}", src, target);
-            Files.copy(src, target);
-        }
-    }
-
     private static Path getDefaultConfigPath() {
-        Path path = EnvConfig.getFilepath(CONFIG_FILENAME);
-
-        String env = EnvConfig.getEnvironment();
-        if (env != null && ! Files.exists(path)) {
-            log.info("Config for environment {} is not found. Copying from default location: {}", env, EnvConfig.getBaseFolder(null));
-            try {
-                copyConfig(CONFIG_FILENAME);
-                copyConfig(WORKSPACE_FILENAME);
-            } catch (IOException e) {
-                log.error("Error during copying configs", e);
-            }
-        }
-        return path;
+        return EnvConfig.getFilepath(CONFIG_FILENAME);
     }
 
     private static Properties getDefaults() {
-        Path pluginProperties = EnvConfig.getPluginFolder().resolve(CONFIG_FILENAME);
+        Path pluginProperties = EnvConfig.getPluginFolder().resolve(OLD_CONFIG_FILENAME);
         if (! Files.exists((pluginProperties))) return null;
 
         try (InputStream inputStream = Files.newInputStream(pluginProperties)) {
@@ -175,12 +120,14 @@ public class Config extends AbstractConfig {
     }
 
     private Config() {
-        super(getDefaultConfigPath(), getDefaults());
-        init();
+//        super(getDefaultConfigPath(), getDefaults());
+//        init();
+        this(getDefaultConfigPath());
     }
 
     public void saveToDisk() {
-        super.saveToDisk();
+        //super.saveToDisk();
+        studioConfig.saveToDisk();
         workspaceConfig.saveToDisk();
     }
 
@@ -244,20 +191,8 @@ public class Config extends AbstractConfig {
         workspaceConfig.save();
     }
 
-    private String[] getWords(String[] values) {
-        return Stream.of(values)
-                        .map(String::trim)
-                        .map(String::toLowerCase)
-                        .toArray(String[]::new);
-    }
-
     public TableConnExtractor getTableConnExtractor() {
-        TableConnExtractor tableConnExtractor = new TableConnExtractor();
-        tableConnExtractor.setMaxConn(getInt(Config.POPUP_MAX_CONNECTIONS));
-        tableConnExtractor.setConnWords(getWords(getStringArray(Config.POPUP_CONN_COLUMNS_WORDS)));
-        tableConnExtractor.setHostWords(getWords(getStringArray(Config.POPUP_HOST_COLUMNS_WORDS)));
-        tableConnExtractor.setPortWords(getWords(getStringArray(Config.POPUP_PORT_COLUMNS_WORDS)));
-        return tableConnExtractor;
+        return (TableConnExtractor) studioConfig.get(Config.TABLE_CONN_EXTRACTOR);
     }
 
     public static Config getInstance() {
@@ -265,22 +200,36 @@ public class Config extends AbstractConfig {
     }
 
     protected void init() {
-        workspaceConfig = new PropertiesConfig(getWorkspacePath());
         serverConfig = new ServerConfig(getServerConfigPath());
 
-        checkForUpgrade();
-    }
-
-    private void upgradeTo14() {
-        log.info("Upgrading config to version 1.4");
-        String defAuth = DefaultAuthenticationMechanism.NAME;
-        if (getDefaultAuthMechanism().equals(OLD_DEF_AUTHMETHOD) ) {
-            setDefaultAuthMechanism(defAuth);
+        checkOldPropertiesToUpgrade();
+        //Hack for tests
+        if (FilenameUtils.getExtension(configPath.toString()).equals("properties")) {
+            configPath = configPath.resolveSibling(CONFIG_FILENAME);
         }
 
-        setDefaultCredentials(defAuth, getDefaultCredentials(OLD_DEF_AUTHMETHOD));
-        config.remove("auth." + OLD_DEF_AUTHMETHOD + ".user");
-        config.remove("auth." + OLD_DEF_AUTHMETHOD + ".password");
+        studioConfig = new StudioConfig(configTypeRegistry, configPath);
+        workspaceConfig = new PropertiesConfig(getWorkspacePath());
+        initServerHistory();
+    }
+
+    private void upgradeTo14(Properties config) {
+        final String OLD_DEF_AUTHMETHOD = "Username and password";
+
+        log.info("Upgrading config to version 1.4");
+        String defAuth = DefaultAuthenticationMechanism.NAME;
+        if (config.getProperty("auth").equals(OLD_DEF_AUTHMETHOD) ) {
+            config.setProperty("auth", defAuth);
+        }
+
+        String oldUserKey = "auth." + OLD_DEF_AUTHMETHOD + ".user";
+        String oldPasswordKey = "auth." + OLD_DEF_AUTHMETHOD + ".password";
+        String oldUser = config.getProperty(oldUserKey, "");
+        String oldPassword = config.getProperty(oldPasswordKey, "");
+        config.setProperty("auth." + defAuth + ".user", oldUser);
+        config.setProperty("auth." + defAuth + ".password", oldPassword);
+        config.remove(oldUserKey);
+        config.remove(oldPasswordKey);
 
         //server.1.authenticationMechanism
         Pattern pattern = Pattern.compile("server\\.[0-9]+\\.authenticationMechanism");
@@ -293,80 +242,91 @@ public class Config extends AbstractConfig {
             }
         }
 
-        config.setProperty("version", VERSION);
-        save();
+        config.setProperty("version", V1_4.getVersion());
     }
 
-    private void migrateSaveOnExit() {
-        String oldSaveOnExitKey = "isSaveOnExit";
-        if (config.containsKey(oldSaveOnExitKey)) {
-            boolean saveOnExit = get(oldSaveOnExitKey, true);
-            log.info("Migrate isSaveOnExit config property with old value {}", saveOnExit);
-            config.remove(oldSaveOnExitKey);
-            setEnum(ACTION_ON_EXIT, saveOnExit ? ActionOnExit.SAVE : ActionOnExit.NOTHING);
-        }
-    }
-
-    private void removeServerListConfig() {
+    private void removeServerListConfig(Properties config) {
         config.remove("serverList.x");
         config.remove("serverList.y");
         config.remove("serverList.width");
         config.remove("serverList.height");
     }
 
-    private void checkForUpgrade() {
-        if (config.isEmpty()) {
-            log.info("Found no or empty config");
-            config.setProperty("version", VERSION);
-            initServerHistory();
-            return;
+    private void checkOldPropertiesToUpgrade() {
+        Path oldPath = configPath.resolveSibling(OLD_CONFIG_FILENAME);
+        //Hack for tests. configPath can be ending to .properties meaning that it is old Properties.
+        if (FilenameUtils.getExtension(configPath.toString()).equals("properties")) {
+            oldPath = configPath;
+            configPath = oldPath.resolveSibling(CONFIG_FILENAME);
         }
 
+        if (!Files.exists(oldPath)) return;
 
-        String version = config.getProperty("version", OLD_VERSION);
-        if (version.equals(OLD_VERSION) || version.equals(VERSION12)) {
+        log.info("Found old config {}. Converting to {}...", oldPath, configPath);
+        try (Reader reader = Files.newBufferedReader(oldPath)) {
+            Properties properties = new Properties();
+            properties.load(reader);
+            properties = checkOldToUpgrade(properties);
+
+            log.info("Converting {} properties", properties.size());
+            ConfigToJsonConverter converter = getConfigToJsonConverter();
+            converter.convert(properties, configPath);
+            Properties remaining = converter.getRemainingProperties();
+            if (remaining.isEmpty()) {
+                log.info("All properties were successfully converted");
+            } else {
+                log.warn("The following properties are either not used or not converted. They will be discarded");
+                log.warn(remaining);
+            }
+
+        } catch (Exception e) {
+            log.error("Error during old properties {} conversion", oldPath, e);
+        } finally {
+            try {
+                log.info("Deleting of old properties {}", oldPath);
+                Files.delete(oldPath);
+            } catch (IOException e) {
+                log.error("Error on old properties file {} removal", oldPath, e);
+            }
+        }
+    }
+
+    private Properties checkOldToUpgrade(Properties config) {
+        String version = config.getProperty("version", V1_1.getVersion());
+        if (version.equals(V1_1.getVersion()) || version.equals(V1_2.getVersion())) {
             log.warn("Very old version: {}. Will try to upgrade...", version);
-            config.setProperty("version", VERSION13);
+            config.setProperty("version", V1_3.getVersion());
         }
 
-
-        if (config.getProperty("version", VERSION).equals(VERSION13)) {
-            upgradeTo14();
+        if (config.getProperty("version", V1_4.getVersion()).equals(V1_3.getVersion())) {
+            upgradeTo14(config);
         }
 
-        initServerHistory();
-        migrateSaveOnExit();
-        removeServerListConfig();
-
-        if (serverConfig.tryToLoadOldConifg(config)) {
-            save();
-        }
-
-        config.setProperty("version", VERSION);
+        removeServerListConfig(config);
+        serverConfig.tryToLoadOldConifg(config);
+        return config;
     }
 
     private void initServerHistory() {
-        int depth = getInt(Config.SERVER_HISTORY_DEPTH);
-        serverHistory = new HistoricalList<>(depth);
-        String[] serverArray = getStringArray(Config.SERVER_HISTORY_LIST);
-        for (int i = serverArray.length-1; i>=0; i--) {
-            Server server = serverConfig.getServer(serverArray[i]);
-            if (server == Server.NO_SERVER) continue;
-            serverHistory.add(server);
-        }
+        serverHistory = getServerHistoryConfig().toServerHistory(serverConfig);
     }
 
-    public List<Server> getServerHistory() {
-        return Collections.unmodifiableList(serverHistory);
+    public HistoricalList<Server> getServerHistory() {
+        return serverHistory;
     }
 
-    public void addServerToHistory(Server server) {
-        serverHistory.add(server);
-        String[] newArray = serverHistory.stream()
-                                        .map(Server::getFullName)
-                                        .toArray(String[]::new);
-        setStringArray(Config.SERVER_HISTORY_LIST, newArray);
+    public void refreshServerToHistory() {
+        setServerHistoryConfig(ServerHistoryConfig.fromServerHistory(serverHistory));
     }
+
+    public ServerHistoryConfig getServerHistoryConfig() {
+        return (ServerHistoryConfig) studioConfig.get(Config.SERVER_HISTORY);
+    }
+
+    public void setServerHistoryConfig(ServerHistoryConfig serverHistoryConfig) {
+        studioConfig.set(Config.SERVER_HISTORY, serverHistoryConfig);
+    }
+
 
     // Resolve or create a new server by connection string.
     // Accept possible various connectionString such as:
@@ -381,29 +341,124 @@ public class Config extends AbstractConfig {
         return QConnection.getByConnection(connectionString, authMethod, getDefaultCredentials(authMethod), serverConfig.allServers());
     }
 
+    public DefaultAuthConfig getDefaultAuthConfig() {
+        return (DefaultAuthConfig) studioConfig.get(Config.DEFAULT_AUTH_CONFIG);
+    }
+
+    public boolean setDefaultAuthConfig(DefaultAuthConfig config) {
+        return studioConfig.set(Config.DEFAULT_AUTH_CONFIG, config);
+    }
+
     public Credentials getDefaultCredentials(String authenticationMechanism) {
-        String user = config.getProperty("auth." + authenticationMechanism + ".user", "");
-        String password = config.getProperty("auth." + authenticationMechanism + ".password", "");
-        return new Credentials(user, password);
+        return getDefaultAuthConfig().getCredential(authenticationMechanism);
     }
 
     public void setDefaultCredentials(String authenticationMechanism, Credentials credentials) {
-        config.setProperty("auth." + authenticationMechanism + ".user", credentials.getUsername());
-        config.setProperty("auth." + authenticationMechanism + ".password", credentials.getPassword());
-        save();
+        DefaultAuthConfig config = getDefaultAuthConfig();
+        DefaultAuthConfig newConfig = new DefaultAuthConfig(config, authenticationMechanism, credentials);
+        setDefaultAuthConfig(newConfig);
     }
 
     public String getDefaultAuthMechanism() {
-        return config.getProperty("auth", DefaultAuthenticationMechanism.NAME);
+        return getDefaultAuthConfig().getDefaultAuth();
     }
 
     public void setDefaultAuthMechanism(String authMechanism) {
-        config.setProperty("auth", authMechanism);
-        save();
+        DefaultAuthConfig config = getDefaultAuthConfig();
+        DefaultAuthConfig newConfig = new DefaultAuthConfig(config, authMechanism);
+        setDefaultAuthConfig(newConfig);
+    }
+
+    public ColorTokenConfig getColorTokenConfig() {
+        return (ColorTokenConfig) studioConfig.get(Config.COLOR_TOKEN_CONFIG);
     }
 
     public ServerTreeNode getServerTree() {
         return serverConfig.getServerTree();
+    }
+
+
+    public static ConfigToJsonConverter getConfigToJsonConverter() {
+        return new ConfigToJsonConverter(configTypeRegistry);
+    }
+
+    public static String configDefault(String key, ConfigType type, Object defaultValue) {
+        return configTypeRegistry.add(key, type, defaultValue);
+    }
+
+    public String getString(String key) {
+        return studioConfig.getString(key);
+    }
+    public boolean setString(String key, String value) {
+        return studioConfig.setString(key, value);
+    }
+
+    public int getInt(String key) {
+        return studioConfig.getInt(key);
+    }
+    public boolean setInt(String key, int value) {
+        return studioConfig.setInt(key, value);
+    }
+
+    public double getDouble(String key) {
+        return studioConfig.getDouble(key);
+    }
+    public boolean setDouble(String key, double value) {
+        return studioConfig.setDouble(key, value);
+    }
+
+    public boolean getBoolean(String key) {
+        return studioConfig.getBoolean(key);
+    }
+    public boolean setBoolean(String key, boolean value) {
+        return studioConfig.setDouble(key, value);
+    }
+
+    public <T extends Enum<T>> T getEnum(String key) {
+        return studioConfig.getEnum(key);
+    }
+    public <T extends Enum<T>> boolean setEnum(String key, T value) {
+        return studioConfig.setEnum(key, value);
+    }
+
+    //@TODO: do we need?
+    public Color getColor(String key) {
+        return studioConfig.getColor(key);
+    }
+
+    public Font getFont(String key) {
+        return studioConfig.getFont(key);
+    }
+    public boolean setFont(String key, Font value) {
+        return studioConfig.setFont(key, value);
+    }
+
+    public Dimension getSize(String key) {
+        return studioConfig.getSize(key);
+    }
+    public boolean setSize(String key, Dimension value) {
+        return studioConfig.setSize(key, value);
+    }
+
+    public Rectangle getBounds(String key) {
+        return studioConfig.getBounds(key);
+    }
+    public boolean setBounds(String key, Rectangle value) {
+        return studioConfig.setBounds(key, value);
+    }
+
+    public FileChooserConfig getFileChooserConfig(String key) {
+        return studioConfig.getFileChooserConfig(key);
+    }
+    public boolean setFileChooserConfig(String key, FileChooserConfig value) {
+        return studioConfig.setFileChooserConfig(key, value);
+    }
+
+    public List<String> getStringArray(String key) {
+        return studioConfig.getStringArray(key);
+    }
+    public boolean setStringArray(String key, List<String> value) {
+        return studioConfig.setStringArray(key, value);
     }
 
 }

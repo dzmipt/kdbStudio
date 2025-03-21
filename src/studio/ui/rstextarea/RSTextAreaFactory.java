@@ -8,6 +8,7 @@ import org.fife.ui.rtextarea.ConfigurableCaret;
 import org.fife.ui.rtextarea.RTextArea;
 import org.fife.ui.rtextarea.RecordableTextAction;
 import studio.kdb.Config;
+import studio.kdb.config.ColorTokenConfig;
 import studio.qeditor.RSToken;
 import studio.qeditor.RSTokenMaker;
 import studio.ui.Util;
@@ -156,10 +157,11 @@ public class RSTextAreaFactory {
         Style[] defaultStyles = scheme.getStyles();
         Style[] styles = new Style[RSToken.NUM_TOKEN_TYPES];
         System.arraycopy(defaultStyles, 0, styles, 0, defaultStyles.length);
+        ColorTokenConfig tokenConfig = Config.getInstance().getColorTokenConfig();
         for (RSToken token: RSToken.values()) {
             Font font = RSyntaxTextArea.getDefaultFont();
             if (token.getFontStyle() != Font.PLAIN) font = font.deriveFont(token.getFontStyle());
-            Color color = Config.getInstance().getColor(token.getColorTokenName());
+            Color color = tokenConfig.getColor(token.getColorToken());
             Style style = new Style(color, null, font);
 
             styles[token.getTokenType()] = style;

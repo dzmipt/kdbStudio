@@ -20,7 +20,6 @@ import studio.ui.search.SearchPanel;
 import studio.ui.statusbar.MainStatusBar;
 import studio.utils.BrowserLaunch;
 import studio.utils.Content;
-import studio.utils.HistoricalList;
 import studio.utils.LineEnding;
 import studio.utils.log4j.EnvConfig;
 
@@ -432,7 +431,7 @@ public class StudioWindow extends JFrame implements WindowListener {
     public void addToMruFiles(String filename) {
         if (filename == null)
             return;
-        String[] mruFiles = CONFIG.getStringArray(Config.MRU_FILES);
+        List<String> mruFiles = CONFIG.getStringArray(Config.MRU_FILES);
 
         List<String> list = new ArrayList<>();
         list.add(filename);
@@ -442,7 +441,7 @@ public class StudioWindow extends JFrame implements WindowListener {
             if (!filename.equals(mruFile)) list.add(mruFile);
         }
 
-        CONFIG.setStringArray(Config.MRU_FILES, list.toArray(new String[list.size()]));
+        CONFIG.setStringArray(Config.MRU_FILES, list);
         refreshAllMenus();
     }
 
@@ -494,8 +493,8 @@ public class StudioWindow extends JFrame implements WindowListener {
     public void setServer(Server server) {
         editor.setServer(server);
         if (!loading) {
-            CONFIG.addServerToHistory(server);
             serverHistory.add(server);
+            CONFIG.refreshServerToHistory();
 
             EditorsPanel.refreshEditorTitle(editor);
             refreshServer();
@@ -907,10 +906,10 @@ public class StudioWindow extends JFrame implements WindowListener {
     private void refreshMenu() {
         openMRUMenu.removeAll();
 
-        String[] mru = CONFIG.getStringArray(Config.MRU_FILES);
+        List<String> mru = CONFIG.getStringArray(Config.MRU_FILES);
         String mnems = "123456789";
-        for (int i = 0; i < mru.length; i++) {
-            final String filename = mru[i];
+        for (int i = 0; i < mru.size(); i++) {
+            final String filename = mru.get(i);
 
             JMenuItem item = new JMenuItem("" + (i + 1) + " " + filename);
             if (i<mnems.length()) {
@@ -1312,8 +1311,7 @@ public class StudioWindow extends JFrame implements WindowListener {
         allWindows.add(this);
         if (activeWindow == null) activeWindow = this;
 
-        serverHistory = new HistoricalList<>(CONFIG.getInt(Config.SERVER_HISTORY_DEPTH),
-                CONFIG.getServerHistory());
+        serverHistory = CONFIG.getServerHistory();
         initActions();
         createMenuBar();
 

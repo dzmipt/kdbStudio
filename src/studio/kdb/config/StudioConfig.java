@@ -6,6 +6,7 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import studio.kdb.Config;
 import studio.kdb.FileChooserConfig;
 import studio.utils.FilesBackup;
 
@@ -17,16 +18,14 @@ import java.io.Writer;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.Instant;
-import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.TreeMap;
 
 public class StudioConfig {
 
-    private static final Map<String,Object> configDefaultValues = new HashMap<>();
-    private static final Map<String,ConfigType> configTypes = new HashMap<>();
-
+    private final ConfigTypeRegistry registry;
     private final Path path;
     private final Map<String, Object> config;
     private final Map<String, Object> defaults;
@@ -34,13 +33,12 @@ public class StudioConfig {
 
     private static final Logger log = LogManager.getLogger();
 
-    private static final String COMMENT = configDefault("comment", ConfigType.STRING, "");
-
-    public StudioConfig(Path path) {
-        this(path, null);
+    public StudioConfig(ConfigTypeRegistry registry, Path path) {
+        this(registry, path, null);
     }
 
-    public StudioConfig(Path path, Path pathToDefaults) {
+    public StudioConfig(ConfigTypeRegistry registry, Path path, Path pathToDefaults) {
+        this.registry = registry;
         this.path = path;
         config = load(path);
         defaults = load(pathToDefaults);
@@ -50,31 +48,23 @@ public class StudioConfig {
                 .create();
     }
 
-
-    public static String configDefault(String key, ConfigType type, Object defaultValue) {
-        if (configDefaultValues.containsKey(key)) throw new IllegalArgumentException(String.format("Key %s is already available", key));
-
-        configDefaultValues.put(key, defaultValue);
-        configTypes.put(key, type);
-        return key;
-    }
-
     private Map<String, Object> load(Path path) {
         Map<String, Object> map = new TreeMap<>();
         if (path == null) return map;
+        if (! Files.exists(path)) return map;
 
         try (Reader reader = Files.newBufferedReader(path)) {
             JsonObject json = JsonParser.parseReader(reader).getAsJsonObject();
 
             for (String key: json.keySet()) {
                 try {
-                    ConfigType type = configTypes.get(key);
+                    ConfigType type = registry.getConfigType(key);
                     if (type == null) {
                         log.warn("Unknown config key {}. Skipping...", key);
                         continue;
                     }
-                    Object value = type.fromJson(json.get(key), getDefault(key));
-                    if (key.equals(COMMENT)) {
+                    Object value = type.fromJson(json.get(key), registry.getDefault(key));
+                    if (key.equals(Config.COMMENT)) {
                         log.info("Loaded config with the comment: {}", value);
                     } else {
                         map.put(key, value);
@@ -92,15 +82,20 @@ public class StudioConfig {
         return map;
     }
 
+    // @TODO: FIX me
+    public void saveToDisk() {
+
+    }
+
     private void save() {
         try (Writer writer = new OutputStreamWriter(FilesBackup.getInstance().newFileOutputStream(path))) {
 
             JsonObject json = new JsonObject();
             String comment = String.format("Auto-generated at %s from a process with pid %d", Instant.now(), ProcessHandle.current().pid());
-            json.add(COMMENT, ConfigType.STRING.toJson(comment));
+            json.add(Config.COMMENT, ConfigType.STRING.toJson(comment));
 
             for (String key: config.keySet()) {
-                ConfigType type = configTypes.get(key);
+                ConfigType type = registry.getConfigType(key);
 
                 json.add(key, type.toJson(config.get(key)));
             }
@@ -115,21 +110,25 @@ public class StudioConfig {
         Object value = defaults.get(key);
         if (value != null) return value;
 
-        return configDefaultValues.get(key);
+        return registry.getDefault(key);
     }
 
-    public Object get(String key, ConfigType type) {
-        if (! configTypes.containsKey(key)) throw new IllegalArgumentException("Unknown key: " + key);
-        if (type != configTypes.get(key)) throw new IllegalArgumentException(String.format("Unexpected type. %s != %s", type, configTypes.get(key)));
+    public int size() {
+        return config.size();
+    }
+
+    public Object get(String key) {
+        ConfigType type = registry.getConfigType(key);
+        if (type == null) throw new IllegalArgumentException("Unknown key: " + key);
 
         Object value = config.get(key);
-        if (value != null) return value;
+        if (value != null) return type.clone(value);
 
-        return getDefault(key);
+        return type.clone(getDefault(key));
     }
 
-    public boolean set(String key, ConfigType type, Object value) {
-        Object currentValue = get(key, type);
+    public boolean set(String key, Object value) {
+        Object currentValue = get(key);
 
         if (Objects.equals(currentValue, value)) return false;
 
@@ -138,127 +137,129 @@ public class StudioConfig {
                 return false;
             }
             config.remove(key);
+        } else {
+            ConfigType type = registry.getConfigType(key);
+            config.put(key, type.clone(value));
         }
 
-        config.put(key, value);
         save();
         return true;
     }
 
     public String getString(String key) {
-        return (String) get(key, ConfigType.STRING);
+        return (String) get(key);
     }
 
     public boolean setString(String key, String value) {
-        return set(key, ConfigType.STRING, value);
+        return set(key, value);
     }
 
     public int getInt(String key) {
-        return (Integer) get(key, ConfigType.INT);
+        return (Integer) get(key);
 
     }
 
     public boolean setInt(String key, int value) {
-        return set(key, ConfigType.INT, value);
+        return set(key, value);
     }
 
     public double getDouble(String key) {
-        return (Double) get(key, ConfigType.DOUBLE);
+        return (Double) get(key);
 
     }
 
     public boolean setDouble(String key, double value) {
-        return set(key, ConfigType.DOUBLE, value);
+        return set(key, value);
     }
 
     public boolean getBoolean(String key) {
-        return (Boolean) get(key, ConfigType.BOOLEAN);
+        return (Boolean) get(key);
 
     }
 
     public boolean setDouble(String key, boolean value) {
-        return set(key, ConfigType.BOOLEAN, value);
+        return set(key, value);
     }
 
     public Font getFont(String key) {
-        return (Font) get(key, ConfigType.FONT);
+        return (Font) get(key);
 
     }
 
     public boolean setFont(String key, Font value) {
-        return set(key, ConfigType.FONT, value);
+        return set(key, value);
     }
 
     public Rectangle getBounds(String key) {
-        return (Rectangle) get(key, ConfigType.BOUNDS);
+        return (Rectangle) get(key);
 
     }
 
     public boolean setBounds(String key, Rectangle value) {
-        return set(key, ConfigType.BOUNDS, value);
+        return set(key, value);
     }
 
     public Color getColor(String key) {
-        return (Color) get(key, ConfigType.COLOR);
+        return (Color) get(key);
 
     }
 
     public boolean setColor(String key, Color value) {
-        return set(key, ConfigType.COLOR, value);
+        return set(key, value);
     }
 
     public <T extends Enum<T>> T getEnum(String key) {
-        return (T) get(key, ConfigType.ENUM);
+        return (T) get(key);
 
     }
 
     public <T extends Enum<T>> boolean setEnum(String key, T value) {
-        return set(key, ConfigType.ENUM, value);
+        return set(key, value);
     }
 
     public Dimension getSize(String key) {
-        return (Dimension) get(key, ConfigType.SIZE);
+        return (Dimension) get(key);
 
     }
 
     public boolean setSize(String key, Dimension value) {
-        return set(key, ConfigType.SIZE, value);
+        return set(key, value);
     }
 
     public FileChooserConfig getFileChooserConfig(String key) {
-        return (FileChooserConfig) get(key, ConfigType.FILE_CHOOSER);
+        return (FileChooserConfig) get(key);
 
     }
 
     public boolean setFileChooserConfig(String key, FileChooserConfig value) {
-        return set(key, ConfigType.FILE_CHOOSER, value);
+        return set(key, value);
     }
 
-    public String[] getStringArray(String key) {
-        return (String[]) get(key, ConfigType.STRING_ARRAY);
-
-    }
-
-    public boolean setStringArray(String key, String[] value) {
-        return set(key, ConfigType.STRING_ARRAY, value);
-    }
-
-    public int[] getIntArray(String key) {
-        return (int[]) get(key, ConfigType.INT_ARRAY);
+    public List<String> getStringArray(String key) {
+        return (List<String>) get(key);
 
     }
 
-    public boolean setIntArray(String key, int[] value) {
-        return set(key, ConfigType.INT_ARRAY, value);
+    public boolean setStringArray(String key, List<String> value) {
+        return set(key, value);
     }
 
-    public <T extends Enum<T>> T[] getEnumArray(String key) {
-        return (T[]) get(key, ConfigType.ENUM_ARRAY);
+    public List<Integer> getIntArray(String key) {
+        return (List<Integer>) get(key);
 
     }
 
-    public <T extends Enum<T>> boolean setEnumArray(String key, T[] value) {
-        return set(key, ConfigType.ENUM_ARRAY, value);
+    public boolean setIntArray(String key, List<Integer> value) {
+        return set(key, value);
+    }
+
+    public <T extends Enum<T>> List<T> getEnumArray(String key) {
+        return (List<T>) get(key);
+
+    }
+
+    public <T extends Enum<T>> boolean setEnumArray(String key, List<T> value) {
+        return set(key, value);
     }
 
 }

@@ -21,7 +21,7 @@ public class ConfigUpgradeTest {
     public void testLoadingConfig13() throws IOException, URISyntaxException {
         byte[] content = Files.readAllBytes(Paths.get(this.getClass().getClassLoader().getResource("studio13.properties").toURI()));
 
-        File tmpFile = File.createTempFile("studioforkdb", ".tmp");
+        File tmpFile = File.createTempFile("studioforkdb", ".properties");
         tmpFile.deleteOnExit();
         Files.write(tmpFile.toPath(), content);
         Config config = new Config(tmpFile.toPath());
