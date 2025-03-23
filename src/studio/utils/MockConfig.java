@@ -1,5 +1,6 @@
 package studio.utils;
 
+import org.apache.commons.io.FileUtils;
 import org.apache.logging.log4j.core.Appender;
 import org.apache.logging.log4j.core.Logger;
 import org.apache.logging.log4j.core.LoggerContext;
@@ -8,30 +9,27 @@ import org.apache.logging.log4j.core.appender.NullAppender;
 import org.apache.logging.log4j.core.appender.RollingFileAppender;
 import studio.kdb.Config;
 import studio.kdb.Workspace;
+import studio.utils.log4j.EnvConfig;
 
-import java.io.File;
 import java.io.IOException;
+import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.ArrayList;
+import java.util.List;
 
 public class MockConfig extends Config {
 
     private static boolean initialized = false;
 
-    public static File configFile;
-    public static File workspaceFile;
-    public static File serversFile;
+    private static Path basePath;
 
     public static synchronized void mock() throws IOException {
         if (initialized) return;
 
         FilesBackup.setEnabled(false);
-        configFile = File.createTempFile("kdbStudio", ".json");
-        configFile.deleteOnExit();
-        workspaceFile = File.createTempFile("kdbStudioWorkspace", ".properties");
-        workspaceFile.deleteOnExit();
-        serversFile = File.createTempFile("kdbStudioServers", ".json");
-        serversFile.deleteOnExit();
-        Config.instance = new MockConfig(configFile.toPath());
+        basePath = createTempDir();
+        EnvConfig.setBaseFolder(basePath);
+        Config.instance = new MockConfig(basePath);
 
         LoggerContext context = LoggerContext.getContext(false);
         for (Logger logger: context.getLoggers() ) {
@@ -48,18 +46,39 @@ public class MockConfig extends Config {
         initialized = true;
     }
 
+    private static List<Path> tmpDirs = new ArrayList<>();
+    private final static Thread shutdownHook = new Thread() {
+        @Override
+        public void run() {
+            for (Path dir: tmpDirs) {
+                try {
+                    FileUtils.deleteDirectory(dir.toFile());
+                } catch (IOException e) {
+                    System.err.printf("Error on folder %s removal\n", dir);
+                    e.printStackTrace(System.err);
+                }
+            }
+        }
+    };
+
+    public static synchronized Path createTempDir() throws IOException {
+        if (tmpDirs.isEmpty()) Runtime.getRuntime().addShutdownHook(shutdownHook);
+        Path path = Files.createTempDirectory("kdbStudio");
+        tmpDirs.add(path);
+        return path;
+    }
+
+    public static void cleanupConfigs() throws IOException {
+        FileUtils.deleteDirectory(basePath.toFile());
+        Files.createDirectory(basePath);
+    }
+
+    public static Path getBasePath() {
+        return basePath;
+    }
+
     public void reload() {
         super.init();
-    }
-
-    @Override
-    protected Path getWorkspacePath() {
-        return workspaceFile.toPath();
-    }
-
-    @Override
-    protected Path getServerConfigPath() {
-        return serversFile.toPath();
     }
 
     private Workspace workspace;

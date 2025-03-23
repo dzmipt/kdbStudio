@@ -5,12 +5,13 @@ import studio.core.DefaultAuthenticationMechanism;
 import studio.kdb.config.ActionOnExit;
 import studio.kdb.config.ExecAllOption;
 import studio.utils.LineEnding;
+import studio.utils.MockConfig;
 
 import java.awt.*;
-import java.io.File;
 import java.io.IOException;
 import java.net.URISyntaxException;
 import java.nio.file.Files;
+import java.nio.file.Path;
 import java.nio.file.Paths;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -19,12 +20,11 @@ public class ConfigUpgradeTest {
 
     @Test
     public void testLoadingConfig13() throws IOException, URISyntaxException {
-        byte[] content = Files.readAllBytes(Paths.get(this.getClass().getClassLoader().getResource("studio13.properties").toURI()));
+        MockConfig.mock();
+        Path srcPath = Paths.get(this.getClass().getClassLoader().getResource("studio13.properties").toURI());
+        Files.copy(srcPath, MockConfig.getBasePath().resolve(Config.OLD_CONFIG_FILENAME));
 
-        File tmpFile = File.createTempFile("studioforkdb", ".properties");
-        tmpFile.deleteOnExit();
-        Files.write(tmpFile.toPath(), content);
-        Config config = new Config(tmpFile.toPath());
+        Config config = new Config(MockConfig.getBasePath());
 
         assertEquals(ActionOnExit.NOTHING, config.getEnum(Config.ACTION_ON_EXIT));
         assertEquals("defU", config.getDefaultCredentials(DefaultAuthenticationMechanism.NAME).getUsername());

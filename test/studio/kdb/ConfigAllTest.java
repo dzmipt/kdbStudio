@@ -1,6 +1,5 @@
 package studio.kdb;
 
-import org.apache.commons.io.FileUtils;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
@@ -9,6 +8,7 @@ import studio.core.DefaultAuthenticationMechanism;
 import studio.kdb.config.*;
 import studio.ui.Util;
 import studio.utils.LineEnding;
+import studio.utils.MockConfig;
 
 import java.awt.*;
 import java.io.IOException;
@@ -27,17 +27,16 @@ public class ConfigAllTest {
     @BeforeAll
     public static void prepare() throws IOException {
         Util.setMockFitToScreen(true);
-        configPath = Files.createTempDirectory("kdbStudioConfig");
-        Path path = configPath.resolve("studio.properties");
+        configPath = MockConfig.createTempDir();
+        Path path = configPath.resolve(Config.OLD_CONFIG_FILENAME);
         try (InputStream inputStream = ConfigAllTest.class.getClassLoader().getResourceAsStream("studio14.properties") ) {
             Files.copy(inputStream, path);
         }
-        config = new Config(path);
+        config = new Config(configPath);
     }
 
     @AfterAll
     public static void cleanup() throws IOException {
-        FileUtils.deleteDirectory(configPath.toFile());
         Util.setMockFitToScreen(false);
     }
 

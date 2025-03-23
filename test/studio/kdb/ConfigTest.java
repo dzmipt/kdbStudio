@@ -15,11 +15,11 @@ import studio.utils.HistoricalList;
 import studio.utils.MockConfig;
 
 import java.awt.*;
-import java.io.File;
 import java.io.IOException;
 import java.io.Reader;
 import java.io.Writer;
 import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.Collection;
 import java.util.function.Consumer;
 
@@ -37,13 +37,10 @@ public class ConfigTest {
 
     @BeforeEach
     public void init() throws IOException {
-        MockConfig.serversFile.delete();
-        MockConfig.configFile.delete();
+        MockConfig.cleanupConfigs();
 
         config = Config.getInstance();
         ((MockConfig)config).reload();
-
-        System.out.println("temp file " + MockConfig.configFile.getAbsolutePath());
 
         ServerTreeNode parent = config.getServerTree().add("testFolder");
         server = new Server("testServer", "localhost",1111,
@@ -146,19 +143,18 @@ public class ConfigTest {
 
 
     private Config getConfig(JsonObject json) throws IOException {
-        File newFile = File.createTempFile("studioforkdb", ".tmp");
-        newFile.deleteOnExit();
-        try (Writer writer = Files.newBufferedWriter(newFile.toPath())) {
+        Path newBase = MockConfig.createTempDir();
+        try (Writer writer = Files.newBufferedWriter(newBase.resolve(Config.CONFIG_FILENAME))) {
             Gson gson = new GsonBuilder().setPrettyPrinting().create();
             gson.toJson(json, writer);
         }
 
-        return new Config(newFile.toPath());
+        return new Config(newBase);
     }
     
     private Config copyConfig(Config config, Consumer<JsonObject> configModification) throws IOException {
         config.saveToDisk();
-        try (Reader reader = Files.newBufferedReader(MockConfig.configFile.toPath())) {
+        try (Reader reader = Files.newBufferedReader(MockConfig.getBasePath().resolve(Config.CONFIG_FILENAME))) {
             JsonObject json = JsonParser.parseReader(reader).getAsJsonObject();
             configModification.accept(json);
             return getConfig(json);

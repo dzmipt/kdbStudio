@@ -1,6 +1,5 @@
 package studio.kdb;
 
-import org.apache.commons.io.FilenameUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import studio.core.Credentials;
@@ -81,27 +80,23 @@ public class Config  {
     public static final String SERVER_HISTORY = configDefault("serverHistory", ConfigType.SERVER_HISTORY, new ServerHistoryConfig(20, List.of()));
     public static final String CONFIG_VERSION = configDefault("version", ConfigType.ENUM, ConfigVersion.V2_0);
 
-    private static final String OLD_CONFIG_FILENAME = "studio.properties";
-    private static final String CONFIG_FILENAME = "studio.json";
-    private static final String WORKSPACE_FILENAME = "workspace.properties";
-    private static final String SERVERCONFIG_FILENAME = "servers.json";
+    public static final String OLD_CONFIG_FILENAME = "studio.properties";
+    public static final String CONFIG_FILENAME = "studio.json";
+    public static final String WORKSPACE_FILENAME = "workspace.properties";
+    public static final String SERVERCONFIG_FILENAME = "servers.json";
 
     protected StudioConfig studioConfig;
     protected PropertiesConfig workspaceConfig;
     protected ServerConfig serverConfig;
     private HistoricalList<Server> serverHistory;
 
-    private Path configPath;
+    private final Path basePath;
     // Can be overridden in test cases
     protected static Config instance = new Config();
 
     protected Config(Path path) {
-        this.configPath = path;
+        this.basePath = path;
         init();
-    }
-
-    private static Path getDefaultConfigPath() {
-        return EnvConfig.getFilepath(CONFIG_FILENAME);
     }
 
     private static Properties getDefaults() {
@@ -122,7 +117,7 @@ public class Config  {
     private Config() {
 //        super(getDefaultConfigPath(), getDefaults());
 //        init();
-        this(getDefaultConfigPath());
+        this(EnvConfig.getBaseFolder());
     }
 
     public void saveToDisk() {
@@ -203,12 +198,8 @@ public class Config  {
         serverConfig = new ServerConfig(getServerConfigPath());
 
         checkOldPropertiesToUpgrade();
-        //Hack for tests
-        if (FilenameUtils.getExtension(configPath.toString()).equals("properties")) {
-            configPath = configPath.resolveSibling(CONFIG_FILENAME);
-        }
 
-        studioConfig = new StudioConfig(configTypeRegistry, configPath);
+        studioConfig = new StudioConfig(configTypeRegistry, basePath.resolve(CONFIG_FILENAME));
         workspaceConfig = new PropertiesConfig(getWorkspacePath());
         initServerHistory();
     }
@@ -253,16 +244,13 @@ public class Config  {
     }
 
     private void checkOldPropertiesToUpgrade() {
-        Path oldPath = configPath.resolveSibling(OLD_CONFIG_FILENAME);
-        //Hack for tests. configPath can be ending to .properties meaning that it is old Properties.
-        if (FilenameUtils.getExtension(configPath.toString()).equals("properties")) {
-            oldPath = configPath;
-            configPath = oldPath.resolveSibling(CONFIG_FILENAME);
-        }
+        Path oldPath = basePath.resolve(OLD_CONFIG_FILENAME);
 
         if (!Files.exists(oldPath)) return;
 
-        log.info("Found old config {}. Converting to {}...", oldPath, configPath);
+        Path newPath = basePath.resolve(CONFIG_FILENAME);
+
+        log.info("Found old config {}. Converting to {}...", oldPath, newPath);
         try (Reader reader = Files.newBufferedReader(oldPath)) {
             Properties properties = new Properties();
             properties.load(reader);
@@ -270,7 +258,7 @@ public class Config  {
 
             log.info("Converting {} properties", properties.size());
             ConfigToJsonConverter converter = getConfigToJsonConverter();
-            converter.convert(properties, configPath);
+            converter.convert(properties, newPath);
             Properties remaining = converter.getRemainingProperties();
             if (remaining.isEmpty()) {
                 log.info("All properties were successfully converted");

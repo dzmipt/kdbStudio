@@ -29,6 +29,10 @@ public class EnvConfig implements StrLookup {
         EnvConfig.baseFolder = baseFolder;
     }
 
+    public static Path getBaseFolder() {
+        return getBaseFolder(environment);
+    }
+
     public static Path getBaseFolder(String env) {
         if (baseFolder != null) return baseFolder;
 
