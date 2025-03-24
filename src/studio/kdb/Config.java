@@ -96,24 +96,7 @@ public class Config  {
         init();
     }
 
-    private static Properties getDefaults() {
-        Path pluginProperties = EnvConfig.getPluginFolder().resolve(OLD_CONFIG_FILENAME);
-        if (! Files.exists((pluginProperties))) return null;
-
-        try (InputStream inputStream = Files.newInputStream(pluginProperties)) {
-            Properties defaults = new Properties();
-            defaults.load(inputStream);
-            log.info("Loaded {} default properties from {}", defaults.size(), pluginProperties);
-            return defaults;
-        } catch (IOException e) {
-            log.error("Error loading default config from {}", pluginProperties, e);
-        }
-        return null;
-    }
-
     private Config() {
-//        super(getDefaultConfigPath(), getDefaults());
-//        init();
         this(EnvConfig.getBaseFolder());
     }
 
@@ -191,7 +174,10 @@ public class Config  {
 
         checkOldPropertiesToUpgrade();
 
-        studioConfig = new StudioConfig(configTypeRegistry, new FileConfig(basePath.resolve(CONFIG_FILENAME)));
+        FileConfig defaultFileConfig = new FileConfig(EnvConfig.getPluginFolder().resolve(CONFIG_FILENAME));
+        FileConfig fileConfig = new FileConfig(basePath.resolve(CONFIG_FILENAME));
+        studioConfig = new StudioConfig(configTypeRegistry, fileConfig, defaultFileConfig);
+
         workspaceConfig = new PropertiesConfig(getWorkspacePath());
         initServerHistory();
     }
