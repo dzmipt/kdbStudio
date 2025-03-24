@@ -3,6 +3,7 @@ package studio.kdb.config;
 import org.junit.jupiter.api.Test;
 import studio.kdb.Server;
 import studio.kdb.ServerTreeNode;
+import studio.utils.FileConfig;
 
 import java.awt.*;
 import java.io.File;
@@ -30,10 +31,11 @@ public class ServerConfigTest {
     public void testWriteRead(ServerTreeNode node) throws IOException {
         File file = File.createTempFile("serverConfig", "json");
         file.delete();
-        ServerConfig config = new ServerConfig(file.toPath());
+        ServerConfig config = new ServerConfig(new FileConfig(file.toPath()));
         config.setRoot(node);
+        FileConfig.saveAllOnDisk();
 
-        ServerConfig config2 = new ServerConfig(file.toPath());
+        ServerConfig config2 = new ServerConfig(new FileConfig(file.toPath()));
         assertDeepEquals(node, config2.getServerTree());
     }
     private Server server =

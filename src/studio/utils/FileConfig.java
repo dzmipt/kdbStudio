@@ -85,4 +85,9 @@ public class FileConfig {
     public static void saveAllOnDisk() {
         all.forEach(FileConfig::saveOnDisk);
     }
+
+    @Override
+    public String toString() {
+        return path.toString();
+    }
 }

@@ -7,16 +7,11 @@ import org.apache.logging.log4j.Logger;
 import studio.core.DefaultAuthenticationMechanism;
 import studio.kdb.Server;
 import studio.kdb.ServerTreeNode;
-import studio.utils.FilesBackup;
-import studio.utils.TmpfileOutputStream;
+import studio.utils.FileConfig;
 
 import java.awt.*;
 import java.io.IOException;
-import java.io.OutputStreamWriter;
-import java.io.Reader;
 import java.io.Writer;
-import java.nio.file.Files;
-import java.nio.file.Path;
 import java.util.List;
 import java.util.*;
 
@@ -24,15 +19,15 @@ import java.util.*;
 public class ServerConfig {
     private static final Logger log = LogManager.getLogger();
 
-    private final Path path;
+    private final FileConfig fileConfig;
 
     private Map<String, Server> servers;
     private List<String> serverNames;
     private ServerTreeNode serverTree;
     private Gson gson;
 
-    public ServerConfig(Path path) {
-        this.path = path;
+    public ServerConfig(FileConfig fileConfig) {
+        this.fileConfig = fileConfig;
         gson = new GsonBuilder()
                 .registerTypeAdapter(ServerTreeNode.class, new ServerTreeNodeSerializer())
                 .setPrettyPrinting()
@@ -41,6 +36,7 @@ public class ServerConfig {
     }
 
     private void init() {
+        fileConfig.saveOnDisk();
         setRoot(load());
     }
 
@@ -53,12 +49,13 @@ public class ServerConfig {
     }
 
     public ServerTreeNode load() {
-        if (!Files.exists(path)) {
-            log.info("Server config {} not found", path);
+        if (! fileConfig.fileExists()) {
+            log.info("Server config {} not found", fileConfig);
             return new ServerTreeNode();
         }
-        try(Reader reader = Files.newBufferedReader(path)) {
-            ServerTreeNode node = gson.fromJson(reader, ServerTreeNode.class);
+        try {
+            String content = fileConfig.getContent();
+            ServerTreeNode node = gson.fromJson(content, ServerTreeNode.class);
             if (node == null) node = new ServerTreeNode();
             if (node.isFolder()) return node;
 
@@ -66,20 +63,18 @@ public class ServerConfig {
             root.add(node.getServer());
             return root;
         } catch (IOException e) {
-            log.error("Error in reading server config from {}", path, e);
+            log.error("Error in reading server config from {}", fileConfig, e);
         } catch (Exception e) {
-            log.error("Error in the file format {}", path, e);
+            log.error("Error in the file format {}", fileConfig, e);
         }
         return new ServerTreeNode();
     }
 
     private void save() {
-        try (TmpfileOutputStream out  = FilesBackup.getInstance().newFileOutputStream(path)) {
-            Writer writer = new OutputStreamWriter(out);
+        try (Writer writer = fileConfig.getWriter()) {
             gson.toJson(serverTree, writer);
-            writer.close();
         } catch (IOException e) {
-            log.error("Error in writing server config to {}", path, e);
+            log.error("Error in writing server config to {}", fileConfig, e);
         }
     }
 

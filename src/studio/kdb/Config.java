@@ -133,11 +133,7 @@ public class Config  {
     }
 
     protected Path getWorkspacePath() {
-        return EnvConfig.getFilepath(WORKSPACE_FILENAME);
-    }
-
-    protected Path getServerConfigPath() {
-        return EnvConfig.getFilepath(SERVERCONFIG_FILENAME);
+        return basePath.resolve(WORKSPACE_FILENAME);
     }
 
 	public Workspace loadWorkspace() {
@@ -191,7 +187,7 @@ public class Config  {
     }
 
     protected void init() {
-        serverConfig = new ServerConfig(getServerConfigPath());
+        serverConfig = new ServerConfig(new FileConfig(basePath.resolve(SERVERCONFIG_FILENAME)));
 
         checkOldPropertiesToUpgrade();
 

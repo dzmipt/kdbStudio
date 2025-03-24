@@ -170,6 +170,9 @@ public class ServerTree extends JTree implements TreeExpansionListener {
 
         if (index == -1) index = folderInConfig.getChildCount();
 
+        int sourceIndex = folderInConfig.getIndex(sourceInConfig);
+        if (sourceIndex != -1 && sourceIndex<index) index--;
+
         sourceInConfig.removeFromParent();
         folderInConfig.insert(sourceInConfig, index);
 
