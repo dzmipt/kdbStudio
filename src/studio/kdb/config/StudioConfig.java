@@ -102,7 +102,7 @@ public class StudioConfig {
         }
     }
 
-    private Object getDefault(String key) {
+    public Object getDefault(String key) {
         Object value = defaults.get(key);
         if (value != null) return value;
 

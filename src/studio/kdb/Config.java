@@ -421,7 +421,14 @@ public class Config  {
     }
 
     public Rectangle getBounds(String key) {
-        return studioConfig.getBounds(key);
+        Rectangle bounds = studioConfig.getBounds(key);
+
+        // Hack? If bounds do not fit to screen, return default
+        if (! Util.fitToScreen(bounds) ) {
+            return (Rectangle) studioConfig.getDefault(key);
+        }
+
+        return bounds;
     }
     public boolean setBounds(String key, Rectangle value) {
         return studioConfig.setBounds(key, value);
