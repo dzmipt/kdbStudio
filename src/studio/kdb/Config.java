@@ -6,10 +6,7 @@ import studio.core.Credentials;
 import studio.core.DefaultAuthenticationMechanism;
 import studio.kdb.config.*;
 import studio.ui.Util;
-import studio.utils.HistoricalList;
-import studio.utils.LineEnding;
-import studio.utils.PropertiesConfig;
-import studio.utils.QConnection;
+import studio.utils.*;
 import studio.utils.log4j.EnvConfig;
 
 import javax.swing.*;
@@ -121,8 +118,7 @@ public class Config  {
     }
 
     public void saveToDisk() {
-        //super.saveToDisk();
-        studioConfig.saveToDisk();
+        FileConfig.saveAllOnDisk();
         workspaceConfig.saveToDisk();
     }
 
@@ -199,7 +195,7 @@ public class Config  {
 
         checkOldPropertiesToUpgrade();
 
-        studioConfig = new StudioConfig(configTypeRegistry, basePath.resolve(CONFIG_FILENAME));
+        studioConfig = new StudioConfig(configTypeRegistry, new FileConfig(basePath.resolve(CONFIG_FILENAME)));
         workspaceConfig = new PropertiesConfig(getWorkspacePath());
         initServerHistory();
     }

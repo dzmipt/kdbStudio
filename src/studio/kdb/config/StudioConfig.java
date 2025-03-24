@@ -8,15 +8,11 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import studio.kdb.Config;
 import studio.kdb.FileChooserConfig;
-import studio.utils.FilesBackup;
+import studio.utils.FileConfig;
 
 import java.awt.*;
 import java.io.IOException;
-import java.io.OutputStreamWriter;
-import java.io.Reader;
 import java.io.Writer;
-import java.nio.file.Files;
-import java.nio.file.Path;
 import java.time.Instant;
 import java.util.List;
 import java.util.Map;
@@ -26,35 +22,40 @@ import java.util.TreeMap;
 public class StudioConfig {
 
     private final ConfigTypeRegistry registry;
-    private final Path path;
+    private final FileConfig fileConfig;
     private final Map<String, Object> config;
     private final Map<String, Object> defaults;
     private final Gson gson;
 
     private static final Logger log = LogManager.getLogger();
 
-    public StudioConfig(ConfigTypeRegistry registry, Path path) {
-        this(registry, path, null);
+    public StudioConfig(ConfigTypeRegistry registry, FileConfig file) {
+        this(registry, file, null);
     }
 
-    public StudioConfig(ConfigTypeRegistry registry, Path path, Path pathToDefaults) {
+    public StudioConfig(ConfigTypeRegistry registry, FileConfig fileConfig, FileConfig defaultConfig) {
         this.registry = registry;
-        this.path = path;
-        config = load(path);
-        defaults = load(pathToDefaults);
+        this.fileConfig = fileConfig;
+        config = load(fileConfig);
+        defaults = load(defaultConfig);
 
         gson = new GsonBuilder()
                 .setPrettyPrinting()
                 .create();
     }
 
-    private Map<String, Object> load(Path path) {
-        Map<String, Object> map = new TreeMap<>();
-        if (path == null) return map;
-        if (! Files.exists(path)) return map;
+    public FileConfig getFileConfig() {
+        return fileConfig;
+    }
 
-        try (Reader reader = Files.newBufferedReader(path)) {
-            JsonObject json = JsonParser.parseReader(reader).getAsJsonObject();
+    private Map<String, Object> load(FileConfig fileConfig) {
+        Map<String, Object> map = new TreeMap<>();
+        if (fileConfig == null) return map;
+        if (! fileConfig.fileExists()) return map;
+
+        try {
+            String content = fileConfig.getContent();
+            JsonObject json = JsonParser.parseString(content).getAsJsonObject();
 
             for (String key: json.keySet()) {
                 try {
@@ -75,20 +76,15 @@ public class StudioConfig {
 
             }
         } catch (IOException | IllegalStateException e) {
-            log.error("Error on parsing json {}", path, e);
+            log.error("Error on parsing json {}", fileConfig.getPath(), e);
         }
 
-        log.info("Loaded config {} with {} settings", path, map.size());
+        log.info("Loaded config {} with {} settings", fileConfig.getPath(), map.size());
         return map;
     }
 
-    // @TODO: FIX me
-    public void saveToDisk() {
-
-    }
-
     private void save() {
-        try (Writer writer = new OutputStreamWriter(FilesBackup.getInstance().newFileOutputStream(path))) {
+        try (Writer writer = fileConfig.getWriter()) {
 
             JsonObject json = new JsonObject();
             String comment = String.format("Auto-generated at %s from a process with pid %d", Instant.now(), ProcessHandle.current().pid());
@@ -102,7 +98,7 @@ public class StudioConfig {
 
             gson.toJson(json, writer);
         } catch (IOException e) {
-            log.error("Error on saving json {}", path, e);
+            log.error("Error on saving json {}", fileConfig.getPath(), e);
         }
     }
 

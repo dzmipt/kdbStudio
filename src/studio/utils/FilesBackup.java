@@ -65,7 +65,7 @@ public class FilesBackup {
         return new TmpfileOutputStream(path);
     }
 
-    protected void backup(Path path) throws IOException {
+    public void backup(Path path) throws IOException {
         if (!enabled) return;
 
         if (Files.notExists(path)) return;

@@ -6,6 +6,7 @@ import studio.core.Credentials;
 import studio.core.DefaultAuthenticationMechanism;
 import studio.kdb.Config;
 import studio.kdb.FileChooserConfig;
+import studio.utils.FileConfig;
 
 import java.awt.*;
 import java.nio.charset.StandardCharsets;
@@ -35,7 +36,8 @@ public class ConfigToJsonConverter {
 
         int count = properties.size();
 
-        StudioConfig config = new StudioConfig(registry, path);
+        FileConfig fileConfig = new FileConfig(path);
+        StudioConfig config = new StudioConfig(registry, fileConfig);
 
         convert(config, this::removeEncodingAndVersion, "encoding and version");
         convert(config, this::convertDefaultAuthConfig, "DefaultAuthConfig");
@@ -46,6 +48,7 @@ public class ConfigToJsonConverter {
         convert(config, this::convertServerHistory, "serverHistory");
         convert(config, this::convertStandard, "standard properties");
 
+        fileConfig.saveOnDisk();
         log.info("Converted {} out of {} properties", count - getRemainingProperties().size(), count);
         return config;
     }

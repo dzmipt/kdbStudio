@@ -34,7 +34,9 @@ public class DefaultAuthConfig {
     }
 
     private void set(String authMethod, Credentials credential) {
-        if (! credential.equals(Credentials.DEFAULT)) {
+        if (credential.equals(Credentials.DEFAULT)) {
+            this.credentials.remove(authMethod);
+        } else {
             this.credentials.put(authMethod, credential);
         }
     }

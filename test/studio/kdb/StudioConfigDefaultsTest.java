@@ -6,6 +6,7 @@ import org.junit.jupiter.api.Test;
 import studio.kdb.config.ConfigType;
 import studio.kdb.config.ConfigTypeRegistry;
 import studio.kdb.config.StudioConfig;
+import studio.utils.FileConfig;
 
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
@@ -38,7 +39,7 @@ public class StudioConfigDefaultsTest {
     }
 
     private StudioConfig newConfig() {
-        return new StudioConfig(registry, configPath, defaultConfigPath);
+        return new StudioConfig(registry, new FileConfig(configPath), new FileConfig(defaultConfigPath));
     }
 
     @Test
@@ -46,19 +47,19 @@ public class StudioConfigDefaultsTest {
 
         assertEquals(10, newConfig().getInt(KEY), "10 is a default value");
 
-        StudioConfig config = new StudioConfig(registry, configPath);
+        StudioConfig config = new StudioConfig(registry, new FileConfig(configPath));
         config.setInt(KEY, 100);
-        config.saveToDisk();
+        config.getFileConfig().saveOnDisk();
         assertEquals(100, newConfig().getInt(KEY), "100 is saved");
 
-        StudioConfig defaults = new StudioConfig(registry, defaultConfigPath);
+        StudioConfig defaults = new StudioConfig(registry, new FileConfig(defaultConfigPath));
         defaults.setInt(KEY, 20);
-        defaults.saveToDisk();
+        defaults.getFileConfig().saveOnDisk();
 
         assertEquals(100, newConfig().getInt(KEY), "The value is still 100 despite of default");
 
         config.setInt(KEY, 10);
-        config.saveToDisk();
+        config.getFileConfig().saveOnDisk();
         assertEquals(20, newConfig().getInt(KEY), "The value should be 20 from default");
     }
 }

@@ -41,4 +41,15 @@ public class DefaultAuthConfigTest {
         c2 = new DefaultAuthConfig(c2, "b");
         assertNotEquals(c1, c2);
     }
+
+    @Test
+    public void test1() {
+        Map<String, Credentials> map = new HashMap<>();
+        map.put("a", new Credentials("user", ""));
+        DefaultAuthConfig config = new DefaultAuthConfig("a", map);
+
+        DefaultAuthConfig newConfig = new DefaultAuthConfig(config, "a", new Credentials("", ""));
+
+        assertEquals("", newConfig.getCredential("a").getUsername());
+    }
 }
