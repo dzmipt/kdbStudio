@@ -1,3 +1,7 @@
+* Configuration is stored in json format (studio.json)
+    * Details of servers connections are extracted into separate servers.json config file
+    * Defaults for studio.json can be put into plugins folder
+
 `dz5.0` 2025.02.28
 -----
 * Fixes for atom formating:
