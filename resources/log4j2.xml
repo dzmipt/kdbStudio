@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<Configuration status="warn" packages="studio.utils.log4j">
+<Configuration status="warn">
     <Properties>
         <!-- studiobase lookup plugin is defined in studio.utils.log4j.EnvConfig -->
         <Property name="baseFolder">${studiobase:log}</Property>

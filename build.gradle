@@ -27,13 +27,7 @@ sourceSets {
             srcDirs 'src'
         }
         resources {
-            srcDirs 'src','images','imagesOrig'
-            include 'log4j2.xml'
-            include 'studio*.properties'
-            include '*.png'
-            include '*.gif'
-            include 'notes.html'
-            include 'build.txt'
+            srcDirs 'resources','images','imagesOrig'
         }
     }
     test {
@@ -69,16 +63,16 @@ configurations {
 dependencies {
     txtmark group: 'com.github.rjeschke', name: 'txtmark', version: '0.13'
 
-    implementation group: 'org.apache.logging.log4j', name: 'log4j-api', version: '2.20.0'
-    implementation group: 'org.apache.logging.log4j', name: 'log4j-core', version: '2.20.0'
-    implementation group: 'org.apache.logging.log4j', name: 'log4j-iostreams', version: '2.20.0'
+    implementation group: 'org.apache.logging.log4j', name: 'log4j-api', version: '2.24.3'
+    implementation group: 'org.apache.logging.log4j', name: 'log4j-core', version: '2.24.3'
+    implementation group: 'org.apache.logging.log4j', name: 'log4j-iostreams', version: '2.24.3'
 
-    implementation group: 'com.fifesoft', name: 'rsyntaxtextarea', version: '3.5.1'
+    implementation group: 'com.fifesoft', name: 'rsyntaxtextarea', version: '3.6.0'
     //see studio.ui.chart.patched folder for the patch for jfreechart.
     // It will require review during the jfreechart upgrade.
     implementation group: 'org.jfree', name: 'jfreechart', version: '1.5.3'
-    implementation group: 'org.apache.poi', name: 'poi', version: '5.2.4'
-    implementation group: 'org.apache.poi', name: 'poi-ooxml', version: '5.2.4'
+    implementation group: 'org.apache.poi', name: 'poi', version: '5.4.0'
+    implementation group: 'org.apache.poi', name: 'poi-ooxml', version: '5.4.0'
     implementation group: 'org.drjekyll', name: 'fontchooser', version: '2.4'
     implementation group: 'net.java.dev.jna', name: 'jna', version: '5.10.0'
     implementation group: 'org.drjekyll', name: 'fontchooser', version: '2.5.2'
@@ -145,7 +139,7 @@ def getGitRevNumber = { ->
 
 task getBuildHash {
     doLast {
-        file("src/build.txt").text = buildTime() + getGitRevNumber()
+        file("resources/build.txt").text = buildTime() + getGitRevNumber()
     }
 }
 
@@ -153,7 +147,7 @@ task convertNotes (type: JavaExec) {
     mainClass = 'com.github.rjeschke.txtmark.Run'
     classpath = configurations.txtmark
     args 'notes.md'
-    standardOutput new FileOutputStream(new File(projectDir,"src/notes.html"))
+    standardOutput new FileOutputStream(new File(projectDir,"resources/notes.html"))
 }
 
 processResources.dependsOn('getBuildHash', 'convertNotes')

@@ -14,3 +14,5 @@ build/
 .settings
 
 /failed-gui-tests/
+resources/build.txt
+resources/notes.html
