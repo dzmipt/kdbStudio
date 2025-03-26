@@ -51,19 +51,15 @@ public class ServerTreeNodeTest {
                 DefaultAuthenticationMechanism.NAME, false);
 
         assertEquals(name1, server1.getFullName());
-        Server s1 = new Server(server1);
-
-        assertEquals(name1, s1.getFullName());
 
         ServerTreeNode root = new ServerTreeNode();
         ServerTreeNode parent = root.add("parent");
         ServerTreeNode childFolder = parent.add("childFolder");
-        s1 = s1.newFolder(childFolder);
+        Server s1 = server1.newFolder(childFolder);
 
         assertEquals("parent/childFolder/" + name1, s1.getFullName());
 
-        Server s2 = new Server(server2);
-        s2 = s2.newFolder(root);
+        Server s2 = server2.newFolder(root);
         assertEquals(name2, s2.getFullName());
     }
 

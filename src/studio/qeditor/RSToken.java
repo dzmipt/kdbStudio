@@ -1,43 +1,43 @@
 package studio.qeditor;
 
 import org.fife.ui.rsyntaxtextarea.TokenTypes;
-import studio.kdb.Config;
+import studio.kdb.config.ColorToken;
 
 import java.awt.*;
 import java.util.Arrays;
 
 public enum RSToken {
 
-    NULL(TokenTypes.NULL, Config.COLOR_DEFAULT),
-    SYMBOL(TokenTypes.DEFAULT_NUM_TOKEN_TYPES, Config.COLOR_SYMBOL),
-    STRING(TokenTypes.LITERAL_CHAR, Config.COLOR_CHARVECTOR),
-    ML_STRING(TokenTypes.DEFAULT_NUM_TOKEN_TYPES + 1, Config.COLOR_CHARVECTOR),
-    ERROR_STRING(TokenTypes.DEFAULT_NUM_TOKEN_TYPES + 2, Font.BOLD, Config.COLOR_ERROR),
-    IDENTIFIER(TokenTypes.IDENTIFIER, Config.COLOR_IDENTIFIER),
-    OPERATOR(TokenTypes.OPERATOR, Config.COLOR_OPERATOR),
-    BRACKET(TokenTypes.SEPARATOR, Config.COLOR_BRACKET),
-    EOL_COMMENT(TokenTypes.COMMENT_EOL, Font.ITALIC, Config.COLOR_EOLCOMMENT),
-    ML_COMMENT(TokenTypes.COMMENT_MULTILINE, Font.ITALIC, Config.COLOR_EOLCOMMENT),
-    KEYWORD(TokenTypes.RESERVED_WORD, Font.BOLD, Config.COLOR_KEYWORD),
-    WHITESPACE(TokenTypes.WHITESPACE, Config.COLOR_WHITESPACE),
-    UNKNOWN(TokenTypes.ERROR_NUMBER_FORMAT, Font.BOLD, Config.COLOR_ERROR),
-    INTEGER(TokenTypes.DEFAULT_NUM_TOKEN_TYPES + 3, Config.COLOR_INTEGER),
-    MINUTE(TokenTypes.DEFAULT_NUM_TOKEN_TYPES + 4, Config.COLOR_MINUTE),
-    SECOND(TokenTypes.DEFAULT_NUM_TOKEN_TYPES + 5, Config.COLOR_SECOND),
-    TIME(TokenTypes.DEFAULT_NUM_TOKEN_TYPES + 6, Config.COLOR_TIME),
-    DATE(TokenTypes.DEFAULT_NUM_TOKEN_TYPES + 7, Config.COLOR_DATE),
-    MONTH(TokenTypes.DEFAULT_NUM_TOKEN_TYPES + 8, Config.COLOR_MONTH),
-    FLOAT(TokenTypes.LITERAL_NUMBER_FLOAT, Config.COLOR_FLOAT),
-    LONG(TokenTypes.LITERAL_NUMBER_DECIMAL_INT, Config.COLOR_LONG),
-    SHORT(TokenTypes.DEFAULT_NUM_TOKEN_TYPES + 9, Config.COLOR_SHORT),
-    REAL(TokenTypes.DEFAULT_NUM_TOKEN_TYPES + 10, Config.COLOR_REAL),
-    BYTE(TokenTypes.DEFAULT_NUM_TOKEN_TYPES + 11, Config.COLOR_BYTE),
-    BOOLEAN(TokenTypes.LITERAL_BOOLEAN, Config.COLOR_BOOLEAN),
-    DATETIME(TokenTypes.DEFAULT_NUM_TOKEN_TYPES + 12, Config.COLOR_DATETIME),
-    TIMESTAMP(TokenTypes.DEFAULT_NUM_TOKEN_TYPES + 13, Config.COLOR_TIMESTAMP),
-    TIMESPAN(TokenTypes.DEFAULT_NUM_TOKEN_TYPES + 14, Config.COLOR_TIMESPAN),
-    SYSTEM(TokenTypes.PREPROCESSOR, Config.COLOR_SYSTEM),
-    COMMAND(TokenTypes.VARIABLE, Config.COLOR_COMMAND);
+    NULL(TokenTypes.NULL, ColorToken.DEFAULT),
+    SYMBOL(TokenTypes.DEFAULT_NUM_TOKEN_TYPES, ColorToken.SYMBOL),
+    STRING(TokenTypes.LITERAL_CHAR, ColorToken.CHARVECTOR),
+    ML_STRING(TokenTypes.DEFAULT_NUM_TOKEN_TYPES + 1, ColorToken.CHARVECTOR),
+    ERROR_STRING(TokenTypes.DEFAULT_NUM_TOKEN_TYPES + 2, Font.BOLD, ColorToken.ERROR),
+    IDENTIFIER(TokenTypes.IDENTIFIER, ColorToken.IDENTIFIER),
+    OPERATOR(TokenTypes.OPERATOR, ColorToken.OPERATOR),
+    BRACKET(TokenTypes.SEPARATOR, ColorToken.BRACKET),
+    EOL_COMMENT(TokenTypes.COMMENT_EOL, Font.ITALIC, ColorToken.EOLCOMMENT),
+    ML_COMMENT(TokenTypes.COMMENT_MULTILINE, Font.ITALIC, ColorToken.EOLCOMMENT),
+    KEYWORD(TokenTypes.RESERVED_WORD, Font.BOLD, ColorToken.KEYWORD),
+    WHITESPACE(TokenTypes.WHITESPACE, ColorToken.WHITESPACE),
+    UNKNOWN(TokenTypes.ERROR_NUMBER_FORMAT, Font.BOLD, ColorToken.ERROR),
+    INTEGER(TokenTypes.DEFAULT_NUM_TOKEN_TYPES + 3, ColorToken.INTEGER),
+    MINUTE(TokenTypes.DEFAULT_NUM_TOKEN_TYPES + 4, ColorToken.MINUTE),
+    SECOND(TokenTypes.DEFAULT_NUM_TOKEN_TYPES + 5, ColorToken.SECOND),
+    TIME(TokenTypes.DEFAULT_NUM_TOKEN_TYPES + 6, ColorToken.TIME),
+    DATE(TokenTypes.DEFAULT_NUM_TOKEN_TYPES + 7, ColorToken.DATE),
+    MONTH(TokenTypes.DEFAULT_NUM_TOKEN_TYPES + 8, ColorToken.MONTH),
+    FLOAT(TokenTypes.LITERAL_NUMBER_FLOAT, ColorToken.FLOAT),
+    LONG(TokenTypes.LITERAL_NUMBER_DECIMAL_INT, ColorToken.LONG),
+    SHORT(TokenTypes.DEFAULT_NUM_TOKEN_TYPES + 9, ColorToken.SHORT),
+    REAL(TokenTypes.DEFAULT_NUM_TOKEN_TYPES + 10, ColorToken.REAL),
+    BYTE(TokenTypes.DEFAULT_NUM_TOKEN_TYPES + 11, ColorToken.BYTE),
+    BOOLEAN(TokenTypes.LITERAL_BOOLEAN, ColorToken.BOOLEAN),
+    DATETIME(TokenTypes.DEFAULT_NUM_TOKEN_TYPES + 12, ColorToken.DATETIME),
+    TIMESTAMP(TokenTypes.DEFAULT_NUM_TOKEN_TYPES + 13, ColorToken.TIMESTAMP),
+    TIMESPAN(TokenTypes.DEFAULT_NUM_TOKEN_TYPES + 14, ColorToken.TIMESPAN),
+    SYSTEM(TokenTypes.PREPROCESSOR, ColorToken.SYSTEM),
+    COMMAND(TokenTypes.VARIABLE, ColorToken.COMMAND);
 
     public final static int NUM_TOKEN_TYPES = TokenTypes.DEFAULT_NUM_TOKEN_TYPES + 15;
 
@@ -62,24 +62,24 @@ public enum RSToken {
     private final int tokenType;
 
     private final int fontStyle;
-    private final String colorTokenName;
+    private final ColorToken colorToken;
 
     public int getFontStyle() {
         return fontStyle;
     }
 
-    public String getColorTokenName() {
-        return colorTokenName;
+    public ColorToken getColorToken() {
+        return colorToken;
     }
     private
-    RSToken(int tokenType, int fontStyle, String colorTokenName) {
+    RSToken(int tokenType, int fontStyle, ColorToken colorToken) {
         this.tokenType = tokenType;
         this.fontStyle = fontStyle;
-        this.colorTokenName = colorTokenName;
+        this.colorToken = colorToken;
     }
 
-    RSToken(int tokenType, String colorTokenName) {
-        this(tokenType, Font.PLAIN, colorTokenName);
+    RSToken(int tokenType, ColorToken colorToken) {
+        this(tokenType, Font.PLAIN, colorToken);
     }
 
 }

@@ -54,13 +54,12 @@ public class Studio {
             System.setProperty("com.apple.mrj.application.growbox.intrudes","false");
         }
 
-        if(Config.getInstance().getLookAndFeel()!=null){
-            try {
-                UIManager.setLookAndFeel(Config.getInstance().getLookAndFeel());
-            } catch (Exception e) {
-                // go on with default one
-                log.warn("Can't set LookAndFeel from Config {}", Config.getInstance().getLookAndFeel(), e);
-            }
+        String lookAndFeelClassName = Config.getInstance().getString(Config.LOOK_AND_FEEL);
+        try {
+            UIManager.setLookAndFeel(lookAndFeelClassName);
+        } catch (Exception e) {
+            // go on with default one
+            log.warn("Can't set LookAndFeel from Config {}", lookAndFeelClassName, e);
         }
 
         studio.ui.I18n.setLocale(Locale.getDefault());
@@ -206,8 +205,8 @@ public class Studio {
 
 
             if (workspace.getWindows().length == 0) {
-                String[] mruFiles = Config.getInstance().getMRUFiles();
-                String filename = mruFiles.length == 0 ? null : mruFiles[0];
+                List<String> mruFiles = Config.getInstance().getStringArray(Config.MRU_FILES);
+                String filename = mruFiles.isEmpty() ? null : mruFiles.get(0);
                 new StudioWindow(getInitServer(), filename);
             } else {
                 StudioWindow.loadWorkspace(workspace);
@@ -217,9 +216,9 @@ public class Studio {
         WorkspaceSaver.init();
 
         String hash = Lm.getNotesHash();
-        if (! Config.getInstance().getNotesHash().equals(hash) ) {
-            StudioWindow.getAllStudioWindows()[0].about();
-            Config.getInstance().setNotesHash(hash);
+        if (! Config.getInstance().getString(Config.NOTES_HASH).equals(hash) ) {
+            StudioWindow.about();
+            Config.getInstance().setString(Config.NOTES_HASH, hash);
         }
     }
 }

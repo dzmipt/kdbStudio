@@ -44,6 +44,7 @@ sourceSets {
             srcDirs 'test'
             include 'syntax.csv'
             include 'studio13.properties'
+            include 'studio14.properties'
         }
     }
     intTest {
@@ -81,6 +82,8 @@ dependencies {
     implementation group: 'org.drjekyll', name: 'fontchooser', version: '2.4'
     implementation group: 'net.java.dev.jna', name: 'jna', version: '5.10.0'
     implementation group: 'org.drjekyll', name: 'fontchooser', version: '2.5.2'
+
+    implementation group: 'com.google.code.gson', name: 'gson', version: '2.11.0'
 
     testImplementation group: 'org.junit.jupiter', name: 'junit-jupiter-api', version: '5.10.0'
     testImplementation group: 'org.junit.jupiter', name:'junit-jupiter-params', version: '5.10.0'

@@ -1,19 +1,26 @@
 package studio.kdb;
 
-import org.junit.jupiter.api.AfterAll;
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import studio.core.Credentials;
 import studio.core.DefaultAuthenticationMechanism;
 import studio.kdb.config.ActionOnExit;
-import studio.utils.FilesBackup;
-import studio.utils.TableConnExtractor;
+import studio.kdb.config.ExecAllOption;
+import studio.utils.HistoricalList;
+import studio.utils.MockConfig;
 
 import java.awt.*;
-import java.io.*;
+import java.io.IOException;
+import java.io.Reader;
+import java.io.Writer;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.Collection;
-import java.util.Properties;
 import java.util.function.Consumer;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -21,30 +28,37 @@ import static org.junit.jupiter.api.Assertions.*;
 public class ConfigTest {
 
     private Config config;
-    private File tmpFile;
     private Server server;
 
     @BeforeAll
-    public static void disableFilesBackup() {
-        FilesBackup.setEnabled(false);
-    }
-
-    @AfterAll
-    public static void restoreFilesBackup() {
-        FilesBackup.setEnabled(true);
+    public static void mockConfig() throws IOException {
+        MockConfig.mock();
     }
 
     @BeforeEach
     public void init() throws IOException {
-        tmpFile = File.createTempFile("studioforkdb", ".tmp");
-        tmpFile.deleteOnExit();
-        config = new Config(tmpFile.getPath());
-        System.out.println("temp file " + tmpFile.getPath());
+        MockConfig.cleanupConfigs();
+
+        config = Config.getInstance();
+        ((MockConfig)config).reload();
 
         ServerTreeNode parent = config.getServerTree().add("testFolder");
         server = new Server("testServer", "localhost",1111,
                 "user", "pwd", Color.WHITE, DefaultAuthenticationMechanism.NAME, false, parent);
     }
+
+    @Test
+    public void addServer() {
+        ServerTreeNode parent = new ServerTreeNode().add("addServerTestFolder");
+        Server server1 = new Server("testServer1", "localhost",1112,
+                "user", "pwd", Color.WHITE, DefaultAuthenticationMechanism.NAME, false, parent);
+
+        config.getServerConfig().addServers(false, server1);
+        assertEquals(1, config.getServerConfig().getServerNames().size());
+        assertEquals(1, config.getServerTree().getChild("addServerTestFolder").getChildCount() );
+        assertEquals(server1, config.getServerTree().getChild("addServerTestFolder").getChild(0).getServer() );
+    }
+
 
     @Test
     public void addServerDifferentTreeNode() {
@@ -56,8 +70,8 @@ public class ConfigTest {
         Server server2 = new Server("testServer2", "localhost",1113,
                 "user", "pwd", Color.WHITE, DefaultAuthenticationMechanism.NAME, false, parent2);
 
-        config.addServers(false, server1, server2);
-        assertEquals(2, config.getServerNames().size());
+        config.getServerConfig().addServers(false, server1, server2);
+        assertEquals(2, config.getServerConfig().getServerNames().size());
         assertEquals(2, config.getServerTree().getChild("addServerTestFolder").getChildCount() );
     }
 
@@ -71,47 +85,27 @@ public class ConfigTest {
         Server server2 = new Server("testServer1", "localhost",1113,
                 "user", "pwd", Color.WHITE, DefaultAuthenticationMechanism.NAME, false, parent1);
 
-        config.addServers(false, server1);
-        assertThrows(IllegalArgumentException.class, ()->config.addServer(server2) );
+        config.getServerConfig().addServers(false, server1);
+        assertThrows(IllegalArgumentException.class, ()->config.getServerConfig().addServer(server2) );
 
-        assertEquals(1, config.getServerNames().size());
+        assertEquals(1, config.getServerConfig().getServerNames().size());
         assertEquals(1, config.getServerTree().getChild("sameNameTestFolder").getChildCount() );
-        assertEquals(server1.getPort(), config.getServer("sameNameTestFolder/testServer1").getPort());
+        assertEquals(server1.getPort(), config.getServerConfig().getServer("sameNameTestFolder/testServer1").getPort());
     }
-
-    @Test
-    public void testDifferentConfigs() throws IOException{
-        Config config1 = config;
-        init();
-
-        int value = config1.getResultTabsCount();
-        assertEquals(value, config.getResultTabsCount());
-
-        config.setResultTabsCount(value+1);
-        assertEquals(value+1, config.getResultTabsCount());
-        assertEquals(value, config1.getResultTabsCount());
-
-        config.saveToDisk();
-        assertEquals(value+1, new Config(tmpFile.getPath()).getResultTabsCount());
-    }
-
-    @Test
-    public void testServerHistoryDepth() {
-        int depth = config.getServerHistoryDepth();
-        config.setServerHistoryDepth(depth+1);
-        assertEquals(depth+1, config.getServerHistoryDepth());
-    }
-
     @Test
     public void testServerHistory() {
-        assertEquals(0, config.getServerHistory().size());
+        HistoricalList<Server> serverHistory = config.getServerHistory();
 
-        config.addServer(server);
+        assertEquals(0, serverHistory.size());
+
+        config.getServerConfig().addServer(server);
         assertEquals(0, config.getServerHistory().size());
-        config.addServerToHistory(server);
+        serverHistory.add(server);
+
         assertEquals(1, config.getServerHistory().size());
         assertEquals(server, config.getServerHistory().get(0));
-        config.addServerToHistory(server);
+
+        serverHistory.add(server);
         assertEquals(1, config.getServerHistory().size());
 
 
@@ -119,123 +113,68 @@ public class ConfigTest {
         Server server2 = server.newName("testServer2");
         Server server3 = server.newName("testServer3");
 
-        config.addServers(false, server1, server2, server3);
-        config.addServerToHistory(server1);
-        config.addServerToHistory(server2);
+        config.getServerConfig().addServers(false, server1, server2, server3);
+        serverHistory.add(server1);
+        serverHistory.add(server2);
         assertEquals(3, config.getServerHistory().size());
         assertEquals(server2, config.getServerHistory().get(0));
         assertEquals(server1, config.getServerHistory().get(1));
         assertEquals(server, config.getServerHistory().get(2));
 
-        config.addServerToHistory(server1);
+        serverHistory.add(server1);
         assertEquals(3, config.getServerHistory().size());
         assertEquals(server1, config.getServerHistory().get(0));
         assertEquals(server2, config.getServerHistory().get(1));
         assertEquals(server, config.getServerHistory().get(2));
 
-        config.addServerToHistory(server);
+        serverHistory.add(server);
         assertEquals(3, config.getServerHistory().size());
         assertEquals(server, config.getServerHistory().get(0));
         assertEquals(server1, config.getServerHistory().get(1));
         assertEquals(server2, config.getServerHistory().get(2));
 
-        config.addServerToHistory(server);
+        serverHistory.add(server);
         assertEquals(3, config.getServerHistory().size());
         assertEquals(server, config.getServerHistory().get(0));
         assertEquals(server1, config.getServerHistory().get(1));
         assertEquals(server2, config.getServerHistory().get(2));
 
-        config.setServerHistoryDepth(3);
-        config.addServerToHistory(server3);
-        assertEquals(3, config.getServerHistory().size());
-        assertEquals(server3, config.getServerHistory().get(0));
-        assertEquals(server, config.getServerHistory().get(1));
-        assertEquals(server1, config.getServerHistory().get(2));
     }
 
-    private Config getConfig(Properties properties) throws IOException {
-        File newFile = File.createTempFile("studioforkdb", ".tmp");
-        newFile.deleteOnExit();
-        OutputStream out = new FileOutputStream(newFile);
-        properties.store(out, null);
-        out.close();
 
-        return new Config(newFile.getPath());
-    } 
+    private Config getConfig(JsonObject json) throws IOException {
+        Path newBase = MockConfig.createTempDir();
+        try (Writer writer = Files.newBufferedWriter(newBase.resolve(Config.CONFIG_FILENAME))) {
+            Gson gson = new GsonBuilder().setPrettyPrinting().create();
+            gson.toJson(json, writer);
+        }
+
+        return new Config(newBase);
+    }
     
-    private Config copyConfig(Config config, Consumer<Properties> propsModification) throws IOException {
+    private Config copyConfig(Config config, Consumer<JsonObject> configModification) throws IOException {
         config.saveToDisk();
-        Properties p = new Properties();
-        p.load(new FileInputStream(tmpFile));
-        propsModification.accept(p);
-        return getConfig(p);
+        try (Reader reader = Files.newBufferedReader(MockConfig.getBasePath().resolve(Config.CONFIG_FILENAME))) {
+            JsonObject json = JsonParser.parseReader(reader).getAsJsonObject();
+            configModification.accept(json);
+            return getConfig(json);
+        }
     }
 
-    @Test
-    public void upgrade13Test() throws IOException {
-        config.addServer(server);
-
-        Config newConfig = copyConfig(config, p -> {
-            p.setProperty("version", "1.2");
-        });
-        assertEquals(0, newConfig.getServerHistory().size());
-
-        newConfig = copyConfig(config, p -> {
-            p.setProperty("version", "1.2");
-            p.setProperty("lruServer", server.getFullName());
-        });
-        assertEquals(1, newConfig.getServerHistory().size());
-        assertEquals(server, newConfig.getServerHistory().get(0));
-    }
-
-    @Test
-    public void upgradeFromOldConfig() throws IOException {
-        Properties p = new Properties();
-        p.setProperty("Servers", "server1");
-        p.setProperty("server.server1.host", "host.com");
-        p.setProperty("server.server1.port", "2000");
-        p.setProperty("server.server1.user", "user");
-        p.setProperty("server.server1.password", "password");
-        p.setProperty("server.server1.backgroundColor", "001122");
-        p.setProperty("server.server1.authenticationMechanism", DefaultAuthenticationMechanism.NAME);
-
-        Config config = getConfig(p);
-        assertEquals(1, config.getServers().length);
-
-        //duplicate server
-        p.setProperty("Servers", "server1,server1");
-        config = getConfig(p);
-        assertEquals(1, config.getServers().length);
-
-        //undefined servers should be filled with defaults
-        p.setProperty("Servers", "server2,server1");
-        config = getConfig(p);
-        assertEquals(2, config.getServers().length);
-
-        //errors should not fail the whole process
-        p.setProperty("server.server1.port", "not a number");
-        p.setProperty("server.server1.backgroundColor", "very strange");
-        p.setProperty("server.server1.authenticationMechanism", "unknown auth");
-        config = getConfig(p);
-        assertEquals(1, config.getServers().length);
-        assertEquals("server2", config.getServers()[0].getFullName());
-
-    }
-    
     @Test
     public void addServersTest() {
         Server server1 = server.newName("testServer1");
         Server server2 = server.newName("comma,name");
         Server server3 = server.newName("testServer1");
 
-        assertThrows(IllegalArgumentException.class, ()->config.addServers(false, server1, server2, server3));
-        assertEquals(0, config.getServers().length);
+        assertThrows(IllegalArgumentException.class, ()->config.getServerConfig().addServers(false, server1, server2, server3));
+        assertEquals(0, config.getServerConfig().getServers().length);
 
-        String[] errors = config.addServers(true, server1, server2, server3);
+        String[] errors = config.getServerConfig().addServers(true, server1, server2, server3);
         assertNull(errors[0]);
         assertNotNull(errors[1]);
         assertNotNull(errors[2]);
-        Collection<String> names = config.getServerNames();
+        Collection<String> names = config.getServerConfig().getServerNames();
         assertEquals(1, names.size());
         assertTrue(names.contains(server1.getFullName()));
         ServerTreeNode serverTree = config.getServerTree();
@@ -245,42 +184,19 @@ public class ConfigTest {
 
     @Test
     public void testExecAllOptions() throws IOException {
-        assertEquals(Config.ExecAllOption.Ask, config.getExecAllOption());
+        assertEquals(ExecAllOption.Ask, config.getEnum(Config.EXEC_ALL));
 
-        config.setExecAllOption(Config.ExecAllOption.Ignore);
-        assertEquals(Config.ExecAllOption.Ignore, config.getExecAllOption());
+        config.setEnum(Config.EXEC_ALL, ExecAllOption.Ignore);
+        assertEquals(ExecAllOption.Ignore, config.getEnum(Config.EXEC_ALL));
 
         Config newConfig = copyConfig(config, p -> {});
-        assertEquals(Config.ExecAllOption.Ignore, newConfig.getExecAllOption());
+        assertEquals(ExecAllOption.Ignore, newConfig.getEnum(Config.EXEC_ALL));
 
-        newConfig = copyConfig(config, p -> {
-            p.setProperty("execAllOption", "testValue");
+        newConfig = copyConfig(config, json -> {
+            json.addProperty("execAllOption", "testValue");
         });
 
-        assertEquals(Config.ExecAllOption.Ask, newConfig.getExecAllOption());
-
-    }
-
-    @Test
-    public void testConnExtractor() throws IOException {
-        TableConnExtractor extractor = config.getTableConnExtractor();
-        assertNotNull(extractor);
-
-        String conn = "someWords, words";
-        String host = "hostWords, words";
-        String port = "someWords, ports";
-
-        config.setConnColWords(conn);
-        config.setHostColWords(host);
-        config.setPortColWords(port);
-        config.setTableMaxConnectionPopup(100);
-        assertNotEquals(extractor, config.getTableConnExtractor());
-
-        Config newConfig = copyConfig(config, p -> {});
-        assertEquals(conn, newConfig.getConnColWords());
-        assertEquals(host, newConfig.getHostColWords());
-        assertEquals(port, newConfig.getPortColWords());
-        assertEquals(100, newConfig.getTableMaxConnectionPopup());
+        assertEquals(ExecAllOption.Ask, newConfig.getEnum(Config.EXEC_ALL));
     }
 
     @Test

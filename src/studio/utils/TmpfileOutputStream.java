@@ -9,20 +9,20 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 
 import static java.nio.file.StandardCopyOption.REPLACE_EXISTING;
 
 public class TmpfileOutputStream extends OutputStream {
     private static final Logger log = LogManager.getLogger();
 
-    private final String filename;
+    private final Path path;
     private final Path tmpFile;
     private final FileOutputStream outputStream;
+    private boolean closed = false;
 
-    public TmpfileOutputStream(String filename) throws IOException {
-        this.filename = filename;
-        tmpFile = Paths.get(filename).resolveSibling(FilenameUtils.getName(filename)
+    public TmpfileOutputStream(Path path) throws IOException {
+        this.path = path;
+        tmpFile = path.resolveSibling(FilenameUtils.getName(path.toString())
                         + "." + System.currentTimeMillis() + ".tmp");
         log.debug("Saving to tmp file {}", tmpFile.toString());
         Files.deleteIfExists(tmpFile);
@@ -51,13 +51,12 @@ public class TmpfileOutputStream extends OutputStream {
 
     @Override
     public void close() throws IOException {
-        outputStream.close();
-    }
+        if (closed) return;
 
-    public void writeCompleted() throws IOException {
         outputStream.close();
-        Files.move(tmpFile, Paths.get(filename), REPLACE_EXISTING);
-        log.debug("moved {} -> {}", tmpFile.toString(), filename);
+        Files.move(tmpFile, path, REPLACE_EXISTING);
+        log.debug("moved {} -> {}", tmpFile.toString(), path);
+        closed = true;
     }
 
 }

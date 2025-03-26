@@ -8,7 +8,6 @@ import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -27,26 +26,30 @@ public class PropertiesConfig extends Properties {
 
     private final static ScheduledExecutorService executor = Executors.newScheduledThreadPool(1);
 
-    private final String filename;
+    private final Path path;
 
     private Properties propertiesToSave = null;
 
-    public PropertiesConfig(String filename) {
-        this.filename = filename;
+    public PropertiesConfig(Path path) {
+        this(path, null);
+    }
+
+    public PropertiesConfig(Path path, Properties defaults) {
+        super(defaults);
+        this.path = path;
         load();
     }
 
     public PropertiesConfig cloneConfig() {
         saveToDisk();
 
-        PropertiesConfig config = new PropertiesConfig(filename);
+        PropertiesConfig config = new PropertiesConfig(path);
         config.putAll(this);
         return config;
     }
 
-    protected void load() {
-        Path file = Paths.get(filename);
-        Path dir = file.getParent();
+    protected synchronized void load() {
+        Path dir = path.getParent();
         if (Files.notExists(dir)) {
             try {
                 log.info("No folder with configuration found. Creating " + dir);
@@ -56,14 +59,12 @@ public class PropertiesConfig extends Properties {
             }
         }
 
-        if (Files.exists(file)) {
-            try {
-                InputStream in = Files.newInputStream(file);
+        if (Files.exists(path)) {
+            try (InputStream in = Files.newInputStream(path)) {
                 load(in);
-                log.info("Loaded {} properties from config {}", size(), file);
-                in.close();
+                log.info("Loaded {} properties from config {}", size(), path);
             } catch (IOException e) {
-                log.error("Can't read configuration from file {}", filename, e);
+                log.error("Can't read configuration from file {}", path, e);
             }
         }
     }
@@ -92,13 +93,13 @@ public class PropertiesConfig extends Properties {
         return null;
     }
 
-    public void saveToDisk() {
+    public synchronized void saveToDisk() {
         ByteArrayOutputStream buffer = getStreamToSave();
         if (buffer == null) return;
 
-        log.info("Saving config to file {} with number of properties {}", filename, size());
+        log.info("Saving config to file {} with number of properties {}", path, size());
 
-        try (TmpfileOutputStream out = FilesBackup.getInstance().newFileOutputStream(filename)) {
+        try (TmpfileOutputStream out = FilesBackup.getInstance().newFileOutputStream(path)) {
             byte[] lineSeparator = System.getProperty("line.separator").getBytes(CHARSET);
 
             BufferedReader reader = new BufferedReader(
@@ -125,11 +126,9 @@ public class PropertiesConfig extends Properties {
             String lastComment = "#Generated from process with pid " + ProcessHandle.current().pid();
             out.write(lastComment.getBytes(CHARSET));
 
-            out.writeCompleted();
-
             propertiesToSave = null;
         } catch (IOException e) {
-            log.error("Error in saving config to the file {}", filename, e);
+            log.error("Error in saving config to the file {}", path, e);
         }
 
     }

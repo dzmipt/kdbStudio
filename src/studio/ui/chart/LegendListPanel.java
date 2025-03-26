@@ -51,7 +51,7 @@ public class LegendListPanel extends Box implements LegendChangeListener {
     }
 
     public void add(String title, LegendIcon icon) {
-        add(title, icon, null);
+        add(title, icon, (Action[]) null);
     }
 
     public int add(String title, LegendIcon icon, Action ... additionalActions) {

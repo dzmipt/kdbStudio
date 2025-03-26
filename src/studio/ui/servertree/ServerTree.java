@@ -170,10 +170,13 @@ public class ServerTree extends JTree implements TreeExpansionListener {
 
         if (index == -1) index = folderInConfig.getChildCount();
 
+        int sourceIndex = folderInConfig.getIndex(sourceInConfig);
+        if (sourceIndex != -1 && sourceIndex<index) index--;
+
         sourceInConfig.removeFromParent();
         folderInConfig.insert(sourceInConfig, index);
 
-        Config.getInstance().setServerTree(serverTree);
+        Config.getInstance().getServerConfig().setRoot(serverTree);
         refreshServers();
 
         TreePath treePath = new TreePath(folderInConfig.getPath());
@@ -199,7 +202,7 @@ public class ServerTree extends JTree implements TreeExpansionListener {
 
         TreeNode[] path = ((ServerTreeNode)selNode.getParent()).getPath();
         node.removeFromParent();
-        Config.getInstance().setServerTree(serverTree);
+        Config.getInstance().getServerConfig().setRoot(serverTree);
         refreshServers();
 
         TreePath treePath = new TreePath(path);
@@ -251,7 +254,7 @@ public class ServerTree extends JTree implements TreeExpansionListener {
 
         parent.insert(newNode, index);
         try {
-            Config.getInstance().setServerTree(serverTree);
+            Config.getInstance().getServerConfig().setRoot(serverTree);
         } catch (IllegalArgumentException exception) {
             log.error("Error adding new node", exception);
             StudioOptionPane.showError(this, "Error adding new node:\n" + exception, "Error");

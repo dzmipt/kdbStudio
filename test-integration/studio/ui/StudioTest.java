@@ -1,6 +1,5 @@
 package studio.ui;
 
-import org.apache.commons.io.FileUtils;
 import org.assertj.swing.annotation.GUITest;
 import org.assertj.swing.core.EmergencyAbortListener;
 import org.assertj.swing.core.MouseButton;
@@ -11,7 +10,6 @@ import org.assertj.swing.junit.runner.GUITestRunner;
 import org.assertj.swing.junit.testcase.AssertJSwingJUnitTestCase;
 import org.assertj.swing.timing.Condition;
 import org.fife.ui.rsyntaxtextarea.RSyntaxTextArea;
-import org.junit.AfterClass;
 import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.runner.RunWith;
@@ -21,14 +19,11 @@ import studio.ui.dndtabbedpane.DraggableTabbedPane;
 import studio.utils.LogErrors;
 import studio.utils.Lookup;
 import studio.utils.MockConfig;
-import studio.utils.log4j.EnvConfig;
 
 import javax.swing.*;
 import java.awt.*;
 import java.io.File;
 import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
 import java.util.List;
 import java.util.Locale;
 import java.util.concurrent.TimeUnit;
@@ -50,7 +45,6 @@ abstract public class StudioTest extends AssertJSwingJUnitTestCase {
     protected FrameFixture frameFixture;
     protected StudioWindow studioWindow;
 
-    private static Path tmpConfigFolder;
     private int expectedNumberOfErrors;
 
     @BeforeClass
@@ -61,18 +55,7 @@ abstract public class StudioTest extends AssertJSwingJUnitTestCase {
 
     @BeforeClass
     public static void prepareConfig() throws IOException {
-        tmpConfigFolder = Files.createTempDirectory("tmpKdbStudio");
-        FileUtils.deleteDirectory(tmpConfigFolder.toFile());
-        Files.createDirectories(tmpConfigFolder);
-        EnvConfig.setBaseFolder(tmpConfigFolder.toString());
-        System.out.println("Setup temporary folder for configs: " + tmpConfigFolder.toString());
-
-        MockConfig.init();
-    }
-
-    @AfterClass
-    public static void cleanupConfig() throws IOException {
-        FileUtils.deleteDirectory(tmpConfigFolder.toFile());
+        MockConfig.mock();
     }
 
     //Emergency key is Ctrl+Shift+Q

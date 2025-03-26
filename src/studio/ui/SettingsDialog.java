@@ -5,6 +5,7 @@ import studio.core.Credentials;
 import studio.kdb.Config;
 import studio.kdb.KFormatContext;
 import studio.kdb.config.ActionOnExit;
+import studio.kdb.config.ExecAllOption;
 import studio.kdb.config.KdbMessageLimitAction;
 import studio.ui.settings.FontSelectionPanel;
 import studio.utils.LineEnding;
@@ -42,7 +43,7 @@ public class SettingsDialog extends EscapeDialog {
     private JFormattedTextField txtCellMaxWidth;
     private JFormattedTextField txtMaxFractionDigits;
     private JFormattedTextField txtEmulateDoubleClickTimeout;
-    private JComboBox<Config.ExecAllOption> comboBoxExecAll;
+    private JComboBox<ExecAllOption> comboBoxExecAll;
     private JComboBox<LineEnding> comboBoxLineEnding;
     private JCheckBox chBoxEmulateTab;
     private JFormattedTextField txtEmulatedTabSize;
@@ -99,8 +100,8 @@ public class SettingsDialog extends EscapeDialog {
         return (Integer) txtCellMaxWidth.getValue();
     }
 
-    public Config.ExecAllOption getExecAllOption() {
-        return (Config.ExecAllOption) comboBoxExecAll.getSelectedItem();
+    public ExecAllOption getExecAllOption() {
+        return (ExecAllOption) comboBoxExecAll.getSelectedItem();
     }
 
     public boolean isAutoSave() {
@@ -156,10 +157,7 @@ public class SettingsDialog extends EscapeDialog {
 
         LookAndFeels lookAndFeels = new LookAndFeels();
         comboBoxLookAndFeel = new JComboBox<>(lookAndFeels.getLookAndFeels());
-        CustomiszedLookAndFeelInfo lf = lookAndFeels.getLookAndFeel(CONFIG.getLookAndFeel());
-        if (lf == null) {
-            lf = lookAndFeels.getLookAndFeel(UIManager.getLookAndFeel().getClass().getName());
-        }
+        CustomiszedLookAndFeelInfo lf = lookAndFeels.getLookAndFeel(CONFIG.getString(Config.LOOK_AND_FEEL));
 
         chBoxRTSAAnimateBracketMatching = new JCheckBox("Animate bracket matching");
         chBoxRTSAAnimateBracketMatching.setSelected(CONFIG.getBoolean(Config.RSTA_ANIMATE_BRACKET_MATCHING));
@@ -204,15 +202,15 @@ public class SettingsDialog extends EscapeDialog {
         comboBoxLookAndFeel.setSelectedItem(lf);
         JLabel lblResultTabsCount = new JLabel("Result tabs count");
         txtTabsCount = new JFormattedTextField(formatter);
-        txtTabsCount.setValue(CONFIG.getResultTabsCount());
+        txtTabsCount.setValue(CONFIG.getInt(Config.RESULT_TAB_COUNTS));
         chBoxShowServerCombo = new JCheckBox("Show server drop down list in the toolbar");
         chBoxShowServerCombo.setSelected(CONFIG.getBoolean(Config.SHOW_SERVER_COMBOBOX));
         JLabel lblMaxCharsInResult = new JLabel("Max chars in result");
         txtMaxCharsInResult = new JFormattedTextField(formatter);
-        txtMaxCharsInResult.setValue(CONFIG.getMaxCharsInResult());
+        txtMaxCharsInResult.setValue(CONFIG.getInt(Config.MAX_CHARS_IN_RESULT));
         JLabel lblMaxCharsInTableCell = new JLabel("Max chars in table cell");
         txtMaxCharsInTableCell = new JFormattedTextField(formatter);
-        txtMaxCharsInTableCell.setValue(CONFIG.getMaxCharsInTableCell());
+        txtMaxCharsInTableCell.setValue(CONFIG.getInt(Config.MAX_CHARS_IN_TABLE_CELL));
 
         JLabel lblMaxFractionDigits = new JLabel("Max number of fraction digits in output");
         formatter = new NumberFormatter();
@@ -245,8 +243,8 @@ public class SettingsDialog extends EscapeDialog {
         txtCellMaxWidth.setValue(CONFIG.getInt(Config.CELL_MAX_WIDTH));
 
         JLabel lblExecAll = new JLabel ("Execute the script when nothing is selected:");
-        comboBoxExecAll = new JComboBox<>(Config.ExecAllOption.values());
-        comboBoxExecAll.setSelectedItem(CONFIG.getExecAllOption());
+        comboBoxExecAll = new JComboBox<>(ExecAllOption.values());
+        comboBoxExecAll.setSelectedItem(CONFIG.getEnum(Config.EXEC_ALL));
         chBoxAutoSave = new JCheckBox("Auto save files");
         chBoxAutoSave.setSelected(CONFIG.getBoolean(Config.AUTO_SAVE));
         JLabel lblActionOnExit = new JLabel("Action on exit: ");
@@ -346,12 +344,12 @@ public class SettingsDialog extends EscapeDialog {
             StudioWindow.refreshComboServerVisibility();
         }
 
-        CONFIG.setResultTabsCount(getResultTabsCount());
-        CONFIG.setMaxCharsInResult(getMaxCharsInResult());
-        CONFIG.setMaxCharsInTableCell(getMaxCharsInTableCell());
+        CONFIG.setInt(Config.RESULT_TAB_COUNTS, getResultTabsCount());
+        CONFIG.setInt(Config.MAX_CHARS_IN_RESULT, getMaxCharsInResult());
+        CONFIG.setInt(Config.MAX_CHARS_IN_TABLE_CELL, getMaxCharsInTableCell());
         CONFIG.setDouble(Config.CELL_RIGHT_PADDING, getCellRightPadding());
         CONFIG.setInt(Config.CELL_MAX_WIDTH, getCellMaxWidth());
-        CONFIG.setExecAllOption(getExecAllOption());
+        CONFIG.setEnum(Config.EXEC_ALL, getExecAllOption());
         CONFIG.setEnum(Config.ACTION_ON_EXIT, (ActionOnExit)comboBoxActionOnExit.getSelectedItem());
         CONFIG.setBoolean(Config.AUTO_SAVE, isAutoSave());
         CONFIG.setEnum(Config.DEFAULT_LINE_ENDING, getDefaultLineEnding());
@@ -383,7 +381,7 @@ public class SettingsDialog extends EscapeDialog {
 
         String lfClass = getLookAndFeelClassName();
         if (!lfClass.equals(UIManager.getLookAndFeel().getClass().getName())) {
-            CONFIG.setLookAndFeel(lfClass);
+            CONFIG.setString(Config.LOOK_AND_FEEL, lfClass);
             StudioOptionPane.showMessage(this, "Look and Feel was changed. " +
                     "New L&F will take effect on the next start up.", "Look and Feel Setting Changed");
         }

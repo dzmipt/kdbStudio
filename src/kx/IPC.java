@@ -1,9 +1,10 @@
 package kx;
 
-import studio.kdb.Config;
 import studio.kdb.K;
 
 import java.io.UnsupportedEncodingException;
+import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 import java.util.UUID;
 
 /*
@@ -28,8 +29,7 @@ types
 
 public class IPC {
 
-    // Do we want to get rid of this coupling?
-    private final static String encoding = Config.getInstance().getEncoding();
+    public final static Charset ENCODING = StandardCharsets.UTF_8;
 
     public static KMessage deserialise(byte[] data, boolean compressed, boolean isLittleEndian) {
         return new IPC(data, 0, compressed, isLittleEndian).deserialise();
@@ -263,7 +263,7 @@ public class IPC {
                 return F;
             }
             case 10: {
-                String value = new String(b, j, n, encoding);
+                String value = new String(b, j, n, ENCODING);
                 K.KCharacterVector C = new K.KCharacterVector(value);
                 C.setAttr(attr);
                 j += n;
@@ -390,7 +390,7 @@ public class IPC {
         int n = j;
         for (; b[n] != 0; )
             ++n;
-        String s = new String(b, j, n - j, encoding);
+        String s = new String(b, j, n - j, ENCODING);
         j = n;
         ++j;
         return new K.KSymbol(s);

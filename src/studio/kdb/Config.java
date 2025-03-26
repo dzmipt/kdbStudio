@@ -4,35 +4,41 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import studio.core.Credentials;
 import studio.core.DefaultAuthenticationMechanism;
-import studio.kdb.config.AbstractConfig;
-import studio.kdb.config.ActionOnExit;
-import studio.kdb.config.KdbMessageLimitAction;
+import studio.kdb.config.*;
+import studio.ui.Util;
 import studio.utils.*;
 import studio.utils.log4j.EnvConfig;
 
+import javax.swing.*;
 import java.awt.*;
-import java.io.File;
-import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.Reader;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.List;
-import java.util.*;
+import java.util.Properties;
 import java.util.regex.Pattern;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
-public class Config extends AbstractConfig {
+import static studio.kdb.config.ConfigVersion.*;
+
+public class Config  {
     private static final Logger log = LogManager.getLogger();
 
-    //@TODO migrate all other keys under such approach
+    private static final ConfigTypeRegistry configTypeRegistry = new ConfigTypeRegistry();
+    public static final String COMMENT = configDefault("comment", ConfigType.STRING, "");
+    public static final String LOOK_AND_FEEL = configDefault("lookandfeel", ConfigType.STRING, UIManager.getLookAndFeel().getClass().getName());
+    public static final String EXEC_ALL = configDefault("execAllOption", ConfigType.ENUM, ExecAllOption.Ask);
+    public static final String MAX_CHARS_IN_RESULT = configDefault("maxCharsInResult", ConfigType.INT, 50000);
+    public static final String MAX_CHARS_IN_TABLE_CELL = configDefault("maxCharsInTableCell", ConfigType.INT, 256);
+    public static final String MRU_FILES = configDefault("mrufiles", ConfigType.STRING_ARRAY, List.of());
+    public static final String NOTES_HASH = configDefault("notesHash", ConfigType.STRING, "");
+    public static final String RESULT_TAB_COUNTS = configDefault("resultTabsCount", ConfigType.INT, 5);
 
     public static final String SHOW_SERVER_COMBOBOX = configDefault("showServerComboBox", ConfigType.BOOLEAN, true);
     public static final String AUTO_SAVE = configDefault("isAutoSave", ConfigType.BOOLEAN, false);
     public static final String ACTION_ON_EXIT = configDefault("actionOnExit", ConfigType.ENUM, ActionOnExit.SAVE);
-    public static final String CHART_BOUNDS = configDefault("chartBounds", ConfigType.BOUNDS, 0.5);
+    public static final String CHART_BOUNDS = configDefault("chartBounds", ConfigType.BOUNDS, Util.getDefaultBounds(0.5));
     public static final String CELL_RIGHT_PADDING = configDefault("cellRightPadding", ConfigType.DOUBLE, 0.5);
     public static final String CELL_MAX_WIDTH = configDefault("cellMaxWidth", ConfigType.INT, 200);
 
@@ -43,36 +49,7 @@ public class Config extends AbstractConfig {
 
     public static final String DEFAULT_LINE_ENDING = configDefault("defaultLineEnding", ConfigType.ENUM, LineEnding.Unix);
 
-    public static final String COLOR_CHARVECTOR = configDefault("token.CHARVECTOR", ConfigType.COLOR, new Color(0,200,20));
-    public static final String COLOR_EOLCOMMENT = configDefault("token.EOLCOMMENT", ConfigType.COLOR,  Color.GRAY);
-    public static final String COLOR_IDENTIFIER = configDefault("token.IDENTIFIER", ConfigType.COLOR, new Color(180,160,0));
-    public static final String COLOR_OPERATOR = configDefault("token.OPERATOR", ConfigType.COLOR, Color.BLACK);
-    public static final String COLOR_BOOLEAN = configDefault("token.BOOLEAN", ConfigType.COLOR, new Color(51,204,255));
-    public static final String COLOR_BYTE = configDefault("token.BYTE", ConfigType.COLOR, new Color(51,104,255));
-    public static final String COLOR_SHORT = configDefault("token.SHORT", ConfigType.COLOR, new Color(51,104,255));
-    public static final String COLOR_LONG = configDefault("token.LONG", ConfigType.COLOR, new Color(51,104,255));
-    public static final String COLOR_REAL = configDefault("token.REAL", ConfigType.COLOR, new Color(51,104,255));
-    public static final String COLOR_INTEGER = configDefault("token.INTEGER", ConfigType.COLOR, new Color(51,104,255));
-    public static final String COLOR_FLOAT = configDefault("token.FLOAT", ConfigType.COLOR, new Color(51,104,255));
-    public static final String COLOR_TIMESTAMP = configDefault("token.TIMESTAMP", ConfigType.COLOR, new Color(184,138,0));
-    public static final String COLOR_TIMESPAN = configDefault("token.TIMESPAN", ConfigType.COLOR, new Color(184,138,0));
-    public static final String COLOR_DATETIME = configDefault("token.DATETIME", ConfigType.COLOR, new Color(184,138,0));
-    public static final String COLOR_DATE = configDefault("token.DATE", ConfigType.COLOR, new Color(184,138,0));
-    public static final String COLOR_MONTH = configDefault("token.MONTH", ConfigType.COLOR, new Color(184,138,0));
-    public static final String COLOR_MINUTE = configDefault("token.MINUTE", ConfigType.COLOR, new Color(184,138,0));
-    public static final String COLOR_SECOND = configDefault("token.SECOND", ConfigType.COLOR, new Color(184,138,0));
-    public static final String COLOR_TIME = configDefault("token.TIME", ConfigType.COLOR, new Color(184,138,0));
-    public static final String COLOR_SYMBOL = configDefault("token.SYMBOL", ConfigType.COLOR, new Color(179,0,134));
-    public static final String COLOR_KEYWORD = configDefault("token.KEYWORD", ConfigType.COLOR, new Color(0,0,255));
-    public static final String COLOR_COMMAND = configDefault("token.COMMAND", ConfigType.COLOR, new Color(240,180,0));
-    public static final String COLOR_SYSTEM = configDefault("token.SYSTEM", ConfigType.COLOR, new Color(240,180,0));
-    public static final String COLOR_WHITESPACE = configDefault("token.WHITESPACE", ConfigType.COLOR, Color.BLACK);
-    public static final String COLOR_DEFAULT = configDefault("token.DEFAULT", ConfigType.COLOR, Color.BLACK);
-    public static final String COLOR_BRACKET = configDefault("token.BRACKET", ConfigType.COLOR, Color.BLACK);
-
-    public static final String COLOR_ERROR = configDefault("token.ERROR", ConfigType.COLOR, Color.RED);
-
-    public static final String COLOR_BACKGROUND = configDefault("token.BACKGROUND", ConfigType.COLOR, Color.WHITE);
+    public static final String COLOR_BACKGROUND = configDefault("backgroundColor", ConfigType.COLOR, Color.WHITE);
 
     public static final String FONT_EDITOR = configDefault("font", ConfigType.FONT, new Font("Monospaced", Font.PLAIN, 14));
     public static final String FONT_TABLE = configDefault("fontTable", ConfigType.FONT, new Font("SansSerif", Font.PLAIN, 12));
@@ -94,74 +71,37 @@ public class Config extends AbstractConfig {
     public static final String KDB_MESSAGE_SIZE_LIMIT_MB = configDefault("kdbMessageSizeLimitMB", ConfigType.INT, 10);
     public static final String KDB_MESSAGE_SIZE_LIMIT_ACTION = configDefault("kdbMessageSizeLimitAction", ConfigType.ENUM, KdbMessageLimitAction.ASK);
 
+    public static final String DEFAULT_AUTH_CONFIG = configDefault("defaultAuthConfig", ConfigType.DEFAULT_AUTH_CONFIG, DefaultAuthConfig.DEFAULT);
+    public static final String TABLE_CONN_EXTRACTOR = configDefault("tableExtractorConfig", ConfigType.TABLE_CONN_EXTRACTOR, TableConnExtractor.DEFAULT);
+    public static final String COLOR_TOKEN_CONFIG = configDefault("tokenColors", ConfigType.COLOR_TOKEN_CONFIG, ColorTokenConfig.DEFAULT);
+    public static final String SERVER_HISTORY = configDefault("serverHistory", ConfigType.SERVER_HISTORY, new ServerHistoryConfig(20, List.of()));
+    public static final String CONFIG_VERSION = configDefault("version", ConfigType.ENUM, ConfigVersion.V2_0);
 
-    private static final String CONFIG_FILENAME = "studio.properties";
-    private static final String WORKSPACE_FILENAME = "workspace.properties";
+    public static final String OLD_CONFIG_FILENAME = "studio.properties";
+    public static final String CONFIG_FILENAME = "studio.json";
+    public static final String WORKSPACE_FILENAME = "workspace.properties";
+    public static final String SERVERCONFIG_FILENAME = "servers.json";
 
-    private static final String OLD_DEF_AUTHMETHOD = "Username and password";
-    private static final String VERSION14 = "1.4";
-    private static final String VERSION13 = "1.3";
-    private static final String VERSION12 = "1.2";
-    private static final String OLD_VERSION = "1.1";
-
-    private static final String VERSION = VERSION14;
-
-
-    private PropertiesConfig workspaceConfig;
-
-    private Map<String, Server> servers;
-    private Collection<String> serverNames;
-    private ServerTreeNode serverTree;
+    protected StudioConfig studioConfig;
+    protected PropertiesConfig workspaceConfig;
+    protected ServerConfig serverConfig;
     private HistoricalList<Server> serverHistory;
 
-    private static final String CONN_COL_WORDS = "server, host, connection, handle";
-    private static final String HOST_COL_WORDS = "server, host";
-    private static final String PORT_COL_WORDS = "port";
-
-    private TableConnExtractor tableConnExtractor;
-
+    private final Path basePath;
     // Can be overridden in test cases
     protected static Config instance = new Config();
 
-    public enum ExecAllOption {Execute, Ask, Ignore}
-
-    protected Config(String filename) {
-        super(filename);
+    protected Config(Path path) {
+        this.basePath = path;
         init();
-    }
-
-    private static void copyConfig(String configFileName) throws IOException {
-        Path src = Paths.get(EnvConfig.getFilepath(null, configFileName));
-        Path target = Paths.get(EnvConfig.getFilepath(configFileName));
-        if (Files.exists(src)) {
-            log.info("Copying from {} to {}", src, target);
-            Files.copy(src, target);
-        }
-    }
-
-    private static String getDefaulConfigFilename() {
-        String filename = EnvConfig.getFilepath(CONFIG_FILENAME);
-
-        String env = EnvConfig.getEnvironment();
-        if (env != null && ! Files.exists(Paths.get(filename))) {
-            log.info("Config for environment {} is not found. Copying from default location: {}", env, EnvConfig.getBaseFolder(null));
-            try {
-                copyConfig(CONFIG_FILENAME);
-                copyConfig(WORKSPACE_FILENAME);
-            } catch (IOException e) {
-                log.error("Error during copying configs", e);
-            }
-        }
-        return filename;
     }
 
     private Config() {
-        super(getDefaulConfigFilename());
-        init();
+        this(EnvConfig.getBaseFolder());
     }
 
-    void saveToDisk() {
-        config.saveToDisk();
+    public void saveToDisk() {
+        FileConfig.saveAllOnDisk();
         workspaceConfig.saveToDisk();
     }
 
@@ -171,17 +111,20 @@ public class Config extends AbstractConfig {
         System.exit(0);
     }
 
-    private String getWorkspaceFilename() {
-        return EnvConfig.getFilepath(WORKSPACE_FILENAME);
+    public ServerConfig getServerConfig() {
+        return serverConfig;
+    }
+
+    protected Path getWorkspacePath() {
+        return basePath.resolve(WORKSPACE_FILENAME);
     }
 
 	public Workspace loadWorkspace() {
 		Workspace workspace = new Workspace();
-        String filename = getWorkspaceFilename();
-        log.info("Loading workspace from {}", filename);
-		File workspaceFile = new File(filename);
-		if (workspaceFile.exists()) {
-			try (InputStream inp = new FileInputStream(workspaceFile)) {
+        Path path = getWorkspacePath();
+        log.info("Loading workspace from {}", path);
+		if (Files.exists(path)) {
+			try (InputStream inp = Files.newInputStream(path)) {
 				Properties p = new Properties();
 				p.load(inp);
                 log.info("Loaded {} properties in workspace file", p.size());
@@ -218,115 +161,44 @@ public class Config extends AbstractConfig {
         workspaceConfig.save();
     }
 
-    private String[] getWords(String value) {
-        return Stream.of(value.split(","))
-                        .map(String::trim)
-                        .map(String::toLowerCase)
-                        .toArray(String[]::new);
-    }
-
-    private void initTableConnExtractor() {
-        tableConnExtractor = new TableConnExtractor();
-        tableConnExtractor.setMaxConn(getTableMaxConnectionPopup());
-        tableConnExtractor.setConnWords(getWords(getConnColWords()));
-        tableConnExtractor.setHostWords(getWords(getHostColWords()));
-        tableConnExtractor.setPortWords(getWords(getPortColWords()));
-    }
-
     public TableConnExtractor getTableConnExtractor() {
-        return tableConnExtractor;
-    }
-
-    public int getTableMaxConnectionPopup() {
-        return Integer.parseInt(config.getProperty("tableMaxConnectionPopup","5"));
-    }
-
-    public String getConnColWords() {
-        return config.getProperty("connColWords", CONN_COL_WORDS);
-    }
-
-    public String getHostColWords() {
-        return config.getProperty("hostColWords", HOST_COL_WORDS);
-
-    }
-
-    public String getPortColWords() {
-        return config.getProperty("portColWords", PORT_COL_WORDS);
-    }
-
-    public void setTableMaxConnectionPopup(int maxConn) {
-        config.setProperty("tableMaxConnectionPopup", "" + maxConn);
-        save();
-        initTableConnExtractor();
-    }
-
-    public void setConnColWords(String words) {
-        config.setProperty("connColWords", words);
-        save();
-        initTableConnExtractor();
-    }
-
-    public void setHostColWords(String words) {
-        config.setProperty("hostColWords", words);
-        save();
-        initTableConnExtractor();
-    }
-
-    public void setPortColWords(String words) {
-        config.setProperty("portColWords", words);
-        save();
-        initTableConnExtractor();
-    }
-
-    public ExecAllOption getExecAllOption() {
-        String value = config.getProperty("execAllOption", "Ask");
-        try {
-            return ExecAllOption.valueOf(value);
-        } catch (IllegalArgumentException e) {
-            log.info(value + " - can't parse execAllOption from Config. Reset to default: Ask");
-            return ExecAllOption.Ask;
-        }
-    }
-
-    public void setExecAllOption(ExecAllOption option) {
-        config.setProperty("execAllOption", option.toString());
-        save();
-    }
-
-    public String getNotesHash() {
-        return config.getProperty("notesHash","");
-    }
-
-    public void setNotesHash(String notesHash) {
-        config.setProperty("notesHash", notesHash);
-        save();
-    }
-
-    public String getEncoding() {
-        return config.getProperty("encoding", "UTF-8");
+        return (TableConnExtractor) studioConfig.get(Config.TABLE_CONN_EXTRACTOR);
     }
 
     public static Config getInstance() {
         return instance;
     }
 
-    private void init() {
-        workspaceConfig = new PropertiesConfig(getWorkspaceFilename());
+    protected void init() {
+        serverConfig = new ServerConfig(new FileConfig(basePath.resolve(SERVERCONFIG_FILENAME)));
 
-        checkForUpgrade();
-        initTableConnExtractor();
+        checkOldPropertiesToUpgrade();
+
+        FileConfig defaultFileConfig = new FileConfig(EnvConfig.getPluginFolder().resolve(CONFIG_FILENAME));
+        FileConfig fileConfig = new FileConfig(basePath.resolve(CONFIG_FILENAME));
+        studioConfig = new StudioConfig(configTypeRegistry, fileConfig, defaultFileConfig);
+
+        workspaceConfig = new PropertiesConfig(getWorkspacePath());
+        initServerHistory();
     }
 
-    private void upgradeTo14() {
+    private void upgradeTo14(Properties config) {
+        final String OLD_DEF_AUTHMETHOD = "Username and password";
+
         log.info("Upgrading config to version 1.4");
         String defAuth = DefaultAuthenticationMechanism.NAME;
-        if (getDefaultAuthMechanism().equals(OLD_DEF_AUTHMETHOD) ) {
-            setDefaultAuthMechanism(defAuth);
+        if (config.getProperty("auth").equals(OLD_DEF_AUTHMETHOD) ) {
+            config.setProperty("auth", defAuth);
         }
 
-        setDefaultCredentials(defAuth, getDefaultCredentials(OLD_DEF_AUTHMETHOD));
-        config.remove("auth." + OLD_DEF_AUTHMETHOD + ".user");
-        config.remove("auth." + OLD_DEF_AUTHMETHOD + ".password");
+        String oldUserKey = "auth." + OLD_DEF_AUTHMETHOD + ".user";
+        String oldPasswordKey = "auth." + OLD_DEF_AUTHMETHOD + ".password";
+        String oldUser = config.getProperty(oldUserKey, "");
+        String oldPassword = config.getProperty(oldPasswordKey, "");
+        config.setProperty("auth." + defAuth + ".user", oldUser);
+        config.setProperty("auth." + defAuth + ".password", oldPassword);
+        config.remove(oldUserKey);
+        config.remove(oldPasswordKey);
 
         //server.1.authenticationMechanism
         Pattern pattern = Pattern.compile("server\\.[0-9]+\\.authenticationMechanism");
@@ -339,167 +211,88 @@ public class Config extends AbstractConfig {
             }
         }
 
-        config.setProperty("version", VERSION);
-        save();
+        config.setProperty("version", V1_4.getVersion());
     }
 
-    private void upgradeTo12() {
-        try {
-            log.info("Found old config. Converting...");
-            String[] names = config.getProperty("Servers", "").split(",");
-            List<Server> list = new ArrayList<>();
-            for (String name : names) {
-                name = name.trim();
-                if (name.equals("")) continue;
-                try {
-                    Server server = initServerFromKey(name, null).newName(name);
-                    list.add(server);
-                } catch (IllegalArgumentException e) {
-                    log.warn("Error during parsing server " + name, e);
-                }
-            }
-            config.remove("Servers");
-            config.entrySet().removeIf(e -> e.getKey().toString().startsWith("server."));
-            config.setProperty("version", VERSION12);
-            initServers();
-            String[] results = addServers(true, list.toArray(new Server[0]));
-            boolean error = false;
-            for(String result: results) {
-                if (result == null) continue;
-                if (!error) {
-                    error = true;
-                    log.warn("Found errors during conversion");
-                }
-                log.warn(result);
-            }
-            log.info("Done");
-        } catch (IllegalArgumentException e) {
-            log.error("Ups... Can't convert", e);
-        }
-    }
-
-    private void upgradeTo13() {
-        String fullName = config.getProperty("lruServer", "");
-        config.remove("lruServer");
-        if (! fullName.equals("")) {
-            Server server = getServer(fullName);
-            if (server != Server.NO_SERVER) addServerToHistory(server);
-        }
-        save();
-    }
-
-    private void migrateSaveOnExit() {
-        String oldSaveOnExitKey = "isSaveOnExit";
-        if (config.containsKey(oldSaveOnExitKey)) {
-            boolean saveOnExit = get(oldSaveOnExitKey, true);
-            log.info("Migrate isSaveOnExit config property with old value {}", saveOnExit);
-            config.remove(oldSaveOnExitKey);
-            setEnum(ACTION_ON_EXIT, saveOnExit ? ActionOnExit.SAVE : ActionOnExit.NOTHING);
-        }
-    }
-
-    private void removeServerListConfig() {
+    private void removeServerListConfig(Properties config) {
         config.remove("serverList.x");
         config.remove("serverList.y");
         config.remove("serverList.width");
         config.remove("serverList.height");
     }
 
-    private void checkForUpgrade() {
-        if (config.size() == 0) {
-            log.info("Found no or empty config");
-            config.setProperty("version", VERSION);
+    private void checkOldPropertiesToUpgrade() {
+        Path oldPath = basePath.resolve(OLD_CONFIG_FILENAME);
 
-            initServers();
-            initServerHistory();
-            return;
+        if (!Files.exists(oldPath)) return;
+
+        Path newPath = basePath.resolve(CONFIG_FILENAME);
+
+        log.info("Found old config {}. Converting to {}...", oldPath, newPath);
+        try (Reader reader = Files.newBufferedReader(oldPath)) {
+            Properties properties = new Properties();
+            properties.load(reader);
+            properties = checkOldToUpgrade(properties);
+
+            log.info("Converting {} properties", properties.size());
+            ConfigToJsonConverter converter = getConfigToJsonConverter();
+            converter.convert(properties, newPath);
+            Properties remaining = converter.getRemainingProperties();
+            if (remaining.isEmpty()) {
+                log.info("All properties were successfully converted");
+            } else {
+                log.warn("The following properties are either not used or not converted. They will be discarded");
+                log.warn(remaining);
+            }
+
+        } catch (Exception e) {
+            log.error("Error during old properties {} conversion", oldPath, e);
+        } finally {
+            try {
+                log.info("Deleting of old properties {}", oldPath);
+                Files.delete(oldPath);
+            } catch (IOException e) {
+                log.error("Error on old properties file {} removal", oldPath, e);
+            }
         }
-
-        if (config.getProperty("version", OLD_VERSION).equals(OLD_VERSION)) {
-            upgradeTo12();
-            config.setProperty("version", VERSION12);
-        }
-
-
-        if (config.getProperty("version", VERSION).equals(VERSION13)) {
-            upgradeTo14();
-        }
-
-        initServers();
-        if (config.getProperty("version").equals(VERSION12)) {
-            initServerHistory();
-            upgradeTo13();
-            config.setProperty("version", VERSION13);
-        }
-        initServerHistory();
-        migrateSaveOnExit();
-        removeServerListConfig();
-
-        config.setProperty("version", VERSION);
     }
 
-    // "".split(",") return {""}; we need to get zero length array
-    private String[] split(String str) {
-        str = str.trim();
-        if (str.length() == 0) return new String[0];
-        return str.split(",");
-    }
+    private Properties checkOldToUpgrade(Properties config) {
+        String version = config.getProperty("version", V1_1.getVersion());
+        if (version.equals(V1_1.getVersion()) || version.equals(V1_2.getVersion())) {
+            log.warn("Very old version: {}. Will try to upgrade...", version);
+            config.setProperty("version", V1_3.getVersion());
+        }
 
-    public int getServerHistoryDepth() {
-        return Integer.parseInt(config.getProperty("serverHistoryDepth", "20"));
-    }
+        if (config.getProperty("version", V1_4.getVersion()).equals(V1_3.getVersion())) {
+            upgradeTo14(config);
+        }
 
-    public void setServerHistoryDepth(int depth) {
-        serverHistory.setDepth(depth);
-        config.setProperty("serverHistoryDepth", "" + depth);
-        save();
+        removeServerListConfig(config);
+        serverConfig.tryToLoadOldConifg(config);
+        return config;
     }
 
     private void initServerHistory() {
-        int depth = getServerHistoryDepth();
-        serverHistory = new HistoricalList<>(depth);
-        for (int i=depth-1; i>=0; i--) {
-            String key = "serverHistory." + i;
-            if (! config.containsKey(key)) continue;
-            Server server = getServer(config.getProperty(key));
-            if (server == Server.NO_SERVER) continue;
-            serverHistory.add(server);
-        }
+        serverHistory = getServerHistoryConfig().toServerHistory(serverConfig);
     }
 
-    public List<Server> getServerHistory() {
-        return Collections.unmodifiableList(serverHistory);
+    public HistoricalList<Server> getServerHistory() {
+        return serverHistory;
     }
 
-    public void addServerToHistory(Server server) {
-        serverHistory.add(server);
-        for (int i=serverHistory.size()-1; i>=0; i--) {
-            String key = "serverHistory." + i;
-            config.setProperty(key, serverHistory.get(i).getFullName());
-        }
-        save();
+    public void refreshServerToHistory() {
+        setServerHistoryConfig(ServerHistoryConfig.fromServerHistory(serverHistory));
     }
 
-    public String[] getMRUFiles() {
-        String mru = config.getProperty("mrufiles", "");
-        return split(mru);
+    public ServerHistoryConfig getServerHistoryConfig() {
+        return (ServerHistoryConfig) studioConfig.get(Config.SERVER_HISTORY);
     }
 
-
-    public void saveMRUFiles(String[] mruFiles) {
-        String value = Stream.of(mruFiles).limit(9).collect(Collectors.joining(","));
-        config.put("mrufiles", value);
-        save();
+    public void setServerHistoryConfig(ServerHistoryConfig serverHistoryConfig) {
+        studioConfig.set(Config.SERVER_HISTORY, serverHistoryConfig);
     }
 
-    public String getLookAndFeel() {
-        return config.getProperty("lookandfeel");
-    }
-
-    public void setLookAndFeel(String lf) {
-        config.put("lookandfeel", lf);
-        save();
-    }
 
     // Resolve or create a new server by connection string.
     // Accept possible various connectionString such as:
@@ -511,304 +304,134 @@ public class Config extends AbstractConfig {
     }
 
     public Server getServerByConnectionString(String connectionString, String authMethod) {
-        return QConnection.getByConnection(connectionString, authMethod, getDefaultCredentials(authMethod), servers.values());
+        return QConnection.getByConnection(connectionString, authMethod, getDefaultCredentials(authMethod), serverConfig.allServers());
+    }
+
+    public DefaultAuthConfig getDefaultAuthConfig() {
+        return (DefaultAuthConfig) studioConfig.get(Config.DEFAULT_AUTH_CONFIG);
+    }
+
+    public boolean setDefaultAuthConfig(DefaultAuthConfig config) {
+        return studioConfig.set(Config.DEFAULT_AUTH_CONFIG, config);
     }
 
     public Credentials getDefaultCredentials(String authenticationMechanism) {
-        String user = config.getProperty("auth." + authenticationMechanism + ".user", "");
-        String password = config.getProperty("auth." + authenticationMechanism + ".password", "");
-        return new Credentials(user, password);
+        return getDefaultAuthConfig().getCredential(authenticationMechanism);
     }
 
     public void setDefaultCredentials(String authenticationMechanism, Credentials credentials) {
-        config.setProperty("auth." + authenticationMechanism + ".user", credentials.getUsername());
-        config.setProperty("auth." + authenticationMechanism + ".password", credentials.getPassword());
-        save();
+        DefaultAuthConfig config = getDefaultAuthConfig();
+        DefaultAuthConfig newConfig = new DefaultAuthConfig(config, authenticationMechanism, credentials);
+        setDefaultAuthConfig(newConfig);
     }
 
     public String getDefaultAuthMechanism() {
-        return config.getProperty("auth", DefaultAuthenticationMechanism.NAME);
+        return getDefaultAuthConfig().getDefaultAuth();
     }
 
     public void setDefaultAuthMechanism(String authMechanism) {
-        config.setProperty("auth", authMechanism);
-        save();
+        DefaultAuthConfig config = getDefaultAuthConfig();
+        DefaultAuthConfig newConfig = new DefaultAuthConfig(config, authMechanism);
+        setDefaultAuthConfig(newConfig);
     }
 
-    public int getResultTabsCount() {
-        return Integer.parseInt(config.getProperty("resultTabsCount","5"));
-    }
-
-    public void setResultTabsCount(int value) {
-        config.setProperty("resultTabsCount", "" + value);
-        save();
-    }
-
-    public int getMaxCharsInResult() {
-        return Integer.parseInt(config.getProperty("maxCharsInResult", "50000"));
-    }
-
-    public void setMaxCharsInResult(int value) {
-        config.setProperty("maxCharsInResult", "" + value);
-        save();
-    }
-
-    public int getMaxCharsInTableCell() {
-        return Integer.parseInt(config.getProperty("maxCharsInTableCell", "256"));
-    }
-
-    public void setMaxCharsInTableCell(int value) {
-        config.setProperty("maxCharsInTableCell", "" + value);
-        save();
-    }
-
-    public Collection<String> getServerNames() {
-        return Collections.unmodifiableCollection(serverNames);
-    }
-
-    public Server[] getServers() {
-        return servers.values().toArray(new Server[servers.size()]);
-    }
-
-    public Server getServer(String name) {
-        if (servers.containsKey(name)) return servers.get(name);
-        return Server.NO_SERVER;
+    public ColorTokenConfig getColorTokenConfig() {
+        return (ColorTokenConfig) studioConfig.get(Config.COLOR_TOKEN_CONFIG);
     }
 
     public ServerTreeNode getServerTree() {
-        return serverTree;
+        return serverConfig.getServerTree();
     }
 
-    private Server initServerFromKey(String key, ServerTreeNode parent) {
-        String host = config.getProperty("server." + key + ".host", "");
-        int port = Integer.parseInt(config.getProperty("server." + key + ".port", "-1"));
-        String username = config.getProperty("server." + key + ".user", "");
-        String password = config.getProperty("server." + key + ".password", "");
-        Color backgroundColor = get("server." + key + ".backgroundColor", Color.WHITE);
-        String authenticationMechanism = config.getProperty("server." + key + ".authenticationMechanism", DefaultAuthenticationMechanism.NAME);
-        boolean useTLS = Boolean.parseBoolean(config.getProperty("server." + key + ".useTLS", "false"));
-        return new Server("", host, port, username, password, backgroundColor, authenticationMechanism, useTLS, parent);
+
+    public static ConfigToJsonConverter getConfigToJsonConverter() {
+        return new ConfigToJsonConverter(configTypeRegistry);
     }
 
-    private Server initServerFromProperties(int number, ServerTreeNode parent) {
-        return initServerFromKey("" + number, parent);
+    public static String configDefault(String key, ConfigType type, Object defaultValue) {
+        return configTypeRegistry.add(key, type, defaultValue);
     }
 
-    private void initServers() {
-        serverNames = new ArrayList<>();
-        serverTree = new ServerTreeNode();
-        servers = new HashMap<>();
-        initServerTree("serverTree.", serverTree, 0);
-        log.info("Loaded {} server from the config", servers.size());
+    public String getString(String key) {
+        return studioConfig.getString(key);
+    }
+    public boolean setString(String key, String value) {
+        return studioConfig.setString(key, value);
     }
 
-    private int initServerTree(String keyPrefix, ServerTreeNode parent, int number) {
-        for (int index = 0; ; index++) {
-            String key = keyPrefix + index;
-            String folderKey = key + "folder";
-            if (config.containsKey(folderKey)) {
-                ServerTreeNode node = parent.add(config.getProperty(folderKey));
-                number = initServerTree(key + ".", node, number);
-            } else if (config.containsKey(key)) {
-                String name = config.getProperty(key);
-                Server server = initServerFromProperties(number, parent).newName(name);
-                String fullName = server.getFullName();
-                servers.put(fullName, server);
-                serverNames.add(fullName);
-                parent.add(server);
-                number++;
-            } else {
-                break;
-            }
-        }
-        return number;
+    public int getInt(String key) {
+        return studioConfig.getInt(key);
+    }
+    public boolean setInt(String key, int value) {
+        return studioConfig.setInt(key, value);
     }
 
-    private void saveAllServers() {
-        config.entrySet().removeIf(e -> e.getKey().toString().startsWith("serverTree."));
-        config.entrySet().removeIf(e -> e.getKey().toString().startsWith("server."));
-        saveServerTree("serverTree.", serverTree, 0);
-
-        save();
+    public double getDouble(String key) {
+        return studioConfig.getDouble(key);
+    }
+    public boolean setDouble(String key, double value) {
+        return studioConfig.setDouble(key, value);
     }
 
-    private void saveServerDetails(Server server, int number) {
-        config.setProperty("server." + number + ".host", server.getHost());
-        config.setProperty("server." + number + ".port", "" + server.getPort());
-        config.setProperty("server." + number + ".user", "" + server.getUsername());
-        config.setProperty("server." + number + ".password", "" + server.getPassword());
-        config.setProperty("server." + number + ".backgroundColor", "" + Integer.toHexString(server.getBackgroundColor().getRGB()).substring(2));
-        config.setProperty("server." + number + ".authenticationMechanism", server.getAuthenticationMechanism());
-        config.setProperty("server." + number + ".useTLS", "" + server.getUseTLS());
+    public boolean getBoolean(String key) {
+        return studioConfig.getBoolean(key);
+    }
+    public boolean setBoolean(String key, boolean value) {
+        return studioConfig.setDouble(key, value);
     }
 
-    private int saveServerTree(String keyPrefix, ServerTreeNode node, int number) {
-        int count = node.getChildCount();
-        for(int index = 0; index<count; index++) {
-            String key = keyPrefix + index;
-            ServerTreeNode child = node.getChild(index);
-            if (child.isFolder()) {
-                config.setProperty(key + "folder", child.getFolder());
-                number = saveServerTree(key + ".", child, number);
-            } else {
-                Server server = child.getServer();
-                config.setProperty(key, server.getName());
-                saveServerDetails(server, number);
-                number++;
-            }
-        }
-        return number;
+    public <T extends Enum<T>> T getEnum(String key) {
+        return studioConfig.getEnum(key);
+    }
+    public <T extends Enum<T>> boolean setEnum(String key, T value) {
+        return studioConfig.setEnum(key, value);
     }
 
-    public void removeServer(Server server) {
-        String name = server.getFullName();
-        serverNames.remove(name);
-        servers.remove(name);
+    //@TODO: do we need?
+    public Color getColor(String key) {
+        return studioConfig.getColor(key);
+    }
 
-        ServerTreeNode folder = serverTree.findPath(server.getFolderPath(), false);
-        if (folder != null) {
-            folder.remove(server);
+    public Font getFont(String key) {
+        return studioConfig.getFont(key);
+    }
+    public boolean setFont(String key, Font value) {
+        return studioConfig.setFont(key, value);
+    }
+
+    public Dimension getSize(String key) {
+        return studioConfig.getSize(key);
+    }
+    public boolean setSize(String key, Dimension value) {
+        return studioConfig.setSize(key, value);
+    }
+
+    public Rectangle getBounds(String key) {
+        Rectangle bounds = studioConfig.getBounds(key);
+
+        // Hack? If bounds do not fit to screen, return default
+        if (! Util.fitToScreen(bounds) ) {
+            return (Rectangle) studioConfig.getDefault(key);
         }
 
-        saveAllServers();
+        return bounds;
+    }
+    public boolean setBounds(String key, Rectangle value) {
+        return studioConfig.setBounds(key, value);
     }
 
-    public void replaceServer(Server oldServer, Server newServer) {
-        ServerTreeNode oldFolder = serverTree.findPath(oldServer.getFolderPath(), false);
-        if (oldFolder == null) {
-            // ?? Is it possible
-            return;
-        }
-        ServerTreeNode newFolder = serverTree.findPath(newServer.getFolderPath(), true);
-
-        String name = oldServer.getFullName();
-        serverNames.remove(name);
-        servers.remove(name);
-        int index = oldFolder.remove(oldServer);
-        if (index == -1 || oldFolder!=newFolder) {
-            index = newFolder.getChildCount();
-        }
-
-        try {
-            addServerInternal(newServer);
-            newFolder.add(index, newServer);
-        } catch (IllegalArgumentException e) {
-            log.error("Failed to add server", e);
-            addServer(oldServer);
-        }
-        saveAllServers();
+    public FileChooserConfig getFileChooserConfig(String key) {
+        return studioConfig.getFileChooserConfig(key);
+    }
+    public boolean setFileChooserConfig(String key, FileChooserConfig value) {
+        return studioConfig.setFileChooserConfig(key, value);
     }
 
-    private void purgeAll() {
-        servers.clear();
-        serverNames.clear();
-        serverTree = new ServerTreeNode();
+    public List<String> getStringArray(String key) {
+        return studioConfig.getStringArray(key);
     }
-
-    public void removeAllServers() {
-        purgeAll();
-        saveAllServers();
-    }
-
-    private void addServerInternal(Server server) {
-        String name = server.getName();
-        String fullName = server.getFullName();
-        if (serverNames.contains(fullName)) {
-            throw new IllegalArgumentException("Server with full name " + fullName + " already exists");
-        }
-        if (name.trim().length() == 0) {
-            throw new IllegalArgumentException("Server name can't be empty");
-        }
-        if (name.contains(",")) {
-            throw new IllegalArgumentException("Server name can't contains ,");
-        }
-        if (name.contains("/")) {
-            throw new IllegalArgumentException("Server name can't contains /");
-        }
-
-        server.getFolderPath()
-                .stream()
-                .skip(1)
-                .forEach(folderName -> {
-                    if (folderName.trim().length() == 0) {
-                        throw new IllegalArgumentException("Folder name can't be empty");
-                    }
-                });
-
-        servers.put(fullName, server);
-        serverNames.add(fullName);
-    }
-
-
-    public void addServer(Server server) {
-        addServers(false, server);
-    }
-
-    public String[] addServers(boolean tryAll, Server... newServers) {
-        String[] result = tryAll ? new String[newServers.length] : null;
-        PropertiesConfig backup = config.cloneConfig();
-        try {
-            int index = -1;
-            for (Server server : newServers) {
-                index++;
-                try {
-                    addServerInternal(server);
-                    serverTree.findPath(server.getFolderPath(), true).add(server);
-                } catch (IllegalArgumentException e) {
-                    if (tryAll) {
-                        result[index] = e.getMessage();
-                    } else {
-                        throw e;
-                    }
-                }
-            }
-
-            saveAllServers();
-        } catch (IllegalArgumentException e) {
-            config = backup;
-            initServers();
-            throw e;
-        }
-        return result;
-    }
-
-    public void setServerTree(ServerTreeNode serverTree) {
-        PropertiesConfig backup = config.cloneConfig();
-        try {
-            purgeAll();
-            this.serverTree = serverTree;
-
-            for(Enumeration e = serverTree.depthFirstEnumeration(); e.hasMoreElements();) {
-                ServerTreeNode node = (ServerTreeNode) e.nextElement();
-                if (node.isRoot()) continue;
-
-                if (node.isFolder()) {
-                    String folder = node.getFolder();
-                    if (folder.trim().length()==0) {
-                        throw new IllegalArgumentException("Can't add folder with empty name");
-                    }
-                    if (folder.contains("/")) {
-                        throw new IllegalArgumentException("Folder can't contain /");
-                    }
-                    if ( ((ServerTreeNode)node.getParent()).getChild(node.getFolder())!= node ) {
-                        throw new IllegalArgumentException("Duplicate folder is found: " + node.fullPath());
-                    }
-                } else {
-                    Server server = node.getServer();
-                    ServerTreeNode parent = (ServerTreeNode) node.getParent();
-                    if (!server.getFolderPath().equals(parent.getFolderPath()) ) {
-                        server = server.newFolder(parent);
-                    }
-                    addServerInternal(server);
-                }
-            }
-
-            saveAllServers();
-        } catch (IllegalArgumentException e) {
-            config = backup;
-            initServers();
-            throw e;
-        }
+    public boolean setStringArray(String key, List<String> value) {
+        return studioConfig.setStringArray(key, value);
     }
 
 }

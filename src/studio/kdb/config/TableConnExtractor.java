@@ -1,20 +1,18 @@
-package studio.utils;
+package studio.kdb.config;
 
 import studio.kdb.K;
 import studio.kdb.KFormatContext;
 
 import javax.swing.table.TableModel;
-import java.util.ArrayList;
-import java.util.LinkedHashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 import java.util.regex.Pattern;
 
 public class TableConnExtractor {
 
-    private String[] hostWords = new String[0];
-    private String[] portWords = new String[0];
-    private String[] connWords = new String[0];
+    private final int maxConn;
+    private final List<String> connWords;
+    private final List<String> hostWords;
+    private final List<String> portWords;
 
     //@TODO: The regexp can't be supported.
     private static final String hostRegex = "(([a-zA-Z0-9][a-zA-Z0-9\\-]*((\\.[a-zA-Z0-9][a-zA-Z0-9\\-]*)*\\.[a-zA-Z][a-zA-Z0-9]*)?)|" +
@@ -25,33 +23,48 @@ public class TableConnExtractor {
     private static final Pattern hostPattern = Pattern.compile("`?:?" + hostRegex);
     private static final Pattern portPattern = Pattern.compile("`?:?" + portRegex);
 
-    private int maxConn = Integer.MAX_VALUE;
+    public final static TableConnExtractor DEFAULT = new TableConnExtractor(20,
+            List.of("server", "host", "connection", "handle"),
+            List.of("server", "host"),
+            List.of("port"));
 
-    private static String[] lower(String[] words) {
-        String[] result = new String[words.length];
-        for (int index = 0; index<words.length; index++) {
-            result[index] = words[index].toLowerCase();
-        }
-        return result;
+    public TableConnExtractor(int maxConn, List<String> connWords, List<String> hostWords, List<String> portWords) {
+        this.maxConn = maxConn;
+        this.connWords = connWords;
+        this.hostWords = hostWords;
+        this.portWords = portWords;
     }
 
-    public void setHostWords(String[] hostWords) {
-        this.hostWords = lower(hostWords);
+    public List<String> getHostWords() {
+        return hostWords;
     }
 
-    public void setPortWords(String[] portWords) {
-        this.portWords = lower(portWords);
+    public List<String> getPortWords() {
+        return portWords;
     }
 
-    public void setConnWords(String[] connWords) {
-        this.connWords = lower(connWords);
+    public List<String> getConnWords() {
+        return connWords;
     }
 
-    public void setMaxConn(int maxConn) {
-        this.maxConn = maxConn<=0 ? Integer.MAX_VALUE : maxConn;
+    public int getMaxConn() {
+        return maxConn;
     }
 
-    private static boolean contains(String header, String[] words) {
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof TableConnExtractor)) return false;
+        TableConnExtractor that = (TableConnExtractor) o;
+        return maxConn == that.maxConn && Objects.equals(hostWords, that.hostWords) && Objects.equals(portWords, that.portWords) && Objects.equals(connWords, that.connWords);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(hostWords, portWords, connWords, maxConn);
+    }
+
+    private static boolean contains(String header, List<String> words) {
         for (String word:words) {
             if (header.contains(word)) return true;
         }

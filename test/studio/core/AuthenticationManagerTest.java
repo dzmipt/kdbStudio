@@ -1,12 +1,12 @@
 package studio.core;
 
-import org.apache.commons.io.FileUtils;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import studio.core.plugins.A;
 import studio.core.plugins.B;
 import studio.core.plugins.C;
+import studio.utils.MockConfig;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -48,19 +48,7 @@ public class AuthenticationManagerTest {
 
     @BeforeAll
     public static void prepare() throws IOException {
-        tmpDir = Files.createTempDirectory("kdbStudioPlugins");
-        Runtime.getRuntime().addShutdownHook(new Thread("Cleanup test plugin folder") {
-            @Override
-            public void run() {
-                try {
-                    FileUtils.deleteDirectory(tmpDir.toFile());
-                } catch (IOException e) {
-                    System.err.println("Error in deleting folder: " + tmpDir);
-                    e.printStackTrace(System.err);
-                }
-            }
-        });
-
+        tmpDir = MockConfig.createTempDir();
 
         Path pluginDir = Files.createDirectory(tmpDir.resolve("plugins"));
         Path folderDir = pluginDir.resolve("folder");

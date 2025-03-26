@@ -8,6 +8,7 @@ import org.fife.ui.rsyntaxtextarea.RSyntaxTextAreaEditorKit;
 import studio.core.Studio;
 import studio.kdb.*;
 import studio.kdb.config.ActionOnExit;
+import studio.kdb.config.ExecAllOption;
 import studio.ui.action.*;
 import studio.ui.chart.Chart;
 import studio.ui.dndtabbedpane.DragEvent;
@@ -19,7 +20,6 @@ import studio.ui.search.SearchPanel;
 import studio.ui.statusbar.MainStatusBar;
 import studio.utils.BrowserLaunch;
 import studio.utils.Content;
-import studio.utils.HistoricalList;
 import studio.utils.LineEnding;
 import studio.utils.log4j.EnvConfig;
 
@@ -37,8 +37,10 @@ import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Iterator;
 import java.util.List;
-import java.util.*;
 
 import static javax.swing.JSplitPane.VERTICAL_SPLIT;
 import static studio.ui.EscapeDialog.DialogResult.ACCEPTED;
@@ -429,14 +431,17 @@ public class StudioWindow extends JFrame implements WindowListener {
     public void addToMruFiles(String filename) {
         if (filename == null)
             return;
+        List<String> mruFiles = CONFIG.getStringArray(Config.MRU_FILES);
 
-        Vector v = new Vector();
-        v.add(filename);
-        String[] mru = CONFIG.getMRUFiles();
-        for (int i = 0;i < mru.length;i++)
-            if (!v.contains(mru[i]))
-                v.add(mru[i]);
-        CONFIG.saveMRUFiles((String[]) v.toArray(new String[0]));
+        List<String> list = new ArrayList<>();
+        list.add(filename);
+        for (String mruFile: mruFiles) {
+            if (list.size() == 9) break;
+
+            if (!filename.equals(mruFile)) list.add(mruFile);
+        }
+
+        CONFIG.setStringArray(Config.MRU_FILES, list);
         refreshAllMenus();
     }
 
@@ -488,8 +493,8 @@ public class StudioWindow extends JFrame implements WindowListener {
     public void setServer(Server server) {
         editor.setServer(server);
         if (!loading) {
-            CONFIG.addServerToHistory(server);
             serverHistory.add(server);
+            CONFIG.refreshServerToHistory();
 
             EditorsPanel.refreshEditorTitle(editor);
             refreshServer();
@@ -551,7 +556,7 @@ public class StudioWindow extends JFrame implements WindowListener {
                             stopAction.actionPerformed(e);
 
                         Server newServer = f.getServer();
-                        CONFIG.replaceServer(editor.getServer(), newServer);
+                        CONFIG.getServerConfig().replaceServer(editor.getServer(), newServer);
                         setServer(newServer);
                         refreshAll();
                     }
@@ -564,7 +569,7 @@ public class StudioWindow extends JFrame implements WindowListener {
                     f.alignAndShow();
                     if (f.getResult() == ACCEPTED) {
                         Server s = f.getServer();
-                        CONFIG.addServer(s);
+                        CONFIG.getServerConfig().addServer(s);
                         setServer(s);
                         refreshAll();
                     }
@@ -582,9 +587,9 @@ public class StudioWindow extends JFrame implements WindowListener {
                             null);      // no default selection
 
                     if (choice == 0) {
-                        CONFIG.removeServer(editor.getServer());
+                        CONFIG.getServerConfig().removeServer(editor.getServer());
 
-                        Server[] servers = CONFIG.getServers();
+                        Server[] servers = CONFIG.getServerConfig().getServers();
 
                         if (servers.length > 0)
                             setServer(servers[0]);
@@ -901,10 +906,10 @@ public class StudioWindow extends JFrame implements WindowListener {
     private void refreshMenu() {
         openMRUMenu.removeAll();
 
-        String[] mru = CONFIG.getMRUFiles();
+        List<String> mru = CONFIG.getStringArray(Config.MRU_FILES);
         String mnems = "123456789";
-        for (int i = 0; i < mru.length; i++) {
-            final String filename = mru[i];
+        for (int i = 0; i < mru.size(); i++) {
+            final String filename = mru.get(i);
 
             JMenuItem item = new JMenuItem("" + (i + 1) + " " + filename);
             if (i<mnems.length()) {
@@ -916,7 +921,7 @@ public class StudioWindow extends JFrame implements WindowListener {
         }
 
         cloneMenu.removeAll();
-        Server[] servers = CONFIG.getServers();
+        Server[] servers = CONFIG.getServerConfig().getServers();
         int count = Math.min(MAX_SERVERS_TO_CLONE, servers.length);
         for (int i = 0; i < count; i++) {
             final Server s = servers[i];
@@ -928,7 +933,7 @@ public class StudioWindow extends JFrame implements WindowListener {
 
                 if (f.getResult() == ACCEPTED) {
                     clone = f.getServer();
-                    CONFIG.addServer(clone);
+                    CONFIG.getServerConfig().addServer(clone);
                     setServer(clone);
                     refreshAll();
                 }
@@ -1080,9 +1085,9 @@ public class StudioWindow extends JFrame implements WindowListener {
 
     private void selectServerName() {
         String selection = comboServer.getSelectedItem().toString();
-        if(! CONFIG.getServerNames().contains(selection)) return;
+        if(! CONFIG.getServerConfig().getServerNames().contains(selection)) return;
 
-        setServer(CONFIG.getServer(selection));
+        setServer(CONFIG.getServerConfig().getServer(selection));
         refreshServer();
     }
 
@@ -1111,7 +1116,7 @@ public class StudioWindow extends JFrame implements WindowListener {
 
     private void refreshServerList() {
         Server server = editor.getServer();
-        Collection<String> names = CONFIG.getServerNames();
+        Collection<String> names = CONFIG.getServerConfig().getServerNames();
         String name = server == Server.NO_SERVER ? "" : server.getFullName();
         if (!names.contains(name)) {
             List<String> newNames = new ArrayList<>();
@@ -1306,8 +1311,7 @@ public class StudioWindow extends JFrame implements WindowListener {
         allWindows.add(this);
         if (activeWindow == null) activeWindow = this;
 
-        serverHistory = new HistoricalList<>(CONFIG.getServerHistoryDepth(),
-                CONFIG.getServerHistory());
+        serverHistory = CONFIG.getServerHistory();
         initActions();
         createMenuBar();
 
@@ -1567,12 +1571,12 @@ public class StudioWindow extends JFrame implements WindowListener {
         String text = editor.getSelectedText();
         if (text != null) return text;
 
-        Config.ExecAllOption option = CONFIG.getExecAllOption();
-        if (option == Config.ExecAllOption.Ignore) {
+        ExecAllOption option = CONFIG.getEnum(Config.EXEC_ALL);
+        if (option == ExecAllOption.Ignore) {
             log.info("Nothing is selected. Ignore execution of the whole script");
             return null;
         }
-        if (option == Config.ExecAllOption.Execute) {
+        if (option == ExecAllOption.Execute) {
             return editor.getText();
         }
         //Ask

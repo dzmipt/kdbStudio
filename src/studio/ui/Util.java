@@ -1,5 +1,7 @@
 package studio.ui;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import studio.utils.Transferables;
 
 import javax.swing.*;
@@ -68,6 +70,10 @@ public class Util {
     public static boolean WINDOWS = (System.getProperty("os.name").toLowerCase().contains("win"));
 
     public static boolean Java8Minus = System.getProperty("java.version").startsWith("1.");
+
+
+    private static boolean mockFitToScreen = false;
+    private final static Logger log = LogManager.getLogger();
 
     public static Color blendColors(Color... colors) {
         float ratio = 1f / ((float) colors.length);
@@ -153,13 +159,35 @@ public class Util {
         }
     }
 
+    public static Rectangle getDefaultBounds(double scale) {
+        if (GraphicsEnvironment.isHeadless()) return new Rectangle(0,0, 1,1);
+
+        DisplayMode displayMode = GraphicsEnvironment.getLocalGraphicsEnvironment()
+                .getDefaultScreenDevice().getDisplayMode();
+
+        int width = displayMode.getWidth();
+        int height = displayMode.getHeight();
+        int w = (int) (width * scale);
+        int h = (int) (height * scale);
+        int x = (width - w) / 2;
+        int y = (height - h) / 2;
+        return new Rectangle(x, y, w, y);
+    }
+
     public static boolean fitToScreen(Rectangle bounds) {
+        if (mockFitToScreen) return true;
+
         boolean fitToScreen = false;
         GraphicsDevice[] devices = GraphicsEnvironment.getLocalGraphicsEnvironment().getScreenDevices();
         for (GraphicsDevice device : devices) {
             fitToScreen |= device.getDefaultConfiguration().getBounds().contains(bounds);
         }
         return fitToScreen;
+    }
+
+    public static void setMockFitToScreen(boolean isMock) {
+        log.info("mock fitToScreen: {}", isMock);
+        mockFitToScreen = isMock;
     }
 
 }

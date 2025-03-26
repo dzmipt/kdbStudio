@@ -4,9 +4,11 @@ package studio.utils;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import studio.kdb.K;
+import studio.kdb.config.TableConnExtractor;
 
 import javax.swing.table.DefaultTableModel;
 import javax.swing.table.TableModel;
+import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 
@@ -43,15 +45,15 @@ public class TableConnExtractorTest {
 
     @BeforeEach
     public void init() {
-        extractor1 = new TableConnExtractor();
-        extractor1.setConnWords(new String[] {"conn", "handle"});
-        extractor1.setHostWords(new String[] {"host", "conn", "handle"});
-        extractor1.setPortWords(new String[] {"port"});
+        extractor1 = new TableConnExtractor(20,
+                List.of("conn", "handle"),
+                List.of("host", "conn", "handle"),
+                List.of("port") );
 
-        extractor2 = new TableConnExtractor();
-        extractor2.setConnWords(new String[] {"conn", "handle"});
-        extractor2.setHostWords(new String[] {"host"});
-        extractor2.setPortWords(new String[] {"port"});
+        extractor2 = new TableConnExtractor(20,
+                List.of("conn", "handle"),
+                List.of("host"),
+                List.of("port") );
     }
 
     @Test
@@ -69,8 +71,12 @@ public class TableConnExtractorTest {
 
     @Test
     public void testMaxConn() {
-        extractor1.setMaxConn(2);
-        assertArrayEquals(new String[] {"`:abc:1111", "1.2.3.4:1234"}, extractor1.getConnections(table, 2, 0));
+        TableConnExtractor extractor = new TableConnExtractor(2,
+                List.of("conn", "handle"),
+                List.of("host", "conn", "handle"),
+                List.of("port") );
+
+        assertArrayEquals(new String[] {"`:abc:1111", "1.2.3.4:1234"}, extractor.getConnections(table, 2, 0));
     }
 
     @Test

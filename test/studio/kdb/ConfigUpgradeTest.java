@@ -3,13 +3,15 @@ package studio.kdb;
 import org.junit.jupiter.api.Test;
 import studio.core.DefaultAuthenticationMechanism;
 import studio.kdb.config.ActionOnExit;
+import studio.kdb.config.ExecAllOption;
 import studio.utils.LineEnding;
+import studio.utils.MockConfig;
 
 import java.awt.*;
-import java.io.File;
 import java.io.IOException;
 import java.net.URISyntaxException;
 import java.nio.file.Files;
+import java.nio.file.Path;
 import java.nio.file.Paths;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -18,12 +20,11 @@ public class ConfigUpgradeTest {
 
     @Test
     public void testLoadingConfig13() throws IOException, URISyntaxException {
-        byte[] content = Files.readAllBytes(Paths.get(this.getClass().getClassLoader().getResource("studio13.properties").toURI()));
+        MockConfig.mock();
+        Path srcPath = Paths.get(this.getClass().getClassLoader().getResource("studio13.properties").toURI());
+        Files.copy(srcPath, MockConfig.getBasePath().resolve(Config.OLD_CONFIG_FILENAME));
 
-        File tmpFile = File.createTempFile("studioforkdb", ".tmp");
-        tmpFile.deleteOnExit();
-        Files.write(tmpFile.toPath(), content);
-        Config config = new Config(tmpFile.getPath());
+        Config config = new Config(MockConfig.getBasePath());
 
         assertEquals(ActionOnExit.NOTHING, config.getEnum(Config.ACTION_ON_EXIT));
         assertEquals("defU", config.getDefaultCredentials(DefaultAuthenticationMechanism.NAME).getUsername());
@@ -36,15 +37,15 @@ public class ConfigUpgradeTest {
         assertTrue(config.getBoolean(Config.EDITOR_TAB_EMULATED));
         assertEquals(15, config.getInt(Config.EDITOR_TAB_SIZE));
         assertEquals(1500, config.getInt(Config.EMULATED_DOUBLE_CLICK_TIMEOUT));
-        assertEquals(Config.ExecAllOption.Ignore, config.getExecAllOption());
+        assertEquals(ExecAllOption.Ignore, config.getEnum(Config.EXEC_ALL));
         assertEquals(new Font("Times New Roman", Font.PLAIN, 18),config.getFont(Config.FONT_EDITOR));
         assertEquals(new Font("Arial", Font.PLAIN, 14),config.getFont(Config.FONT_TABLE));
         assertTrue(config.getBoolean(Config.AUTO_SAVE));
-        assertEquals("javax.swing.plaf.nimbus.NimbusLookAndFeel",config.getLookAndFeel());
-        assertEquals(500000, config.getMaxCharsInResult());
-        assertEquals(1024, config.getMaxCharsInTableCell());
+        assertEquals("javax.swing.plaf.nimbus.NimbusLookAndFeel",config.getString(Config.LOOK_AND_FEEL));
+        assertEquals(500000, config.getInt(Config.MAX_CHARS_IN_RESULT));
+        assertEquals(1024, config.getInt(Config.MAX_CHARS_IN_TABLE_CELL));
         assertEquals(9, config.getInt(Config.MAX_FRACTION_DIGITS));
-        assertEquals(20, config.getResultTabsCount());
+        assertEquals(20, config.getInt(Config.RESULT_TAB_COUNTS));
         assertFalse(config.getBoolean(Config.RSTA_ANIMATE_BRACKET_MATCHING));
         assertFalse(config.getBoolean(Config.RSTA_HIGHLIGHT_CURRENT_LINE));
         assertFalse(config.getBoolean(Config.RSTA_INSERT_PAIRED_CHAR));
