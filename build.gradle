@@ -108,7 +108,7 @@ application {
     mainClass = 'studio.core.Studio'
 }
 
-def buildTime() {
+static def buildTime() {
     def df = new SimpleDateFormat("yyyy.MM.dd HH:mm:ss")
     return df.format(new Date())
 }
@@ -159,7 +159,7 @@ task convertNotes (type: JavaExec) {
 processResources.dependsOn('getBuildHash', 'convertNotes')
 
 task sourcesJar(type: Jar) {
-    classifier = 'sources'
+    archiveClassifier.set("sources")
     duplicatesStrategy = 'warn'
     from sourceSets.main.allSource
 }
@@ -171,7 +171,7 @@ javadoc {
 javadoc.options.addStringOption('Xdoclint:none', '-quiet')
 
 task javadocJar(type: Jar) {
-    classifier = 'javadoc'
+    archiveClassifier.set("javadoc")
     from javadoc
 }
 
