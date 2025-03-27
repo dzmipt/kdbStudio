@@ -16,3 +16,4 @@ build/
 /failed-gui-tests/
 resources/build.txt
 resources/notes.html
+Log4j2Plugins.dat

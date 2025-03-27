@@ -66,6 +66,7 @@ dependencies {
     implementation group: 'org.apache.logging.log4j', name: 'log4j-api', version: '2.24.3'
     implementation group: 'org.apache.logging.log4j', name: 'log4j-core', version: '2.24.3'
     implementation group: 'org.apache.logging.log4j', name: 'log4j-iostreams', version: '2.24.3'
+    annotationProcessor 'org.apache.logging.log4j:log4j-core:2.24.3'
 
     implementation group: 'com.fifesoft', name: 'rsyntaxtextarea', version: '3.6.0'
     //see studio.ui.chart.patched folder for the patch for jfreechart.
@@ -150,7 +151,22 @@ task convertNotes (type: JavaExec) {
     standardOutput new FileOutputStream(new File(projectDir,"resources/notes.html"))
 }
 
-processResources.dependsOn('getBuildHash', 'convertNotes')
+task copyLog4JPluginDat(type: Copy) {
+    dependsOn 'compileJava'
+    from 'build/classes/java/main/META-INF'
+    into 'resources/META-INF'
+}
+
+task delBuildLog4JPluginDat(type: Delete) {
+    dependsOn 'copyLog4JPluginDat'
+    delete 'build/classes/java/main/META-INF'
+}
+
+task moveBuildLog4JPluginDat() {
+    dependsOn 'copyLog4JPluginDat', 'delBuildLog4JPluginDat'
+}
+
+processResources.dependsOn('getBuildHash', 'convertNotes', 'moveBuildLog4JPluginDat')
 
 task sourcesJar(type: Jar) {
     archiveClassifier.set("sources")
