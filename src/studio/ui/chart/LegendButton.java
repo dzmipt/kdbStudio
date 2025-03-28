@@ -72,7 +72,7 @@ public class LegendButton extends JLabel implements MouseListener {
     }
 
     public static BasicStroke getDefaultStroke() {
-        return strokeWithWidth(BASE_STROKES[0], STROKE_WIDTHS[0].width);
+        return strokeWithWidth(BASE_STROKES[0], STROKE_WIDTHS[2].width);// 2x width by default
     }
 
     public LegendButton(LegendIcon icon, boolean line, boolean shape, boolean bar) {
