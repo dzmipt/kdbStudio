@@ -428,10 +428,10 @@ public class Config  {
     }
 
     public List<String> getStringArray(String key) {
-        return studioConfig.getStringArray(key);
+        return studioConfig.getArray(key);
     }
     public boolean setStringArray(String key, List<String> value) {
-        return studioConfig.setStringArray(key, value);
+        return studioConfig.setArray(key, value);
     }
 
 }

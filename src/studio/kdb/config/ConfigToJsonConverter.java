@@ -189,7 +189,7 @@ public class ConfigToJsonConverter {
         String value = get(Config.MRU_FILES);
         if (value == null) return;
 
-        config.setStringArray(Config.MRU_FILES, List.of(value.split(",")));
+        config.setArray(Config.MRU_FILES, List.of(value.split(",")));
     }
 
     private void convertTableConnExtractor(StudioConfig config) {

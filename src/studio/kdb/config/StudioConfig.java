@@ -15,9 +15,7 @@ import java.io.IOException;
 import java.io.Writer;
 import java.time.Instant;
 import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.TreeMap;
+import java.util.*;
 
 public class StudioConfig {
 
@@ -231,31 +229,12 @@ public class StudioConfig {
         return set(key, value);
     }
 
-    public List<String> getStringArray(String key) {
-        return (List<String>) get(key);
-
+    public <T> List<T> getArray(String key) {
+        return Collections.unmodifiableList( (List<T>) get(key));
     }
 
-    public boolean setStringArray(String key, List<String> value) {
-        return set(key, value);
-    }
-
-    public List<Integer> getIntArray(String key) {
-        return (List<Integer>) get(key);
-
-    }
-
-    public boolean setIntArray(String key, List<Integer> value) {
-        return set(key, value);
-    }
-
-    public <T extends Enum<T>> List<T> getEnumArray(String key) {
-        return (List<T>) get(key);
-
-    }
-
-    public <T extends Enum<T>> boolean setEnumArray(String key, List<T> value) {
-        return set(key, value);
+    public <T> boolean setArray(String key, List<T> value) {
+        return set(key, new ArrayList<>(value));
     }
 
 }
