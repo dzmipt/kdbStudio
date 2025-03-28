@@ -31,7 +31,7 @@ public class Line extends AbstractAnnotation implements XYAnnotation {
     public Line(ChartPanel chartPanel, Point2D.Double p0) {
         this.chartPanel = chartPanel;
         this.p0 = p0;
-        icon = new LegendIcon(Color.BLACK, null, LegendButton.getDefaultStroke());
+        icon = new LegendIcon(Color.BLACK, null, LegendButton.strokeWithWidth(LegendButton.getDefaultStroke(), 1.0f));
         XYPlot plot = chartPanel.getChart().getXYPlot();
         plot.getDomainAxis().addChangeListener(e -> refresh());
         plot.getRangeAxis().addChangeListener(e -> refresh());
