@@ -1,9 +1,6 @@
 package studio.kdb.config;
 
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
-import com.google.gson.JsonObject;
-import com.google.gson.JsonParser;
+import com.google.gson.*;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import studio.kdb.Config;
@@ -21,8 +18,8 @@ public class StudioConfig {
 
     private final ConfigTypeRegistry registry;
     private final FileConfig fileConfig;
+    private final FileConfig defaultFileConfig;
     private final Map<String, Object> config;
-    private final Map<String, Object> defaults;
     private final Gson gson;
 
     private static final Logger log = LogManager.getLogger();
@@ -31,11 +28,11 @@ public class StudioConfig {
         this(registry, file, null);
     }
 
-    public StudioConfig(ConfigTypeRegistry registry, FileConfig fileConfig, FileConfig defaultConfig) {
+    public StudioConfig(ConfigTypeRegistry registry, FileConfig fileConfig, FileConfig defaultFileConfig) {
         this.registry = registry;
         this.fileConfig = fileConfig;
-        config = load(fileConfig);
-        defaults = load(defaultConfig);
+        this.defaultFileConfig = defaultFileConfig;
+        config = initConfig();
 
         gson = new GsonBuilder()
                 .setPrettyPrinting()
@@ -46,34 +43,113 @@ public class StudioConfig {
         return fileConfig;
     }
 
-    private Map<String, Object> load(FileConfig fileConfig) {
-        Map<String, Object> map = new TreeMap<>();
-        if (fileConfig == null) return map;
-        if (! fileConfig.fileExists()) return map;
+
+    private JsonObject deepMerge(JsonObject jBase, JsonObject jAdd) {
+        JsonObject json = new JsonObject();
+        for (String key: jBase.keySet()) {
+            if (jAdd.has(key)) {
+                JsonElement elBase = jBase.get(key);
+                JsonElement elAdd = jAdd.get(key);
+                if (elBase.isJsonObject() && elAdd.isJsonObject()) {
+                    json.add(key, deepMerge(elBase.getAsJsonObject(), elAdd.getAsJsonObject()));
+                } else {
+                    json.add(key, elAdd);
+                }
+            } else {
+                json.add(key, jBase.get(key));
+            }
+        }
+
+        for (String key: jAdd.keySet()) {
+            if (! jBase.has(key)) {
+                json.add(key, jAdd.get(key));
+            }
+        }
+        return json;
+    }
+
+    private JsonObject deepExclude(JsonObject jBase, JsonObject jMinus) {
+        JsonObject json = new JsonObject();
+        for (String key: jBase.keySet()) {
+            if (jMinus.has(key)) {
+                JsonElement elBase = jBase.get(key);
+                JsonElement elMinus = jMinus.get(key);
+                if (elBase.isJsonObject() && elMinus.isJsonObject()) {
+                    json.add(key, deepExclude(elBase.getAsJsonObject(), elMinus.getAsJsonObject()));
+                } else {
+                    if (! elBase.equals(elMinus)) {
+                        json.add(key, elBase);
+                    } // we exclude, if elBase equals to elMinus
+                }
+            } else {
+                json.add(key, jBase.get(key));
+            }
+        }
+        return json;
+    }
+
+    private JsonObject getJson(FileConfig fileConfig) {
+        if (fileConfig == null || ! fileConfig.fileExists()) return new JsonObject();
 
         try {
             String content = fileConfig.getContent();
-            JsonObject json = JsonParser.parseString(content).getAsJsonObject();
+            return JsonParser.parseString(content).getAsJsonObject();
+        } catch (IOException | JsonParseException e) {
+            log.error("Error in loading and parsing {}", fileConfig);
+        }
+        return new JsonObject();
+    }
 
-            for (String key: json.keySet()) {
-                try {
-                    ConfigType type = registry.getConfigType(key);
-                    if (type == null) {
-                        log.warn("Unknown config key {}. Skipping...", key);
-                        continue;
-                    }
-                    Object value = type.fromJson(json.get(key), registry.getDefault(key));
-                    if (key.equals(Config.COMMENT)) {
-                        log.info("Loaded config with the comment: {}", value);
-                    } else {
-                        map.put(key, value);
-                    }
-                } catch (Exception e) {
-                    log.warn("Error parsing key {}. Skipping...", key, e);
+    private JsonObject getJsonFromRegistry() {
+        JsonObject jRegistry = new JsonObject();
+        for (String key: registry.keySet()) {
+            JsonElement jsonElement = registry.getConfigType(key).toJson(registry.getDefault(key));
+            jRegistry.add(key, jsonElement);
+        }
+        return jRegistry;
+    }
+
+    private JsonObject getJsonFromConfig() {
+        JsonObject json = new JsonObject();
+        for (String key: config.keySet()) {
+            ConfigType type = registry.getConfigType(key);
+            json.add(key, type.toJson(config.get(key)));
+        }
+        return json;
+    }
+
+    private Map<String, Object> parseConfig(JsonObject json) {
+        Map<String, Object> map = new TreeMap<>();
+        for (String key: json.keySet()) {
+            try {
+                ConfigType type = registry.getConfigType(key);
+                if (type == null) {
+                    log.warn("Unknown config key {}. Skipping...", key);
+                    continue;
                 }
-
+                Object value = type.fromJson(json.get(key), registry.getDefault(key));
+                map.put(key, value);
+            } catch (Exception e) {
+                log.warn("Error parsing key {}. Skipping...", key, e);
             }
-        } catch (IOException | IllegalStateException e) {
+        }
+        return map;
+    }
+
+    private Map<String, Object> initConfig() {
+        Map<String, Object> map = new TreeMap<>();
+        try {
+            JsonObject json = getJson(fileConfig);
+            if (json.has(Config.COMMENT)) {
+                log.info("Loaded config with the comment: {}", json.get(Config.COMMENT).getAsString());
+                json.remove(Config.COMMENT);
+            }
+
+            JsonObject jConfig = deepMerge(getJsonFromRegistry(), getJson(defaultFileConfig));
+
+            json = deepMerge(jConfig, json);
+            map = parseConfig(json);
+        } catch (Exception e) {
             log.error("Error on parsing json {}", fileConfig.getPath(), e);
         }
 
@@ -83,16 +159,14 @@ public class StudioConfig {
 
     private void save() {
         try (Writer writer = fileConfig.getWriter()) {
+            JsonObject jConfig = getJsonFromConfig();
+            JsonObject jDefault = deepMerge(getJsonFromRegistry(), getJson(defaultFileConfig));
+            jConfig = deepExclude(jConfig, jDefault);
 
             JsonObject json = new JsonObject();
             String comment = String.format("Auto-generated at %s from a process with pid %d", Instant.now(), ProcessHandle.current().pid());
             json.add(Config.COMMENT, ConfigType.STRING.toJson(comment));
-
-            for (String key: config.keySet()) {
-                ConfigType type = registry.getConfigType(key);
-
-                json.add(key, type.toJson(config.get(key)));
-            }
+            json = deepMerge(json, jConfig);
 
             gson.toJson(json, writer);
         } catch (IOException e) {
@@ -101,9 +175,6 @@ public class StudioConfig {
     }
 
     public Object getDefault(String key) {
-        Object value = defaults.get(key);
-        if (value != null) return value;
-
         return registry.getDefault(key);
     }
 
@@ -126,15 +197,8 @@ public class StudioConfig {
 
         if (Objects.equals(currentValue, value)) return false;
 
-        if (Objects.equals(getDefault(key), value)) {
-            if (!config.containsKey(key)) {
-                return false;
-            }
-            config.remove(key);
-        } else {
-            ConfigType type = registry.getConfigType(key);
-            config.put(key, type.clone(value));
-        }
+        ConfigType type = registry.getConfigType(key);
+        config.put(key, type.clone(value));
 
         save();
         return true;
