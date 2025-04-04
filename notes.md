@@ -1,3 +1,4 @@
+* Color schema for charts is configurable in the Settings
 * Configuration is stored in json format (studio.json)
     * Details of servers connections are extracted into separate servers.json config file
     * Defaults for studio.json can be put into plugins folder
