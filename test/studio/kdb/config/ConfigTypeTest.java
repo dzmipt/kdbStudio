@@ -144,4 +144,30 @@ public class ConfigTypeTest {
         check(ConfigType.ENUM_ARRAY, types, List.of());
 
     }
+
+    @Test
+    public void testColorArray() {
+        List<Color> colors = List.of(Color.ORANGE, new Color(1,2,3));
+        check(ConfigType.COLOR_ARRAY, colors);
+
+        check(ConfigType.COLOR_ARRAY, List.of());
+    }
+
+    @Test
+    public void testColorSets() {
+        ColorSets colorSets = ColorSets.DEFAULT;
+        check(ConfigType.COLOR_SETS, colorSets);
+
+        colorSets = colorSets.setColorSet("add", List.of(Color.ORANGE, Color.RED));
+        assertEquals(2, colorSets.getNames().size());
+        check(ConfigType.COLOR_SETS, colorSets);
+
+        colorSets = colorSets.newSelected("add");
+        assertEquals("add", colorSets.getDefaultName());
+        check(ConfigType.COLOR_SETS, colorSets);
+
+        colorSets = colorSets.deleteColorSet("Default");
+        assertEquals(1, colorSets.getNames().size());
+        check(ConfigType.COLOR_SETS, colorSets);
+    }
 }
