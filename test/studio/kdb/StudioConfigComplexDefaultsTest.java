@@ -2,6 +2,7 @@ package studio.kdb;
 
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import studio.kdb.config.ConfigType;
 import studio.kdb.config.ConfigTypeRegistry;
@@ -16,7 +17,7 @@ import java.nio.file.Path;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 public class StudioConfigComplexDefaultsTest {
-    private static Path configPath, defaultConfigPath;
+    private static Path configPath, complexDefaultConfigPath, simpleDefaultConfigPath;
     private static ConfigTypeRegistry registry;
     private final static String KEY = "key";
 
@@ -26,14 +27,11 @@ public class StudioConfigComplexDefaultsTest {
         registry.add(KEY, ConfigType.BOUNDS, new Rectangle(5, 10, 100, 200));
 
         configPath = Files.createTempFile("studioConfig",".json");
-        Files.delete(configPath);
+        complexDefaultConfigPath = Files.createTempFile("defaultStudioConfig",".json");
+        simpleDefaultConfigPath = Files.createTempFile("simpleDefaultStudioConfig",".json");
+        Files.delete(simpleDefaultConfigPath);
 
-        defaultConfigPath = Files.createTempFile("defaultStudioConfig",".json");
-        Files.delete(defaultConfigPath);
-
-        Files.writeString(configPath, "{}");
-
-        Files.writeString(defaultConfigPath,
+        Files.writeString(complexDefaultConfigPath,
                 "{" +
                         "key: {" +
                         "'width':105," +
@@ -44,31 +42,49 @@ public class StudioConfigComplexDefaultsTest {
     @AfterAll
     public static void cleanup() throws IOException {
         Files.delete(configPath);
-        Files.delete(defaultConfigPath);
+        Files.delete(complexDefaultConfigPath);
     }
 
-    private StudioConfig getConfig() {
+    @BeforeEach
+    public void prepareConfig() throws IOException {
+        Files.writeString(configPath, "{}");
+    }
+
+    private StudioConfig getConfig(Path defaultConfigPath) {
         return new StudioConfig(registry, new FileConfig(configPath), new FileConfig(defaultConfigPath));
     }
 
-    private void check(Rectangle rect) {
-        StudioConfig config = getConfig();
+    private void check(Path defaultConfigPath, Rectangle rect) {
+        StudioConfig config = getConfig(defaultConfigPath);
         config.set(KEY, rect);
         config.getFileConfig().saveOnDisk();
-        assertEquals(rect, getConfig().get(KEY));
+        assertEquals(rect, getConfig(defaultConfigPath).get(KEY));
     }
 
     @Test
     public void test() {
-        assertEquals(new Rectangle(5, 10, 105, 200), getConfig().get(KEY));
+        assertEquals(new Rectangle(5, 10, 105, 200), getConfig(complexDefaultConfigPath).get(KEY));
 
-        check(new Rectangle(5, 10, 100, 200));
-        check(new Rectangle(5, 10, 105, 200));
-        check(new Rectangle(5, 15, 105, 200));
-        check(new Rectangle(5, 15, 100, 200));
-        check(new Rectangle(5, 15, 105, 205));
-        check(new Rectangle(5, 15, 100, 205));
-        check(new Rectangle(0, 0, 0, 0));
+        check(complexDefaultConfigPath, new Rectangle(5, 10, 100, 200));
+        check(complexDefaultConfigPath, new Rectangle(5, 10, 105, 200));
+        check(complexDefaultConfigPath, new Rectangle(5, 15, 105, 200));
+        check(complexDefaultConfigPath, new Rectangle(5, 15, 100, 200));
+        check(complexDefaultConfigPath, new Rectangle(5, 15, 105, 205));
+        check(complexDefaultConfigPath, new Rectangle(5, 15, 100, 205));
+        check(complexDefaultConfigPath, new Rectangle(0, 0, 0, 0));
+    }
+
+    @Test
+    public void testSimple() {
+        assertEquals(new Rectangle(5, 10, 100, 200), getConfig(simpleDefaultConfigPath).get(KEY));
+
+        check(simpleDefaultConfigPath, new Rectangle(5, 10, 100, 200));
+        check(simpleDefaultConfigPath, new Rectangle(5, 10, 105, 200));
+        check(simpleDefaultConfigPath, new Rectangle(5, 15, 105, 200));
+        check(simpleDefaultConfigPath, new Rectangle(5, 15, 100, 200));
+        check(simpleDefaultConfigPath, new Rectangle(5, 15, 105, 205));
+        check(simpleDefaultConfigPath, new Rectangle(5, 15, 100, 205));
+        check(simpleDefaultConfigPath, new Rectangle(0, 0, 0, 0));
     }
 
 }
