@@ -394,13 +394,12 @@ public class SettingsDialog extends EscapeDialog {
         String name = JOptionPane.showInputDialog(this, "Enter name:", "Add Color Schema", JOptionPane.QUESTION_MESSAGE);
         if (name == null) return;
 
-        if (chartColorSets.getNames().contains(name)) {
-            chartColorSets = chartColorSets.newSelected(name);
-        } else {
+        if (! chartColorSets.getNames().contains(name)) {
             List<Color> colors = new ArrayList<>();
             colors.add(Color.BLACK);
             chartColorSets = chartColorSets.setColorSet(name, colors);
         }
+        chartColorSets = chartColorSets.newSelected(name);
         refreshChartColorSet();
     }
 
