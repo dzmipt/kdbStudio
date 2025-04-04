@@ -1,5 +1,7 @@
 package studio.ui.chart;
 
+import studio.kdb.Config;
+import studio.kdb.config.ColorSets;
 import studio.ui.UserAction;
 import studio.ui.Util;
 
@@ -53,8 +55,11 @@ public class ChartConfigPanel extends Box {
 
         listSeries = new LegendListPanel("Series:", true, true, true);
         listSeries.addChangeListener(e -> refresh() );
+
+        ColorSets colorSets = Config.getInstance().getChartColorSets();
+        List<Color> baseColors = colorSets.getColors(colorSets.getDefaultName());
         for (int index = 0; index < names.length; index++) {
-            LegendIcon icon = new LegendIcon(LegendButton.BASE_COLORS[index % LegendButton.BASE_COLORS.length], LegendButton.SHAPES[index % LegendButton.SHAPES.length],
+            LegendIcon icon = new LegendIcon(baseColors.get(index % baseColors.size()), LegendButton.SHAPES[index % LegendButton.SHAPES.length],
                     LegendButton.getDefaultStroke());
             icon.setChartType(ChartType.values()[0]);
             listSeries.add(names[index], icon);
