@@ -25,11 +25,11 @@ public class GroupLayoutSimple extends GroupLayout {
 
         SequentialGroup horizontalGroup = createSequentialGroup();
         for (Stack stack: stacks) {
-            ParallelGroup stackGroup = createParallelGroup();
+            ParallelGroup stackGroup = createParallelGroup(GroupLayout.Alignment.LEADING);
             for (Component[] line: stack.lines) {
                 SequentialGroup lineGroup = createSequentialGroup();
                 for (Component component: line) {
-                    lineGroup.addComponent(component);
+                    lineGroup.addComponent(component, GroupLayout.PREFERRED_SIZE, GroupLayout.PREFERRED_SIZE, GroupLayout.PREFERRED_SIZE);
                 }
                 stackGroup.addGroup(lineGroup);
             }
@@ -42,7 +42,7 @@ public class GroupLayoutSimple extends GroupLayout {
             ParallelGroup lineGroup = createParallelGroup(GroupLayout.Alignment.BASELINE);
             for (Stack stack: stacks) {
                 for (Component component: stack.lines.get(lineIndex)) {
-                    lineGroup.addComponent(component);
+                    lineGroup.addComponent(component, GroupLayout.PREFERRED_SIZE, GroupLayout.PREFERRED_SIZE, GroupLayout.PREFERRED_SIZE);
                 }
             }
             verticalGroup.addGroup(lineGroup);

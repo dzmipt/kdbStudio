@@ -46,6 +46,14 @@ public abstract class UserAction extends AbstractAction {
         return this;
     }
 
+    public static UserAction create(String text, Runnable action) {
+        return new UserAction(text, null, "", 0, null) {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                action.run();
+            }
+        };
+    }
 
     public static UserAction create(String text, Icon icon,
                                String desc, int mnemonic,

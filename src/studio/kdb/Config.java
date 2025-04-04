@@ -434,4 +434,14 @@ public class Config  {
         return studioConfig.setArray(key, value);
     }
 
+    private ColorSets chartColorSets = ColorSets.DEFAULT;
+
+    public ColorSets getChartColorSets() {
+        return chartColorSets;
+    }
+
+    public void setChartColorSets(ColorSets colorSets) {
+        chartColorSets = colorSets;
+    }
+
 }
