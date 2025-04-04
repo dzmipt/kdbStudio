@@ -75,6 +75,8 @@ public class Config  {
     public static final String TABLE_CONN_EXTRACTOR = configDefault("tableExtractorConfig", ConfigType.TABLE_CONN_EXTRACTOR, TableConnExtractor.DEFAULT);
     public static final String COLOR_TOKEN_CONFIG = configDefault("tokenColors", ConfigType.COLOR_TOKEN_CONFIG, ColorTokenConfig.DEFAULT);
     public static final String SERVER_HISTORY = configDefault("serverHistory", ConfigType.SERVER_HISTORY, new ServerHistoryConfig(20, List.of()));
+    public static final String CHART_COLORSETS = configDefault("chartColorSets", ConfigType.COLOR_SETS, ColorSets.DEFAULT);
+
     public static final String CONFIG_VERSION = configDefault("version", ConfigType.ENUM, ConfigVersion.V2_0);
 
     public static final String OLD_CONFIG_FILENAME = "studio.properties";
@@ -437,11 +439,11 @@ public class Config  {
     private ColorSets chartColorSets = ColorSets.DEFAULT;
 
     public ColorSets getChartColorSets() {
-        return chartColorSets;
+        return (ColorSets) studioConfig.get(Config.CHART_COLORSETS);
     }
 
-    public void setChartColorSets(ColorSets colorSets) {
-        chartColorSets = colorSets;
+    public boolean setChartColorSets(ColorSets colorSets) {
+        return studioConfig.set(Config.CHART_COLORSETS, colorSets);
     }
 
 }

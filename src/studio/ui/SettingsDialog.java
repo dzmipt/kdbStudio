@@ -380,8 +380,8 @@ public class SettingsDialog extends EscapeDialog {
     private void refreshChartColorSet() {
         String[] names = chartColorSets.getNames().toArray(new String[0]);
         comboBoxColorSetName.setModel(new DefaultComboBoxModel<>(names));
-        comboBoxColorSetName.setSelectedItem(chartColorSets.getSelected());
-        colorList.setColors(chartColorSets.getColors(chartColorSets.getSelected()));
+        comboBoxColorSetName.setSelectedItem(chartColorSets.getDefaultName());
+        colorList.setColors(chartColorSets.getColors(chartColorSets.getDefaultName()));
         btnDeleteColorSet.setEnabled(chartColorSets.getNames().size() > 1);
     }
 
@@ -410,7 +410,7 @@ public class SettingsDialog extends EscapeDialog {
     }
 
     private void colorsChanged(ActionEvent e) {
-        chartColorSets = chartColorSets.setColorSet(chartColorSets.getSelected(), colorList.getColors());
+        chartColorSets = chartColorSets.setColorSet(chartColorSets.getDefaultName(), colorList.getColors());
         refreshChartColorSet();
     }
 
@@ -462,6 +462,8 @@ public class SettingsDialog extends EscapeDialog {
         if (changedResult) {
             StudioWindow.refreshResultSettings();
         }
+
+        CONFIG.setChartColorSets(chartColorSets);
 
         String lfClass = getLookAndFeelClassName();
         if (!lfClass.equals(UIManager.getLookAndFeel().getClass().getName())) {

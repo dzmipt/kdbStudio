@@ -66,12 +66,14 @@ public class ColorSets {
     }
 
 
-    public String getSelected() {
+    public String getDefaultName() {
         return selected;
     }
 
     public List<Color> getColors(String name) {
-        return Collections.unmodifiableList(map.get(name));
+        List<Color> colors = map.get(name);
+        if (colors == null) return null;
+        return Collections.unmodifiableList(colors);
     }
 
     public Set<String> getNames() {

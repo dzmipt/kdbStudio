@@ -287,8 +287,36 @@ public enum ConfigType {
             return json;
         }
     },
+    COLOR_SETS {
+        @Override
+        public Object fromJson(JsonElement jsonElement, Object defaultValue) {
+            JsonObject json = jsonElement.getAsJsonObject();
+            String defaultName = json.get("default").getAsString();
+            JsonObject jsonSet = json.get("set").getAsJsonObject();
+            Map<String, List<Color>> map = new HashMap<>();
+            for (String name: jsonSet.keySet()) {
+                List<Color> list = (List<Color>)COLOR_ARRAY.fromJson(jsonSet.get(name), null);
+                map.put(name, list);
+            }
+            return new ColorSets(defaultName, map);
+        }
+
+        @Override
+        public JsonElement toJson(Object value) {
+            ColorSets colorSets = (ColorSets) value;
+            JsonObject json = new JsonObject();
+            json.addProperty("default", colorSets.getDefaultName());
+            JsonObject jsonSet = new JsonObject();
+            for (String name: colorSets.getNames()) {
+                jsonSet.add(name, COLOR_ARRAY.toJson(colorSets.getColors(name)) );
+            }
+            json.add("set", jsonSet);
+            return json;
+        }
+    },
     STRING_ARRAY(STRING),
     INT_ARRAY(INT),
+    COLOR_ARRAY(COLOR),
     ENUM_ARRAY(ENUM);
 
 
@@ -324,7 +352,7 @@ public enum ConfigType {
         JsonArray jsonArray = jsonElement.getAsJsonArray();
         int count = jsonArray.size();
         List<Object> defList = (List<Object>) defaultValue;
-        Object defValue = defList.size() == 0 ? null: defList.get(0);
+        Object defValue = (defList == null || defList.isEmpty()) ? null: defList.get(0);
 
         List<Object> list = new ArrayList<>();
         for (int i=0; i<count; i++) {
