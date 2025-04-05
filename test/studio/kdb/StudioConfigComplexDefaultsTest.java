@@ -17,7 +17,7 @@ import java.nio.file.Path;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 public class StudioConfigComplexDefaultsTest {
-    private static Path configPath, complexDefaultConfigPath, simpleDefaultConfigPath;
+    private static Path configPath, complexDefaultConfigPath, simpleDefaultConfigPath, errorDefaultConfigPath;
     private static ConfigTypeRegistry registry;
     private final static String KEY = "key";
 
@@ -28,6 +28,7 @@ public class StudioConfigComplexDefaultsTest {
 
         configPath = Files.createTempFile("studioConfig",".json");
         complexDefaultConfigPath = Files.createTempFile("defaultStudioConfig",".json");
+        errorDefaultConfigPath = Files.createTempFile("errorDefaultStudioConfig",".json");
         simpleDefaultConfigPath = Files.createTempFile("simpleDefaultStudioConfig",".json");
         Files.delete(simpleDefaultConfigPath);
 
@@ -43,6 +44,7 @@ public class StudioConfigComplexDefaultsTest {
     public static void cleanup() throws IOException {
         Files.delete(configPath);
         Files.delete(complexDefaultConfigPath);
+        Files.delete(errorDefaultConfigPath);
     }
 
     @BeforeEach
@@ -87,4 +89,38 @@ public class StudioConfigComplexDefaultsTest {
         check(simpleDefaultConfigPath, new Rectangle(0, 0, 0, 0));
     }
 
+    public void check(String error) throws IOException {
+        Files.writeString(errorDefaultConfigPath, error);
+        assertEquals(new Rectangle(5, 10, 100, 200), getConfig(errorDefaultConfigPath).get(KEY));
+    }
+
+    @Test
+    public void testError() throws IOException {
+        check("{");
+
+        check("{" +
+                "key: {" +
+                "'width':105a," +
+                "'height':200" +
+                "}}".replace('\'','"') );
+
+        check("{" +
+                "key: {" +
+                "'width':105" +
+                "'height':200" +
+                "}}".replace('\'','"') );
+
+        check("{" +
+                "key: {" +
+                "'width':'xxx'," +
+                "'height':200" +
+                "}}".replace('\'','"') );
+
+        check("{" +
+                "key: {" +
+                "'width':[11,12]," +
+                "'height':200" +
+                "}}".replace('\'','"') );
+
+    }
 }
