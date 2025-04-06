@@ -495,7 +495,7 @@ public class EditorsPanel extends JPanel {
     }
 
 
-    private static class MarkingDocumentListener extends DocumentChangeListener {
+    private static class MarkingDocumentListener implements DocumentChangeListener {
         private final EditorTab editor;
         public MarkingDocumentListener(EditorTab editor) {
             this.editor = editor;

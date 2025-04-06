@@ -1,5 +1,6 @@
 package studio.kdb;
 
+import com.google.gson.JsonPrimitive;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import studio.core.Credentials;
@@ -76,6 +77,13 @@ public class Config  {
     public static final String COLOR_TOKEN_CONFIG = configDefault("tokenColors", ConfigType.COLOR_TOKEN_CONFIG, ColorTokenConfig.DEFAULT);
     public static final String SERVER_HISTORY = configDefault("serverHistory", ConfigType.SERVER_HISTORY, new ServerHistoryConfig(20, List.of()));
     public static final String CHART_COLORSETS = configDefault("chartColorSets", ConfigType.COLOR_SETS, ColorSets.DEFAULT);
+    public static final String CHART_STROKE_STYLES = configDefault("chartStrokeStyles", ConfigType.STROKE_FROM_STYLE_ARRAY,
+            List.of(Config.strokeFromStyle(""), Config.strokeFromStyle("10,10"),
+                    Config.strokeFromStyle("10,5"), Config.strokeFromStyle("5,5"),
+                    Config.strokeFromStyle("1.5,3"),Config.strokeFromStyle("10,3,3,3") ) );
+    public static final String CHART_STROKE_WIDTHS = configDefault("chartStrokeWidths", ConfigType.STROKE_FROM_WIDTH_ARRAY,
+            List.of(Config.strokeFromWidth("2"), Config.strokeFromWidth("1"),
+                    Config.strokeFromWidth("1.5") , Config.strokeFromWidth("3") ));
 
     public static final String CONFIG_VERSION = configDefault("version", ConfigType.ENUM, ConfigVersion.V2_0);
 
@@ -436,7 +444,12 @@ public class Config  {
         return studioConfig.setArray(key, value);
     }
 
-    private ColorSets chartColorSets = ColorSets.DEFAULT;
+    public List<Double> getDoubleArray(String key) {
+        return studioConfig.getArray(key);
+    }
+    public boolean setDoubleArray(String key, List<Double> value) {
+        return studioConfig.setArray(key, value);
+    }
 
     public ColorSets getChartColorSets() {
         return (ColorSets) studioConfig.get(Config.CHART_COLORSETS);
@@ -444,6 +457,38 @@ public class Config  {
 
     public boolean setChartColorSets(ColorSets colorSets) {
         return studioConfig.set(Config.CHART_COLORSETS, colorSets);
+    }
+
+    public static BasicStroke strokeFromWidth(String strWidth) {
+        return (BasicStroke) ConfigType.STROKE_FROM_WIDTH.fromJson(new JsonPrimitive(strWidth), null);
+    }
+
+    public static BasicStroke strokeFromStyle(String strStyle) {
+        return (BasicStroke) ConfigType.STROKE_FROM_STYLE.fromJson(new JsonPrimitive(strStyle), null);
+    }
+
+    public static String widthFromStroke(BasicStroke stroke) {
+        return ConfigType.STROKE_FROM_WIDTH.toJson(stroke).getAsString();
+    }
+
+    public static String styleFromStroke(BasicStroke stroke) {
+        return ConfigType.STROKE_FROM_STYLE.toJson(stroke).getAsString();
+    }
+
+    public List<BasicStroke> getStrokesFromWidth() {
+        return (List<BasicStroke>) studioConfig.get(Config.CHART_STROKE_WIDTHS);
+    }
+
+    public boolean setStrokesFromWidth(List<BasicStroke> strokes) {
+        return studioConfig.set(Config.CHART_STROKE_WIDTHS, strokes);
+    }
+
+    public List<BasicStroke> getStrokesFromStyle() {
+        return (List<BasicStroke>) studioConfig.get(Config.CHART_STROKE_STYLES);
+    }
+
+    public boolean setStrokesFromStyle(List<BasicStroke> strokes) {
+        return studioConfig.set(Config.CHART_STROKE_STYLES, strokes);
     }
 
 }

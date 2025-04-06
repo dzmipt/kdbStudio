@@ -9,6 +9,8 @@ import studio.core.Credentials;
 import studio.kdb.FileChooserConfig;
 
 import java.awt.*;
+import java.text.DecimalFormat;
+import java.text.NumberFormat;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -314,10 +316,53 @@ public enum ConfigType {
             return json;
         }
     },
+    STROKE_FROM_WIDTH {
+        @Override
+        public Object fromJson(JsonElement jsonElement, Object defaultValue) {
+            return new BasicStroke((float) jsonElement.getAsDouble());
+        }
+
+        @Override
+        public JsonElement toJson(Object value) {
+            return new JsonPrimitive(((BasicStroke)value).getLineWidth());
+        }
+    },
+    STROKE_FROM_STYLE {
+        @Override
+        public Object fromJson(JsonElement jsonElement, Object defaultValue) {
+            String str = jsonElement.getAsString().trim();
+            if (str.isEmpty()) {
+                return new BasicStroke(1);
+            }
+            String[] words = str.split(",");
+            float[] dashArray = new float[words.length];
+            for (int i = 0; i < words.length; i++) {
+                dashArray[i] = Float.parseFloat(words[i]);
+            }
+
+            return new BasicStroke(1f,BasicStroke.CAP_BUTT,
+                    BasicStroke.JOIN_BEVEL,1f,dashArray,0f);
+        }
+        private final NumberFormat f2 = new DecimalFormat("#.##");
+        @Override
+        public JsonElement toJson(Object value) {
+            float[] dashArray = ((BasicStroke)value).getDashArray();
+            if (dashArray == null) return new JsonPrimitive("");
+            StringBuffer str = new StringBuffer();
+            for (int i=0; i<dashArray.length; i++) {
+                if (i>0) str.append(", ");
+                str.append(f2.format(dashArray[i]));
+            }
+            return new JsonPrimitive(str.toString());
+        }
+    },
     STRING_ARRAY(STRING),
     INT_ARRAY(INT),
+    DOUBLE_ARRAY(DOUBLE),
     COLOR_ARRAY(COLOR),
-    ENUM_ARRAY(ENUM);
+    ENUM_ARRAY(ENUM),
+    STROKE_FROM_WIDTH_ARRAY(STROKE_FROM_WIDTH),
+    STROKE_FROM_STYLE_ARRAY(STROKE_FROM_STYLE);
 
 
     private static Rectangle clone(Rectangle r) {

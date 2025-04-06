@@ -3,17 +3,16 @@ package studio.ui.servertree;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import studio.kdb.ServerTreeNode;
+import studio.utils.BasicDataFlavor;
 
 import javax.swing.*;
 import javax.swing.tree.TreePath;
-import java.awt.datatransfer.DataFlavor;
 import java.awt.datatransfer.Transferable;
 import java.awt.datatransfer.UnsupportedFlavorException;
 import java.io.IOException;
 
 public class NodesTransferHandler extends TransferHandler {
-    private static final String mimeType = DataFlavor.javaJVMLocalObjectMimeType + ";class=\"" + ServerTreeNode.class.getName() + "\"";
-    private static final DataFlavor nodesFlavor = new DataFlavor(mimeType, "ServerTreeNode");
+    private static final BasicDataFlavor nodesFlavor = new BasicDataFlavor(ServerTreeNode.class);
     private static final Logger log = LogManager.getLogger();
 
 
@@ -28,7 +27,7 @@ public class NodesTransferHandler extends TransferHandler {
         ServerTreeNode node = tree.getSelectedNode();
         if (node == null) return null;
 
-        return new NodesTransferable(node);
+        return nodesFlavor.getTransferable(node);
     }
 
 
@@ -81,33 +80,6 @@ public class NodesTransferHandler extends TransferHandler {
         } catch (UnsupportedFlavorException | IOException e) {
             log.error("Error in getting node to transfer", e);
             return false;
-        }
-    }
-
-    public class NodesTransferable implements Transferable {
-
-        private final ServerTreeNode node;
-
-        public NodesTransferable(ServerTreeNode node) {
-            this.node = node;
-        }
-
-        @Override
-        public DataFlavor[] getTransferDataFlavors() {
-            return new DataFlavor[]{nodesFlavor};
-        }
-
-        @Override
-        public boolean isDataFlavorSupported(DataFlavor flavor) {
-            return nodesFlavor.equals(flavor);
-        }
-
-        @Override
-        public Object getTransferData(DataFlavor flavor) throws UnsupportedFlavorException {
-            if (!isDataFlavorSupported(flavor)) {
-                throw new UnsupportedFlavorException(flavor);
-            }
-            return node;
         }
     }
 

@@ -1,4 +1,4 @@
-package studio.ui.colorlist;
+package studio.ui.settings;
 
 import studio.ui.ColorChooser;
 import studio.ui.UserAction;
@@ -28,9 +28,9 @@ public class ColorListComponent extends JComponent implements DropTargetListener
     private JComponent prefWidthComponent = null;
     private int prefWidthInsets;
 
-    private Action actionEdit;
-    private Action actionDelete;
-    private Action actionInsert;
+    private final Action actionEdit;
+    private final Action actionDelete;
+    private final Action actionInsert;
 
 
     public ColorListComponent() {
@@ -148,7 +148,10 @@ public class ColorListComponent extends JComponent implements DropTargetListener
         if (cols<=0) cols = 1;
         int rows = (labels.size() + cols - 1) / cols;
 
-        return new Dimension(GAP + cols * (SIZE+GAP), GAP + rows * (SIZE+GAP));
+        int prefWidth = GAP + cols * (SIZE+GAP);
+        int prefHeight = GAP + rows * (SIZE+GAP);
+        Insets insets = getInsets();
+        return new Dimension(prefWidth + insets.left + insets.right, prefHeight + insets.top + insets.bottom);
     }
 
     public void addActionListener(ActionListener listener) {

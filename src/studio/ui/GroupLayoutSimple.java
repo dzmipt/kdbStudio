@@ -26,10 +26,13 @@ public class GroupLayoutSimple extends GroupLayout {
         SequentialGroup horizontalGroup = createSequentialGroup();
         for (Stack stack: stacks) {
             ParallelGroup stackGroup = createParallelGroup(GroupLayout.Alignment.LEADING);
-            for (Component[] line: stack.lines) {
+            for (Line line: stack.lines) {
                 SequentialGroup lineGroup = createSequentialGroup();
-                for (Component component: line) {
+                for (Component component: line.components) {
                     lineGroup.addComponent(component, GroupLayout.PREFERRED_SIZE, GroupLayout.PREFERRED_SIZE, GroupLayout.PREFERRED_SIZE);
+                }
+                if (line.glue != null) {
+                    lineGroup.addComponent(line.glue);
                 }
                 stackGroup.addGroup(lineGroup);
             }
@@ -41,8 +44,12 @@ public class GroupLayoutSimple extends GroupLayout {
         for (int lineIndex = 0; lineIndex<lineCount; lineIndex++) {
             ParallelGroup lineGroup = createParallelGroup(GroupLayout.Alignment.BASELINE);
             for (Stack stack: stacks) {
-                for (Component component: stack.lines.get(lineIndex)) {
+                Line line = stack.lines.get(lineIndex);
+                for (Component component: line.components) {
                     lineGroup.addComponent(component, GroupLayout.PREFERRED_SIZE, GroupLayout.PREFERRED_SIZE, GroupLayout.PREFERRED_SIZE);
+                }
+                if (line.glue != null) {
+                    lineGroup.addComponent(line.glue, GroupLayout.PREFERRED_SIZE, GroupLayout.PREFERRED_SIZE, GroupLayout.PREFERRED_SIZE);
                 }
             }
             verticalGroup.addGroup(lineGroup);
@@ -51,23 +58,23 @@ public class GroupLayoutSimple extends GroupLayout {
     }
 
     public static class Stack {
-        List<Component[]> lines;
-        public Stack() {
-            lines = new ArrayList<>();
-        }
-
+        List<Line> lines = new ArrayList<>();
         public Stack addLine(Component... line) {
-            lines.add(line);
+            lines.add(new Line(line, false));
             return this;
         }
-
         public Stack addLineAndGlue(Component... line) {
-            int count = line.length;
-            Component[] newLine = new Component[count + 1];
-            System.arraycopy(line, 0, newLine, 0, count);
-            newLine[count] = Box.createGlue();
-            lines.add(newLine);
+            lines.add(new Line(line, true));
             return this;
+        }
+    }
+
+    private static class Line {
+        Component[] components;
+        Component glue = null;
+        Line(Component[] components, boolean hasGlue) {
+            this.components = components;
+            if (hasGlue) glue = Box.createGlue();
         }
     }
 }

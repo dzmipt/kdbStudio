@@ -11,6 +11,7 @@ public abstract class EscapeDialog extends JDialog {
     private DialogResult result = DialogResult.CANCELLED;
 
     private static Window getWindow(Component component) {
+        if (component == null) return null;
         if (component instanceof Window) return (Window) component;
         return SwingUtilities.getWindowAncestor(component);
     }

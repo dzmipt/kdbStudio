@@ -1,5 +1,7 @@
 package studio.ui;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import studio.core.AuthenticationManager;
 import studio.core.Credentials;
 import studio.kdb.Config;
@@ -8,8 +10,7 @@ import studio.kdb.config.ActionOnExit;
 import studio.kdb.config.ColorSets;
 import studio.kdb.config.ExecAllOption;
 import studio.kdb.config.KdbMessageLimitAction;
-import studio.ui.colorlist.ColorListComponent;
-import studio.ui.settings.FontSelectionPanel;
+import studio.ui.settings.*;
 import studio.utils.LineEnding;
 
 import javax.swing.*;
@@ -59,6 +60,9 @@ public class SettingsDialog extends EscapeDialog {
     private JButton btnAddColorSet;
     private JButton btnDeleteColorSet;
 
+    private StrokeStyleEditor strokeStyleEditor;
+    private StrokeWidthEditor strokeWidthEditor;
+
     private JButton btnOk;
     private JButton btnCancel;
 
@@ -66,6 +70,8 @@ public class SettingsDialog extends EscapeDialog {
     private ColorSets chartColorSets;
 
     private static final Config CONFIG = Config.getInstance();
+
+    private static final Logger log = LogManager.getLogger();
 
     public SettingsDialog(JFrame owner) {
         super(owner, "Settings");
@@ -281,6 +287,25 @@ public class SettingsDialog extends EscapeDialog {
         btnCancel.addActionListener(e->cancel());
 
 
+        JLabel lblColorSchema = new JLabel("Color schema: ");
+        comboBoxColorSetName = new JComboBox<>();
+        comboBoxColorSetName.addActionListener(this::colorSetNameSelected);
+        btnAddColorSet = new JButton("new");
+        btnAddColorSet.addActionListener(this::chartAddColorSetAction);
+        btnDeleteColorSet = new JButton("delete");
+        btnDeleteColorSet.addActionListener(this::chartDeleteColorSetAction);
+        colorList = new ColorListComponent();
+        colorList.setPreferredSize(new Dimension(0, 0));
+        colorList.addActionListener(this::colorsChanged);
+        colorList.setToolTipText("<html>Use drag&drop, double click, <code>INS</code>, <code>DEL</code> to edit</html>");
+        FocusDecorator.add(colorList);
+
+        chartColorSets = CONFIG.getChartColorSets();
+        refreshChartColorSet();
+
+        strokeStyleEditor = new StrokeStyleEditor(135, 140);
+        strokeWidthEditor = new StrokeWidthEditor(70, 140);
+
         JPanel pnlGeneral = new JPanel();
         GroupLayoutSimple layout = new GroupLayoutSimple(pnlGeneral);
         layout.setStacks(
@@ -299,7 +324,7 @@ public class SettingsDialog extends EscapeDialog {
         layout.setStacks(
                 new GroupLayoutSimple.Stack()
                         .addLineAndGlue(chBoxRTSAAnimateBracketMatching, chBoxRTSAHighlightCurrentLine,
-                                        chBoxRTSAWordWrap, chBoxRTSAInsertPairedChar)
+                                chBoxRTSAWordWrap, chBoxRTSAInsertPairedChar)
                         .addLineAndGlue(chBoxEmulateTab, txtEmulatedTabSize, chBoxReplaceTabOnOpen)
                         .addLineAndGlue(lblDefaultLineEnding, comboBoxLineEnding)
                         .addLineAndGlue(lblExecAll, comboBoxExecAll)
@@ -327,34 +352,29 @@ public class SettingsDialog extends EscapeDialog {
                         .addLineAndGlue(resultFontSelection)
         );
 
-
-        JLabel lblColorSchema = new JLabel("Color schema: ");
-        comboBoxColorSetName = new JComboBox<>();
-        comboBoxColorSetName.addActionListener(this::colorSetNameSelected);
-        btnAddColorSet = new JButton("new");
-        btnAddColorSet.addActionListener(this::chartAddColorSetAction);
-        btnDeleteColorSet = new JButton("delete");
-        btnDeleteColorSet.addActionListener(this::chartDeleteColorSetAction);
-        colorList = new ColorListComponent();
-        colorList.setPreferredSize(new Dimension(0, 0));
-        colorList.addActionListener(this::colorsChanged);
-        colorList.setToolTipText("<html>Use drag&drop, double click, <code>INS</code>, <code>DEL</code> to edit</html>");
-
-        chartColorSets = CONFIG.getChartColorSets();
-        refreshChartColorSet();
-
-        JPanel pnlChart = new JPanel();
-        layout = new GroupLayoutSimple(pnlChart);
+        JPanel pnlColor = new JPanel();
+        layout = new GroupLayoutSimple(pnlColor);
         layout.setStacks(
                 new GroupLayoutSimple.Stack()
                         .addLineAndGlue(lblColorSchema, comboBoxColorSetName, btnAddColorSet, btnDeleteColorSet)
                         .addLine(colorList)
         );
+        pnlColor.setBorder(BorderFactory.createMatteBorder(0,0,1,0,Color.GRAY));
+        strokeStyleEditor.setBorder(BorderFactory.createMatteBorder(0,0,1,0,Color.GRAY));
 
+        Box boxChart = Box.createVerticalBox();
+        boxChart.add(pnlColor);
+        boxChart.add(strokeStyleEditor);
+        boxChart.add(strokeWidthEditor);
 
+        JPanel pnlChart = new JPanel();
+        layout = new GroupLayoutSimple(pnlChart);
+        layout.setStacks(new GroupLayoutSimple.Stack()
+                .addLine(boxChart)
+        );
         JScrollPane scrollChart = getTabComponent(pnlChart);
         JViewport viewport = scrollChart.getViewport();
-        colorList.setPrefWidthComponent(viewport, 12);
+        colorList.setPrefWidthComponent(viewport, 20);
         viewport.addChangeListener( e -> {
             colorList.revalidate();
             colorList.repaint();
@@ -463,6 +483,8 @@ public class SettingsDialog extends EscapeDialog {
         }
 
         CONFIG.setChartColorSets(chartColorSets);
+        CONFIG.setStrokesFromStyle(strokeStyleEditor.getStrokes());
+        CONFIG.setStrokesFromWidth(strokeWidthEditor.getStrokes());
 
         String lfClass = getLookAndFeelClassName();
         if (!lfClass.equals(UIManager.getLookAndFeel().getClass().getName())) {
@@ -504,5 +526,11 @@ public class SettingsDialog extends EscapeDialog {
         public String toString() {
             return getName();
         }
+    }
+
+    public static void main(String... args) throws UnsupportedLookAndFeelException {
+        UIManager.setLookAndFeel(new javax.swing.plaf.nimbus.NimbusLookAndFeel());
+        SettingsDialog dialog = new SettingsDialog(null);
+        dialog.alignAndShow();
     }
 }
