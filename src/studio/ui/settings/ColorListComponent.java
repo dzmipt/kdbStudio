@@ -1,8 +1,8 @@
 package studio.ui.settings;
 
+import org.jfree.chart.plot.DefaultDrawingSupplier;
 import studio.ui.ColorChooser;
 import studio.ui.UserAction;
-import studio.ui.chart.LegendButton;
 import studio.ui.chart.SquareIcon;
 
 import javax.swing.*;
@@ -398,7 +398,7 @@ public class ColorListComponent extends JComponent implements DropTargetListener
 
     public static void main(String... args) {
         List<Color> list = new ArrayList<>();
-        for (Paint p: LegendButton.BASE_COLORS) {
+        for (Paint p: DefaultDrawingSupplier.DEFAULT_PAINT_SEQUENCE) {
             if (p instanceof Color) list.add((Color)p);
         }
 

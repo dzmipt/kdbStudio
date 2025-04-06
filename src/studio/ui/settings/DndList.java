@@ -3,7 +3,6 @@ package studio.ui.settings;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import studio.ui.UserAction;
-import studio.ui.chart.LegendButton;
 import studio.ui.chart.LegendIcon;
 import studio.utils.BasicDataFlavor;
 
@@ -227,7 +226,25 @@ public class DndList extends JList<DndList.ListItem> {
 
 
     public static void main(String[] args) {
-        BasicStroke[] strokes = LegendButton.BASE_STROKES;
+        BasicStroke[] strokes = new BasicStroke[] {
+                new BasicStroke(1f),
+                new BasicStroke(1f,BasicStroke.CAP_BUTT,
+                        BasicStroke.JOIN_BEVEL,1f,new float[] {10,10},0f
+                ),
+                new BasicStroke(1f,BasicStroke.CAP_BUTT,
+                        BasicStroke.JOIN_BEVEL,1f,new float[] {10,5},0f
+                ),
+                new BasicStroke(1f,BasicStroke.CAP_BUTT,
+                        BasicStroke.JOIN_BEVEL,1f,new float[] {5,5},0f
+                ),
+                new BasicStroke(1f,BasicStroke.CAP_BUTT,
+                        BasicStroke.JOIN_BEVEL,1f,new float[] {1.5f,3},0f
+                ),
+                new BasicStroke(1f,BasicStroke.CAP_BUTT,
+                        BasicStroke.JOIN_BEVEL,1f,new float[] {10,3,3,3},0f
+                ),
+        };
+
         DndList list = new DndList(new ListItem("Default", new LegendIcon(Color.BLACK, null, strokes[0])));
 
         for (int index = 0; index<strokes.length; index++) {

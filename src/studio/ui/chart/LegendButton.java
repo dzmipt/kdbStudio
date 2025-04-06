@@ -1,6 +1,7 @@
 package studio.ui.chart;
 
 import org.jfree.chart.plot.DefaultDrawingSupplier;
+import studio.kdb.Config;
 import studio.ui.ColorChooser;
 import studio.ui.chart.event.LegendChangeEvent;
 import studio.ui.chart.event.LegendChangeListener;
@@ -26,42 +27,7 @@ public class LegendButton extends JLabel implements MouseListener {
     private final static Border EMPTY_BORDER = BorderFactory.createEmptyBorder(2,2,2,2);
     private final static Border SELECTED_BORDER = BorderFactory.createEtchedBorder(EtchedBorder.LOWERED);
 
-    public static final Paint[] BASE_COLORS = DefaultDrawingSupplier.DEFAULT_PAINT_SEQUENCE;
     public static final Shape[] SHAPES = DefaultDrawingSupplier.DEFAULT_SHAPE_SEQUENCE;
-    public static final BasicStroke[] BASE_STROKES = new BasicStroke[] {
-            new BasicStroke(1f),
-            new BasicStroke(1f,BasicStroke.CAP_BUTT,
-                    BasicStroke.JOIN_BEVEL,1f,new float[] {10,10},0f
-            ),
-            new BasicStroke(1f,BasicStroke.CAP_BUTT,
-                    BasicStroke.JOIN_BEVEL,1f,new float[] {10,5},0f
-            ),
-            new BasicStroke(1f,BasicStroke.CAP_BUTT,
-                    BasicStroke.JOIN_BEVEL,1f,new float[] {5,5},0f
-            ),
-            new BasicStroke(1f,BasicStroke.CAP_BUTT,
-                    BasicStroke.JOIN_BEVEL,1f,new float[] {1.5f,3},0f
-            ),
-            new BasicStroke(1f,BasicStroke.CAP_BUTT,
-                    BasicStroke.JOIN_BEVEL,1f,new float[] {10,3,3,3},0f
-            ),
-    };
-
-    private static class StrokeWidth {
-        String title;
-        float width;
-        StrokeWidth(String title, float width) {
-            this.title = title;
-            this.width = width;
-        }
-    }
-
-    private static StrokeWidth[] STROKE_WIDTHS = new StrokeWidth[] {
-            new StrokeWidth("x 1", 1),
-            new StrokeWidth("x 1.5", 1.5f),
-            new StrokeWidth("x 2", 2),
-            new StrokeWidth("x 3", 3),
-    };
 
     //@TODO: May be it is better to have a cache of all possible strokes to avoid unnecessary garbage ?
     public static BasicStroke strokeWithWidth(BasicStroke stroke, float width) {
@@ -72,7 +38,9 @@ public class LegendButton extends JLabel implements MouseListener {
     }
 
     public static BasicStroke getDefaultStroke() {
-        return strokeWithWidth(BASE_STROKES[0], STROKE_WIDTHS[2].width);// 2x width by default
+        BasicStroke stroke = Config.getInstance().getStrokesFromStyle().get(0);
+        float width = Config.getInstance().getStrokesFromWidth().get(0).getLineWidth();
+        return strokeWithWidth(stroke, width);
     }
 
     public LegendButton(LegendIcon icon, boolean line, boolean shape, boolean bar) {
@@ -205,7 +173,7 @@ public class LegendButton extends JLabel implements MouseListener {
         if (chartType.hasLine()) {
             float width = stroke.getLineWidth();
             JMenu subMenu = new JMenu("Change stroke");
-            for (BasicStroke baseStroke: BASE_STROKES) {
+            for (BasicStroke baseStroke: Config.getInstance().getStrokesFromStyle()) {
                 BasicStroke menuStroke = strokeWithWidth(baseStroke, width);
                 LegendIcon menuIcon = new LegendIcon(color, null, menuStroke);
                 JCheckBoxMenuItem item = new JCheckBoxMenuItem("", menuIcon, menuStroke.equals(stroke));
@@ -217,12 +185,13 @@ public class LegendButton extends JLabel implements MouseListener {
             }
             subMenu.addSeparator();
 
-            for (StrokeWidth strokeWidth: STROKE_WIDTHS) {
-                boolean selected = width == strokeWidth.width;
-                BasicStroke menuStroke = strokeWithWidth(stroke, strokeWidth.width);
+            for (BasicStroke strokeWidth: Config.getInstance().getStrokesFromWidth()) {
+                float thisWidth = strokeWidth.getLineWidth();
+                boolean selected = width == thisWidth;
+                BasicStroke menuStroke = strokeWithWidth(stroke, thisWidth);
                 LegendIcon menuIcon = new LegendIcon(color, null, menuStroke);
 
-                JCheckBoxMenuItem item = new JCheckBoxMenuItem(strokeWidth.title, menuIcon, selected);
+                JCheckBoxMenuItem item = new JCheckBoxMenuItem("x " + thisWidth, menuIcon, selected);
                 item.addActionListener(e -> {
                     icon.setStroke(menuStroke);
                     notifyChange();
