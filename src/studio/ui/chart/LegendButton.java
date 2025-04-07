@@ -14,6 +14,8 @@ import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
+import java.text.DecimalFormat;
+import java.text.NumberFormat;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -29,6 +31,8 @@ public class LegendButton extends JLabel implements MouseListener {
 
     public static final Shape[] SHAPES = DefaultDrawingSupplier.DEFAULT_SHAPE_SEQUENCE;
 
+    private final static NumberFormat f2 = new DecimalFormat("#.##");
+
     //@TODO: May be it is better to have a cache of all possible strokes to avoid unnecessary garbage ?
     public static BasicStroke strokeWithWidth(BasicStroke stroke, float width) {
         if (stroke.getLineWidth() == width) return stroke;
@@ -38,8 +42,8 @@ public class LegendButton extends JLabel implements MouseListener {
     }
 
     public static BasicStroke getDefaultStroke() {
-        BasicStroke stroke = Config.getInstance().getStrokesFromStyle().get(0);
-        float width = Config.getInstance().getStrokesFromWidth().get(0).getLineWidth();
+        BasicStroke stroke = Config.getInstance().getStyleStrokes().get(0);
+        float width = Config.getInstance().getDoubleArray(Config.CHART_STROKE_WIDTHS).get(0).floatValue();
         return strokeWithWidth(stroke, width);
     }
 
@@ -173,7 +177,7 @@ public class LegendButton extends JLabel implements MouseListener {
         if (chartType.hasLine()) {
             float width = stroke.getLineWidth();
             JMenu subMenu = new JMenu("Change stroke");
-            for (BasicStroke baseStroke: Config.getInstance().getStrokesFromStyle()) {
+            for (BasicStroke baseStroke: Config.getInstance().getStyleStrokes()) {
                 BasicStroke menuStroke = strokeWithWidth(baseStroke, width);
                 LegendIcon menuIcon = new LegendIcon(color, null, menuStroke);
                 JCheckBoxMenuItem item = new JCheckBoxMenuItem("", menuIcon, menuStroke.equals(stroke));
@@ -185,13 +189,13 @@ public class LegendButton extends JLabel implements MouseListener {
             }
             subMenu.addSeparator();
 
-            for (BasicStroke strokeWidth: Config.getInstance().getStrokesFromWidth()) {
-                float thisWidth = strokeWidth.getLineWidth();
+            for (Double strokeWidthDouble: Config.getInstance().getDoubleArray(Config.CHART_STROKE_WIDTHS)) {
+                float thisWidth = strokeWidthDouble.floatValue();
                 boolean selected = width == thisWidth;
                 BasicStroke menuStroke = strokeWithWidth(stroke, thisWidth);
                 LegendIcon menuIcon = new LegendIcon(color, null, menuStroke);
 
-                JCheckBoxMenuItem item = new JCheckBoxMenuItem("x " + thisWidth, menuIcon, selected);
+                JCheckBoxMenuItem item = new JCheckBoxMenuItem("x " + f2.format(thisWidth), menuIcon, selected);
                 item.addActionListener(e -> {
                     icon.setStroke(menuStroke);
                     notifyChange();

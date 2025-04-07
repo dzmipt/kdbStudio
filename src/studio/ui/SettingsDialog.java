@@ -483,8 +483,8 @@ public class SettingsDialog extends EscapeDialog {
         }
 
         CONFIG.setChartColorSets(chartColorSets);
-        CONFIG.setStrokesFromStyle(strokeStyleEditor.getStrokes());
-        CONFIG.setStrokesFromWidth(strokeWidthEditor.getStrokes());
+        strokeStyleEditor.saveSettings();
+        strokeWidthEditor.saveSettings();
 
         String lfClass = getLookAndFeelClassName();
         if (!lfClass.equals(UIManager.getLookAndFeel().getClass().getName())) {

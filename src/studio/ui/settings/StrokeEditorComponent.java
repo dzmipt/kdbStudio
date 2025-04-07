@@ -7,6 +7,8 @@ import javax.swing.*;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.ListSelectionEvent;
 import java.awt.*;
+import java.text.DecimalFormat;
+import java.text.NumberFormat;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -18,6 +20,8 @@ abstract class StrokeEditorComponent extends JPanel implements DocumentChangeLis
 
     private final DndList list;
     private final JTextField txtField;
+
+    protected final static NumberFormat f2 = new DecimalFormat("#.##");
 
     StrokeEditorComponent(int iconWidth, int prefWidth) {
         this.iconWidth = iconWidth;
@@ -42,6 +46,10 @@ abstract class StrokeEditorComponent extends JPanel implements DocumentChangeLis
 
     }
 
+    protected static float round(float value) {
+        return Math.round(100*value) / 100.0f;
+    }
+
     protected StrokeIcon getIcon(BasicStroke stroke) {
         return new StrokeIcon(stroke, Color.BLACK, iconWidth, HEIGHT);
     }
@@ -50,6 +58,7 @@ abstract class StrokeEditorComponent extends JPanel implements DocumentChangeLis
     abstract protected DndList.ListItem getListItem(BasicStroke stroke);
     abstract protected String getText(BasicStroke stroke);
     abstract protected BasicStroke getStroke(String text);
+    abstract public void saveSettings();
 
     private void listSelectionChanges(ListSelectionEvent e) {
         StrokeIcon icon = (StrokeIcon) list.getSelectedIcon();
@@ -73,7 +82,7 @@ abstract class StrokeEditorComponent extends JPanel implements DocumentChangeLis
         }
     }
 
-    public List<BasicStroke> getStrokes() {
+    protected List<BasicStroke> getStrokes() {
         int count = list.getModel().getSize();
         List<BasicStroke> strokes = new ArrayList<>(count);
         for (int i=0; i<count; i++) {
