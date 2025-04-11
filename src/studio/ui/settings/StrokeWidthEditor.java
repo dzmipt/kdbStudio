@@ -10,6 +10,7 @@ public class StrokeWidthEditor extends StrokeEditorComponent {
 
     public StrokeWidthEditor(int iconWidth, int prefWidth) {
         super(iconWidth, prefWidth);
+        lblInfo.setText("Stroke widths:");
     }
 
     @Override

@@ -20,6 +20,7 @@ abstract class StrokeEditorComponent extends JPanel implements DocumentChangeLis
 
     private final DndList list;
     private final JTextField txtField;
+    protected final JLabel lblInfo;
 
     protected final static NumberFormat f2 = new DecimalFormat("#.##");
 
@@ -38,9 +39,11 @@ abstract class StrokeEditorComponent extends JPanel implements DocumentChangeLis
         list.addListSelectionListener(this::listSelectionChanges);
         txtField.getDocument().addDocumentListener(this);
 
+        lblInfo = new JLabel();
         GroupLayoutSimple layout = new GroupLayoutSimple(this);
         layout.setStacks(
                 new GroupLayoutSimple.Stack()
+                        .addLineAndGlue(lblInfo)
                         .addLineAndGlue(list, txtField)
         );
 

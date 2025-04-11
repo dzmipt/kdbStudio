@@ -374,7 +374,7 @@ public class SettingsDialog extends EscapeDialog {
         );
         JScrollPane scrollChart = getTabComponent(pnlChart);
         JViewport viewport = scrollChart.getViewport();
-        colorList.setPrefWidthComponent(viewport, 20);
+        colorList.setPrefWidthComponent(viewport, 22);
         viewport.addChangeListener( e -> {
             colorList.revalidate();
             colorList.repaint();

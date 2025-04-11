@@ -10,6 +10,7 @@ public class StrokeStyleEditor extends StrokeEditorComponent {
 
     public StrokeStyleEditor(int iconWidth, int prefWidth) {
         super(iconWidth, prefWidth);
+        lblInfo.setText("Stroke styles:");
     }
 
     @Override
