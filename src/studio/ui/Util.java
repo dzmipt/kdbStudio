@@ -97,25 +97,26 @@ public class Util {
     }
 
     public static void centerChildOnParent(Component child,Component parent) {
-        Point parentLocation;
-        Dimension parentSize;
+        Rectangle pBounds;
         if (parent == null) {
             GraphicsDevice device = GraphicsEnvironment.getLocalGraphicsEnvironment().getDefaultScreenDevice();
-            Rectangle bounds = device.getDefaultConfiguration().getBounds();
-            parentSize = bounds.getSize();
-            parentLocation = bounds.getLocation();
+            pBounds = device.getDefaultConfiguration().getBounds();
         } else {
-            parentLocation = parent.getLocation();
-            parentSize = parent.getSize();
+            pBounds = parent.getBounds();
         }
 
         Dimension oursize = child.getPreferredSize();
 
-        int x = parentLocation.x + (parentSize.width - oursize.width) / 2;
-        int y = parentLocation.y + (parentSize.height - oursize.height) / 2;
+        int x = pBounds.x + (pBounds.width - oursize.width) / 2;
+        int y = pBounds.y + (pBounds.height - oursize.height) / 2;
 
-        x = Math.max(0,x);  // keep the corner on the screen
-        y = Math.max(0,y);  //
+        for (GraphicsDevice device: GraphicsEnvironment.getLocalGraphicsEnvironment().getScreenDevices()) {
+            Rectangle bound = device.getDefaultConfiguration().getBounds();
+            if (bound.contains(pBounds.getCenterX(), pBounds.getCenterY())) {
+                x = Math.max(bound.x, x);
+                y = Math.max(bound.y, y);
+            }
+        }
 
         child.setLocation(x,y);
     }
