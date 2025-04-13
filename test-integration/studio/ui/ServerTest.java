@@ -4,6 +4,8 @@ package studio.ui;
 import org.assertj.swing.fixture.DialogFixture;
 import org.assertj.swing.fixture.JComboBoxFixture;
 import org.assertj.swing.fixture.JTextComponentFixture;
+import org.assertj.swing.timing.Condition;
+import org.assertj.swing.timing.Pause;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -14,6 +16,7 @@ import studio.kdb.Server;
 import java.awt.*;
 
 import static org.assertj.swing.edt.GuiActionRunner.execute;
+import static org.assertj.swing.timing.Pause.pause;
 import static org.junit.Assert.assertEquals;
 
 public class ServerTest extends StudioTest {
@@ -61,20 +64,35 @@ public class ServerTest extends StudioTest {
 
         DialogFixture serverDialog = new DialogFixture(robot(), robot().finder().findByType(EditServerForm.class));
         JTextComponentFixture sample = serverDialog.textBox("sampleTextOnBackground");
-        Color bgColor = execute(() -> sample.target().getBackground());
+        final Color bgColor = execute(() -> sample.target().getBackground());
         assertEquals(server2.getBackgroundColor(), bgColor);
 
         Color newColor = new Color (171, 255, 171);
         ColorChooser.mock(newColor);
         serverDialog.button("editColor").click();
-        bgColor = execute(() -> sample.target().getBackground());
-        assertEquals(newColor, bgColor);
+        Pause.pause(new Condition("wait until sample background color is changed") {
+            @Override
+            public boolean test() {
+                return ! sample.target().getBackground().equals(bgColor);
+            }
+        }, 1000 );
+
+        Color newBgColor = execute(() -> sample.target().getBackground());
+        assertEquals(newColor, newBgColor);
 
         serverDialog.button("okButton").click();
 
         JTextComponentFixture editor = frameFixture.textBox("editor1");
-        bgColor = execute(() -> editor.target().getBackground());
-        assertEquals(newColor, bgColor);
+        Pause.pause(new Condition("wait until edito background color is changed") {
+            @Override
+            public boolean test() {
+                return ! editor.target().getBackground().equals(bgColor);
+            }
+        }, 1000 );
+
+
+        newBgColor = execute(() -> editor.target().getBackground());
+        assertEquals(newColor, newBgColor);
 
     }
 
