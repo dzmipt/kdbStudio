@@ -73,6 +73,7 @@ public class RSTextAreaFactory {
         actions.add(new FindReplaceAction(true));
         actions.add(new HideSearchPanelAction());
         actions.add(new ConvertTabsToSpacesAction());
+        actions.add(new CommentAction());
 
         actionMap = new ActionMapUIResource();
         for (Action a : actions) {
@@ -106,7 +107,7 @@ public class RSTextAreaFactory {
         inputMap.put(KeyStroke.getKeyStroke(KeyEvent.VK_F,      defaultModifier), FindReplaceAction.findAction);
         inputMap.put(KeyStroke.getKeyStroke(KeyEvent.VK_R,      defaultModifier), FindReplaceAction.replaceAction);
         inputMap.put(KeyStroke.getKeyStroke(KeyEvent.VK_ESCAPE,      0), HideSearchPanelAction.action);
-
+        inputMap.put(KeyStroke.getKeyStroke(KeyEvent.VK_SLASH, defaultModifier), CommentAction.action);
 
         for (KeyStroke ks: inputMap.allKeys() ) {
             Object action = inputMap.get(ks);
