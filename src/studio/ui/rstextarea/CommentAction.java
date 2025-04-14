@@ -64,7 +64,7 @@ public class CommentAction extends TextAction {
                         int pos = dot - textArea.getLineStartOffset(start);
                         int off = textArea.getLineStartOffset(start+1);
                         int endOff = textArea.getLineEndOffset(start+1);
-                        int newDot = Math.min (off+pos, endOff);
+                        int newDot = Math.min (off+pos, endOff-1);
                         textArea.getCaret().setDot(newDot);
                     }
                 }
