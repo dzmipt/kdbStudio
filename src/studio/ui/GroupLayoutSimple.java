@@ -3,15 +3,24 @@ package studio.ui;
 import javax.swing.*;
 import java.awt.*;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 public class GroupLayoutSimple extends GroupLayout {
 
-    public GroupLayoutSimple(Container container) {
+    private final Set<Component> maxWidthComponents;
+
+    public GroupLayoutSimple(Container container, Component ... maxWidthComponents) {
         super(container);
+        this.maxWidthComponents = new HashSet<>(List.of(maxWidthComponents));
         container.setLayout(this);
         setAutoCreateGaps(true);
         setAutoCreateContainerGaps(true);
+    }
+
+    public GroupLayoutSimple(Container container) {
+        this(container, new Component[0]);
     }
 
     public void setStacks(Stack... stacks) {
@@ -29,7 +38,11 @@ public class GroupLayoutSimple extends GroupLayout {
             for (Line line: stack.lines) {
                 SequentialGroup lineGroup = createSequentialGroup();
                 for (Component component: line.components) {
-                    lineGroup.addComponent(component, GroupLayout.PREFERRED_SIZE, GroupLayout.PREFERRED_SIZE, GroupLayout.PREFERRED_SIZE);
+                    if (maxWidthComponents.contains(component)) {
+                        lineGroup.addComponent(component);
+                    } else {
+                        lineGroup.addComponent(component, GroupLayout.PREFERRED_SIZE, GroupLayout.PREFERRED_SIZE, GroupLayout.PREFERRED_SIZE);
+                    }
                 }
                 if (line.glue != null) {
                     lineGroup.addComponent(line.glue);

@@ -98,7 +98,7 @@ public class SearchPanel extends JPanel {
             }
         });
 
-        GroupLayoutSimple layout = new GroupLayoutSimple(this);
+        GroupLayoutSimple layout = new GroupLayoutSimple(this, txtFind, txtReplace);
         layout.setAutoCreateGaps(false);
         layout.setStacks(
                 new GroupLayoutSimple.Stack()
