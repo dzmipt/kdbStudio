@@ -193,7 +193,7 @@ public class ConfigToJsonConverter {
     }
 
     private void convertTableConnExtractor(StudioConfig config) {
-        int maxConn = 5;
+        int maxConn = TableConnExtractor.DEFAULT.getMaxConn();
         String value = get("tableMaxConnectionPopup");
         if (value != null) {
             try {
@@ -203,13 +203,13 @@ public class ConfigToJsonConverter {
             }
         }
         value = get("connColWords");
-        List<String> connWords = value == null ? List.of() : List.of(value.split(","));
+        List<String> connWords = value == null ? TableConnExtractor.DEFAULT.getConnWords() : List.of(value.split(","));
 
         value = get("hostColWords");
-        List<String> hostWords = value == null ? List.of() : List.of(value.split(","));
+        List<String> hostWords = value == null ? TableConnExtractor.DEFAULT.getHostWords() : List.of(value.split(","));
 
         value = get("portColWords");
-        List<String> portWords = value == null ? List.of() : List.of(value.split(","));
+        List<String> portWords = value == null ? TableConnExtractor.DEFAULT.getPortWords() : List.of(value.split(","));
 
         TableConnExtractor extractor = new TableConnExtractor(maxConn, connWords, hostWords, portWords);
         config.set(Config.TABLE_CONN_EXTRACTOR, extractor);
