@@ -100,7 +100,7 @@ public class EditorStatusBar extends StatusBar {
     }
 
     private void refreshConnectedLabel() {
-        lblConnection.setText(sessionConnected ? CONNECTED : DISCONNECTED);
+        lblConnection.setText(sessionConnected ? authMethod : DISCONNECTED);
         if (sessionConnected) {
             lblConnection.setToolTipText("Connected with '"+authMethod+"'");
         } else {
