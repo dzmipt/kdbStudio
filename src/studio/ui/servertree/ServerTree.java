@@ -6,7 +6,10 @@ import studio.kdb.Config;
 import studio.kdb.Server;
 import studio.kdb.ServerTreeNode;
 import studio.kdb.config.ServerTreeNodeSerializer;
-import studio.ui.*;
+import studio.ui.EditServerForm;
+import studio.ui.EscapeDialog;
+import studio.ui.StudioOptionPane;
+import studio.ui.UserAction;
 
 import javax.accessibility.AccessibleContext;
 import javax.accessibility.AccessibleRole;
@@ -21,10 +24,6 @@ import java.awt.event.ActionEvent;
 import java.awt.event.KeyEvent;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
-import java.io.File;
-import java.io.IOException;
-import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
 import java.util.*;
 
 public class ServerTree extends JTree implements TreeExpansionListener {
@@ -43,12 +42,13 @@ public class ServerTree extends JTree implements TreeExpansionListener {
     private java.util.Set<TreePath> expandedPath = new HashSet<>();
     private java.util.Set<TreePath> collapsedPath = new HashSet<>();
 
-    private JPopupMenu popupMenu;
+    private JPopupMenu popupMenu, popupRootMenu;
     private UserAction selectAction, removeAction,
             insertFolderAction, insertServerAction,
             addServerBeforeAction, addServerAfterAction,
             addFolderBeforeAction, addFolderAfterAction,
-            importAction, exportAction;
+            importAction, exportAction,
+            importRootAction, loadRootAction, exportRootAction;
 
     private enum AddNodeLocation {INSERT, BEFORE, AFTER};
 
@@ -102,6 +102,10 @@ public class ServerTree extends JTree implements TreeExpansionListener {
         importAction = UserAction.create("Import from file", "Import from json", KeyEvent.VK_L, this::importConfig);
         exportAction = UserAction.create("Export into file", "Export to json", KeyEvent.VK_T, this::exportConfig);
 
+        importRootAction = UserAction.create("Import from file", "Import from json", KeyEvent.VK_L, this::importRootConfig);
+        exportRootAction = UserAction.create("Export into file", "Export to json", KeyEvent.VK_T, this::exportRootConfig);
+        loadRootAction = UserAction.create("Load servers from file", "Replace server tree from file", KeyEvent.VK_T, this::loadRootConfig);
+
         getActionMap().put(selectAction.getText(), selectAction);
         getInputMap().put(KeyStroke.getKeyStroke(KeyEvent.VK_ENTER, 0), selectAction.getText());
     }
@@ -120,39 +124,39 @@ public class ServerTree extends JTree implements TreeExpansionListener {
 
         TreePath path = empty ? new TreePath(root) : getPathForLocation(x, y);
         if (path == null) {
-            return;
-        }
-
-        setSelectionPath(path);
-
-        if (listView) {
-            if (empty) return;
-            selectAction.setEnabled(true);
-            insertFolderAction.setEnabled(false);
-            addFolderBeforeAction.setEnabled(false);
-            addFolderAfterAction.setEnabled(false);
-            insertServerAction.setEnabled(false);
-            addServerBeforeAction.setEnabled(false);
-            addServerAfterAction.setEnabled(false);
-            removeAction.setEnabled(false);
-            importAction.setEnabled(false);
+            popupRootMenu.show(this, x, y);
         } else {
-            boolean isFolder = ((ServerTreeNode) path.getLastPathComponent()).isFolder();
+            setSelectionPath(path);
 
-            selectAction.setEnabled(!isFolder);
-            insertServerAction.setEnabled(isFolder);
-            insertFolderAction.setEnabled(isFolder);
+            if (listView) {
+                if (empty) return;
+                selectAction.setEnabled(true);
+                insertFolderAction.setEnabled(false);
+                addFolderBeforeAction.setEnabled(false);
+                addFolderAfterAction.setEnabled(false);
+                insertServerAction.setEnabled(false);
+                addServerBeforeAction.setEnabled(false);
+                addServerAfterAction.setEnabled(false);
+                removeAction.setEnabled(false);
+                importAction.setEnabled(false);
+            } else {
+                boolean isFolder = ((ServerTreeNode) path.getLastPathComponent()).isFolder();
 
-            addFolderBeforeAction.setEnabled(!empty);
-            addFolderAfterAction.setEnabled(!empty);
-            addServerBeforeAction.setEnabled(!empty);
-            addServerAfterAction.setEnabled(!empty);
-            removeAction.setEnabled(!empty);
+                selectAction.setEnabled(!isFolder);
+                insertServerAction.setEnabled(isFolder);
+                insertFolderAction.setEnabled(isFolder);
 
-            importAction.setEnabled(isFolder);
+                addFolderBeforeAction.setEnabled(!empty);
+                addFolderAfterAction.setEnabled(!empty);
+                addServerBeforeAction.setEnabled(!empty);
+                addServerAfterAction.setEnabled(!empty);
+                removeAction.setEnabled(!empty);
+
+                importAction.setEnabled(isFolder);
+            }
+
+            popupMenu.show(this, x, y);
         }
-
-        popupMenu.show(this, x, y);
     }
 
     private void initPopupMenu() {
@@ -171,68 +175,71 @@ public class ServerTree extends JTree implements TreeExpansionListener {
         popupMenu.add(exportAction);
         popupMenu.add(new JSeparator());
         popupMenu.add(removeAction);
+
+        popupRootMenu = new JPopupMenu();
+        popupRootMenu.add(importRootAction);
+        popupRootMenu.add(exportRootAction);
+        popupRootMenu.add(new JSeparator());
+        popupRootMenu.add(loadRootAction);
     }
+
 
 
     private void importConfig(ActionEvent evt) {
         ServerTreeNode selNode  = (ServerTreeNode) getLastSelectedPathComponent();
         if (selNode == null) return;
         if (! selNode.isFolder()) return;
+        importConfig(selNode);
+    }
+
+    private void importRootConfig(ActionEvent evt) {
+        importConfig(root);
+    }
+
+    private void loadRootConfig(ActionEvent evt) {
+        ServerTreeNode importTree = ServerTreeNodeSerializer.openImportDialog(this);
+        if (importTree == null) return;
+
+        Config.getInstance().getServerConfig().setRoot(importTree);
+        refreshServers();
+    }
+
+    private void importConfig(ServerTreeNode intoFolder) {
+        ServerTreeNode importTree = ServerTreeNodeSerializer.openImportDialog(this);
+        if (importTree == null) return;
 
         ServerTreeNode serverTree = Config.getInstance().getServerTree();
-        selNode = serverTree.findPath(selNode.getPath());
+        intoFolder = serverTree.findPath(intoFolder.getPath());
 
-        File file = FileChooser.openFile(this, FileChooser.JSON_FF);
-        if (file == null) return;
-        try {
-            String content = new String(Files.readAllBytes(file.toPath()), StandardCharsets.UTF_8);
-            ServerTreeNode importTree = ServerTreeNodeSerializer.fromJson(content);
+        String importName = importTree.isFolder() ? importTree.getFolder() : importTree.getServer().getName();
 
-            String importName = importTree.isFolder() ? importTree.getFolder() : importTree.getServer().getName();
+        for (ServerTreeNode child: intoFolder.childNodes()) {
+            String childName = child.isFolder() ? child.getFolder() : child.getServer().getName();
 
-            for (ServerTreeNode child: selNode.childNodes()) {
-                String childName = child.isFolder() ? child.getFolder() : child.getServer().getName();
-
-                if (childName.equals(importName)) {
-                    StudioOptionPane.showError(this, "Can't import as the folder already contains node with name " + importName, "Import Error");
-                    return;
-                }
+            if (childName.equals(importName)) {
+                StudioOptionPane.showError(this, "Can't import as the folder already contains node with name " + importName, "Import Error");
+                return;
             }
-
-            selNode.add(importTree);
-            Config.getInstance().getServerConfig().setRoot(serverTree);
-            refreshServers();
-
-            TreePath treePath = new TreePath(selNode.getPath());
-            scrollPathToVisible(treePath);
-            setSelectionPath(treePath);
-
-        } catch (Exception e) {
-            log.error("Error in loading from file {}", file, e);
-            StudioOptionPane.showError(this, "Error in loading to file " + file, "File Error");
         }
 
+        intoFolder.add(importTree);
+        Config.getInstance().getServerConfig().setRoot(serverTree);
+        refreshServers();
+
+        TreePath treePath = new TreePath(intoFolder.getPath());
+        scrollPathToVisible(treePath);
+        setSelectionPath(treePath);
     }
 
     private void exportConfig(ActionEvent evt) {
         ServerTreeNode selNode  = (ServerTreeNode) getLastSelectedPathComponent();
         if (selNode == null) return;
 
-        File file = FileChooser.saveFile(this, FileChooser.JSON_FF);
-        if (file == null) return;
+        ServerTreeNodeSerializer.openExportDialog(this, selNode);
+    }
 
-        if (file.exists()) {
-            int result = StudioOptionPane.showYesNoDialog(this, "File " + file + " exist. Overwrite?", "Overwrite File");
-            if (result != JOptionPane.YES_OPTION) return;
-        }
-
-        try {
-            String content = ServerTreeNodeSerializer.toJson(selNode);
-            Files.write(file.toPath(), content.getBytes(StandardCharsets.UTF_8));
-        } catch (IOException e) {
-            log.error("Error in saving to file {}", file, e);
-            StudioOptionPane.showError(this, "Error in saving to file " + file, "File Error");
-        }
+    private void exportRootConfig(ActionEvent evt) {
+        ServerTreeNodeSerializer.openExportDialog(this, root);
     }
 
     boolean moveNode(ServerTreeNode source, ServerTreeNode folder, int index) {

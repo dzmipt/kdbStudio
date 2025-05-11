@@ -9,6 +9,7 @@ import studio.core.Studio;
 import studio.kdb.*;
 import studio.kdb.config.ActionOnExit;
 import studio.kdb.config.ExecAllOption;
+import studio.kdb.config.ServerTreeNodeSerializer;
 import studio.ui.action.*;
 import studio.ui.chart.Chart;
 import studio.ui.dndtabbedpane.DragEvent;
@@ -123,6 +124,8 @@ public class StudioWindow extends JFrame implements WindowListener {
     private UserAction settingsAction;
     private UserAction toggleDividerOrientationAction;
     private UserAction minMaxDividerAction;
+    private UserAction loadServerTreeAction;
+    private UserAction exportServerTreeAction;
     private UserAction importFromQPadAction;
     private UserAction connectionStatsAction;
     private UserAction editServerAction;
@@ -534,6 +537,18 @@ public class StudioWindow extends JFrame implements WindowListener {
         serverHistoryAction = UserAction.create("Server History", "Recent selected servers", KeyEvent.VK_R,
                 KeyStroke.getKeyStroke(KeyEvent.VK_R, menuShortcutKeyMask | InputEvent.SHIFT_MASK),
                 e -> showServerList(true));
+
+        loadServerTreeAction = UserAction.create("Load Servers...", Util.FOLDER_ICON, "Load Server Tree from json",
+                KeyEvent.VK_O, null, e -> {
+                    ServerTreeNode importTree = ServerTreeNodeSerializer.openImportDialog(this);
+                    if (importTree == null) return;
+
+                    Config.getInstance().getServerConfig().setRoot(importTree);
+                });
+
+        exportServerTreeAction = UserAction.create("Export Servers", Util.SAVE_AS_ICON, "Export Server Tree into json",
+                KeyEvent.VK_E, null, e -> ServerTreeNodeSerializer.openExportDialog(this, Config.getInstance().getServerTree()));
+
 
         importFromQPadAction = UserAction.create("Import Servers from QPad...", "Import from Servers.cfg",
                 KeyEvent.VK_I, null, e -> QPadImport.doImport(this));
@@ -1012,7 +1027,7 @@ public class StudioWindow extends JFrame implements WindowListener {
         addToMenu(menu, addServerAction, editServerAction, removeServerAction);
         menu.add(cloneMenu);
 
-        addToMenu(menu, null, serverListAction, serverHistoryAction, importFromQPadAction, null, connectionStatsAction);
+        addToMenu(menu, null, serverListAction, serverHistoryAction, loadServerTreeAction, exportServerTreeAction, importFromQPadAction, null, connectionStatsAction);
 
         menubar.add(menu);
 

@@ -6,10 +6,17 @@ import org.apache.logging.log4j.Logger;
 import studio.core.DefaultAuthenticationMechanism;
 import studio.kdb.Server;
 import studio.kdb.ServerTreeNode;
+import studio.ui.FileChooser;
+import studio.ui.StudioOptionPane;
 import studio.utils.QConnection;
 
+import javax.swing.*;
 import java.awt.*;
+import java.io.File;
+import java.io.IOException;
 import java.lang.reflect.Type;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
 
 public class ServerTreeNodeSerializer implements JsonSerializer<ServerTreeNode>, JsonDeserializer<ServerTreeNode> {
     private static final Logger log = LogManager.getLogger();
@@ -26,6 +33,38 @@ public class ServerTreeNodeSerializer implements JsonSerializer<ServerTreeNode>,
 
     public static ServerTreeNode fromJson(String content) {
         return gson.fromJson(content, ServerTreeNode.class);
+    }
+
+    public static ServerTreeNode openImportDialog(Component parent) {
+        File file = FileChooser.openFile(parent, FileChooser.JSON_FF);
+        if (file == null) return null;
+        try {
+            String content = new String(Files.readAllBytes(file.toPath()), StandardCharsets.UTF_8);
+            return ServerTreeNodeSerializer.fromJson(content);
+
+        } catch (Exception e) {
+            log.error("Error in loading from file {}", file, e);
+            StudioOptionPane.showError(parent, "Error in loading to file " + file, "File Error");
+        }
+        return null;
+    }
+
+    public static void openExportDialog(Component parent, ServerTreeNode root) {
+        File file = FileChooser.saveFile(parent, FileChooser.JSON_FF);
+        if (file == null) return;
+
+        if (file.exists()) {
+            int result = StudioOptionPane.showYesNoDialog(parent, "File " + file + " exist. Overwrite?", "Overwrite File");
+            if (result != JOptionPane.YES_OPTION) return;
+        }
+
+        try {
+            String content = ServerTreeNodeSerializer.toJson(root);
+            Files.write(file.toPath(), content.getBytes(StandardCharsets.UTF_8));
+        } catch (IOException e) {
+            log.error("Error in saving to file {}", file, e);
+            StudioOptionPane.showError(parent, "Error in saving to file " + file, "File Error");
+        }
     }
 
     @Override
