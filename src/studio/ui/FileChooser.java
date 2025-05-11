@@ -17,6 +17,13 @@ public class FileChooser {
 
     private final static Logger log = LogManager.getLogger();
 
+    public final static FileFilter Q_FF = new FileNameExtensionFilter("q script", "q");
+    public final static FileFilter CSV_FF = new FileNameExtensionFilter("csv (Comma delimited)", "csv");
+    public final static FileFilter TXT_FF = new FileNameExtensionFilter("txt (Tab delimited)", "txt");
+    public final static FileFilter XML_FF = new FileNameExtensionFilter("xml", "xml");
+    public final static FileFilter XLS_FF = new FileNameExtensionFilter("xls (Microsoft Excel)", "xls");
+    public final static FileFilter JSON_FF = new FileNameExtensionFilter("json", "json");
+
     private final static Map<String, JFileChooser> fileChooserMap = new HashMap<>();
 
     private static boolean mocked = false;
@@ -32,6 +39,22 @@ public class FileChooser {
     public static void mock(File shouldReturn) {
         setMocked(true);
         mockResult = shouldReturn;
+    }
+
+    public static File openFile(Component parent, FileFilter... filters) {
+        return openFile(parent, null, filters);
+    }
+
+    public static File openFile(Component parent, String title, FileFilter... filters) {
+        return chooseFile(parent, Config.OPEN_FILE_CHOOSER, JFileChooser.OPEN_DIALOG, title, null, filters);
+    }
+
+    public static File saveFile(Component parent, FileFilter... filters) {
+        return saveFile(parent, null, null, filters);
+    }
+
+    public static File saveFile(Component parent, String title, File defaultFile, FileFilter... filters) {
+        return chooseFile(parent, Config.SAVE_FILE_CHOOSER, JFileChooser.SAVE_DIALOG, title, defaultFile, filters);
     }
 
     public static File chooseFile(Component parent, String fileChooserType, int dialogType, String title, File defaultFile, FileFilter... filters) {

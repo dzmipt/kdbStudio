@@ -6,18 +6,13 @@ import studio.kdb.Config;
 import studio.kdb.Server;
 import studio.kdb.ServerTreeNode;
 import studio.kdb.config.ServerTreeNodeSerializer;
-import studio.ui.EditServerForm;
-import studio.ui.EscapeDialog;
-import studio.ui.StudioOptionPane;
-import studio.ui.UserAction;
+import studio.ui.*;
 
 import javax.accessibility.AccessibleContext;
 import javax.accessibility.AccessibleRole;
 import javax.swing.*;
 import javax.swing.event.TreeExpansionEvent;
 import javax.swing.event.TreeExpansionListener;
-import javax.swing.filechooser.FileFilter;
-import javax.swing.filechooser.FileNameExtensionFilter;
 import javax.swing.tree.DefaultTreeModel;
 import javax.swing.tree.TreeNode;
 import javax.swing.tree.TreePath;
@@ -104,8 +99,8 @@ public class ServerTree extends JTree implements TreeExpansionListener {
         addFolderAfterAction = UserAction.create("Add Folder After", "Add Folder after selected node",
                 KeyEvent.VK_A, e -> addNode(true, AddNodeLocation.AFTER));
 
-        importAction = UserAction.create("Import tree into JSON", "Import from json", KeyEvent.VK_L, this::importConfig);
-        exportAction = UserAction.create("Export from JSON", "Export to json", KeyEvent.VK_T, this::exportConfig);
+        importAction = UserAction.create("Import from file", "Import from json", KeyEvent.VK_L, this::importConfig);
+        exportAction = UserAction.create("Export into file", "Export to json", KeyEvent.VK_T, this::exportConfig);
 
         getActionMap().put(selectAction.getText(), selectAction);
         getInputMap().put(KeyStroke.getKeyStroke(KeyEvent.VK_ENTER, 0), selectAction.getText());
@@ -187,15 +182,8 @@ public class ServerTree extends JTree implements TreeExpansionListener {
         ServerTreeNode serverTree = Config.getInstance().getServerTree();
         selNode = serverTree.findPath(selNode.getPath());
 
-        JFileChooser fileChooser = new JFileChooser();
-        FileFilter fileFilter = new FileNameExtensionFilter("JSON files", "json");
-        fileChooser.addChoosableFileFilter(fileFilter);
-        fileChooser.setFileFilter(fileFilter);
-
-        int result = fileChooser.showOpenDialog(this);
-        if (result != JFileChooser.APPROVE_OPTION) return;
-
-        File file = fileChooser.getSelectedFile();
+        File file = FileChooser.openFile(this, FileChooser.JSON_FF);
+        if (file == null) return;
         try {
             String content = new String(Files.readAllBytes(file.toPath()), StandardCharsets.UTF_8);
             ServerTreeNode importTree = ServerTreeNodeSerializer.fromJson(content);
@@ -230,17 +218,11 @@ public class ServerTree extends JTree implements TreeExpansionListener {
         ServerTreeNode selNode  = (ServerTreeNode) getLastSelectedPathComponent();
         if (selNode == null) return;
 
-        JFileChooser fileChooser = new JFileChooser();
-        FileFilter fileFilter = new FileNameExtensionFilter("JSON files", "json");
-        fileChooser.addChoosableFileFilter(fileFilter);
-        fileChooser.setFileFilter(fileFilter);
+        File file = FileChooser.saveFile(this, FileChooser.JSON_FF);
+        if (file == null) return;
 
-        int result = fileChooser.showSaveDialog(this);
-        if (result != JFileChooser.APPROVE_OPTION) return;
-
-        File file = fileChooser.getSelectedFile();
         if (file.exists()) {
-            result = StudioOptionPane.showYesNoDialog(this, "File " + file + " exist. Overwrite?", "Overwrite File");
+            int result = StudioOptionPane.showYesNoDialog(this, "File " + file + " exist. Overwrite?", "Overwrite File");
             if (result != JOptionPane.YES_OPTION) return;
         }
 

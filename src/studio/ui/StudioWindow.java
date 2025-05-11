@@ -24,7 +24,6 @@ import studio.utils.LineEnding;
 import studio.utils.log4j.EnvConfig;
 
 import javax.swing.*;
-import javax.swing.filechooser.FileNameExtensionFilter;
 import javax.swing.plaf.basic.BasicSplitPaneUI;
 import javax.swing.table.TableModel;
 import javax.swing.text.BadLocationException;
@@ -374,10 +373,7 @@ public class StudioWindow extends JFrame implements WindowListener {
 
         File file = FileChooser.chooseFile(this, Config.EXPORT_FILE_CHOOSER, JFileChooser.SAVE_DIALOG, "Export result set as",
                 null,
-                new FileNameExtensionFilter("csv (Comma delimited)", "csv"),
-                new FileNameExtensionFilter("txt (Tab delimited)", "txt"),
-                new FileNameExtensionFilter("xml", "xml"),
-                new FileNameExtensionFilter("xls (Microsoft Excel)", "xls"));
+                FileChooser.CSV_FF, FileChooser.TXT_FF, FileChooser.XML_FF, FileChooser.XLS_FF );
 
         if (file == null) return;
 
@@ -410,8 +406,7 @@ public class StudioWindow extends JFrame implements WindowListener {
     }
 
     private void openFile() {
-        File file = FileChooser.chooseFile(this, Config.OPEN_FILE_CHOOSER, JFileChooser.OPEN_DIALOG, null, null,
-                new FileNameExtensionFilter("q script", "q"));
+        File file = FileChooser.openFile(this, FileChooser.Q_FF);
 
         if (file == null) return;
         String filename = file.getAbsolutePath();

@@ -14,7 +14,6 @@ import studio.utils.FileReaderWriter;
 
 import javax.swing.*;
 import javax.swing.event.DocumentEvent;
-import javax.swing.filechooser.FileNameExtensionFilter;
 import javax.swing.text.JTextComponent;
 import java.awt.*;
 import java.awt.event.FocusAdapter;
@@ -265,9 +264,8 @@ public class EditorsPanel extends JPanel {
 
     public static boolean saveAsFile(EditorTab editor) {
         String filename = editor.getFilename();
-        File file = FileChooser.chooseFile(editor.getStudioWindow(), Config.SAVE_FILE_CHOOSER, JFileChooser.SAVE_DIALOG, "Save script as",
-                filename == null ? null : new File(filename),
-                new FileNameExtensionFilter("q script", "q"));
+        File file = FileChooser.saveFile(editor.getStudioWindow(), "Save script as",
+                filename == null ? null : new File(filename), FileChooser.Q_FF);
 
         if (file == null) return false;
 
