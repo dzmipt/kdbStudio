@@ -14,6 +14,20 @@ import java.lang.reflect.Type;
 public class ServerTreeNodeSerializer implements JsonSerializer<ServerTreeNode>, JsonDeserializer<ServerTreeNode> {
     private static final Logger log = LogManager.getLogger();
 
+    private static final Gson gson = new GsonBuilder()
+            .registerTypeAdapter(ServerTreeNode.class, new ServerTreeNodeSerializer())
+            .setPrettyPrinting()
+            .create();
+
+
+    public static String toJson(ServerTreeNode serverTree) {
+        return gson.toJson(serverTree);
+    }
+
+    public static ServerTreeNode fromJson(String content) {
+        return gson.fromJson(content, ServerTreeNode.class);
+    }
+
     @Override
     public ServerTreeNode deserialize(JsonElement node, Type type, JsonDeserializationContext context) throws JsonParseException {
         JsonObject json =(JsonObject) node;

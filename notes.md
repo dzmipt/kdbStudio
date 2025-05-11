@@ -1,3 +1,4 @@
+* Import/export subtree of servers
 * Comment line action - Ctrl + / (or Command + / on MacOS) 
 * Chart Settings for color schema and stroke styles
 * Configuration is stored in json format (studio.json)

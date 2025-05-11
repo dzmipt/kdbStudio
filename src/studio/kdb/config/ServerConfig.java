@@ -1,7 +1,5 @@
 package studio.kdb.config;
 
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import studio.core.DefaultAuthenticationMechanism;
@@ -24,14 +22,9 @@ public class ServerConfig {
     private Map<String, Server> servers;
     private List<String> serverNames;
     private ServerTreeNode serverTree;
-    private Gson gson;
 
     public ServerConfig(FileConfig fileConfig) {
         this.fileConfig = fileConfig;
-        gson = new GsonBuilder()
-                .registerTypeAdapter(ServerTreeNode.class, new ServerTreeNodeSerializer())
-                .setPrettyPrinting()
-                .create();
         init();
     }
 
@@ -55,7 +48,7 @@ public class ServerConfig {
         }
         try {
             String content = fileConfig.getContent();
-            ServerTreeNode node = gson.fromJson(content, ServerTreeNode.class);
+            ServerTreeNode node = ServerTreeNodeSerializer.fromJson(content);
             if (node == null) node = new ServerTreeNode();
             if (node.isFolder()) return node;
 
@@ -72,7 +65,7 @@ public class ServerConfig {
 
     private void save() {
         try (Writer writer = fileConfig.getWriter()) {
-            gson.toJson(serverTree, writer);
+            writer.append(ServerTreeNodeSerializer.toJson(serverTree));
         } catch (IOException e) {
             log.error("Error in writing server config to {}", fileConfig, e);
         }
