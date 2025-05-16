@@ -3,6 +3,7 @@ package studio.core;
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.core.config.Configurator;
 import org.apache.logging.log4j.io.IoBuilder;
 import studio.kdb.Config;
 import studio.kdb.Lm;
@@ -38,6 +39,11 @@ public class Studio {
         PrintStream stderrStream = IoBuilder.forLogger("stderr").setLevel(Level.ERROR).buildPrintStream();
         System.setOut(stdoutStream);
         System.setErr(stderrStream);
+
+        if (Config.getInstance().getBoolean(Config.LOG_DEBUG) ) {
+            log.info("Setting up DEBUG log level");
+            Configurator.setRootLevel(Level.DEBUG);
+        }
     }
 
     public static void main(final String[] args) {

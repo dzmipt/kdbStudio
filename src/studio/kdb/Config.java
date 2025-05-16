@@ -83,6 +83,8 @@ public class Config  {
     public static final String CHART_STROKE_WIDTHS = configDefault("chartStrokeWidths", ConfigType.DOUBLE_ARRAY,
                                                                     List.of(2.0, 1.0, 1.5, 3.0) );
 
+    public static final String LOG_DEBUG = configDefault("logDebug", ConfigType.BOOLEAN, false);
+
     public static final String CONFIG_VERSION = configDefault("version", ConfigType.ENUM, ConfigVersion.V2_0);
 
     public static final String OLD_CONFIG_FILENAME = "studio.properties";
