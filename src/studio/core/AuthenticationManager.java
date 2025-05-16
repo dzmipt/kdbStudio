@@ -65,7 +65,7 @@ public class AuthenticationManager {
                         log.debug("Trying to invoke constructor for the class {}", externalName);
                         IAuthenticationMechanism am = (IAuthenticationMechanism) c.newInstance();
                         classMap.put(am.getMechanismName(), c);
-                        log.debug("Loaded auth. method {}", am.getMechanismName());
+                        log.info("Loaded auth. method {}", am.getMechanismName());
                     }
                 } catch (ClassNotFoundException | IllegalAccessException | InstantiationException | Error e1) {
                     log.debug("Error in loading class {}", name, e1);
