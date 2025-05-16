@@ -93,44 +93,10 @@ class ExcelExporter {
             for (int j = 0; j < model.getColumnCount(); j++) {
                 Cell cell = row.createCell(j);
                 K.KBase b = (K.KBase) model.getValueAt(i, j);
-                if (!b.isNull()) {
-                    Class<?> columnClass = model.getColumnClass(j);
-                    if (columnClass == K.KSymbolVector.class) {
-                        cell.setCellValue(((K.KSymbol)b).s);
-                    } else if (columnClass == K.KDateVector.class) {
-                        cell.setCellValue(sd("yyyy-MM-dd", ((K.KDate) b).toDate()));
-                    } else if (columnClass == K.KTimeVector.class) {
-                        cell.setCellValue(sd("HH:mm:ss.SSS", ((K.KTime) b).toTime()));
-                    } else if (columnClass == K.KTimestampVector.class) {
-                        char[] cs = sd("yyyy-MM-dd HH:mm:ss.SSS",
-                                ((K.KTimestamp) b).toJavaTimestamp()).toCharArray();
-                        cs[10] = 'T';
-                        cell.setCellValue(new String(cs));
-                    } else if (columnClass == K.KMonthVector.class) {
-                        cell.setCellValue(sd("yyyy-MM", ((K.KMonth) b).toDate()));
-                    } else if (columnClass == K.KMinuteVector.class) {
-                        cell.setCellValue(sd("HH:mm", ((K.KMinute) b).toDate()));
-                    } else if (columnClass == K.KSecondVector.class) {
-                        cell.setCellValue(sd("HH:mm:ss", ((K.KSecond) b).toDate()));
-                    } else if (columnClass == K.KBooleanVector.class) {
-                        cell.setCellValue(((K.KBoolean) b).b ? 1 : 0);
-                    } else if (columnClass == K.KDoubleVector.class) {
-                        cell.setCellValue(((K.KDouble) b).toDouble());
-                    } else if (columnClass == K.KFloatVector.class) {
-                        cell.setCellValue(((K.KFloat) b).f);
-                    } else if (columnClass == K.KLongVector.class) {
-                        cell.setCellValue(((K.KLong) b).toLong());
-                    } else if (columnClass == K.KIntVector.class) {
-                        cell.setCellValue(((K.KInteger) b).toInt());
-                    } else if (columnClass == K.KShortVector.class) {
-                        cell.setCellValue(((K.KShort) b).s);
-                    } else if (columnClass == K.KCharacterVector.class) {
-                        cell.setCellValue(((K.KCharacter) b).c);
-                    } else {
-                        cell.setCellValue(b.toString(KFormatContext.NO_TYPE));
-                    }
-                } else {
+                if (b.isNull()) {
                     cell.setCellValue("");
+                } else {
+                    cell.setCellValue(b.toString(KFormatContext.EXCEL));
                 }
             }
 

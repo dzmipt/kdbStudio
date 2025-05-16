@@ -3,6 +3,7 @@ package studio.kdb;
 import java.text.DecimalFormat;
 import java.text.DecimalFormatSymbols;
 import java.text.NumberFormat;
+import java.time.format.DateTimeFormatter;
 import java.util.Locale;
 
 public class KFormatContext {
@@ -11,10 +12,14 @@ public class KFormatContext {
     private final static NumberFormat RAW_FORMAT = new DecimalFormat("#.#######", formatSymbols);
     private final static NumberFormat COMMA_FORMAT = new DecimalFormat("#,###.#######", formatSymbols);
 
+    private final static DateTimeFormatter dateFormatter = DateTimeFormatter.ofPattern("yyyy.MM.dd");
+    private final static DateTimeFormatter excelDateFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+
     static {
         setMaxFractionDigits(Config.getInstance().getInt(Config.MAX_FRACTION_DIGITS));
     }
 
+    private boolean excelFormat = false;
     private boolean showType;
     private boolean showThousandsComma;
     private final Rounding rounding;
@@ -53,6 +58,7 @@ public class KFormatContext {
 
 
     public final static KFormatContext DEFAULT = new KFormatContext();
+    public final static KFormatContext EXCEL = new KFormatContext(true);
     public final static KFormatContext NO_TYPE = new KFormatContext(false, false);
 
     public final static KFormatContext DAY = new KFormatContext(Rounding.DAY);
@@ -83,6 +89,11 @@ public class KFormatContext {
         this(formatContext.showType, formatContext.showThousandsComma);
     }
 
+    public KFormatContext(boolean isExcelFormat) {
+        this(false, false);
+        this.excelFormat = isExcelFormat;
+    }
+
     public KFormatContext() {
         this(true, false);
     }
@@ -93,6 +104,10 @@ public class KFormatContext {
 
     public NumberFormat getNumberFormat() {
         return showThousandsComma ? COMMA_FORMAT : RAW_FORMAT;
+    }
+
+    public boolean exelFormat() {
+        return excelFormat;
     }
 
     public boolean showType() {
@@ -112,4 +127,9 @@ public class KFormatContext {
         this.showThousandsComma = showThousandsComma;
         return this;
     }
+
+    public DateTimeFormatter getDateFormatter() {
+        return excelFormat ? excelDateFormatter : dateFormatter;
+    }
+
 }

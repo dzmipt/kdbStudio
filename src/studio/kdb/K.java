@@ -5,23 +5,16 @@ import kx.IPC;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.lang.reflect.Array;
-import java.sql.Time;
-import java.sql.Timestamp;
 import java.text.DecimalFormat;
-import java.text.SimpleDateFormat;
 import java.time.*;
 import java.time.temporal.ChronoUnit;
 import java.util.*;
-import java.util.stream.Stream;
 
 public class K {
     private final static DecimalFormat nsFormatter = new DecimalFormat("000000000");
-    private final static SimpleDateFormat dateFormatter = new SimpleDateFormat("yyyy.MM.dd");
-    private final static SimpleDateFormat dateTimeFormatter = new SimpleDateFormat("yyyy.MM.dd'T'HH:mm:ss.SSS");
-    private final static SimpleDateFormat timestampFormatter = new SimpleDateFormat("yyyy.MM.dd'D'HH:mm:ss.");
-    private static final java.text.DecimalFormat i2Formatter = new java.text.DecimalFormat("00");
-    private static final java.text.DecimalFormat i3Formatter = new java.text.DecimalFormat("000");
-    private static final java.text.DecimalFormat i4Formatter = new java.text.DecimalFormat("0000");
+    private static final DecimalFormat i2Formatter = new DecimalFormat("00");
+    private static final DecimalFormat i3Formatter = new DecimalFormat("000");
+    private static final DecimalFormat i4Formatter = new DecimalFormat("0000");
 
     private static String i2(int i) {
         return i2Formatter.format(i);
@@ -46,13 +39,11 @@ public class K {
     public final static long NS_IN_DAY = NS_IN_SEC * SEC_IN_DAY;
     public final static long NS_IN_MONTH = (long) (NS_IN_DAY*(365*4+1)/(12*4.0));
 
+    // 946_684_800_000L is a number of millisecond between 01-Jan-1970 and 01-Jan-2000
+    private final static long MILLIS_OFFSET = 946_684_800_000L;
+
     public final static LocalDate ZERO_DATE = LocalDate.of(2000, 1, 1);
     public final static LocalDateTime ZERO_DATE_TIME = LocalDateTime.of(2000, 1, 1, 0, 0);
-    static {
-        TimeZone gmtTimeZone = java.util.TimeZone.getTimeZone("GMT");
-        Stream.of(dateFormatter, dateTimeFormatter, timestampFormatter)
-                .forEach(f -> f.setTimeZone(gmtTimeZone));
-    }
 
     private static final String enlist = "enlist ";
     private static final String flip = "flip ";
@@ -952,12 +943,13 @@ public class K {
             if (isNull()) builder.append("0Nd");
             else if (value == Integer.MAX_VALUE) builder.append("0Wd");
             else if (value == -Integer.MAX_VALUE) builder.append("-0Wd");
-            else builder.append(dateFormatter.format(toDate()));
+            else builder.append(context.getDateFormatter().format(toLocalDate()));
             return builder;
         }
 
-        public Date toDate() {
-            return new Date(MS_IN_DAY * (value + JAVA_DAY_OFFSET));
+        public LocalDate toLocalDate() {
+            return LocalDate.ofEpochDay(JAVA_DAY_OFFSET + value);
+
         }
 
         public KTimestamp toTimestamp() {
@@ -1040,9 +1032,6 @@ public class K {
             return builder;
         }
 
-        public Time toTime() {
-            return new Time(value);
-        }
     }
 
     // Artificial class need to represent time in the charts.
@@ -1092,13 +1081,21 @@ public class K {
             if (isNull()) builder.append("0Nz");
             else if (value == Double.POSITIVE_INFINITY) builder.append("0wz");
             else if (value == Double.NEGATIVE_INFINITY) builder.append("-0wz");
-            else builder.append(dateTimeFormatter.format(toTimestamp()));
+            else {
+                int date = (int) value;
+                double fraction = value - date;
+                if (fraction < 0)  {
+                    fraction += 1;
+                    date -= 1;
+                }
+                int ms = (int) (0.5 + MS_IN_DAY * fraction);
+                builder.append(context.getDateFormatter().format(new K.KDate(date).toLocalDate()))
+                                .append('T');
+                new K.KTime(ms).format(builder, context);
+            }
             return builder;
         }
 
-        public Timestamp toTimestamp() {
-            return new Timestamp(Math.round(8.64e7 * (value + JAVA_DAY_OFFSET)));
-        }
     }
 
 
@@ -1107,8 +1104,6 @@ public class K {
         public final static KTimestamp NULL = new KTimestamp(NULL_VALUE);
 
         private final static Clock systemClock = Clock.systemDefaultZone();
-        // 946_684_800_000L is a number of millisecond between 01-Jan-1970 and 01-Jan-2000
-        private final static long MILLIS_OFFSET = 946_684_800_000L;
 
         static KTimestamp now(Clock clock) {
             long epoch = clock.instant().toEpochMilli();
@@ -1162,9 +1157,7 @@ public class K {
                 }
                 LocalDate localDate = LocalDate.ofEpochDay(epochDays);
 
-                builder.append(i4(localDate.getYear()))
-                        .append('.').append(i2(localDate.getMonthValue()))
-                        .append('.').append(i2(localDate.getDayOfMonth()));
+                builder.append(context.getDateFormatter().format(localDate));
 
                 if (rounding.days() && v == 0) return builder;
 
@@ -1173,7 +1166,12 @@ public class K {
                 long mm = v / NS_IN_MIN;
                 v = v % NS_IN_MIN;
 
-                builder.append('D').append(l2(hh))
+                if (context.exelFormat()) {
+                    builder.append('T');
+                } else {
+                    builder.append('D');
+                }
+                builder.append(l2(hh))
                         .append(':').append(l2(mm));
 
                 if (rounding.minutes() && v == 0) return builder;
@@ -1193,16 +1191,6 @@ public class K {
             return builder;
         }
 
-        public Timestamp toJavaTimestamp() {
-            long k = MS_IN_DAY * JAVA_DAY_OFFSET;
-            long n = 1000000000L;
-            long d = value < 0 ? (value + 1) / n - 1 : value / n;
-            long ltime = value == Long.MIN_VALUE ? value : (k + 1000 * d);
-            int nanos = (int) (value - n * d);
-            Timestamp ts = new Timestamp(ltime);
-            ts.setNanos(nanos);
-            return ts;
-        }
     }
 
     public static class Dict extends KBase {
@@ -1362,19 +1350,16 @@ public class K {
             else {
                 int m = value + 24000, y = m / 12;
 
-                builder.append(i2(y / 100)).append(i2(y % 100))
-                        .append(".").append(i2(1 + m % 12));
+                builder.append(i2(y / 100)).append(i2(y % 100));
+                if (context.exelFormat()) {
+                    builder.append('-');
+                } else {
+                    builder.append('.');
+                }
+                builder.append(i2(1 + m % 12));
             }
-            if (context.showType()) builder.append("m");
+            if (context.showType()) builder.append('m');
             return builder;
-        }
-
-        public Date toDate() {
-            int m = value + 24000, y = m / 12;
-            m %= 12;
-            Calendar cal = Calendar.getInstance();
-            cal.set(y, m, 1);
-            return cal.getTime();
         }
 
         public LocalDateTime toLocalDateTime() {
@@ -1407,12 +1392,6 @@ public class K {
             }
             return builder;
         }
-        public Date toDate() {
-            Calendar cal = Calendar.getInstance();
-            cal.set(Calendar.HOUR_OF_DAY, value / 60);
-            cal.set(Calendar.MINUTE, value % 60);
-            return cal.getTime();
-        }
     }
 
     public static class KSecond extends KIntBase {
@@ -1442,13 +1421,6 @@ public class K {
             return builder;
         }
 
-        public Date toDate() {
-            Calendar cal = Calendar.getInstance();
-            cal.set(Calendar.HOUR_OF_DAY, value / (60 * 60));
-            cal.set(Calendar.MINUTE,  (value % (60 * 60)) / 60);
-            cal.set(Calendar.SECOND, value % 60);
-            return cal.getTime();
-        }
     }
 
     public static class KTimespan extends KLongBase {

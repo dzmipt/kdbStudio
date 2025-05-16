@@ -2,7 +2,6 @@ package studio.ui;
 
 import org.apache.poi.ss.usermodel.Workbook;
 import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import studio.kdb.K;
 import studio.kdb.KType;
@@ -31,17 +30,17 @@ public class ExcelExporterTest {
     public void timestampExportTest() {
         K.KTimestamp timestamp = K.KTimestamp.of(LocalDateTime.of(
                 LocalDate.of(2003,11,29),
-                LocalTime.of(21,33,9,12_000_000)
+                LocalTime.of(21,33,9,12_123_456)
         ));
 
-        check("2003-11-29T21:33:09.012", new K.KTimestampVector(timestamp.toLong()));
+        check("2003-11-29T21:33:09.012123456", new K.KTimestampVector(timestamp.toLong()));
 
         timestamp = K.KTimestamp.of(LocalDateTime.of(
                 LocalDate.of(1950,11,29),
                 LocalTime.of(21,33,9,12_000_000)
         ));
 
-        check("1950-11-29T21:33:09.012", new K.KTimestampVector(timestamp.toLong()));
+        check("1950-11-29T21:33:09.012000000", new K.KTimestampVector(timestamp.toLong()));
 
 
         check("", new K.KTimestampVector(Long.MIN_VALUE));
@@ -66,12 +65,10 @@ public class ExcelExporterTest {
     public void timesExportTest() {
         K.KTime time = K.KTime.of(LocalTime.of(11, 12, 34, 567_000_000));
         check("11:12:34.567", new K.KTimeVector(time.toInt()));
-        //@TODO: fix me
-        //check("-11:12:34.567", new K.KTimeVector(-time.toInt()));
+        check("-11:12:34.567", new K.KTimeVector(-time.toInt()));
     }
 
     @Test
-    @Disabled("Should be fixed")
     public void secondsExportTest() {
         K.KSecond time = K.KSecond.of(LocalTime.of(11, 12, 34));
         check("11:12:34", new K.KSecondVector(time.toInt()));
@@ -114,15 +111,20 @@ public class ExcelExporterTest {
     @Test
     public void minuteExportTest() {
         K.KMinute minute = K.KMinute.of(LocalTime.of(11, 12, 34));
-        //@TODO: fix me
-//        check("11:22", new K.KMinuteVector(minute.toInt()));
+        check("11:12", new K.KMinuteVector(minute.toInt()));
+        check("-11:12", new K.KMinuteVector(-minute.toInt()));
     }
 
     @Test
     public void dateTimeExportTest() {
         double value = Parser.parse(KType.Datetime, "2025.05.16T16:26:31.123");
-        //@TODO: fix me
-        //check("2025-05-16T16:26:31.123", new K.KDatetimeVector(value));
+        check("2025-05-16T16:26:31.123", new K.KDatetimeVector(value));
+
+        value = Parser.parse(KType.Datetime, "2000.05.16T16:26:31.123");
+        check("2000-05-16T16:26:31.123", new K.KDatetimeVector(value));
+
+        value = Parser.parse(KType.Datetime, "1950.05.16T16:26:31.123");
+        check("1950-05-16T16:26:31.123", new K.KDatetimeVector(value));
     }
 
 }
