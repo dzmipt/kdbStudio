@@ -107,11 +107,11 @@ class ExcelExporter {
                         cs[10] = 'T';
                         cell.setCellValue(new String(cs));
                     } else if (columnClass == K.KMonthVector.class) {
-                        cell.setCellValue(sd("yyyy-MM", ((K.Month) b).toDate()));
+                        cell.setCellValue(sd("yyyy-MM", ((K.KMonth) b).toDate()));
                     } else if (columnClass == K.KMinuteVector.class) {
-                        cell.setCellValue(sd("HH:mm", ((K.Minute) b).toDate()));
+                        cell.setCellValue(sd("HH:mm", ((K.KMinute) b).toDate()));
                     } else if (columnClass == K.KSecondVector.class) {
-                        cell.setCellValue(sd("HH:mm:ss", ((K.Second) b).toDate()));
+                        cell.setCellValue(sd("HH:mm:ss", ((K.KSecond) b).toDate()));
                     } else if (columnClass == K.KBooleanVector.class) {
                         cell.setCellValue(((K.KBoolean) b).b ? 1 : 0);
                     } else if (columnClass == K.KDoubleVector.class) {

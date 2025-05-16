@@ -4,7 +4,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class KCompareTest {
 
@@ -49,7 +49,7 @@ public class KCompareTest {
     @ParameterizedTest
     @ValueSource(ints = { 0, Integer.MIN_VALUE, 10, -1})
     public void testInt(int value) throws Exception {
-        Class[] classes = new Class[] {K.KInteger.class, K.KTime.class, K.Month.class, K.Minute.class, K.Second.class};
+        Class[] classes = new Class[] {K.KInteger.class, K.KTime.class, K.KMonth.class, K.KMinute.class, K.KSecond.class};
         for (Class clazz:classes) {
             K.KBase k0 = (K.KBase)clazz.getConstructor(int.class).newInstance(value);
             K.KBase kk = (K.KBase)clazz.getConstructor(int.class).newInstance(value+1);

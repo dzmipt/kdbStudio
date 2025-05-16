@@ -44,9 +44,9 @@ public class KFormat extends NumberFormat {
                 }
             } else if (type == KType.Month) {
                 fmtContext = KFormatContext.DAY;
-                kValue = new K.Month(intValue);
+                kValue = new K.KMonth(intValue);
                 if (hasFraction) {
-                    LocalDateTime dateTime = ((K.Month)kValue).toLocalDateTime();
+                    LocalDateTime dateTime = ((K.KMonth)kValue).toLocalDateTime();
 
                     LocalDateTime next = dateTime.plusMonths((int)Math.signum(fraction));
                     long days = Duration.between(dateTime, next).toDays();
@@ -67,14 +67,14 @@ public class KFormat extends NumberFormat {
                 if (hasFraction) {
                     kValue = new K.KTimeLong((long) (value * K.NS_IN_SEC));
                 } else {
-                    kValue = new K.Second(intValue);
+                    kValue = new K.KSecond(intValue);
                 }
             } else if (type == KType.Minute) {
                 fmtContext = KFormatContext.MINUTE;
                 if (hasFraction) {
                     kValue = new K.KTimeLong((long) (value * K.NS_IN_MIN));
                 } else {
-                    kValue = new K.Minute(intValue);
+                    kValue = new K.KMinute(intValue);
                 }
             } else {
                 throw new IllegalArgumentException("Unsupported type: " + type);

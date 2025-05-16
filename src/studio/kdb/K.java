@@ -46,6 +46,8 @@ public class K {
     public final static long NS_IN_DAY = NS_IN_SEC * SEC_IN_DAY;
     public final static long NS_IN_MONTH = (long) (NS_IN_DAY*(365*4+1)/(12*4.0));
 
+    public final static LocalDate ZERO_DATE = LocalDate.of(2000, 1, 1);
+    public final static LocalDateTime ZERO_DATE_TIME = LocalDateTime.of(2000, 1, 1, 0, 0);
     static {
         TimeZone gmtTimeZone = java.util.TimeZone.getTimeZone("GMT");
         Stream.of(dateFormatter, dateTimeFormatter, timestampFormatter)
@@ -936,6 +938,10 @@ public class K {
 
     public static class KDate extends KIntBase {
 
+        public static KDate of(LocalDate date) {
+            return new KDate((int)ChronoUnit.DAYS.between(ZERO_DATE, date));
+        }
+
         public KDate(int date) {
             super(KType.Date, date);
         }
@@ -1003,6 +1009,10 @@ public class K {
     }
 
     public static class KTime extends KIntBase {
+
+        public static KTime of(LocalTime time) {
+            return new KTime( (int) (time.toNanoOfDay() / NS_IN_MLS));
+        }
 
         public KTime(int time) {
             super(KType.Time, time);
@@ -1330,10 +1340,16 @@ public class K {
         }
     }
 
-    //@TODO: rename to KMonth
-    public static class Month extends KIntBase {
+    public static class KMonth extends KIntBase {
 
-        public Month(int x) {
+        public static KMonth of(LocalDate date) {
+            int m = date.getMonthValue() - 1;
+            int y = date.getYear() - 2000;
+
+            return new KMonth(12 * y + m);
+        }
+
+        public KMonth(int x) {
             super(KType.Month, x);
         }
 
@@ -1368,10 +1384,13 @@ public class K {
         }
     }
 
-    //@TODO: rename to Minute
-    public static class Minute extends KIntBase {
+    public static class KMinute extends KIntBase {
 
-        public Minute(int x) {
+        public static KMinute of(LocalTime time) {
+            return new KMinute(time.toSecondOfDay() / 60);
+        }
+
+        public KMinute(int x) {
             super(KType.Minute, x);
         }
 
@@ -1396,10 +1415,13 @@ public class K {
         }
     }
 
-    //@TODO: rename to KSecond
-    public static class Second extends KIntBase {
+    public static class KSecond extends KIntBase {
 
-        public Second(int x) {
+        public static KSecond of(LocalTime time) {
+            return new KSecond(time.toSecondOfDay());
+        }
+
+        public KSecond(int x) {
             super(KType.Second, x);
         }
 
@@ -1524,10 +1546,6 @@ public class K {
                         .append(".").append(nsFormatter.format((int) (jj % 1000000000L)));
             }
             return builder;
-        }
-
-        public Time toTime() {
-            return new Time((value / 1000000));
         }
 
     }
@@ -1702,14 +1720,14 @@ public class K {
         }
     }
 
-    public static class KMonthVector extends KBaseVector<Month> {
+    public static class KMonthVector extends KBaseVector<KMonth> {
 
         public KMonthVector(int... array) {
             super(array, KType.MonthVector);
         }
 
-        public Month at(int i) {
-            return new Month(Array.getInt(array, i));
+        public KMonth at(int i) {
+            return new KMonth(Array.getInt(array, i));
         }
     }
 
@@ -1735,14 +1753,14 @@ public class K {
         }
     }
 
-    public static class KMinuteVector extends KBaseVector<Minute> {
+    public static class KMinuteVector extends KBaseVector<KMinute> {
 
         public KMinuteVector(int... array) {
             super(array, KType.MinuteVector);
         }
 
-        public Minute at(int i) {
-            return new Minute(Array.getInt(array, i));
+        public KMinute at(int i) {
+            return new KMinute(Array.getInt(array, i));
         }
     }
 
@@ -1779,14 +1797,14 @@ public class K {
         }
     }
 
-    public static class KSecondVector extends KBaseVector<Second> {
+    public static class KSecondVector extends KBaseVector<KSecond> {
 
         public KSecondVector(int... array) {
             super(array, KType.SecondVector);
         }
 
-        public Second at(int i) {
-            return new Second(Array.getInt(array, i));
+        public KSecond at(int i) {
+            return new KSecond(Array.getInt(array, i));
         }
     }
 

@@ -227,11 +227,11 @@ public class KTest {
 
     @Test
     public void testMonthToString() throws Exception {
-        check(new K.Month(-12345), "0971.04", "0971.04m");
-        check(new K.Month(123456), "12288.01", "12288.01m");
-        check(new K.Month(-Integer.MAX_VALUE), "-0W", "-0Wm");
-        check(new K.Month(Integer.MAX_VALUE), "0W", "0Wm");
-        check(new K.Month(Integer.MIN_VALUE), "0N", "0Nm");
+        check(new K.KMonth(-12345), "0971.04", "0971.04m");
+        check(new K.KMonth(123456), "12288.01", "12288.01m");
+        check(new K.KMonth(-Integer.MAX_VALUE), "-0W", "-0Wm");
+        check(new K.KMonth(Integer.MAX_VALUE), "0W", "0Wm");
+        check(new K.KMonth(Integer.MIN_VALUE), "0N", "0Nm");
 
         check(new K.KMonthVector(-10, 10, 3), "1999.03 2000.11 2000.04", "1999.03 2000.11 2000.04m");
         check(new K.KMonthVector(), "`month$()", "`month$()");
@@ -241,7 +241,7 @@ public class KTest {
 
     @Test
     public void testMonthToDate() {
-        K.Month month = new K.Month(262); // Nov-2021
+        K.KMonth month = new K.KMonth(262); // Nov-2021
         Calendar c = Calendar.getInstance();
         c.setTime(month.toDate());
 
@@ -253,12 +253,12 @@ public class KTest {
     @Test
     public void testMinuteToString() throws Exception {
         //@ToDo Fix me
-        check(new K.Minute(-12345), "-205:45", "-205:45");
+        check(new K.KMinute(-12345), "-205:45", "-205:45");
 
-        check(new K.Minute(123456), "2057:36", "2057:36");
-        check(new K.Minute(-Integer.MAX_VALUE), "-0Wu", "-0Wu");
-        check(new K.Minute(Integer.MAX_VALUE), "0Wu", "0Wu");
-        check(new K.Minute(Integer.MIN_VALUE), "0Nu", "0Nu");
+        check(new K.KMinute(123456), "2057:36", "2057:36");
+        check(new K.KMinute(-Integer.MAX_VALUE), "-0Wu", "-0Wu");
+        check(new K.KMinute(Integer.MAX_VALUE), "0Wu", "0Wu");
+        check(new K.KMinute(Integer.MIN_VALUE), "0Nu", "0Nu");
 
         check(new K.KMinuteVector(-10, 10, 3), "-00:10 00:10 00:03", "-00:10 00:10 00:03");
         check(new K.KMinuteVector(), "`minute$()", "`minute$()");
@@ -269,12 +269,12 @@ public class KTest {
     @Test
     public void testSecondToString() throws Exception {
         //@ToDo Fix me
-        check(new K.Second(-12345), "-03:25:45", "-03:25:45");
+        check(new K.KSecond(-12345), "-03:25:45", "-03:25:45");
 
-        check(new K.Second(123456), "34:17:36", "34:17:36");
-        check(new K.Second(-Integer.MAX_VALUE), "-0Wv", "-0Wv");
-        check(new K.Second(Integer.MAX_VALUE), "0Wv", "0Wv");
-        check(new K.Second(Integer.MIN_VALUE), "0Nv", "0Nv");
+        check(new K.KSecond(123456), "34:17:36", "34:17:36");
+        check(new K.KSecond(-Integer.MAX_VALUE), "-0Wv", "-0Wv");
+        check(new K.KSecond(Integer.MAX_VALUE), "0Wv", "0Wv");
+        check(new K.KSecond(Integer.MIN_VALUE), "0Nv", "0Nv");
 
         check(new K.KSecondVector(-10, 10, 3), "-00:00:10 00:00:10 00:00:03", "-00:00:10 00:00:10 00:00:03");
         check(new K.KSecondVector(), "`second$()", "`second$()");
@@ -431,6 +431,68 @@ public class KTest {
         assertNull(list.getType().getElementType());
     }
 
+    @Test
+    public void testLocalDateToDate() {
+        LocalDate date = LocalDate.of(2025,5,12);
+        assertEquals("2025.05.12", K.KDate.of(date).toString());
+
+        date = LocalDate.of(1978,5,12);
+        assertEquals("1978.05.12", K.KDate.of(date).toString());
+
+        date = LocalDate.of(1918,5,12);
+        assertEquals("1918.05.12", K.KDate.of(date).toString());
+
+        date = LocalDate.of(2000,1,1);
+        assertEquals("2000.01.01", K.KDate.of(date).toString());
+
+    }
+
+    @Test
+    public void testLocalDateToMonth() {
+        LocalDate date = LocalDate.of(2025,5,12);
+        assertEquals("2025.05m", K.KMonth.of(date).toString());
+
+        date = LocalDate.of(1978,5,12);
+        assertEquals("1978.05m", K.KMonth.of(date).toString());
+
+        date = LocalDate.of(1918,5,12);
+        assertEquals("1918.05m", K.KMonth.of(date).toString());
+
+        date = LocalDate.of(2000,1,1);
+        assertEquals("2000.01m", K.KMonth.of(date).toString());
+
+    }
+
+    @Test
+    public void testLocalTimeToTime() {
+        LocalTime localTime = LocalTime.of(10,11,12);
+        assertEquals("10:11:12.000", K.KTime.of(localTime).toString());
+
+        localTime = LocalTime.of(10,11,12, 34_000_000);
+        assertEquals("10:11:12.034", K.KTime.of(localTime).toString());
+
+        localTime = LocalTime.of(10,11,12, 34_999_999);
+        assertEquals("10:11:12.034", K.KTime.of(localTime).toString());
+    }
+
+
+    @Test
+    public void testLocalTimeToSecond() {
+        LocalTime localTime = LocalTime.of(10,11,12);
+        assertEquals("10:11:12", K.KSecond.of(localTime).toString());
+
+        localTime = LocalTime.of(10,11,12, 34_999_999);
+        assertEquals("10:11:12", K.KSecond.of(localTime).toString());
+    }
+
+    @Test
+    public void testLocalTimeToMinute() {
+        LocalTime localTime = LocalTime.of(10,11,52);
+        assertEquals("10:11", K.KMinute.of(localTime).toString());
+
+        localTime = LocalTime.of(10,11,12, 34_999_999);
+        assertEquals("10:11", K.KMinute.of(localTime).toString());
+    }
 
     @Test
     public void testLocalDateTimeToTimestamp() {
@@ -442,12 +504,29 @@ public class KTest {
 
     @Test
     public void testMonthToLocalDateTime() {
-        K.Month month = new K.Month(299);
+        K.KMonth month = new K.KMonth(299);
         assertEquals("2024.12m", month.toString());
 
         LocalDateTime expected = LocalDateTime.of(2024, 12, 1, 0, 0);
         LocalDateTime actual = month.toLocalDateTime();
         assertEquals(expected, actual);
+
+
+        month = new K.KMonth(-1);
+        assertEquals("1999.12m", month.toString());
+
+        expected = LocalDateTime.of(1999, 12, 1, 0, 0);
+        actual = month.toLocalDateTime();
+        assertEquals(expected, actual);
+
+        month = new K.KMonth(-598);
+        assertEquals("1950.03m", month.toString());
+
+        expected = LocalDateTime.of(1950, 3, 1, 0, 0);
+        actual = month.toLocalDateTime();
+        assertEquals(expected, actual);
+
+
     }
 
     @Test

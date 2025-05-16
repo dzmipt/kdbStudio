@@ -72,7 +72,7 @@ public class KEqualsTest {
     @ParameterizedTest
     @ValueSource(ints = { 0, Integer.MAX_VALUE, Integer.MIN_VALUE, -Integer.MAX_VALUE, 10, -1})
     public void testInt(int value) throws Exception {
-        Class[] classes = new Class[] {K.KInteger.class, K.KTime.class, K.Month.class, K.Minute.class, K.Second.class};
+        Class[] classes = new Class[] {K.KInteger.class, K.KTime.class, K.KMonth.class, K.KMinute.class, K.KSecond.class};
         for (Class clazz:classes) {
             K.KBase k0 = (K.KBase)clazz.getConstructor(int.class).newInstance(value);
             K.KBase k1 = (K.KBase)clazz.getConstructor(int.class).newInstance(value);

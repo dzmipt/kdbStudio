@@ -454,16 +454,16 @@ public class IPC {
         return new K.Projection(array);
     }
 
-    K.Minute ru() {
-        return new K.Minute(ri());
+    K.KMinute ru() {
+        return new K.KMinute(ri());
     }
 
-    K.Month rm() {
-        return new K.Month(ri());
+    K.KMonth rm() {
+        return new K.KMonth(ri());
     }
 
-    K.Second rv() {
-        return new K.Second(ri());
+    K.KSecond rv() {
+        return new K.KSecond(ri());
     }
 
     K.KTimespan rn() {

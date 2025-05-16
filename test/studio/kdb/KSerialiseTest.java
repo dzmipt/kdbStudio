@@ -159,9 +159,9 @@ public class KSerialiseTest {
         test(new K.KDatetime(-123.456));
         test(new K.KTime(12345));
         test(new K.KDate(35241));
-        test(new K.Minute(-12345));
-        test(new K.Month(54321));
-        test(new K.Second(13542));
+        test(new K.KMinute(-12345));
+        test(new K.KMonth(54321));
+        test(new K.KSecond(13542));
     }
 
     @Test
