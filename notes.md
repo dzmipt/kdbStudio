@@ -1,3 +1,6 @@
+* Charting shortcuts:
+   * Ctrl + G (Command + G for MacOS) is to chart
+   * Ctrl + Shift + E / Ctrl + Shift + Enter (Command for MacOS) is to execute and chart
 * Import/export server list
 * Comment line action - Ctrl + / (or Command + / on MacOS) 
 * Chart Settings for color schema and stroke styles

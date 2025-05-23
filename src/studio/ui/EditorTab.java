@@ -143,6 +143,9 @@ public class EditorTab implements FileWatcher.Listener, EditorStatusBarCallback 
         try {
             if (queryResult.hasResultObject()) {
                 studioWindow.addResultTab(queryResult, "Executed at server: " + queryResult.getServer().getDescription(true) );
+                if (queryResult.isChartAfter()) {
+                    studioWindow.chart();
+                }
             }
         } catch (Throwable error) {
             log.error("Error during result rendering", error);

@@ -6,21 +6,26 @@ import studio.kdb.Server;
 
 public class QueryResult {
 
-    private String query;
-    private Server server;
-
+    private final String query;
+    private final Server server;
+    private final boolean chartAfter;
     private KMessage result = null;
     private Throwable error = null;
     private boolean complete = false;
 
     public QueryResult(K.KBase kObject) {
-        this(null, "");
+        this(null, "", false);
         setResult(new KMessage(kObject));
     }
 
-    public QueryResult(Server server, String query) {
+    public QueryResult(Server server, String query, boolean chartAfter) {
         this.server = server;
         this.query = query;
+        this.chartAfter = chartAfter;
+    }
+
+    public boolean isChartAfter() {
+        return chartAfter;
     }
 
     public void setResult(KMessage result) {

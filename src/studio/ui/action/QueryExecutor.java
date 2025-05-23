@@ -123,7 +123,7 @@ public class QueryExecutor implements ProgressCallback {
 
         @Override
         protected QueryResult doInBackground() {
-            QueryResult result = new QueryResult(server, queryTask.getQueryText());
+            QueryResult result = new QueryResult(server, queryTask.getQueryText(), queryTask.isChartAfter());
             queryLog.info("#{}: query {}({})\n{}",queryIndex, server.getFullName(), server.getConnectionString(), queryTask.getQueryText());
             try {
                 session = getSession();
@@ -164,7 +164,7 @@ public class QueryExecutor implements ProgressCallback {
             try {
                 QueryResult result;
                 if (isCancelled()) {
-                    result = new QueryResult(server, queryTask.getQueryText());
+                    result = new QueryResult(server, queryTask.getQueryText(), false);
                     queryLog.info("#{}: Cancelled", queryIndex);
                 } else {
                     result = get();

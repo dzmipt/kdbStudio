@@ -106,6 +106,8 @@ public class StudioWindow extends JFrame implements WindowListener {
     private UserAction saveAsFileAction;
     private UserAction exportAction;
     private UserAction chartAction;
+    private UserAction executeAndChartAction;
+    private UserAction executeCurrentLineAndChartAction;
     private Action undoAction;
     private Action redoAction;
     private Action cutAction;
@@ -624,7 +626,15 @@ public class StudioWindow extends JFrame implements WindowListener {
                 KeyEvent.VK_E, null, e -> export());
 
         chartAction = UserAction.create(I18n.getString("Chart"), Util.CHART_ICON, "Chart current data set",
-                KeyEvent.VK_E, null, e -> new Chart((KTableModel) getSelectedTable().getModel()));
+                KeyEvent.VK_C, KeyStroke.getKeyStroke(KeyEvent.VK_G, menuShortcutKeyMask), e -> chart() );
+
+        executeAndChartAction = UserAction.create("Execute and Chart", Util.EXECUTE_AND_CHART, "Execute and chart",
+                KeyEvent.VK_H, KeyStroke.getKeyStroke(KeyEvent.VK_E, menuShortcutKeyMask | InputEvent.SHIFT_DOWN_MASK),
+                e -> executeQuery(true) );
+
+        executeCurrentLineAndChartAction = UserAction.create("Execute CurrentLine and Chart", Util.EXECUTE_AND_CHART, "Execute current line and chart",
+                KeyEvent.VK_H, KeyStroke.getKeyStroke(KeyEvent.VK_ENTER, menuShortcutKeyMask | InputEvent.SHIFT_DOWN_MASK),
+                e -> executeQueryCurrentLine(true) );
 
         stopAction = UserAction.create(I18n.getString("Stop"), Util.STOP_ICON, "Stop the query",
                 KeyEvent.VK_S, null, e -> editor.getQueryExecutor().cancel());
@@ -641,10 +651,10 @@ public class StudioWindow extends JFrame implements WindowListener {
                 });
 
         executeAction = UserAction.create(I18n.getString("Execute"), Util.TABLE_SQL_RUN_ICON, "Execute the full or highlighted text as a query",
-                KeyEvent.VK_E, KeyStroke.getKeyStroke(KeyEvent.VK_E, menuShortcutKeyMask), e -> executeQuery());
+                KeyEvent.VK_E, KeyStroke.getKeyStroke(KeyEvent.VK_E, menuShortcutKeyMask), e -> executeQuery(false));
 
         executeCurrentLineAction = UserAction.create(I18n.getString("ExecuteCurrentLine"), Util.RUN_ICON, "Execute the current line as a query",
-                KeyEvent.VK_ENTER, KeyStroke.getKeyStroke(KeyEvent.VK_ENTER, menuShortcutKeyMask), e -> executeQueryCurrentLine());
+                KeyEvent.VK_ENTER, KeyStroke.getKeyStroke(KeyEvent.VK_ENTER, menuShortcutKeyMask), e -> executeQueryCurrentLine(false));
 
         refreshAction = UserAction.create(I18n.getString("Refresh"), Util.REFRESH_ICON, "Refresh the result set",
                 KeyEvent.VK_R, KeyStroke.getKeyStroke(KeyEvent.VK_Y, menuShortcutKeyMask | InputEvent.SHIFT_MASK), e -> refreshQuery());
@@ -1034,7 +1044,7 @@ public class StudioWindow extends JFrame implements WindowListener {
         menu = new JMenu(I18n.getString("Query"));
         menu.setMnemonic(KeyEvent.VK_Q);
 
-        addToMenu(menu, executeCurrentLineAction, executeAction, stopAction, refreshAction,
+        addToMenu(menu, executeCurrentLineAction, executeCurrentLineAndChartAction, executeAction, executeAndChartAction, stopAction, refreshAction,
                 toggleCommaFormatAction, findInResultAction);
         menubar.add(menu);
 
@@ -1547,26 +1557,37 @@ public class StudioWindow extends JFrame implements WindowListener {
         editor.executeQuery(QueryTask.query(lastQuery));
     }
 
-    public void executeQueryCurrentLine() {
-        executeQuery(getCurrentLineEditorText(editor.getTextArea()));
+    public void executeQueryCurrentLine(boolean chart) {
+        executeQuery(getCurrentLineEditorText(editor.getTextArea()), chart);
     }
 
-    public void executeQuery() {
-        executeQuery(getEditorText(editor.getTextArea()));
+    public void executeQuery(boolean chart) {
+        executeQuery(getEditorText(editor.getTextArea()), chart);
     }
 
-    private void executeQuery(String text) {
+    private void executeQuery(String text, boolean chart) {
         if (text == null) {
             return;
         }
         text = text.trim();
-        if (text.length() == 0) {
+        if (text.isEmpty()) {
             log.info("Nothing to execute - got empty string");
             return;
         }
 
-        editor.executeQuery(QueryTask.query(text));
+        QueryTask queryTask = chart ? QueryTask.queryAndChart(text) : QueryTask.query(text);
+        editor.executeQuery(queryTask);
         lastQuery = text;
+    }
+
+    public void chart() {
+        JTable table = getSelectedTable();
+        if (table == null) {
+            StudioOptionPane.showWarning(this, "Can only chart from table result", "Table expected");
+            return;
+        }
+
+        new Chart((KTableModel) table.getModel());
     }
 
     public MainStatusBar getMainStatusBar() {

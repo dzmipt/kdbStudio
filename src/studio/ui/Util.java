@@ -40,6 +40,7 @@ public class Util {
     public final static ImageIcon STOP_ICON = getImage("/stop.png");
     public final static ImageIcon EXCEL_ICON = getImage("/excel_icon.gif");
     public final static ImageIcon TABLE_SQL_RUN_ICON = getImage("/table_sql_run.png");
+    public final static ImageIcon EXECUTE_AND_CHART = getImage("/executeAndChart.png");
     public final static ImageIcon RUN_ICON = getImage("/element_run.png");
     public final static ImageIcon REFRESH_ICON = getImage("/refresh.png");
     public final static ImageIcon ABOUT_ICON = getImage("/about.png");

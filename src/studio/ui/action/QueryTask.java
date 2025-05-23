@@ -11,7 +11,11 @@ import java.io.IOException;
 public abstract class QueryTask {
 
     public static QueryTask query(String queryText) {
-        return new Query(queryText);
+        return new Query(queryText, false);
+    }
+
+    public static QueryTask queryAndChart(String queryText) {
+        return new Query(queryText, true);
     }
 
     public static QueryTask upload(String varName, K.KBase kObject) {
@@ -30,17 +34,27 @@ public abstract class QueryTask {
         return true;
     }
 
+    public boolean isChartAfter() {
+        return false;
+    }
 
     private static class Query extends QueryTask {
-        private String query;
+        private final String query;
+        private final boolean chartAfter;
 
-        Query (String query) {
+        Query (String query, boolean chartAfter) {
             this.query = query;
+            this.chartAfter = chartAfter;
         }
 
         @Override
         public String getQueryText() {
             return query;
+        }
+
+        @Override
+        public boolean isChartAfter() {
+            return chartAfter;
         }
 
         @Override
