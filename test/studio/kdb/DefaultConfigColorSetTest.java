@@ -34,14 +34,17 @@ public class DefaultConfigColorSetTest {
         Files.writeString(configPath, "{}");
 
         Files.writeString(defaultConfigPath,
-                "{" +
-                        "chartColorSets: {" +
-                        "'default':'custom'," +
-                        "'set':{'custom':['ff0000','00ff00']}"+
+                "{ chartColorSets: {" +
+                            "'default':'custom'," +
+                            "'set': {" +
+                                "'custom':{" +
+                                    "'colors':['ff0000','00ff00'], " +
+                                    "'background':'ff00ff'," +
+                                    "'grid':'ffffff' }}" +
                         "}}".replace('\'','"'));
 
         registry = new ConfigTypeRegistry();
-        registry.add("chartColorSets", ConfigType.COLOR_SETS, ColorSets.DEFAULT);
+        registry.add("chartColorSets", ConfigType.CHART_COLOR_SETS, ColorSets.DEFAULT);
     }
 
     @AfterAll
@@ -58,8 +61,8 @@ public class DefaultConfigColorSetTest {
 
         assertEquals(2, colorSets.getNames().size());
         assertEquals("custom", colorSets.getDefaultName());
-        assertEquals(List.of(Color.RED, Color.GREEN), colorSets.getColors("custom"));
-        assertTrue(colorSets.getColors("Default").size()>0);
+        assertEquals(List.of(Color.RED, Color.GREEN), colorSets.getColorSchema("custom").getColors());
+        assertTrue(colorSets.getColorSchema("Default").getColors().size()>0);
 
     }
 

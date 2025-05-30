@@ -57,7 +57,7 @@ public class ChartConfigPanel extends Box {
         listSeries.addChangeListener(e -> refresh() );
 
         ColorSets colorSets = Config.getInstance().getChartColorSets();
-        List<Color> baseColors = colorSets.getColors(colorSets.getDefaultName());
+        List<Color> baseColors = colorSets.getColorSchema().getColors();
         for (int index = 0; index < names.length; index++) {
             LegendIcon icon = new LegendIcon(baseColors.get(index % baseColors.size()), LegendButton.SHAPES[index % LegendButton.SHAPES.length],
                     LegendButton.getDefaultStroke());

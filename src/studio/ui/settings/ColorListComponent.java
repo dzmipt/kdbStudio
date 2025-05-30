@@ -2,10 +2,11 @@ package studio.ui.settings;
 
 import org.jfree.chart.plot.DefaultDrawingSupplier;
 import studio.ui.ColorChooser;
+import studio.ui.ColorLabel;
 import studio.ui.UserAction;
-import studio.ui.chart.SquareIcon;
 
 import javax.swing.*;
+import javax.swing.event.ChangeEvent;
 import java.awt.*;
 import java.awt.datatransfer.StringSelection;
 import java.awt.dnd.*;
@@ -13,16 +14,17 @@ import java.awt.event.*;
 import java.awt.image.BufferedImage;
 import java.util.List;
 import java.util.*;
+import java.util.stream.Collectors;
 
 public class ColorListComponent extends JComponent implements DropTargetListener {
-    private final int SIZE = 24;
+    private final int SIZE = ColorLabel.DEFAULT_SIZE;
     private final int GAP = 8;
 
-    private List<JLabel> labels  = new ArrayList<>();
+    private List<ColorLabel> labels  = new ArrayList<>();
     private Map<Point, Integer> hotspots = new HashMap<>();
     private Point selectedHotspot = null;
-    private JLabel draggedLabel = null;
-    private JLabel selectedLabel = null;
+    private ColorLabel draggedLabel = null;
+    private ColorLabel selectedLabel = null;
     private final List<ActionListener> listeners = new ArrayList<>();
 
     private JComponent prefWidthComponent = null;
@@ -75,9 +77,7 @@ public class ColorListComponent extends JComponent implements DropTargetListener
         removeAll();
         labels = new ArrayList<>(colors.size());
         for (int index = 0; index < colors.size(); index++) {
-            JLabel label = new JLabel(new SquareIcon(colors.get(index), SIZE));
-            label.setOpaque(true);
-            label.setPreferredSize(new Dimension(SIZE, SIZE));
+            ColorLabel label = new ColorLabel(colors.get(index));
             labels.add(label);
             add(label);
             new DraggableLabel(label);
@@ -85,7 +85,7 @@ public class ColorListComponent extends JComponent implements DropTargetListener
                 private boolean checkPopup(MouseEvent e) {
                     if (!e.isPopupTrigger()) return false;
                     if (labels.contains(e.getSource())) {
-                        selectLabel((JLabel) e.getSource(), true);
+                        selectLabel((ColorLabel) e.getSource(), true);
                     }
                     JPopupMenu popup = new JPopupMenu();
                     popup.add(actionEdit);
@@ -108,16 +108,10 @@ public class ColorListComponent extends JComponent implements DropTargetListener
                     selectLabel(label);
                 }
 
-                @Override
-                public void mouseClicked(MouseEvent e) {
-                    if (e.getClickCount() == 2) {
-                        selectedLabel = label;
-                        edit();
-                    }
-                }
             });
+            label.addChangeListener(this::colorChanged);
         }
-        actionDelete.setEnabled(labels.size() > 1);
+         actionDelete.setEnabled(labels.size() > 1);
         revalidate();
         repaint();
         SwingUtilities.invokeLater(this::refresh);
@@ -125,11 +119,7 @@ public class ColorListComponent extends JComponent implements DropTargetListener
     }
 
     public List<Color> getColors() {
-        List<Color> colors = new ArrayList<>(labels.size());
-        for (JLabel label: labels) {
-            colors.add( (Color)((SquareIcon) label.getIcon()).getColor());
-        }
-        return colors;
+        return labels.stream().map(ColorLabel::getColor).collect(Collectors.toList());
     }
 
     public void setPrefWidthComponent(JComponent component, int gap) {
@@ -167,11 +157,11 @@ public class ColorListComponent extends JComponent implements DropTargetListener
         listeners.forEach(listener -> listener.actionPerformed(event));
     }
 
-    private void selectLabel(JLabel label) {
+    private void selectLabel(ColorLabel label) {
         selectLabel(label, false);
     }
 
-    private void selectLabel(JLabel label, boolean forced) {
+    private void selectLabel(ColorLabel label, boolean forced) {
         requestFocus();
         if (forced) {
             selectedLabel = label;
@@ -203,15 +193,13 @@ public class ColorListComponent extends JComponent implements DropTargetListener
 
     private void edit() {
         if (selectedLabel == null) return;
-        Color color = (Color) ((SquareIcon)selectedLabel.getIcon()).getColor();
-        Color newColor = ColorChooser.chooseColor(this,"Select color", color);
-        if (newColor == null || newColor.equals(color)) return;
+        selectedLabel.selectColor();
+    }
 
-        int index = labels.indexOf(selectedLabel);
-        List<Color> colors = getColors();
-        colors.set(index, newColor);
-        setColors(colors);
-        selectLabel(labels.get(index));
+    private void colorChanged(ChangeEvent event) {
+        ColorLabel label = (ColorLabel) event.getSource();
+        selectLabel(label);
+        fireActionEvent();
     }
 
     private void insert() {
@@ -364,9 +352,9 @@ public class ColorListComponent extends JComponent implements DropTargetListener
 
     private class DraggableLabel extends DragSourceAdapter implements DragGestureListener {
         private DragSource dragSource = new DragSource();
-        private JLabel label;
+        private ColorLabel label;
 
-        public DraggableLabel(JLabel label) {
+        public DraggableLabel(ColorLabel label) {
             this.label = label;
             dragSource.createDefaultDragGestureRecognizer(label, DnDConstants.ACTION_MOVE, this);
             dragSource.addDragSourceListener(this);

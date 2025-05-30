@@ -7,22 +7,21 @@ import studio.core.Credentials;
 import studio.kdb.Config;
 import studio.kdb.KFormatContext;
 import studio.kdb.config.ActionOnExit;
-import studio.kdb.config.ColorSets;
 import studio.kdb.config.ExecAllOption;
 import studio.kdb.config.KdbMessageLimitAction;
-import studio.ui.settings.*;
+import studio.ui.settings.ColorSetsEditor;
+import studio.ui.settings.FontSelectionPanel;
+import studio.ui.settings.StrokeStyleEditor;
+import studio.ui.settings.StrokeWidthEditor;
 import studio.utils.LineEnding;
 
 import javax.swing.*;
 import javax.swing.text.NumberFormatter;
 import java.awt.*;
-import java.awt.event.ActionEvent;
 import java.math.RoundingMode;
 import java.text.DecimalFormat;
 import java.text.NumberFormat;
-import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 public class SettingsDialog extends EscapeDialog {
@@ -55,11 +54,7 @@ public class SettingsDialog extends EscapeDialog {
     private JFormattedTextField txtEmulatedTabSize;
     private JCheckBox chBoxReplaceTabOnOpen;
 
-    private ColorListComponent colorList;
-    private JComboBox<String> comboBoxColorSetName;
-    private JButton btnAddColorSet;
-    private JButton btnDeleteColorSet;
-
+    private ColorSetsEditor colorSetsEditor;
     private StrokeStyleEditor strokeStyleEditor;
     private StrokeWidthEditor strokeWidthEditor;
 
@@ -67,7 +62,6 @@ public class SettingsDialog extends EscapeDialog {
     private JButton btnCancel;
 
     private FontSelectionPanel editorFontSelection, resultFontSelection;
-    private ColorSets chartColorSets;
 
     private static final Config CONFIG = Config.getInstance();
 
@@ -286,22 +280,7 @@ public class SettingsDialog extends EscapeDialog {
         btnOk.addActionListener(e->accept());
         btnCancel.addActionListener(e->cancel());
 
-
-        JLabel lblColorSchema = new JLabel("Color schema: ");
-        comboBoxColorSetName = new JComboBox<>();
-        comboBoxColorSetName.addActionListener(this::colorSetNameSelected);
-        btnAddColorSet = new JButton("new");
-        btnAddColorSet.addActionListener(this::chartAddColorSetAction);
-        btnDeleteColorSet = new JButton("delete");
-        btnDeleteColorSet.addActionListener(this::chartDeleteColorSetAction);
-        colorList = new ColorListComponent();
-        colorList.setPreferredSize(new Dimension(0, 0));
-        colorList.addActionListener(this::colorsChanged);
-        colorList.setToolTipText("<html>Use drag&drop, double click, <code>INS</code>, <code>DEL</code> to edit</html>");
-        FocusDecorator.add(colorList);
-
-        chartColorSets = CONFIG.getChartColorSets();
-        refreshChartColorSet();
+        colorSetsEditor = new ColorSetsEditor(CONFIG.getChartColorSets());
 
         strokeStyleEditor = new StrokeStyleEditor(135, 140);
         strokeWidthEditor = new StrokeWidthEditor(70, 140);
@@ -352,18 +331,11 @@ public class SettingsDialog extends EscapeDialog {
                         .addLineAndGlue(resultFontSelection)
         );
 
-        JPanel pnlColor = new JPanel();
-        layout = new GroupLayoutSimple(pnlColor);
-        layout.setStacks(
-                new GroupLayoutSimple.Stack()
-                        .addLineAndGlue(lblColorSchema, comboBoxColorSetName, btnAddColorSet, btnDeleteColorSet)
-                        .addLine(colorList)
-        );
-        pnlColor.setBorder(BorderFactory.createMatteBorder(0,0,1,0,Color.GRAY));
+        colorSetsEditor.setBorder(BorderFactory.createMatteBorder(0,0,1,0,Color.GRAY));
         strokeStyleEditor.setBorder(BorderFactory.createMatteBorder(0,0,1,0,Color.GRAY));
 
         Box boxChart = Box.createVerticalBox();
-        boxChart.add(pnlColor);
+        boxChart.add(colorSetsEditor);
         boxChart.add(strokeStyleEditor);
         boxChart.add(strokeWidthEditor);
 
@@ -373,12 +345,7 @@ public class SettingsDialog extends EscapeDialog {
                 .addLine(boxChart)
         );
         JScrollPane scrollChart = getTabComponent(pnlChart);
-        JViewport viewport = scrollChart.getViewport();
-        colorList.setPrefWidthComponent(viewport, 22);
-        viewport.addChangeListener( e -> {
-            colorList.revalidate();
-            colorList.repaint();
-        });
+        colorSetsEditor.setExternalViewport(scrollChart.getViewport());
 
         JTabbedPane tabs = new JTabbedPane();
         tabs.addTab("General", getTabComponent(pnlGeneral));
@@ -395,42 +362,6 @@ public class SettingsDialog extends EscapeDialog {
         root.add(tabs, BorderLayout.CENTER);
         root.add(pnlButtons, BorderLayout.SOUTH);
         setContentPane(root);
-    }
-
-    private void refreshChartColorSet() {
-        String[] names = chartColorSets.getNames().toArray(new String[0]);
-        comboBoxColorSetName.setModel(new DefaultComboBoxModel<>(names));
-        comboBoxColorSetName.setSelectedItem(chartColorSets.getDefaultName());
-        colorList.setColors(chartColorSets.getColors(chartColorSets.getDefaultName()));
-        btnDeleteColorSet.setEnabled(chartColorSets.getNames().size() > 1);
-    }
-
-    private void colorSetNameSelected(ActionEvent e) {
-        chartColorSets = chartColorSets.newSelected((String)comboBoxColorSetName.getSelectedItem());
-        refreshChartColorSet();
-    }
-
-    private void chartAddColorSetAction(ActionEvent e) {
-        String name = JOptionPane.showInputDialog(this, "Enter name:", "Add Color Schema", JOptionPane.QUESTION_MESSAGE);
-        if (name == null) return;
-
-        if (! chartColorSets.getNames().contains(name)) {
-            List<Color> colors = new ArrayList<>();
-            colors.add(Color.BLACK);
-            chartColorSets = chartColorSets.setColorSet(name, colors);
-        }
-        chartColorSets = chartColorSets.newSelected(name);
-        refreshChartColorSet();
-    }
-
-    private void chartDeleteColorSetAction(ActionEvent e) {
-        chartColorSets = chartColorSets.deleteColorSet((String)comboBoxColorSetName.getSelectedItem());
-        refreshChartColorSet();
-    }
-
-    private void colorsChanged(ActionEvent e) {
-        chartColorSets = chartColorSets.setColorSet(chartColorSets.getDefaultName(), colorList.getColors());
-        refreshChartColorSet();
     }
 
     public void saveSettings() {
@@ -482,7 +413,7 @@ public class SettingsDialog extends EscapeDialog {
             StudioWindow.refreshResultSettings();
         }
 
-        CONFIG.setChartColorSets(chartColorSets);
+        CONFIG.setChartColorSets(colorSetsEditor.getColorSets());
         strokeStyleEditor.saveSettings();
         strokeWidthEditor.saveSettings();
 

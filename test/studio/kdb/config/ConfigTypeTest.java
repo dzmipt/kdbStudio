@@ -156,18 +156,39 @@ public class ConfigTypeTest {
     @Test
     public void testColorSets() {
         ColorSets colorSets = ColorSets.DEFAULT;
-        check(ConfigType.COLOR_SETS, colorSets);
+        check(ConfigType.CHART_COLOR_SETS, colorSets);
 
-        colorSets = colorSets.setColorSet("add", List.of(Color.ORANGE, Color.RED));
+        colorSets = colorSets.setColorSchema("add", new ColorSchema());
         assertEquals(2, colorSets.getNames().size());
-        check(ConfigType.COLOR_SETS, colorSets);
+        check(ConfigType.CHART_COLOR_SETS, colorSets);
 
         colorSets = colorSets.newSelected("add");
         assertEquals("add", colorSets.getDefaultName());
-        check(ConfigType.COLOR_SETS, colorSets);
+        check(ConfigType.CHART_COLOR_SETS, colorSets);
 
-        colorSets = colorSets.deleteColorSet("Default");
+        colorSets = colorSets.deleteColorSchema("Default");
         assertEquals(1, colorSets.getNames().size());
-        check(ConfigType.COLOR_SETS, colorSets);
+        check(ConfigType.CHART_COLOR_SETS, colorSets);
+    }
+
+    @Test
+    public void testColorSchema() {
+        check(ConfigType.CHART_COLOR_SCHEMA, new ColorSchema());
+
+        ColorSchema colorSchema = ColorSchema.DEFAULT;
+        check(ConfigType.CHART_COLOR_SCHEMA, colorSchema);
+
+        colorSchema = colorSchema.newBackgroundColor(Color.RED);
+        assertEquals(Color.RED, colorSchema.getBackground());
+        check(ConfigType.CHART_COLOR_SCHEMA, colorSchema);
+
+        colorSchema = colorSchema.newGridColor(Color.GREEN);
+        assertEquals(Color.GREEN, colorSchema.getGrid());
+        check(ConfigType.CHART_COLOR_SCHEMA, colorSchema);
+
+        colorSchema = colorSchema.newColors(List.of(Color.BLACK, Color.CYAN, Color.DARK_GRAY));
+        assertEquals(List.of(Color.BLACK, Color.CYAN, Color.DARK_GRAY), colorSchema.getColors());
+        check(ConfigType.CHART_COLOR_SCHEMA, colorSchema);
+
     }
 }

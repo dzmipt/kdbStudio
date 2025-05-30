@@ -28,7 +28,6 @@ public class Config  {
     private static final Logger log = LogManager.getLogger();
 
     private static final ConfigTypeRegistry configTypeRegistry = new ConfigTypeRegistry();
-    public static final String COMMENT = configDefault("comment", ConfigType.STRING, "");
     public static final String LOOK_AND_FEEL = configDefault("lookandfeel", ConfigType.STRING, UIManager.getLookAndFeel().getClass().getName());
     public static final String EXEC_ALL = configDefault("execAllOption", ConfigType.ENUM, ExecAllOption.Ask);
     public static final String MAX_CHARS_IN_RESULT = configDefault("maxCharsInResult", ConfigType.INT, 50000);
@@ -77,7 +76,7 @@ public class Config  {
     public static final String TABLE_CONN_EXTRACTOR = configDefault("tableExtractorConfig", ConfigType.TABLE_CONN_EXTRACTOR, TableConnExtractor.DEFAULT);
     public static final String COLOR_TOKEN_CONFIG = configDefault("tokenColors", ConfigType.COLOR_TOKEN_CONFIG, ColorTokenConfig.DEFAULT);
     public static final String SERVER_HISTORY = configDefault("serverHistory", ConfigType.SERVER_HISTORY, new ServerHistoryConfig(20, List.of()));
-    public static final String CHART_COLORSETS = configDefault("chartColorSets", ConfigType.COLOR_SETS, ColorSets.DEFAULT);
+    public static final String CHART_COLORSETS = configDefault("chartColorSets", ConfigType.CHART_COLOR_SETS, ColorSets.DEFAULT);
     public static final String CHART_STROKE_STYLES = configDefault("chartStrokeStyles", ConfigType.STRING_ARRAY,
                                                                     List.of("", "10,10", "10,5", "5,5", "1.5,3", "10,3,3,3" ) );
     public static final String CHART_STROKE_WIDTHS = configDefault("chartStrokeWidths", ConfigType.DOUBLE_ARRAY,
@@ -85,7 +84,7 @@ public class Config  {
 
     public static final String LOG_DEBUG = configDefault("logDebug", ConfigType.BOOLEAN, false);
 
-    public static final String CONFIG_VERSION = configDefault("version", ConfigType.ENUM, ConfigVersion.V2_0);
+    public static final String CONFIG_VERSION = configDefault("version", ConfigType.ENUM, ConfigVersion.V_NO); // to force version to save
 
     public static final String OLD_CONFIG_FILENAME = "studio.properties";
     public static final String CONFIG_FILENAME = "studio.json";
@@ -186,7 +185,7 @@ public class Config  {
 
         FileConfig defaultFileConfig = new FileConfig(EnvConfig.getPluginFolder().resolve(CONFIG_FILENAME));
         FileConfig fileConfig = new FileConfig(basePath.resolve(CONFIG_FILENAME));
-        studioConfig = new StudioConfig(configTypeRegistry, fileConfig, defaultFileConfig);
+        studioConfig = new StudioConfig(configTypeRegistry, fileConfig, defaultFileConfig, new ConfigConverter());
 
         workspaceConfig = new PropertiesConfig(getWorkspacePath());
         initServerHistory();

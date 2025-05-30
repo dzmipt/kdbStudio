@@ -48,6 +48,9 @@ public class FileConfig {
     }
 
     public synchronized String getContent() throws IOException {
+        String content = cache.get();
+        if (content != null) return content;
+
         return new String(Files.readAllBytes(path), StandardCharsets.UTF_8);
     }
 

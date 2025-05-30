@@ -3,7 +3,6 @@ package studio.kdb.config;
 import com.google.gson.*;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import studio.kdb.Config;
 import studio.kdb.FileChooserConfig;
 import studio.utils.FileConfig;
 
@@ -16,9 +15,11 @@ import java.util.*;
 
 public class StudioConfig {
 
+    private final static String COMMENT = "comment";
     private final ConfigTypeRegistry registry;
     private final FileConfig fileConfig;
     private final FileConfig defaultFileConfig;
+    private final JsonConverter jsonConverter;
     private final Map<String, Object> config;
     private final Gson gson;
 
@@ -29,14 +30,20 @@ public class StudioConfig {
     }
 
     public StudioConfig(ConfigTypeRegistry registry, FileConfig fileConfig, FileConfig defaultFileConfig) {
+        this(registry, fileConfig, defaultFileConfig, null);
+    }
+
+    public StudioConfig(ConfigTypeRegistry registry, FileConfig fileConfig, FileConfig defaultFileConfig, JsonConverter converter) {
         this.registry = registry;
         this.fileConfig = fileConfig;
         this.defaultFileConfig = defaultFileConfig;
-        config = initConfig();
+        this.jsonConverter = converter;
 
         gson = new GsonBuilder()
                 .setPrettyPrinting()
                 .create();
+
+        config = initConfig();
     }
 
     public FileConfig getFileConfig() {
@@ -113,7 +120,11 @@ public class StudioConfig {
         JsonObject json = new JsonObject();
         for (String key: config.keySet()) {
             ConfigType type = registry.getConfigType(key);
-            json.add(key, type.toJson(config.get(key)));
+            if (type == null) {
+                log.error("type for key {} is null", key);
+            } else {
+                json.add(key, type.toJson(config.get(key)));
+            }
         }
         return json;
     }
@@ -140,9 +151,17 @@ public class StudioConfig {
         Map<String, Object> map = new TreeMap<>();
         try {
             JsonObject json = getJson(fileConfig);
-            if (json.has(Config.COMMENT)) {
-                log.info("Loaded config with the comment: {}", json.get(Config.COMMENT).getAsString());
-                json.remove(Config.COMMENT);
+            if (json.has(COMMENT)) {
+                log.info("Loaded config with the comment: {}", json.get(COMMENT).getAsString());
+                json.remove(COMMENT);
+            }
+
+            if (jsonConverter != null) {
+                boolean changed = jsonConverter.convert(json);
+                if (changed) {
+                    log.info("The config has been converted");
+                    save(json);
+                }
             }
 
             JsonObject jConfig = deepMerge(getJsonFromRegistry(), getJson(defaultFileConfig));
@@ -158,16 +177,20 @@ public class StudioConfig {
     }
 
     private void save() {
+        JsonObject jConfig = getJsonFromConfig();
+        JsonObject jDefault = deepMerge(getJsonFromRegistry(), getJson(defaultFileConfig));
+        jConfig = deepExclude(jConfig, jDefault);
+        save(jConfig);
+    }
+
+    private void save(JsonObject jsonConfig) {
         try (Writer writer = fileConfig.getWriter()) {
-            JsonObject jConfig = getJsonFromConfig();
-            JsonObject jDefault = deepMerge(getJsonFromRegistry(), getJson(defaultFileConfig));
-            jConfig = deepExclude(jConfig, jDefault);
 
             JsonObject json = new JsonObject();
             String comment = String.format("Auto-generated at %s from a process with pid %d", Instant.now(), ProcessHandle.current().pid());
-            json.add(Config.COMMENT, ConfigType.STRING.toJson(comment));
-            json = deepMerge(json, jConfig);
+            json.add(COMMENT, new JsonPrimitive(comment));
 
+            json = deepMerge(json, jsonConfig);
             gson.toJson(json, writer);
         } catch (IOException e) {
             log.error("Error on saving json {}", fileConfig.getPath(), e);

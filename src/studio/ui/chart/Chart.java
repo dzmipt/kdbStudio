@@ -20,6 +20,7 @@ import studio.kdb.Config;
 import studio.kdb.KFormat;
 import studio.kdb.KTableModel;
 import studio.kdb.KType;
+import studio.kdb.config.ColorSchema;
 import studio.ui.StudioOptionPane;
 import studio.ui.Toolbar;
 import studio.ui.Util;
@@ -169,6 +170,10 @@ public class Chart implements ComponentListener {
         JFreeChart chart = new JFreeChart("", JFreeChart.DEFAULT_TITLE_FONT, plot, false);
         chart.addChangeListener(e -> updateTitle() );
         currentTheme.apply(chart);
+        ColorSchema colorSchema = Config.getInstance().getChartColorSets().getColorSchema();
+        plot.setBackgroundPaint(colorSchema.getBackground());
+        plot.setDomainGridlinePaint(colorSchema.getGrid());
+        plot.setRangeGridlinePaint(colorSchema.getGrid());
         return new ChartPanel(chart);
     }
 

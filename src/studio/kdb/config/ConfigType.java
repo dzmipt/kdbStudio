@@ -287,16 +287,16 @@ public enum ConfigType {
             return json;
         }
     },
-    COLOR_SETS {
+    CHART_COLOR_SETS {
         @Override
         public Object fromJson(JsonElement jsonElement, Object defaultValue) {
             JsonObject json = jsonElement.getAsJsonObject();
             String defaultName = json.get("default").getAsString();
             JsonObject jsonSet = json.get("set").getAsJsonObject();
-            Map<String, List<Color>> map = new HashMap<>();
+            Map<String, ColorSchema> map = new HashMap<>();
             for (String name: jsonSet.keySet()) {
-                List<Color> list = (List<Color>)COLOR_ARRAY.fromJson(jsonSet.get(name), null);
-                map.put(name, list);
+                ColorSchema colorSchema = (ColorSchema) CHART_COLOR_SCHEMA.fromJson(jsonSet.get(name), null);
+                map.put(name, colorSchema);
             }
             return new ColorSets(defaultName, map);
         }
@@ -308,9 +308,29 @@ public enum ConfigType {
             json.addProperty("default", colorSets.getDefaultName());
             JsonObject jsonSet = new JsonObject();
             for (String name: colorSets.getNames()) {
-                jsonSet.add(name, COLOR_ARRAY.toJson(colorSets.getColors(name)) );
+                jsonSet.add(name, CHART_COLOR_SCHEMA.toJson(colorSets.getColorSchema(name)));
             }
             json.add("set", jsonSet);
+            return json;
+        }
+    },
+    CHART_COLOR_SCHEMA {
+        @Override
+        public Object fromJson(JsonElement jsonElement, Object defaultValue) {
+            JsonObject json = jsonElement.getAsJsonObject();
+            Color background = (Color) COLOR.fromJson(json.get("background"), null);
+            Color grid = (Color) COLOR.fromJson(json.get("grid"), null);
+            List<Color> list = (List<Color>)COLOR_ARRAY.fromJson(json.get("colors"), null);
+            return new ColorSchema(background, grid, list);
+        }
+
+        @Override
+        public JsonElement toJson(Object value) {
+            ColorSchema colorSchema = (ColorSchema) value;
+            JsonObject json = new JsonObject();
+            json.add("background", COLOR.toJson(colorSchema.getBackground()));
+            json.add("grid", COLOR.toJson(colorSchema.getGrid()));
+            json.add("colors", COLOR_ARRAY.toJson(colorSchema.getColors()));
             return json;
         }
     },

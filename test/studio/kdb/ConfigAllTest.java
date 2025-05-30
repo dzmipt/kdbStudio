@@ -129,7 +129,7 @@ public class ConfigAllTest {
         // Removed encoding from the config
         // assertEquals("UTF-8", config.getEncoding());
 
-        assertEquals(ConfigVersion.V2_0, config.getEnum(Config.CONFIG_VERSION));
+        assertEquals(ConfigVersion.LAST, config.getEnum(Config.CONFIG_VERSION));
 
     }
 

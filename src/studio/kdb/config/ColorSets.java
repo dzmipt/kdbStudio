@@ -1,41 +1,23 @@
 package studio.kdb.config;
 
-import org.jfree.chart.plot.DefaultDrawingSupplier;
-
-import java.awt.*;
-import java.util.List;
 import java.util.*;
 
 public class ColorSets {
     private final String selected;
-    private final Map<String, List<Color>> map;
+    private final Map<String, ColorSchema> map;
 
     private final static String DEFAULT_NAME = "Default";
-    public final static ColorSets DEFAULT = new ColorSets(DEFAULT_NAME, getDefaultMap());
+    public final static ColorSets DEFAULT = new ColorSets(DEFAULT_NAME, defaultMap());
 
-    private static Map<String, List<Color>> getDefaultMap() {
-        Paint[] paints = DefaultDrawingSupplier.DEFAULT_PAINT_SEQUENCE;
-        List<Color> colors = new ArrayList<>(paints.length);
-        for (Paint p: paints) {
-            if (p instanceof Color) colors.add( (Color)p);
-        }
+    private static Map<String, ColorSchema> defaultMap() {
         String name = "Default";
-        Map<String, List<Color>> map = new HashMap<>();
-        map.put(name, colors);
+        Map<String, ColorSchema> map = new HashMap<>();
+        map.put(name, ColorSchema.DEFAULT);
         return map;
     }
 
-    public ColorSets(String selected, Map<String, List<Color>> map) {
-        this.map = new LinkedHashMap<>();
-        for (String name: map.keySet()) {
-            List<Color> colors = new ArrayList<>(map.get(name));
-            if (!colors.isEmpty())
-                this.map.put(name, colors);
-        }
-        if (this.map.isEmpty()) {
-            this.map.putAll(getDefaultMap());
-        }
-
+    public ColorSets(String selected, Map<String, ColorSchema> map) {
+        this.map = new LinkedHashMap<>(map);
         if (this.map.containsKey(selected)) {
             this.selected = selected;
         } else {
@@ -48,13 +30,13 @@ public class ColorSets {
         return new ColorSets(newSelected, map);
     }
 
-    public ColorSets setColorSet(String name, List<Color> colors) {
+    public ColorSets setColorSchema(String name, ColorSchema colorSchema) {
         ColorSets colorSets = new ColorSets(selected, map);
-        colorSets.map.put(name, colors);
+        colorSets.map.put(name, colorSchema);
         return colorSets;
     }
 
-    public ColorSets deleteColorSet(String name) {
+    public ColorSets deleteColorSchema(String name) {
         Iterator<String> iterator = map.keySet().iterator();
         String newSelected = iterator.next();
         if (newSelected.equals(name)) {
@@ -70,10 +52,11 @@ public class ColorSets {
         return selected;
     }
 
-    public List<Color> getColors(String name) {
-        List<Color> colors = map.get(name);
-        if (colors == null) return null;
-        return Collections.unmodifiableList(colors);
+    public ColorSchema getColorSchema(String name) {
+        return map.get(name);
+    }
+    public ColorSchema getColorSchema() {
+        return getColorSchema(getDefaultName());
     }
 
     public Set<String> getNames() {
