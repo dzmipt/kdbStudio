@@ -8,6 +8,7 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.datatransfer.StringSelection;
 import java.awt.event.KeyEvent;
+import java.net.URI;
 import java.net.URL;
 
 public class Util {
@@ -191,5 +192,16 @@ public class Util {
         log.info("mock fitToScreen: {}", isMock);
         mockFitToScreen = isMock;
     }
+
+    public static void openURL(String url) {
+        try {
+            Desktop.getDesktop().browse(new URI(url));
+        }
+        catch (Exception e) {
+            log.error("Error during URL {} openning", url);
+            StudioOptionPane.showError("Error attempting to launch web browser:\n" + e.getLocalizedMessage(), "Error");
+        }
+    }
+
 
 }

@@ -19,7 +19,6 @@ import studio.ui.rstextarea.FindReplaceAction;
 import studio.ui.rstextarea.RSTextAreaFactory;
 import studio.ui.search.SearchPanel;
 import studio.ui.statusbar.MainStatusBar;
-import studio.utils.BrowserLaunch;
 import studio.utils.Content;
 import studio.utils.LineEnding;
 import studio.utils.log4j.EnvConfig;
@@ -682,7 +681,7 @@ public class StudioWindow extends JFrame implements WindowListener {
         codeKxComAction = UserAction.create("code.kx.com", Util.TEXT_ICON, "Open code.kx.com",
                 KeyEvent.VK_C, null, e -> {
                     try {
-                        BrowserLaunch.openURL("http://code.kx.com/q/");
+                        Util.openURL("https://code.kx.com/q/ref/");
                     } catch (Exception ex) {
                         StudioOptionPane.showError("Error attempting to launch web browser:\n" + ex.getLocalizedMessage(), "Error");
                     }

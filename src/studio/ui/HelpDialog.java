@@ -1,7 +1,6 @@
 package studio.ui;
 
 import studio.kdb.Lm;
-import studio.utils.BrowserLaunch;
 import studio.utils.log4j.EnvConfig;
 
 import javax.swing.*;
@@ -22,10 +21,10 @@ public class HelpDialog extends JDialog {
                         + "Version: " + Lm.version + " (" + Lm.date + ")"
                         + "<br>Build date: " + Lm.build
                         + "<br>JVM Version: " + System.getProperty("java.version")
-                        + "</p><p>License: <a href=\"http://github.com/CharlesSkelton/studio/blob/master/license.md\">Apache 2</a>"
+                        + "</p><p>License: <a href=\"https://github.com/dzmipt/kdbStudio/blob/master/license.md\">Apache 2</a>"
                         + "<br>N.B. Some components have their own license terms, see this project on github for details."
-                        + "<br>Source available from <a href=\"http://github.com/dzmipt/kdbStudio\">Github</a>"
-                        + "<br>The repository was forked from <a href=\"http://github.com/CharlesSkelton/studio\">Github</a>"
+                        + "<br>Source available from <a href=\"https://github.com/dzmipt/kdbStudio\">Github</a>"
+                        + "<br>The repository was forked from <a href=\"https://github.com/CharlesSkelton/studio\">Github</a>"
                         + "<br>Contributions and corrections welcome."
                         + "<h1>Notes</h1>"
                         + Lm.notes
@@ -36,7 +35,7 @@ public class HelpDialog extends JDialog {
             @Override
             public void hyperlinkUpdate(HyperlinkEvent hle) {
                 if (HyperlinkEvent.EventType.ACTIVATED.equals(hle.getEventType()))
-                    BrowserLaunch.openURL(hle.getURL().toString());
+                    Util.openURL(hle.getURL().toString());
             }
         });
         jep.setBorder(BorderFactory.createEmptyBorder(10,20,10,20));
