@@ -67,8 +67,8 @@ public class KXYSeries extends XYSeries {
         double amaxY = Double.MIN_VALUE;
         data = new ArrayList<>();
         for (int row = 0; row < table.getRowCount(); row++) {
-            K.KBase xValue = (K.KBase)table.getValueAt(row, xIndex);
-            K.KBase yValue = (K.KBase)table.getValueAt(row, yIndex);
+            K.KBase xValue = table.get(row, xIndex);
+            K.KBase yValue = table.get(row, yIndex);
             if (xValue.isNull() || yValue.isNull()) continue;
 
             ToDouble x = (ToDouble)xValue;

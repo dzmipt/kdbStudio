@@ -26,12 +26,12 @@ import studio.ui.Toolbar;
 import studio.ui.Util;
 import studio.utils.WindowsAppUserMode;
 
-import javax.swing.Timer;
 import javax.swing.*;
+import javax.swing.Timer;
 import java.awt.*;
 import java.awt.event.*;
-import java.util.List;
 import java.util.*;
+import java.util.List;
 
 
 public class Chart implements ComponentListener {
@@ -82,7 +82,7 @@ public class Chart implements ComponentListener {
     private void initComponents() {
         List<String> namesList = new ArrayList<>();
         for (int index = 0; index < table.getColumnCount(); index++) {
-            KType type = table.getColumnType(index).getElementType();
+            KType type = table.getColumn(index).getElementType();
             if (supportedClasses.contains(type)) {
                 indexes.add(index);
                 namesList.add(table.getColumnName(index));
@@ -243,11 +243,11 @@ public class Chart implements ComponentListener {
     }
 
     public KType getDomainKType() {
-        return table.getColumnType(xIndex).getElementType();
+        return table.getColumn(xIndex).getElementType();
     }
 
     public KType getRangeKType() {
-        return table.getColumnType(yIndex).getElementType();
+        return table.getColumn(yIndex).getElementType();
     }
 
     public void refreshPlot() {
@@ -260,7 +260,7 @@ public class Chart implements ComponentListener {
         }
 
         int xIndex = indexes.get(pnlConfig.getDomainIndex());
-        KType xType = table.getColumnType(xIndex).getElementType();
+        KType xType = table.getColumn(xIndex).getElementType();
 
         if (this.xIndex != xIndex) {
             NumberAxis xAxis = new NumberAxis("");
@@ -282,7 +282,7 @@ public class Chart implements ComponentListener {
             if (yIndex == xIndex) continue;;
 
             if (yType == null) {
-                yType = table.getColumnType(yIndex).getElementType();
+                yType = table.getColumn(yIndex).getElementType();
                 if (this.yIndex != yIndex) {
                     NumberAxis yAxis = new NumberAxis("");
                     yAxis.setNumberFormatOverride(new KFormat(yType));

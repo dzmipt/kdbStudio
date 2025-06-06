@@ -5,8 +5,12 @@ import javax.swing.table.AbstractTableModel;
 public abstract class KTableModel extends AbstractTableModel {
 
     public abstract boolean isKey(int column);
-    public abstract K.KBaseVector<? extends K.KBase> getColumn(int col);
-    public abstract String getColumnName(int col) ;
+    public abstract KColumn getColumn(int col);
+
+    @Override
+    public final String getColumnName(int column) {
+        return getColumn(column).getName();
+    }
 
     public static KTableModel getModel(K.KBase obj) {
         if (obj instanceof K.Flip) {
@@ -66,11 +70,11 @@ public abstract class KTableModel extends AbstractTableModel {
         if (col == -1) {
             initIndex();
         } else {
-            K.KBaseVector<? extends K.KBase> array = getColumn(col);
+            KColumn column = getColumn(col);
             if (sortedByColumn == col) {
-                index = Sorter.reverse(array, index);
+                index = Sorter.reverse(column, index);
             } else {
-                index = Sorter.sort(array, index);
+                index = Sorter.sort(column, index);
             }
         }
         sortedByColumn = col;
@@ -86,21 +90,16 @@ public abstract class KTableModel extends AbstractTableModel {
         return !ascSorted && sortedByColumn == column;
     }
 
-    public Class getColumnClass(int col) {
-        return getColumn(col).getClass();
-    }
-    public KType getColumnType(int col) {
-        return getColumn(col).getType();
+    public Object getValueAt(int row,int col) {
+        return get(row, col);
     }
 
-    //@TODO: add separate method which return K.KBase
-    public Object getValueAt(int row,int col) {
-        K.KBaseVector<? extends K.KBase> v = getColumn(col);
-        return v.at(row);
+    public K.KBase get(int row, int col) {
+        return getColumn(col).get(row);
     }
 
     public int getRowCount() {
-        return getColumn(0).getLength();
+        return getColumn(0).size();
     }
 
 }

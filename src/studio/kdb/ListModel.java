@@ -1,11 +1,11 @@
 package studio.kdb;
 
 public class ListModel extends KTableModel {
-    private final K.KBaseVector<? extends K.KBase> list;
+    private final KColumn column;
 
     public ListModel(K.KBaseVector<? extends K.KBase> list) {
         super(list.count());
-        this.list = list;
+        column = new KColumn("value", list);
     }
     @Override
     public boolean isKey(int column) {
@@ -13,13 +13,8 @@ public class ListModel extends KTableModel {
     }
 
     @Override
-    public K.KBaseVector<? extends K.KBase> getColumn(int col) {
-        return list;
-    }
-
-    @Override
-    public String getColumnName(int col) {
-        return "value";
+    public KColumn getColumn(int col) {
+        return column;
     }
 
     @Override

@@ -1,20 +1,41 @@
 package studio.kdb;
 
 public class DictTableModel extends KTableModel {
-    private final K.Dict dict;
-
-    private final boolean keyFlip;
-    private final boolean valueFlip;
     private final int keyCount;
-    private final int valueCount;
+    private final KColumn[] columns;
 
-    public DictTableModel(K.Dict obj) {
-        super(obj.count());
-        this.dict = obj;
-        keyFlip = dict.x instanceof K.Flip;
-        valueFlip = dict.y instanceof K.Flip;
+    public DictTableModel(K.Dict dict) {
+        super(dict.count());
+
+        boolean keyFlip = dict.x instanceof K.Flip;
+        boolean valueFlip = dict.y instanceof K.Flip;
         keyCount = keyFlip ? ((K.Flip)dict.x).x.getLength() : 1;
-        valueCount = valueFlip ? ((K.Flip)dict.y).x.getLength() : 1;
+        int valueCount = valueFlip ? ((K.Flip)dict.y).x.getLength() : 1;
+
+        columns = new KColumn[keyCount + valueCount];
+        for (int col = 0; col<columns.length; col++) {
+            boolean keyColumn = col < keyCount;
+
+            K.KBase obj = keyColumn ? dict.x : dict.y;
+            int index = keyColumn ? col : col - keyCount;
+
+            String name;
+            if (obj instanceof K.Flip) {
+                K.KSymbolVector v = ((K.Flip) obj).x;
+                name = v.at(index).s;
+            } else { //list
+                name = keyColumn ? "key" : "value";
+            }
+
+            K.KBaseVector<? extends K.KBase> data;
+            if (obj instanceof K.Flip) {
+                data = (K.KBaseVector<? extends K.KBase>) ((K.Flip)obj).y.at(index);
+            } else { //list
+                data = (K.KBaseVector<? extends K.KBase>)obj;
+            }
+
+            columns[col] = new KColumn(name, data);
+        }
     }
 
     public boolean isKey(int column) {
@@ -22,30 +43,10 @@ public class DictTableModel extends KTableModel {
     }
 
     public int getColumnCount() {
-        return keyCount + valueCount;
+        return columns.length;
     }
 
-    public String getColumnName(int col) {
-        boolean keyColumn = col < keyCount;
-        K.KBase obj = keyColumn ? dict.x : dict.y;
-        int index = keyColumn ? col : col - keyCount;
-
-        if (obj instanceof K.Flip) {
-            K.KSymbolVector v = ((K.Flip) obj).x;
-            return v.at(index).s;
-        } else { //list
-            return keyColumn ? "key" : "value";
-        }
-    }
-
-    public K.KBaseVector<? extends K.KBase> getColumn(int col) {
-        boolean keyColumn = col < keyCount;
-        K.KBase obj = keyColumn ? dict.x : dict.y;
-        int index = keyColumn ? col : col - keyCount;
-        if (obj instanceof K.Flip) {
-            return (K.KBaseVector<? extends K.KBase>) ((K.Flip)obj).y.at(index);
-        } else { //list
-            return (K.KBaseVector<? extends K.KBase>)obj;
-        }
+    public KColumn getColumn(int col) {
+        return columns[col];
     }
 };

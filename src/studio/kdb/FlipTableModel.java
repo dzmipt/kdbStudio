@@ -2,11 +2,16 @@ package studio.kdb;
 
 public class FlipTableModel extends KTableModel {
 
-    private final K.Flip flip;
+    private final KColumn[] columns;
 
-    public FlipTableModel(K.Flip obj) {
-        super(obj.count());
-        flip = obj;
+    public FlipTableModel(K.Flip flip) {
+        super(flip.count());
+
+        int count = flip.x.getLength();
+        columns = new KColumn[count];
+        for (int index=0; index<count; index++) {
+            columns[index] = new KColumn(flip.x.at(index).s, (K.KBaseVector<? extends K.KBase>) flip.y.at(index) );
+        }
     }
 
     public boolean isKey(int column) {
@@ -14,14 +19,10 @@ public class FlipTableModel extends KTableModel {
     }
 
     public int getColumnCount() {
-        return flip.x.getLength();
+        return columns.length;
     }
 
-    public String getColumnName(int i) {
-        return flip.x.at(i).s;
-    }
-
-    public K.KBaseVector<? extends K.KBase> getColumn(int col) {
-        return (K.KBaseVector<? extends K.KBase>) flip.y.at(col);
+    public KColumn getColumn(int col) {
+        return columns[col];
     }
 };

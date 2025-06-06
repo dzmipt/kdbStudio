@@ -11,7 +11,6 @@ import studio.ui.search.*;
 import javax.swing.*;
 import javax.swing.event.*;
 import javax.swing.table.TableColumn;
-import javax.swing.table.TableModel;
 import java.awt.*;
 import java.awt.event.*;
 import java.util.Objects;
@@ -20,7 +19,7 @@ import java.util.regex.PatternSyntaxException;
 //@TODO: Should it be really a JPanel? It looks it should be just a JTabel. And anyway any additional components could be added to TabPanel
 public class QGrid extends JPanel implements MouseWheelListener, SearchPanelListener {
     private StudioWindow studioWindow;
-    private final TableModel model;
+    private final KTableModel model;
     private final JTable table;
     private final WidthAdjuster widthAdjuster;
     private final TableRowHeader tableRowHeader;
@@ -422,7 +421,7 @@ public class QGrid extends JPanel implements MouseWheelListener, SearchPanelList
 
             int modelRow = table.convertRowIndexToModel(lastSearchPos.getRow());
             int modelColumn = table.convertColumnIndexToModel(lastSearchPos.getColumn());
-            K.KBase value = (K.KBase)model.getValueAt(modelRow, modelColumn);
+            K.KBase value = model.get(modelRow, modelColumn);
             String text = value.isNull() ? "" : value.toString(KFormatContext.NO_TYPE);
 
             if (searchEngine.containsIn(text)) {
