@@ -3,6 +3,7 @@ package studio.ui.chart;
 import org.jfree.chart.plot.DefaultDrawingSupplier;
 import studio.kdb.Config;
 import studio.ui.ColorChooser;
+import studio.ui.SquareIcon;
 import studio.ui.chart.event.LegendChangeEvent;
 import studio.ui.chart.event.LegendChangeListener;
 

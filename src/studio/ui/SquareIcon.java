@@ -1,4 +1,4 @@
-package studio.ui.chart;
+package studio.ui;
 
 import javax.swing.*;
 import java.awt.*;
