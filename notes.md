@@ -5,7 +5,7 @@
 * Comment line action - Ctrl + / (or Command + / on MacOS) 
 * Chart Settings for color schema and stroke styles
 * Configuration is stored in json format (studio.json)
-    * Details of servers connections are extracted into separate servers.json config file
+    * Details of server connections are extracted into separate servers.json config file
     * Defaults for studio.json can be put into plugins folder
 
 `dz5.0` 2025.02.28
