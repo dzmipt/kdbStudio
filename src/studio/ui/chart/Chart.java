@@ -19,17 +19,17 @@ import org.jfree.data.xy.XYSeriesCollection;
 import studio.kdb.*;
 import studio.kdb.config.ColorSchema;
 import studio.ui.StudioOptionPane;
+import studio.ui.StudioWindow;
 import studio.ui.Toolbar;
 import studio.ui.Util;
 import studio.utils.WindowsAppUserMode;
 
 import javax.swing.*;
+import javax.swing.Timer;
 import java.awt.*;
 import java.awt.event.*;
-import java.util.ArrayList;
-import java.util.HashMap;
+import java.util.*;
 import java.util.List;
-import java.util.Map;
 
 
 public class Chart implements ComponentListener {
@@ -127,6 +127,7 @@ public class Chart implements ComponentListener {
                 public void windowClosed(WindowEvent e) {
                     charts.remove(Chart.this);
                     pnlConfig.dispose();
+                    StudioWindow.refreshAllMenus();
                 }
             });
             frame.setIconImage(Util.CHART_BIG_ICON.getImage());
@@ -145,6 +146,10 @@ public class Chart implements ComponentListener {
         return frame;
     }
 
+    public static List<Chart> getCharts() {
+        return Collections.unmodifiableList(charts);
+    }
+
     private ChartPanel createChartPanel() {
         XYPlot plot = new XYPlot(null, null, null, null);
         JFreeChart chart = new JFreeChart("", JFreeChart.DEFAULT_TITLE_FONT, plot, false);
@@ -157,7 +162,7 @@ public class Chart implements ComponentListener {
         return new ChartPanel(chart);
     }
 
-    private String getChartTitle() {
+    public String getChartTitle() {
         String title = null;
 
         if (chartPanel != null && chartPanel.getChart() != null) {
@@ -186,6 +191,7 @@ public class Chart implements ComponentListener {
         String title = getChartTitle();
         if (! title.equals(frame.getTitle())) {
             frame.setTitle(title);
+            StudioWindow.refreshAllMenus();
         }
     }
 

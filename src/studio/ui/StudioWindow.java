@@ -913,7 +913,7 @@ public class StudioWindow extends JFrame implements WindowListener {
         }
     }
 
-    private static void refreshAllMenus() {
+    public static void refreshAllMenus() {
         for(StudioWindow window: allWindows) {
             window.refreshMenu();
         }
@@ -980,6 +980,21 @@ public class StudioWindow extends JFrame implements WindowListener {
 
             addToMenu(windowMenu, windowMenuActions);
         }
+
+        List<Chart> charts = Chart.getCharts();
+        if (!charts.isEmpty()) {
+            windowMenu.addSeparator();
+
+            for(int index = 0; index < charts.size(); index++) {
+                Chart chart = charts.get(index);
+                UserAction action = UserAction.create("" + (index + 1) + " " + chart.getChartTitle(),
+                        Util.BLANK_ICON, "", 0, null,
+                        e -> ensureDeiconified(chart.getFrame()) );
+
+                addToMenu(windowMenu, action);
+            }
+        }
+
     }
 
     private void createMenuBar() {
