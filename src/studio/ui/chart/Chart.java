@@ -16,10 +16,7 @@ import org.jfree.chart.renderer.xy.XYLineAndShapeRenderer;
 import org.jfree.chart.title.TextTitle;
 import org.jfree.data.xy.IntervalXYDataset;
 import org.jfree.data.xy.XYSeriesCollection;
-import studio.kdb.Config;
-import studio.kdb.KFormat;
-import studio.kdb.KTableModel;
-import studio.kdb.KType;
+import studio.kdb.*;
 import studio.kdb.config.ColorSchema;
 import studio.ui.StudioOptionPane;
 import studio.ui.Toolbar;
@@ -27,11 +24,12 @@ import studio.ui.Util;
 import studio.utils.WindowsAppUserMode;
 
 import javax.swing.*;
-import javax.swing.Timer;
 import java.awt.*;
 import java.awt.event.*;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 
 public class Chart implements ComponentListener {
@@ -43,73 +41,55 @@ public class Chart implements ComponentListener {
 
     private Timer configUpdateTimer;
 
-    private KTableModel table;
     private ChartPanel chartPanel = null;
     private JFrame frame;
     private JPanel contentPane;
     private ChartConfigPanel pnlConfig;
 
-    private final List<Integer> indexes = new ArrayList<>();
-    private int xIndex = -1;
-    private int yIndex = -1;
-    private Map<Integer, KXYSeries> series = new HashMap<>();
+    private int domainIndex = -1;
+    private int rangeIndex = -1;
+    private KType domainType, rangeType;
+    private final Map<Integer, KXYSeries> series = new HashMap<>();
 
     private final String defaultTitle;
 
     private static int chartIndex = 0;
     private static final List<Chart> charts = new ArrayList<>();
 
-
-    private final static Set<KType> supportedClasses = new HashSet<>();
-
-    static {
-        supportedClasses.addAll(Editor.VALUE_CLASSES);
-        supportedClasses.addAll(Editor.TEMPORAL_CLASSES);
-    }
-
-    private static StandardChartTheme currentTheme = new StandardChartTheme("JFree");
+    private static final StandardChartTheme currentTheme = new StandardChartTheme("JFree");
     static {
         currentTheme.setXYBarPainter(new StandardXYBarPainter());
     }
 
     public Chart(KTableModel table) {
-        this.table = table;
         chartIndex++;
         defaultTitle = "Studio for kdb+ [chart"+ chartIndex +"]";
-        initComponents();
+        initComponents(table);
     }
 
-    private void initComponents() {
-        List<String> namesList = new ArrayList<>();
-        for (int index = 0; index < table.getColumnCount(); index++) {
-            KType type = table.getColumn(index).getElementType();
-            if (supportedClasses.contains(type)) {
-                indexes.add(index);
-                namesList.add(table.getColumnName(index));
-            }
-        }
+    private void initComponents(KTableModel table) {
+        PlotConfig plotConfig = new PlotConfig(table);
 
-        if (indexes.size() < 2) {
-            log.info("Nothing to chart. Number of columns which can be casted to decimal in {}", indexes.size());
+        if (plotConfig.size() < 2) {
+            log.info("Nothing to chart. Number of columns which can be casted to decimal in {}", plotConfig.size());
             StudioOptionPane.showWarning(null, "It turns out that nothing is found to chart.", "Nothing to chart");
             return;
         }
-        String[] names = namesList.toArray(new String[namesList.size()]);
 
-        int plotMoveModifier = Util.MAC_OS_X ? KeyEvent.ALT_MASK : KeyEvent.CTRL_MASK;
-        int lineDragModifier = Util.MAC_OS_X ? KeyEvent.META_MASK : KeyEvent.CTRL_MASK;
+        int plotMoveModifier = Util.MAC_OS_X ? KeyEvent.ALT_DOWN_MASK : KeyEvent.CTRL_DOWN_MASK;
+        int lineDragModifier = Util.MAC_OS_X ? KeyEvent.META_DOWN_MASK : KeyEvent.CTRL_DOWN_MASK;
 
         String defaultLabelText = "  Use mouse wheel or select a rectangle to zoom. " +
-                "Hold " + KeyEvent.getKeyModifiersText(plotMoveModifier) + " to move the chart. " +
+                "Hold " + InputEvent.getModifiersExText(plotMoveModifier) + " to move the chart. " +
                 "ESC - to restore scale";
 
         String selectedLineText = "  Move the line wih mouse drag. " +
-                "Hold " + KeyEvent.getKeyModifiersText(lineDragModifier) + " to change the slope of the line. ";
+                "Hold " + InputEvent.getModifiersExText(lineDragModifier) + " to change the slope of the line. ";
 
         JLabel lbl = new JLabel(defaultLabelText);
 
         chartPanel = createChartPanel();
-        pnlConfig = new ChartConfigPanel(this, names);
+        pnlConfig = new ChartConfigPanel(this, plotConfig);
 
         JToolBar toolbar = new Toolbar();
         toolbar.setLayout(new BoxLayout(toolbar, BoxLayout.X_AXIS));
@@ -186,13 +166,13 @@ public class Chart implements ComponentListener {
             TextTitle chartTitle = chart.getTitle();
             if (chartTitle != null && chartTitle.isVisible()) {
                 String text = chartTitle.getText();
-                if (text != null && !text.trim().equals("")) {
+                if (text != null && !text.trim().isEmpty()) {
                     title = text.trim();
                 }
             }
         }
 
-        if (title == null || title.trim().equals("")) {
+        if (title == null || title.trim().isEmpty()) {
             return defaultTitle;
         }
 
@@ -243,11 +223,11 @@ public class Chart implements ComponentListener {
     }
 
     public KType getDomainKType() {
-        return table.getColumn(xIndex).getElementType();
+        return domainType;
     }
 
     public KType getRangeKType() {
-        return table.getColumn(yIndex).getElementType();
+        return rangeType;
     }
 
     public void refreshPlot() {
@@ -259,46 +239,46 @@ public class Chart implements ComponentListener {
             plot.setRenderer(i, null);
         }
 
-        int xIndex = indexes.get(pnlConfig.getDomainIndex());
-        KType xType = table.getColumn(xIndex).getElementType();
+        PlotConfig plotConfig = pnlConfig.getPlotConfig();
+        int domainIndex = plotConfig.getDomainIndex();
+        domainType = plotConfig.getColumn(domainIndex).getElementType();
 
-        if (this.xIndex != xIndex) {
+        if (this.domainIndex != domainIndex) {
             NumberAxis xAxis = new NumberAxis("");
-            xAxis.setNumberFormatOverride(new KFormat(xType));
+            xAxis.setNumberFormatOverride(new KFormat(domainType));
             xAxis.setAutoRangeIncludesZero(false);
             plot.setDomainAxis(xAxis);
-            this.xIndex = xIndex;
+            this.domainIndex = domainIndex;
             series.clear();
         }
 
-        KType yType = null;
+        rangeType = null;
         plot.setDomainPannable(true);
         plot.setRangePannable(true);
         plot.setDatasetRenderingOrder(DatasetRenderingOrder.FORWARD);
         int datasetIndex = 0;
-        for (int index = 0; index<indexes.size(); index++) {
-            if (! pnlConfig.isSeriesEnables(index)) continue;
-            int yIndex = indexes.get(index);
-            if (yIndex == xIndex) continue;;
+        for (int index = 0; index < plotConfig.size(); index++) {
+            if (! plotConfig.getEnabled(index)) continue;
+            if (index == domainIndex) continue;
 
-            if (yType == null) {
-                yType = table.getColumn(yIndex).getElementType();
-                if (this.yIndex != yIndex) {
+            if (rangeType == null) {
+                rangeType = plotConfig.getColumn(index).getElementType();
+                if (this.rangeIndex != index) {
                     NumberAxis yAxis = new NumberAxis("");
-                    yAxis.setNumberFormatOverride(new KFormat(yType));
+                    yAxis.setNumberFormatOverride(new KFormat(rangeType));
                     yAxis.setAutoRangeIncludesZero(false);
                     plot.setRangeAxis(yAxis);
-                    this.yIndex = yIndex;
+                    this.rangeIndex = index;
                 }
             }
 
-            IntervalXYDataset dataset = getDateset(xIndex, yIndex);
+            IntervalXYDataset dataset = getDateset(plotConfig.getColumn(domainIndex), plotConfig.getColumn(index), index);
 
             XYToolTipGenerator toolTipGenerator = new StandardXYToolTipGenerator(StandardXYToolTipGenerator.DEFAULT_TOOL_TIP_FORMAT,
-                    new KFormat(xType), new KFormat(yType));
+                    new KFormat(domainType), new KFormat(rangeType));
             XYItemRenderer renderer;
 
-            LegendIcon icon = pnlConfig.getLegendIcon(index);
+            LegendIcon icon = plotConfig.getIcon(index);
             ChartType chartType = icon.getChartType();
             if (chartType == ChartType.BAR) {
                 renderer = new BarRenderer();
@@ -318,18 +298,18 @@ public class Chart implements ComponentListener {
             datasetIndex++;
         }
 
-        chartPanel.setVisible(yType!=null);
+        chartPanel.setVisible(rangeType!=null);
         contentPane.revalidate();
         contentPane.repaint();
     }
 
-    private IntervalXYDataset getDateset(int xCol, int yCol) {
+    private IntervalXYDataset getDateset(KColumn xColumn, KColumn yColumn, int yCol) {
         XYSeriesCollection collection = new XYSeriesCollection();
         collection.setAutoWidth(true);
 
         KXYSeries kxySeries = series.get(yCol);
         if (kxySeries == null) {
-            kxySeries = new KXYSeries(table, xCol, yCol);
+            kxySeries = new KXYSeries(xColumn, yColumn);
             series.put(yCol, kxySeries);
         }
 

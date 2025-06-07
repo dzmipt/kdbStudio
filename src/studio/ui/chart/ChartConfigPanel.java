@@ -1,7 +1,5 @@
 package studio.ui.chart;
 
-import studio.kdb.Config;
-import studio.kdb.config.ColorSets;
 import studio.ui.UserAction;
 import studio.ui.Util;
 
@@ -27,10 +25,13 @@ public class ChartConfigPanel extends Box {
     private final LegendListPanel listLines;
     private final List<Line> lines = new ArrayList<>();
     private final Map<Line,LineInfoFrame> infoFrameMap = new HashMap<>();
+    private PlotConfig plotConfig;
 
-    public ChartConfigPanel(Chart chart, String[] names) {
+    public ChartConfigPanel(Chart chart, PlotConfig plotConfig) {
         super(BoxLayout.Y_AXIS);
         this.chart = chart;
+        this.plotConfig = plotConfig;
+
         setBorder(BorderFactory.createEmptyBorder(5,5,5,5));
 
         comboCharType = new JComboBox<>(ChartType.values());
@@ -43,7 +44,9 @@ public class ChartConfigPanel extends Box {
         boxStyle.add(Box.createHorizontalGlue());
         add(boxStyle);
 
+        String[] names = plotConfig.getNames();
         comboX = new JComboBox<>(names);
+        comboX.setSelectedIndex(plotConfig.getDomainIndex());
         comboX.setMaximumSize(new Dimension(Integer.MAX_VALUE, comboX.getPreferredSize().height));
         comboX.addActionListener(e -> validateState() );
 
@@ -56,13 +59,8 @@ public class ChartConfigPanel extends Box {
         listSeries = new LegendListPanel("Series:", true, true, true);
         listSeries.addChangeListener(e -> refresh() );
 
-        ColorSets colorSets = Config.getInstance().getChartColorSets();
-        List<Color> baseColors = colorSets.getColorSchema().getColors();
         for (int index = 0; index < names.length; index++) {
-            LegendIcon icon = new LegendIcon(baseColors.get(index % baseColors.size()), LegendButton.SHAPES[index % LegendButton.SHAPES.length],
-                    LegendButton.getDefaultStroke());
-            icon.setChartType(ChartType.values()[0]);
-            listSeries.add(names[index], icon);
+            listSeries.add(names[index], plotConfig.getIcon(index));
         }
         listSeries.setEnabled(0, false);
 
@@ -95,16 +93,18 @@ public class ChartConfigPanel extends Box {
         }
     }
 
-    public int getDomainIndex() {
+    private int getDomainIndex() {
         return comboX.getSelectedIndex();
     }
 
-    public boolean isSeriesEnables(int index) {
-        return listSeries.isSelected(index);
-    }
-
-    public LegendIcon getLegendIcon(int index) {
-        return listSeries.getIcon(index);
+    public PlotConfig getPlotConfig() {
+//        dataset = new Dataset(this.dataset);
+        plotConfig.setDomainIndex(getDomainIndex());
+        for (int index = 0; index < plotConfig.size(); index++) {
+            plotConfig.setEnabled(index, listSeries.isSelected(index));
+            plotConfig.setIcon(index, listSeries.getIcon(index));
+        }
+        return plotConfig;
     }
 
     public void addLine(Line line) {

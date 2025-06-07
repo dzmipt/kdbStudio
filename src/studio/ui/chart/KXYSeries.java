@@ -3,7 +3,7 @@ package studio.ui.chart;
 import org.jfree.data.xy.XYDataItem;
 import org.jfree.data.xy.XYSeries;
 import studio.kdb.K;
-import studio.kdb.KTableModel;
+import studio.kdb.KColumn;
 import studio.kdb.ToDouble;
 
 import java.util.ArrayList;
@@ -60,15 +60,15 @@ public class KXYSeries extends XYSeries {
         throw new IllegalStateException("KXYSeries modification is not supported");
     }
 
-    public KXYSeries(KTableModel table, int xIndex, int yIndex) {
-        super(table.getColumnName(yIndex),true, false);
+    public KXYSeries(KColumn xColumn, KColumn yColumn) {
+        super(yColumn.getName(),true, false);
 
         double aminY = Double.MAX_VALUE;
         double amaxY = Double.MIN_VALUE;
         data = new ArrayList<>();
-        for (int row = 0; row < table.getRowCount(); row++) {
-            K.KBase xValue = table.get(row, xIndex);
-            K.KBase yValue = table.get(row, yIndex);
+        for (int row = 0; row < xColumn.size(); row++) {
+            K.KBase xValue = xColumn.get(row);
+            K.KBase yValue = yColumn.get(row);
             if (xValue.isNull() || yValue.isNull()) continue;
 
             ToDouble x = (ToDouble)xValue;
