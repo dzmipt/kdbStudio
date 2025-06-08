@@ -1,5 +1,6 @@
 package studio.ui.chart;
 
+import studio.ui.GroupLayoutSimple;
 import studio.ui.UserAction;
 import studio.ui.Util;
 
@@ -14,23 +15,19 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-public class ChartConfigPanel extends Box {
+public class ChartConfigPanel extends JPanel {
 
     private final Chart chart;
 
     private final JComboBox<ChartType> comboCharType;
-    private final JComboBox<String> comboX;
     private final LegendListPanel listSeries;
 
     private final LegendListPanel listLines;
     private final List<Line> lines = new ArrayList<>();
     private final Map<Line,LineInfoFrame> infoFrameMap = new HashMap<>();
-    private PlotConfig plotConfig;
 
     public ChartConfigPanel(Chart chart, PlotConfig plotConfig) {
-        super(BoxLayout.Y_AXIS);
         this.chart = chart;
-        this.plotConfig = plotConfig;
 
         setBorder(BorderFactory.createEmptyBorder(5,5,5,5));
 
@@ -38,53 +35,42 @@ public class ChartConfigPanel extends Box {
         comboCharType.setMaximumSize(new Dimension(Integer.MAX_VALUE, comboCharType.getPreferredSize().height));
         comboCharType.addActionListener(this::charTypeSelected);
 
-        Box boxStyle = Box.createHorizontalBox();
-        boxStyle.add(new JLabel("Type: "));
-        boxStyle.add(comboCharType);
-        boxStyle.add(Box.createHorizontalGlue());
-        add(boxStyle);
 
-        String[] names = plotConfig.getNames();
-        comboX = new JComboBox<>(names);
-        comboX.setSelectedIndex(plotConfig.getDomainIndex());
-        comboX.setMaximumSize(new Dimension(Integer.MAX_VALUE, comboX.getPreferredSize().height));
-        comboX.addActionListener(e -> validateState() );
+        JLabel typeLabel = new JLabel("Type: ");
 
-        Box boxDomain = Box.createHorizontalBox();
-        boxDomain.add(new JLabel("Domain axis: "));
-        boxDomain.add(comboX);
-        boxDomain.add(Box.createHorizontalGlue());
-        add(boxDomain);
-
-        listSeries = new LegendListPanel("Series:", true, true, true);
+        listSeries = new LegendListPanel(plotConfig);
         listSeries.addChangeListener(e -> refresh() );
 
-        for (int index = 0; index < names.length; index++) {
-            listSeries.add(names[index], plotConfig.getIcon(index));
-        }
-        listSeries.setEnabled(0, false);
-
-        listLines = new LegendListPanel("Lines:", true, false, false);
+        listLines = new LegendListPanel();
         listLines.addChangeListener(e -> refresh() );
 
-        Box boxIndent = Box.createHorizontalBox();
-        boxIndent.add(Box.createRigidArea(new Dimension(5,20)));
-        JComponent filler = new Box.Filler(new Dimension(0,0), new Dimension(0, 0), new Dimension(Integer.MAX_VALUE, 1));
+        Component left = Box.createRigidArea(new Dimension(5,20));
+        Component right = Box.createRigidArea(new Dimension(5,20));
+        JComponent filler = new Box.Filler(new Dimension(0,1), new Dimension(0, 1), new Dimension(Integer.MAX_VALUE, 1));
         filler.setBorder(BorderFactory.createLineBorder(Color.GRAY));
-        boxIndent.add(filler);
-        boxIndent.add(Box.createRigidArea(new Dimension(5,20)));
 
+        JPanel scrollPaneContent = new JPanel();
+        GroupLayoutSimple layout = new GroupLayoutSimple(scrollPaneContent, listSeries, filler, listLines);
+        layout.setAutoCreateGaps(false);
+        layout.setAutoCreateContainerGaps(false);
+        layout.setBaseline(false);
+        layout.setStacks(
+                new GroupLayoutSimple.Stack()
+                        .addLine(listSeries)
+                        .addLine(left, filler, right)
+                        .addLine(listLines)
+        );
 
-        Box scrollPaneContent = Box.createVerticalBox();
-        scrollPaneContent.add(listSeries);
-        scrollPaneContent.add(boxIndent);
-        scrollPaneContent.add(listLines);
-        scrollPaneContent.add(Box.createVerticalBox());
+        JScrollPane scrollPane = new JScrollPane(scrollPaneContent);
+        scrollPane.setBorder(BorderFactory.createEmptyBorder(0,0,0,0));
 
-        scrollPaneContent.setBorder(BorderFactory.createEmptyBorder(2,2,2,2));
-        add(new JScrollPane(scrollPaneContent));
-
-        listSeries.setEnabled(0, false);
+        layout = new GroupLayoutSimple(this, comboCharType, scrollPane);
+        layout.setAutoCreateContainerGaps(false);
+        layout.setStacks(
+                new GroupLayoutSimple.Stack()
+                        .addLine(typeLabel, comboCharType)
+                        .addLine(scrollPane)
+        );
     }
 
     public void dispose() {
@@ -93,18 +79,8 @@ public class ChartConfigPanel extends Box {
         }
     }
 
-    private int getDomainIndex() {
-        return comboX.getSelectedIndex();
-    }
-
     public PlotConfig getPlotConfig() {
-//        dataset = new Dataset(this.dataset);
-        plotConfig.setDomainIndex(getDomainIndex());
-        for (int index = 0; index < plotConfig.size(); index++) {
-            plotConfig.setEnabled(index, listSeries.isSelected(index));
-            plotConfig.setIcon(index, listSeries.getIcon(index));
-        }
-        return plotConfig;
+        return listSeries.getPlotConfig();
     }
 
     public void addLine(Line line) {
@@ -146,15 +122,6 @@ public class ChartConfigPanel extends Box {
         invalidate();
         repaint();
         chart.refreshPlot();
-    }
-
-    private void validateState() {
-        int domainIndex = getDomainIndex();
-        int count = listSeries.getListSize();
-        for (int index = 0; index < count; index++) {
-            listSeries.setEnabled(index, index !=domainIndex);
-        }
-        refresh();
     }
 
     private void charTypeSelected(ActionEvent e) {

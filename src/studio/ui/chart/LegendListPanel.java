@@ -1,5 +1,6 @@
 package studio.ui.chart;
 
+import studio.ui.GroupLayoutSimple;
 import studio.ui.chart.event.LegendChangeEvent;
 import studio.ui.chart.event.LegendChangeListener;
 
@@ -7,24 +8,52 @@ import javax.swing.*;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 import javax.swing.event.EventListenerList;
+import java.awt.*;
 import java.util.ArrayList;
 import java.util.List;
 
-public class LegendListPanel extends Box implements LegendChangeListener {
+public class LegendListPanel extends JPanel implements LegendChangeListener {
 
-    private final boolean line, shape, bar;
+    private final boolean isLines;
     private final List<JCheckBox> checkBoxes = new ArrayList<>();
     private final List<LegendButton> buttons = new ArrayList<>();
-    private final JPanel panel;
+    private final JLabel lblTitle = new JLabel();
+    private final JComboBox<String> comboX = new JComboBox<>();
+    private final JPanel panel = new JPanel();
+    private boolean blockLayoutUpdate = true;
+
+    private PlotConfig plotConfig;
+
     private final EventListenerList listenerList = new EventListenerList();
 
+    public LegendListPanel(PlotConfig plotConfig) {
+        this.plotConfig = plotConfig;
+        isLines = false;
+        lblTitle.setVisible(false);
+        lblTitle.setText(plotConfig.getTitle());
+        comboX.setModel(new DefaultComboBoxModel<>(plotConfig.getNames()));
+        comboX.setSelectedIndex(plotConfig.getDomainIndex());
+        comboX.addActionListener(e -> validateState() );
 
-    public LegendListPanel(String labelText, boolean line, boolean shape, boolean bar) {
-        super(BoxLayout.Y_AXIS);
-        this.line = line;
-        this.shape = shape;
-        this.bar = bar;
+        for (int index = 0; index < plotConfig.size(); index++) {
+            add(plotConfig.getColumn(index).getName(), plotConfig.getIcon(index));
+            JCheckBox checkBox = checkBoxes.get(index);
+            checkBox.setSelected(plotConfig.getEnabled(index));
+            checkBox.setEnabled(index != plotConfig.getDomainIndex());
+        }
 
+        initComponents();
+    }
+
+    public LegendListPanel() {
+        isLines = true;
+        initComponents();
+    }
+
+    private void initComponents() {
+        JLabel domainLabel = new JLabel("Domain axis: ");
+        JLabel captionLabel = new JLabel(isLines ? "Lines:" : "Series:");
+        Component glue = Box.createGlue();
         JCheckBox chkAll = new JCheckBox("All", true);
         chkAll.addActionListener(e -> {
             for (JCheckBox checkBox: checkBoxes) {
@@ -33,21 +62,46 @@ public class LegendListPanel extends Box implements LegendChangeListener {
             notifyListeners();
         });
 
-        panel = new JPanel();
+        GroupLayoutSimple layout = new GroupLayoutSimple(this, comboX, glue);
+        layout.setAutoCreateContainerGaps(false);
+        layout.setStacks(
+                new GroupLayoutSimple.Stack()
+                        .addLine(lblTitle)
+                        .addLine(domainLabel,comboX)
+                        .addLine(captionLabel, glue, chkAll)
+                        .addLine(panel)
+        );
 
-        Box boxTop = Box.createHorizontalBox();
-        boxTop.add(new JLabel(labelText));
-        boxTop.add(Box.createHorizontalGlue());
-        boxTop.add(chkAll);
+        if (isLines) {
+            lblTitle.setVisible(false);
+            domainLabel.setVisible(false);
+            comboX.setVisible(false);
+        }
 
-        Box boxCentral = Box.createHorizontalBox();
-        boxCentral.add(panel);
-        boxCentral.add(Box.createHorizontalGlue());
-
-        add(boxTop);
-        add(boxCentral);
-
+        blockLayoutUpdate = false;
         updateLayout();
+    }
+
+    public PlotConfig getPlotConfig() {
+        plotConfig.setDomainIndex(getDomainIndex());
+        for (int index = 0; index < plotConfig.size(); index++) {
+            plotConfig.setEnabled(index, isSelected(index));
+            plotConfig.setIcon(index, getIcon(index));
+        }
+        return plotConfig;
+    }
+
+
+    private int getDomainIndex() {
+        return comboX.getSelectedIndex();
+    }
+
+    private void validateState() {
+        int domainIndex = getDomainIndex();
+        for (int index = 0; index < buttons.size(); index++) {
+            setEnabled(index, index !=domainIndex);
+        }
+        notifyListeners();
     }
 
     public void add(String title, LegendIcon icon) {
@@ -57,7 +111,7 @@ public class LegendListPanel extends Box implements LegendChangeListener {
     public int add(String title, LegendIcon icon, Action ... additionalActions) {
         JCheckBox checkBox = new JCheckBox(title, true);
         checkBox.addActionListener(e -> notifyListeners() );
-        LegendButton button = new LegendButton(icon, line, shape, bar);
+        LegendButton button = new LegendButton(icon, true, true, !isLines);
         button.addChangeListener(this);
         if (additionalActions != null) {
             button.setAdditionalActions(additionalActions);
@@ -85,37 +139,25 @@ public class LegendListPanel extends Box implements LegendChangeListener {
         return checkBoxes.get(index).isSelected();
     }
 
-    public void setEnabled(int index, boolean enabled) {
+    private void setEnabled(int index, boolean enabled) {
         checkBoxes.get(index).setEnabled(enabled);
         buttons.get(index).setEnabled(enabled);
         buttons.get(index).invalidate();
     }
 
     private void updateLayout() {
-        GroupLayout layout = new GroupLayout(panel);
+        if (blockLayoutUpdate) return;
 
-        GroupLayout.ParallelGroup chkGroup = layout.createParallelGroup(GroupLayout.Alignment.LEADING);
-        GroupLayout.ParallelGroup iconGroup = layout.createParallelGroup(GroupLayout.Alignment.LEADING);
-        GroupLayout.SequentialGroup rowsGroup = layout.createSequentialGroup();
-
-        for (int i=0; i < buttons.size(); i++) {
-            JCheckBox chk = checkBoxes.get(i);
-            LegendButton button = buttons.get(i);
-            chkGroup.addComponent(chk);
-            iconGroup.addComponent(button);
-
-            rowsGroup.addGroup(layout.createParallelGroup(GroupLayout.Alignment.CENTER)
-                    .addComponent(chk)
-                    .addComponent(button) );
+        GroupLayoutSimple layout = new GroupLayoutSimple(panel);
+        layout.setBaseline(false);
+        layout.setPadding(3);
+        GroupLayoutSimple.Stack chkBoxStack = new GroupLayoutSimple.Stack();
+        GroupLayoutSimple.Stack btnStack = new GroupLayoutSimple.Stack();
+        for (int i=0; i<buttons.size(); i++) {
+            chkBoxStack.addLine(checkBoxes.get(i));
+            btnStack.addLineAndGlue(buttons.get(i));
         }
-
-        layout.setHorizontalGroup(layout.createSequentialGroup()
-                .addGroup(chkGroup)
-                .addGroup(iconGroup) );
-
-        layout.setVerticalGroup(rowsGroup);
-
-        panel.setLayout(layout);
+        layout.setStacks(chkBoxStack, btnStack);
     }
 
     @Override

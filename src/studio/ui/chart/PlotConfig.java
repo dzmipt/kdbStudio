@@ -53,9 +53,8 @@ public class PlotConfig {
         for (int i=0; i<count; i++) {
             int index = indexes.get(i);
             columns[i] = table.getColumn(index);
-            enabled[i] = i>0;
+            enabled[i] = true;
             icons[i] = new LegendIcon(baseColors.get(i % baseColors.size()),
-//                    null,
                     LegendButton.SHAPES[i % LegendButton.SHAPES.length],
                     LegendButton.getDefaultStroke());
             icons[i].setChartType(ChartType.LINE);
