@@ -156,7 +156,7 @@ public class Chart implements ComponentListener {
         JComboBox<String> comboCaptions = new JComboBox<>(captions);
         JCheckBox chkColor = new JCheckBox("Update colors");
         chkColor.setSelected(true);
-        JCheckBox chkClose = new JCheckBox("Close another chart");
+        JCheckBox chkClose = new JCheckBox("Close other chart");
 
         JPanel panel = new JPanel();
         GroupLayoutSimple layout = new GroupLayoutSimple(panel);
