@@ -135,6 +135,12 @@ public class LegendListPanel extends JPanel implements LegendChangeListener {
         return buttons.get(index).getLegendIcon();
     }
 
+    public void setChartType(ChartType chartType) {
+        for (LegendButton btn : buttons) {
+            btn.getLegendIcon().setChartType(chartType);
+        }
+    }
+
     public boolean isSelected(int index) {
         return checkBoxes.get(index).isSelected();
     }

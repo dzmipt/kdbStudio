@@ -9,13 +9,13 @@ import java.util.Set;
 
 public class GroupLayoutSimple extends GroupLayout {
 
-    private final Set<Component> maxWidthComponents;
+    private final Set<Component> maxWidthComponents = new HashSet<>();
     private int padding = -1;
     private boolean baseline = true;
 
     public GroupLayoutSimple(Container container, Component ... maxWidthComponents) {
         super(container);
-        this.maxWidthComponents = new HashSet<>(List.of(maxWidthComponents));
+        addMaxWidthComponents(maxWidthComponents);
         container.setLayout(this);
         setAutoCreateGaps(true);
         setAutoCreateContainerGaps(true);
@@ -23,6 +23,10 @@ public class GroupLayoutSimple extends GroupLayout {
 
     public GroupLayoutSimple(Container container) {
         this(container, new Component[0]);
+    }
+
+    public void addMaxWidthComponents(Component ... maxWidthComponents) {
+        this.maxWidthComponents.addAll(List.of(maxWidthComponents));
     }
 
     public void setPadding(int padding) {

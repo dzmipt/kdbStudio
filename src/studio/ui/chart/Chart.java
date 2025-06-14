@@ -14,9 +14,11 @@ import org.jfree.chart.renderer.xy.StandardXYBarPainter;
 import org.jfree.chart.renderer.xy.XYItemRenderer;
 import org.jfree.chart.renderer.xy.XYLineAndShapeRenderer;
 import org.jfree.chart.title.TextTitle;
-import org.jfree.data.xy.IntervalXYDataset;
 import org.jfree.data.xy.XYSeriesCollection;
-import studio.kdb.*;
+import studio.kdb.Config;
+import studio.kdb.KFormat;
+import studio.kdb.KTableModel;
+import studio.kdb.KType;
 import studio.kdb.config.ColorSchema;
 import studio.ui.StudioOptionPane;
 import studio.ui.StudioWindow;
@@ -25,10 +27,10 @@ import studio.ui.Util;
 import studio.utils.WindowsAppUserMode;
 
 import javax.swing.*;
-import javax.swing.Timer;
 import java.awt.*;
 import java.awt.event.*;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 
@@ -46,10 +48,7 @@ public class Chart implements ComponentListener {
     private JPanel contentPane;
     private ChartConfigPanel pnlConfig;
 
-    private int domainIndex = -1;
-    private int rangeIndex = -1;
     private KType domainType, rangeType;
-    private final Map<Integer, KXYSeries> series = new HashMap<>();
 
     private final String defaultTitle;
 
@@ -245,82 +244,69 @@ public class Chart implements ComponentListener {
             plot.setRenderer(i, null);
         }
 
-        PlotConfig plotConfig = pnlConfig.getPlotConfig();
-        int domainIndex = plotConfig.getDomainIndex();
-        domainType = plotConfig.getColumn(domainIndex).getElementType();
-
-        if (this.domainIndex != domainIndex) {
-            NumberAxis xAxis = new NumberAxis("");
-            xAxis.setNumberFormatOverride(new KFormat(domainType));
-            xAxis.setAutoRangeIncludesZero(false);
-            plot.setDomainAxis(xAxis);
-            this.domainIndex = domainIndex;
-            series.clear();
-        }
-
+        domainType = null;
         rangeType = null;
         plot.setDomainPannable(true);
         plot.setRangePannable(true);
         plot.setDatasetRenderingOrder(DatasetRenderingOrder.FORWARD);
-        int datasetIndex = 0;
-        for (int index = 0; index < plotConfig.size(); index++) {
-            if (! plotConfig.getEnabled(index)) continue;
-            if (index == domainIndex) continue;
 
-            if (rangeType == null) {
-                rangeType = plotConfig.getColumn(index).getElementType();
-                if (this.rangeIndex != index) {
+        int datasetIndex = 0;
+        PlotConfig[] plotConfigs = pnlConfig.getPlotConfigs();
+        for (PlotConfig plotConfig: plotConfigs) {
+            if (domainType == null) {
+                int domainIndex = plotConfig.getDomainIndex();
+                domainType = plotConfig.getColumn(domainIndex).getElementType();
+
+                NumberAxis xAxis = new NumberAxis("");
+                xAxis.setNumberFormatOverride(new KFormat(domainType));
+                xAxis.setAutoRangeIncludesZero(false);
+                plot.setDomainAxis(xAxis);
+            }
+
+            for (int index = 0; index < plotConfig.size(); index++) {
+                if (!plotConfig.getEnabled(index)) continue;
+                if (index == plotConfig.getDomainIndex() ) continue;
+
+                if (rangeType == null) {
+                    rangeType = plotConfig.getColumn(index).getElementType();
                     NumberAxis yAxis = new NumberAxis("");
                     yAxis.setNumberFormatOverride(new KFormat(rangeType));
                     yAxis.setAutoRangeIncludesZero(false);
                     plot.setRangeAxis(yAxis);
-                    this.rangeIndex = index;
                 }
+
+                XYSeriesCollection dataset = new XYSeriesCollection();
+                dataset.setAutoWidth(true);
+                dataset.addSeries(plotConfig.getSeries(index));
+
+                XYToolTipGenerator toolTipGenerator = new StandardXYToolTipGenerator(StandardXYToolTipGenerator.DEFAULT_TOOL_TIP_FORMAT,
+                        new KFormat(domainType), new KFormat(rangeType));
+                XYItemRenderer renderer;
+
+                LegendIcon icon = plotConfig.getIcon(index);
+                ChartType chartType = icon.getChartType();
+                if (chartType == ChartType.BAR) {
+                    renderer = new BarRenderer();
+                } else {
+                    renderer = new XYLineAndShapeRenderer(chartType.hasLine(), chartType.hasShape());
+                }
+                renderer.setDefaultToolTipGenerator(toolTipGenerator);
+                renderer.setSeriesPaint(0, icon.getColor());
+                renderer.setSeriesShape(0, icon.getShape());
+                renderer.setSeriesStroke(0, icon.getStroke());
+                ((AbstractRenderer) renderer).setAutoPopulateSeriesPaint(false);
+                ((AbstractRenderer) renderer).setAutoPopulateSeriesShape(false);
+                ((AbstractRenderer) renderer).setAutoPopulateSeriesStroke(false);
+
+                plot.setRenderer(datasetIndex, renderer);
+                plot.setDataset(datasetIndex, dataset);
+                datasetIndex++;
             }
-
-            IntervalXYDataset dataset = getDateset(plotConfig.getColumn(domainIndex), plotConfig.getColumn(index), index);
-
-            XYToolTipGenerator toolTipGenerator = new StandardXYToolTipGenerator(StandardXYToolTipGenerator.DEFAULT_TOOL_TIP_FORMAT,
-                    new KFormat(domainType), new KFormat(rangeType));
-            XYItemRenderer renderer;
-
-            LegendIcon icon = plotConfig.getIcon(index);
-            ChartType chartType = icon.getChartType();
-            if (chartType == ChartType.BAR) {
-                renderer = new BarRenderer();
-            } else {
-                renderer = new XYLineAndShapeRenderer(chartType.hasLine(), chartType.hasShape());
-            }
-            renderer.setDefaultToolTipGenerator(toolTipGenerator);
-            renderer.setSeriesPaint(0, icon.getColor());
-            renderer.setSeriesShape(0, icon.getShape());
-            renderer.setSeriesStroke(0, icon.getStroke());
-            ((AbstractRenderer)renderer).setAutoPopulateSeriesPaint(false);
-            ((AbstractRenderer)renderer).setAutoPopulateSeriesShape(false);
-            ((AbstractRenderer)renderer).setAutoPopulateSeriesStroke(false);
-
-            plot.setRenderer(datasetIndex, renderer);
-            plot.setDataset(datasetIndex, dataset);
-            datasetIndex++;
         }
 
         chartPanel.setVisible(rangeType!=null);
         contentPane.revalidate();
         contentPane.repaint();
-    }
-
-    private IntervalXYDataset getDateset(KColumn xColumn, KColumn yColumn, int yCol) {
-        XYSeriesCollection collection = new XYSeriesCollection();
-        collection.setAutoWidth(true);
-
-        KXYSeries kxySeries = series.get(yCol);
-        if (kxySeries == null) {
-            kxySeries = new KXYSeries(xColumn, yColumn);
-            series.put(yCol, kxySeries);
-        }
-
-        collection.addSeries(kxySeries);
-        return collection;
     }
 }
 

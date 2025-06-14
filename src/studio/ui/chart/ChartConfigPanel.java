@@ -20,57 +20,85 @@ public class ChartConfigPanel extends JPanel {
     private final Chart chart;
 
     private final JComboBox<ChartType> comboCharType;
-    private final LegendListPanel listSeries;
+
+    private final List<LegendListPanel> serieas = new ArrayList<>();
 
     private final LegendListPanel listLines;
     private final List<Line> lines = new ArrayList<>();
     private final Map<Line,LineInfoFrame> infoFrameMap = new HashMap<>();
 
+
     public ChartConfigPanel(Chart chart, PlotConfig plotConfig) {
         this.chart = chart;
-
-        setBorder(BorderFactory.createEmptyBorder(5,5,5,5));
 
         comboCharType = new JComboBox<>(ChartType.values());
         comboCharType.setMaximumSize(new Dimension(Integer.MAX_VALUE, comboCharType.getPreferredSize().height));
         comboCharType.addActionListener(this::charTypeSelected);
 
-
-        JLabel typeLabel = new JLabel("Type: ");
-
-        listSeries = new LegendListPanel(plotConfig);
-        listSeries.addChangeListener(e -> refresh() );
-
         listLines = new LegendListPanel();
         listLines.addChangeListener(e -> refresh() );
 
-        Component left = Box.createRigidArea(new Dimension(5,20));
-        Component right = Box.createRigidArea(new Dimension(5,20));
-        JComponent filler = new Box.Filler(new Dimension(0,1), new Dimension(0, 1), new Dimension(Integer.MAX_VALUE, 1));
-        filler.setBorder(BorderFactory.createLineBorder(Color.GRAY));
+        addPlotConfigs(plotConfig);
+    }
+
+    private void addPlotConfigs(PlotConfig... plotConfigs) {
+        for (PlotConfig plotConfig: plotConfigs) {
+            LegendListPanel panel = new LegendListPanel(plotConfig);
+            panel.addChangeListener(e -> refresh());
+            serieas.add(panel);
+        }
+        initComponents();
+    }
+
+
+    private void initComponents() {
+        removeAll();
+        setBorder(BorderFactory.createEmptyBorder(5,5,5,5));
+
+        JLabel typeLabel = new JLabel("Type: ");
+
+        List<Component> lefts = new ArrayList<>();
+        List<Component> rights = new ArrayList<>();
+        List<Component> fillers = new ArrayList<>();
+        for (int i=0; i<serieas.size(); i++) {
+            Component left = Box.createRigidArea(new Dimension(5,20));
+            Component right = Box.createRigidArea(new Dimension(5,20));
+            JComponent filler = new Box.Filler(new Dimension(0,1), new Dimension(0, 1), new Dimension(Integer.MAX_VALUE, 1));
+            filler.setBorder(BorderFactory.createLineBorder(Color.GRAY));
+
+            lefts.add(left);
+            rights.add(right);
+            fillers.add(filler);
+        }
 
         JPanel scrollPaneContent = new JPanel();
-        GroupLayoutSimple layout = new GroupLayoutSimple(scrollPaneContent, listSeries, filler, listLines);
+        GroupLayoutSimple layout = new GroupLayoutSimple(scrollPaneContent, listLines);
+        layout.addMaxWidthComponents(serieas.toArray(new LegendListPanel[0]));
+        layout.addMaxWidthComponents(fillers.toArray(new Component[0]));
+
         layout.setAutoCreateGaps(false);
         layout.setAutoCreateContainerGaps(false);
         layout.setBaseline(false);
-        layout.setStacks(
-                new GroupLayoutSimple.Stack()
-                        .addLine(listSeries)
-                        .addLine(left, filler, right)
-                        .addLine(listLines)
-        );
 
+        GroupLayoutSimple.Stack stack = new GroupLayoutSimple.Stack();
+        for (int i=0; i<serieas.size(); i++) {
+            stack.addLine(serieas.get(i))
+                    .addLine(lefts.get(i), fillers.get(i), rights.get(i));
+        }
+        stack.addLine(listLines);
+        layout.setStacks(stack);
+
+        scrollPaneContent.setBorder(BorderFactory.createEmptyBorder(0,0,0,2));
         JScrollPane scrollPane = new JScrollPane(scrollPaneContent);
         scrollPane.setBorder(BorderFactory.createEmptyBorder(0,0,0,0));
 
-        layout = new GroupLayoutSimple(this, comboCharType, scrollPane);
-        layout.setAutoCreateContainerGaps(false);
-        layout.setStacks(
-                new GroupLayoutSimple.Stack()
-                        .addLine(typeLabel, comboCharType)
-                        .addLine(scrollPane)
-        );
+        setLayout(new BorderLayout());
+        JPanel top = new JPanel(new BorderLayout());
+        top.add(typeLabel, BorderLayout.WEST);
+        top.add(comboCharType, BorderLayout.CENTER);
+        add(top, BorderLayout.NORTH);
+        add(scrollPane, BorderLayout.CENTER);
+
     }
 
     public void dispose() {
@@ -79,8 +107,10 @@ public class ChartConfigPanel extends JPanel {
         }
     }
 
-    public PlotConfig getPlotConfig() {
-        return listSeries.getPlotConfig();
+    public PlotConfig[] getPlotConfigs() {
+        return serieas.stream()
+                .map(LegendListPanel::getPlotConfig)
+                .toArray(PlotConfig[]::new);
     }
 
     public void addLine(Line line) {
@@ -126,9 +156,8 @@ public class ChartConfigPanel extends JPanel {
 
     private void charTypeSelected(ActionEvent e) {
         ChartType chartType = (ChartType) comboCharType.getSelectedItem();
-        int count = listSeries.getListSize();
-        for (int index = 0; index < count; index++) {
-            listSeries.getIcon(index).setChartType(chartType);
+        for(LegendListPanel panel: serieas) {
+            panel.setChartType(chartType);
         }
         refresh();
     }

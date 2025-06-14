@@ -18,6 +18,7 @@ public class PlotConfig {
     private final boolean[] enabled;
     private final LegendIcon[] icons;
     private int domainIndex;
+    private final KXYSeries[] series;
 
     private final static Set<KType> supportedClasses = new HashSet<>();
 
@@ -32,6 +33,7 @@ public class PlotConfig {
         this.enabled = Arrays.copyOf(plotConfig.enabled, plotConfig.enabled.length);
         this.icons = Arrays.copyOf(plotConfig.icons, plotConfig.icons.length);
         this.domainIndex = plotConfig.domainIndex;
+        this.series = Arrays.copyOf(plotConfig.series, plotConfig.series.length);
     }
 
     public PlotConfig(KTableModel table) {
@@ -47,6 +49,7 @@ public class PlotConfig {
         columns = new KColumn[count];
         enabled = new boolean[count];
         icons = new LegendIcon[count];
+        series = new KXYSeries[count];
 
         ColorSets colorSets = Config.getInstance().getChartColorSets();
         List<Color> baseColors = colorSets.getColorSchema().getColors();
@@ -60,6 +63,8 @@ public class PlotConfig {
             icons[i].setChartType(ChartType.LINE);
         }
         domainIndex = 0;
+
+        resetSeriesCache();
     }
 
 
@@ -104,6 +109,20 @@ public class PlotConfig {
     }
 
     public void setDomainIndex(int domainIndex) {
+        if (this.domainIndex == domainIndex) return;
+
         this.domainIndex = domainIndex;
+        resetSeriesCache();
+    }
+
+    private void resetSeriesCache() {
+        Arrays.fill(series, null);
+    }
+
+    public KXYSeries getSeries(int index) {
+        if (series[index] != null) return series[index];
+
+        series[index] = new KXYSeries(columns[domainIndex], columns[index]);
+        return series[index];
     }
 }
