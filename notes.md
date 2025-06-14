@@ -1,3 +1,4 @@
+* Chart merging
 * Charting shortcuts:
     * Ctrl + G (Command + G for MacOS) is to chart
     * Ctrl + Shift + E / Ctrl + Shift + Enter (Command for MacOS) is to execute and chart

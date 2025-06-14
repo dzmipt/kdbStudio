@@ -26,11 +26,13 @@ public class LegendListPanel extends JPanel implements LegendChangeListener {
 
     private final EventListenerList listenerList = new EventListenerList();
 
-    public LegendListPanel(PlotConfig plotConfig) {
+    public LegendListPanel(PlotConfig plotConfig, boolean visibleTitle) {
         this.plotConfig = plotConfig;
         isLines = false;
-        lblTitle.setVisible(false);
+        lblTitle.setVisible(visibleTitle);
         lblTitle.setText(plotConfig.getTitle());
+        Font font = lblTitle.getFont();
+        if (font != null) lblTitle.setFont(font.deriveFont(Font.ITALIC | Font.BOLD));
         comboX.setModel(new DefaultComboBoxModel<>(plotConfig.getNames()));
         comboX.setSelectedIndex(plotConfig.getDomainIndex());
         comboX.addActionListener(e -> validateState() );
@@ -88,9 +90,12 @@ public class LegendListPanel extends JPanel implements LegendChangeListener {
             plotConfig.setEnabled(index, isSelected(index));
             plotConfig.setIcon(index, getIcon(index));
         }
-        return plotConfig;
+        return new PlotConfig(plotConfig);
     }
 
+    public void setPlotTitle(String title) {
+        plotConfig.setTitle(title);
+    }
 
     private int getDomainIndex() {
         return comboX.getSelectedIndex();

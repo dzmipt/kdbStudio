@@ -61,6 +61,7 @@ public class StudioOptionPane {
     public static final Option IGNOREALL_OPTION = new Option("Ignore all", KeyEvent.VK_I);
 
     public static final Option[] OK_OPTIONS = new Option[] {OK_OPTION};
+    public static final Option[] OK_CANCEL_OPTIONS = new Option[] {OK_OPTION, CANCEL_OPTION};
     public static final Option[] YES_NO_OPTIONS = new Option[] {YES_OPTION, NO_OPTION};
     public static final Option[] YES_NO_CANCEL_OPTIONS = new Option[] {YES_OPTION, NO_OPTION, CANCEL_OPTION};
 
@@ -128,6 +129,10 @@ public class StudioOptionPane {
                 findButtons(buttons, (Container) c);
             }
         }
+    }
+
+    public static int showComplexDialog(Component parentComponent, JComponent content, String title) {
+        return showOptionDialog(parentComponent, content, title, JOptionPane.QUESTION_MESSAGE, Util.QUESTION_ICON, OK_CANCEL_OPTIONS, OK_OPTION);
     }
 
     public static int showOptionDialog(Component parentComponent, Object message, String title, int messageType, Icon icon, Option[] options, Option initialValue) {

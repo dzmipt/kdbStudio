@@ -21,7 +21,7 @@ public class ChartConfigPanel extends JPanel {
 
     private final JComboBox<ChartType> comboCharType;
 
-    private final List<LegendListPanel> serieas = new ArrayList<>();
+    private final List<LegendListPanel> series = new ArrayList<>();
 
     private final LegendListPanel listLines;
     private final List<Line> lines = new ArrayList<>();
@@ -41,15 +41,20 @@ public class ChartConfigPanel extends JPanel {
         addPlotConfigs(plotConfig);
     }
 
-    private void addPlotConfigs(PlotConfig... plotConfigs) {
+    public void addPlotConfigs(PlotConfig... plotConfigs) {
         for (PlotConfig plotConfig: plotConfigs) {
-            LegendListPanel panel = new LegendListPanel(plotConfig);
+            LegendListPanel panel = new LegendListPanel(plotConfig, series.size()>0);
             panel.addChangeListener(e -> refresh());
-            serieas.add(panel);
+            series.add(panel);
         }
         initComponents();
+        revalidate();
     }
 
+    public void setPlotTitle(String title) {
+        if (series.size() == 0) return;
+        series.get(0).setPlotTitle(title);
+    }
 
     private void initComponents() {
         removeAll();
@@ -60,7 +65,7 @@ public class ChartConfigPanel extends JPanel {
         List<Component> lefts = new ArrayList<>();
         List<Component> rights = new ArrayList<>();
         List<Component> fillers = new ArrayList<>();
-        for (int i=0; i<serieas.size(); i++) {
+        for (int i = 0; i< series.size(); i++) {
             Component left = Box.createRigidArea(new Dimension(5,20));
             Component right = Box.createRigidArea(new Dimension(5,20));
             JComponent filler = new Box.Filler(new Dimension(0,1), new Dimension(0, 1), new Dimension(Integer.MAX_VALUE, 1));
@@ -73,7 +78,7 @@ public class ChartConfigPanel extends JPanel {
 
         JPanel scrollPaneContent = new JPanel();
         GroupLayoutSimple layout = new GroupLayoutSimple(scrollPaneContent, listLines);
-        layout.addMaxWidthComponents(serieas.toArray(new LegendListPanel[0]));
+        layout.addMaxWidthComponents(series.toArray(new LegendListPanel[0]));
         layout.addMaxWidthComponents(fillers.toArray(new Component[0]));
 
         layout.setAutoCreateGaps(false);
@@ -81,8 +86,8 @@ public class ChartConfigPanel extends JPanel {
         layout.setBaseline(false);
 
         GroupLayoutSimple.Stack stack = new GroupLayoutSimple.Stack();
-        for (int i=0; i<serieas.size(); i++) {
-            stack.addLine(serieas.get(i))
+        for (int i = 0; i< series.size(); i++) {
+            stack.addLine(series.get(i))
                     .addLine(lefts.get(i), fillers.get(i), rights.get(i));
         }
         stack.addLine(listLines);
@@ -108,7 +113,7 @@ public class ChartConfigPanel extends JPanel {
     }
 
     public PlotConfig[] getPlotConfigs() {
-        return serieas.stream()
+        return series.stream()
                 .map(LegendListPanel::getPlotConfig)
                 .toArray(PlotConfig[]::new);
     }
@@ -156,7 +161,7 @@ public class ChartConfigPanel extends JPanel {
 
     private void charTypeSelected(ActionEvent e) {
         ChartType chartType = (ChartType) comboCharType.getSelectedItem();
-        for(LegendListPanel panel: serieas) {
+        for(LegendListPanel panel: series) {
             panel.setChartType(chartType);
         }
         refresh();

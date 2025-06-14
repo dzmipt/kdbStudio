@@ -42,6 +42,13 @@ public class LegendIcon implements Icon {
     private BasicStroke stroke;
     private ChartType chartType;
 
+    public LegendIcon(LegendIcon icon) {
+        this.color = icon.color;
+        this.shape = icon.shape;
+        this.stroke = icon.stroke;
+        this.chartType = icon.chartType;
+    }
+
     public LegendIcon(Paint color, Shape shape, BasicStroke stroke) {
         this.color = color;
         this.shape = shape;

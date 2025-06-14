@@ -31,7 +31,10 @@ public class PlotConfig {
         this.title = plotConfig.title;
         this.columns = plotConfig.columns;
         this.enabled = Arrays.copyOf(plotConfig.enabled, plotConfig.enabled.length);
-        this.icons = Arrays.copyOf(plotConfig.icons, plotConfig.icons.length);
+        this.icons = new LegendIcon[plotConfig.icons.length];
+        for (int i=0; i<icons.length; i++) {
+            this.icons[i] = new LegendIcon(plotConfig.icons[i]);
+        }
         this.domainIndex = plotConfig.domainIndex;
         this.series = Arrays.copyOf(plotConfig.series, plotConfig.series.length);
     }

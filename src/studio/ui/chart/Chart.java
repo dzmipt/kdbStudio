@@ -20,16 +20,14 @@ import studio.kdb.KFormat;
 import studio.kdb.KTableModel;
 import studio.kdb.KType;
 import studio.kdb.config.ColorSchema;
-import studio.ui.StudioOptionPane;
-import studio.ui.StudioWindow;
-import studio.ui.Toolbar;
-import studio.ui.Util;
+import studio.ui.*;
 import studio.utils.WindowsAppUserMode;
 
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.*;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
@@ -68,6 +66,7 @@ public class Chart implements ComponentListener {
 
     private void initComponents(KTableModel table) {
         PlotConfig plotConfig = new PlotConfig(table);
+        plotConfig.setTitle(getChartTitle());
 
         if (plotConfig.size() < 2) {
             log.info("Nothing to chart. Number of columns which can be casted to decimal in {}", plotConfig.size());
@@ -93,6 +92,8 @@ public class Chart implements ComponentListener {
         JToolBar toolbar = new Toolbar();
         toolbar.setLayout(new BoxLayout(toolbar, BoxLayout.X_AXIS));
         toolbar.setFloatable(false);
+        toolbar.add(UserAction.create("Merge", Util.PLUS2_ICON, "Merge another chart",
+                0, null, this::merge)).setFocusable(false);
         toolbar.add(chartPanel.getLineAction());
         toolbar.add(chartPanel.getCopyAction()).setFocusable(false);
         toolbar.add(chartPanel.getSaveAction()).setFocusable(false);
@@ -139,6 +140,72 @@ public class Chart implements ComponentListener {
         } finally {
             WindowsAppUserMode.setMainId();
         }
+    }
+
+    public void merge(ActionEvent event) {
+        if (charts.size() < 2) {
+            StudioOptionPane.showWarning(getFrame(), "There is on other charts", "Nothing to select");
+            return;
+        }
+
+        String[] captions = charts.stream()
+                .filter(c -> c!=this )
+                .map(c -> c.getChartTitle())
+                .toArray(String[]::new);
+
+        JComboBox<String> comboCaptions = new JComboBox<>(captions);
+        JCheckBox chkColor = new JCheckBox("Update colors");
+        chkColor.setSelected(true);
+        JCheckBox chkClose = new JCheckBox("Close another chart");
+
+        JPanel panel = new JPanel();
+        GroupLayoutSimple layout = new GroupLayoutSimple(panel);
+        layout.setStacks(new GroupLayoutSimple.Stack()
+                .addLine(comboCaptions)
+                .addLine(chkColor)
+                .addLine(chkClose)
+        );
+
+        int result = StudioOptionPane.showComplexDialog(getFrame(), panel, "Select Chart");
+        if (result != JOptionPane.OK_OPTION) return;
+
+        int selectedIndex = comboCaptions.getSelectedIndex();
+        Chart chart = null;
+        for(int index = 0 ;index < charts.size(); index++ ) {
+            chart = charts.get(index);
+            if (chart == this) continue;
+            if (selectedIndex == 0) break;
+            selectedIndex--;
+        }
+
+        if (chart == null) {
+            log.warn("Something goes unexpectedly wrong");
+            return;
+        }
+
+        PlotConfig[] plotConfigs = chart.pnlConfig.getPlotConfigs();
+        if (chkColor.isSelected()) {
+            int count = Arrays.stream(pnlConfig.getPlotConfigs())
+                                .mapToInt(PlotConfig::size)
+                                .sum();
+
+            List<Color> colors = Config.getInstance().getChartColorSets().getColorSchema().getColors();
+            int colorCount = colors.size();
+            for (PlotConfig plotConfig: plotConfigs) {
+                for (int i=0; i<plotConfig.size(); i++) {
+                    LegendIcon icon = plotConfig.getIcon(i);
+                    icon.setColor(colors.get(count % colorCount));
+                    count++;
+                }
+            }
+        }
+
+        pnlConfig.addPlotConfigs(plotConfigs);
+
+        if (chkClose.isSelected()) {
+            chart.getFrame().dispose();
+        }
+        refreshPlot();
     }
 
     public JFrame getFrame() {
@@ -192,6 +259,8 @@ public class Chart implements ComponentListener {
             frame.setTitle(title);
             StudioWindow.refreshAllMenus();
         }
+
+        pnlConfig.setPlotTitle(title);
     }
 
     private void saveFrameBounds() {
