@@ -86,7 +86,7 @@ public class EditorTab implements FileWatcher.Listener, EditorStatusBarCallback 
         RSyntaxTextArea textArea = editorPane.getTextArea();
         textArea.addMouseListener(new MouseAdapter() {
             @Override
-            public void mouseClicked(MouseEvent e) {
+            public void mousePressed(MouseEvent e) {
                 if (e.getButton() == 4) navigateHistoryServer(false);
                 else if (e.getButton() == 5) navigateHistoryServer(true);
             }
