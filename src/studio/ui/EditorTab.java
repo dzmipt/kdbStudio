@@ -27,9 +27,13 @@ import java.awt.datatransfer.Transferable;
 import java.awt.dnd.DnDConstants;
 import java.awt.dnd.DropTarget;
 import java.awt.dnd.DropTargetDropEvent;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Objects;
 import java.util.stream.Stream;
 
@@ -37,7 +41,8 @@ public class EditorTab implements FileWatcher.Listener, EditorStatusBarCallback 
 
     private String title;
     private String filename = null;
-    private Server server = Server.NO_SERVER;
+    private int serverIndex = -1;
+    private final List<Server> serverHistory = new ArrayList<>();
     private boolean modified = false;
     private LineEnding lineEnding = LineEnding.Unix;
 
@@ -79,6 +84,13 @@ public class EditorTab implements FileWatcher.Listener, EditorStatusBarCallback 
         editorPane.setEditorStatusBarCallback(this);
         editorPane.setFocusable(false);
         RSyntaxTextArea textArea = editorPane.getTextArea();
+        textArea.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mouseClicked(MouseEvent e) {
+                if (e.getButton() == 4) navigateHistoryServer(false);
+                else if (e.getButton() == 5) navigateHistoryServer(true);
+            }
+        });
         textArea.setName("editor" + studioWindow.nextEditorNameIndex());
 
         textArea.setDropTarget(new DropTarget() {
@@ -117,7 +129,7 @@ public class EditorTab implements FileWatcher.Listener, EditorStatusBarCallback 
     }
 
     public void executeQuery(QueryTask queryTask) {
-        if (server == Server.NO_SERVER) {
+        if (getServer() == Server.NO_SERVER) {
             log.info("Server is not set. Can't execute the query");
             return;
         }
@@ -155,7 +167,7 @@ public class EditorTab implements FileWatcher.Listener, EditorStatusBarCallback 
                 message = "No message with exception. Exception is " + error;
             StudioOptionPane.showError(editorPane,
                     "\nAn unexpected error occurred whilst communicating with " +
-                            server.getConnectionString() +
+                            getServer().getConnectionString() +
                             "\n\nError detail is\n\n" + message + "\n\n",
                     "Studio for kdb+");
         }
@@ -165,8 +177,8 @@ public class EditorTab implements FileWatcher.Listener, EditorStatusBarCallback 
 
     @Override
     public void connect(String authMethod) {
-        if (! server.getAuthenticationMechanism().equals(authMethod)) {
-            Server newServer = Config.getInstance().getServerByConnectionString(server.getConnectionString(), authMethod);
+        if (! getServer().getAuthenticationMechanism().equals(authMethod)) {
+            Server newServer = Config.getInstance().getServerByConnectionString(getServer().getConnectionString(), authMethod);
             studioWindow.setServer(newServer);
         }
 
@@ -198,7 +210,7 @@ public class EditorTab implements FileWatcher.Listener, EditorStatusBarCallback 
         EditorsPanel editorsPanel = getEditorsPanel();
         for (File file: files) {
             String name = file.toString();
-            editorsPanel.addTab(server).loadFile(name);
+            editorsPanel.addTab(getServer()).loadFile(name);
         }
     }
 
@@ -228,7 +240,7 @@ public class EditorTab implements FileWatcher.Listener, EditorStatusBarCallback 
     }
 
     public void setSessionConnection(boolean connected) {
-        editorPane.setSessionConnected(connected, server.getAuthenticationMechanism());
+        editorPane.setSessionConnected(connected, getServer().getAuthenticationMechanism());
     }
 
     public void setStudioWindow(StudioWindow studioWindow) {
@@ -316,22 +328,51 @@ public class EditorTab implements FileWatcher.Listener, EditorStatusBarCallback 
     }
 
     public Server getServer() {
-        return server;
+        if (serverIndex == -1) return Server.NO_SERVER;
+        return serverHistory.get(serverIndex);
     }
 
-    public void setServer(Server server) {
-        if (this.server == server) return;
-
+    private void serverRefreshed() {
         if (session != null) {
             session.removeTab(this);
         }
-        this.server = server;
         session = Session.newSession(this);
         setSessionConnection(!session.isClosed());
 
-        getTextArea().setBackground(server.getBackgroundColor());
+        getTextArea().setBackground(getServer().getBackgroundColor());
 
-        studioWindow.getMainStatusBar().setTemporaryStatus("Changed server: " + server.getDescription(true));
+        studioWindow.getMainStatusBar().setTemporaryStatus("Changed server: " + getServer().getDescription(true));
+
+    }
+
+    public void setServer(Server server) {
+        if (getServer().equals(server)) return;
+
+        serverHistory.subList(serverIndex+1, serverHistory.size()).clear();
+        serverHistory.add(server);
+        serverIndex++;
+
+        serverRefreshed();
+    }
+
+    public boolean hasNextServerInHistory() {
+        return serverIndex+1 < serverHistory.size();
+    }
+
+    public boolean hasPreviousServerInHistory() {
+        return serverIndex>0;
+    }
+
+    public void navigateHistoryServer(boolean forward) {
+        if (forward) {
+            if (!hasNextServerInHistory()) return;
+            serverIndex++;
+        } else {
+            if (! hasPreviousServerInHistory()) return;
+            serverIndex--;
+        }
+        serverRefreshed();
+        studioWindow.setServer(getServer());
     }
 
     public LineEnding getLineEnding() {

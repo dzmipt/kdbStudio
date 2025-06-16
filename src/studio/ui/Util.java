@@ -69,6 +69,8 @@ public class Util {
     public final static ImageIcon LINE_ICON = getImage("/line.png");
     public final static ImageIcon PLUS_ICON = getImage("/plus.png");
     public final static ImageIcon PLUS2_ICON = getImage("/plus2.png");
+    public final static ImageIcon LEFT_ICON = getImage("/left.png");
+    public final static ImageIcon RIGHT_ICON = getImage("/right.png");
 
     public static boolean MAC_OS_X = (System.getProperty("os.name").toLowerCase().startsWith("mac os x"));
     public static boolean WINDOWS = (System.getProperty("os.name").toLowerCase().contains("win"));

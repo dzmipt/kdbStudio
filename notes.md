@@ -1,3 +1,4 @@
+* Adding server back/forward actions which also work with mouse back/forward buttons
 * Chart merging
 * Charting shortcuts:
     * Ctrl + G (Command + G for MacOS) is to chart

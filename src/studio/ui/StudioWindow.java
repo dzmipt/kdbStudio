@@ -89,6 +89,8 @@ public class StudioWindow extends JFrame implements WindowListener {
     private SearchPanel resultSearchPanel;
     private ServerList serverList;
 
+    private UserAction serverBackAction;
+    private UserAction serverForwardAction;
     private UserAction arrangeAllAction;
     private UserAction closeFileAction;
     private UserAction closeTabAction;
@@ -218,6 +220,8 @@ public class StudioWindow extends JFrame implements WindowListener {
     public void refreshActionState() {
         RSyntaxTextArea textArea = editor.getTextArea();
         Server server = editor.getServer();
+        serverBackAction.setEnabled(editor.hasPreviousServerInHistory());
+        serverForwardAction.setEnabled(editor.hasNextServerInHistory());
         editServerAction.setEnabled(server != Server.NO_SERVER);
         removeServerAction.setEnabled(server != Server.NO_SERVER);
 
@@ -501,6 +505,15 @@ public class StudioWindow extends JFrame implements WindowListener {
     }
 
     private void initActions() {
+        serverBackAction = UserAction.create("Back", Util.LEFT_ICON, "Previous server", KeyEvent.VK_B,
+                KeyStroke.getKeyStroke(KeyEvent.VK_OPEN_BRACKET, menuShortcutKeyMask | InputEvent.SHIFT_MASK),
+                e -> editor.navigateHistoryServer(false)
+                );
+        serverForwardAction = UserAction.create("Forward", Util.RIGHT_ICON, "Next server", KeyEvent.VK_F,
+                KeyStroke.getKeyStroke(KeyEvent.VK_CLOSE_BRACKET, menuShortcutKeyMask | InputEvent.SHIFT_MASK),
+                e -> editor.navigateHistoryServer(true)
+        );
+
         cleanAction = UserAction.create("Clean", Util.NEW_DOCUMENT_ICON, "Clean editor script", KeyEvent.VK_N,
                 null, e -> newFile());
 
@@ -1051,7 +1064,8 @@ public class StudioWindow extends JFrame implements WindowListener {
         addToMenu(menu, addServerAction, editServerAction, removeServerAction);
         menu.add(cloneMenu);
 
-        addToMenu(menu, null, serverListAction, serverHistoryAction, loadServerTreeAction, exportServerTreeAction, importFromQPadAction, null, connectionStatsAction);
+        addToMenu(menu, null, serverBackAction, serverForwardAction,
+                serverListAction, serverHistoryAction, loadServerTreeAction, exportServerTreeAction, importFromQPadAction, null, connectionStatsAction);
 
         menubar.add(menu);
 
@@ -1199,27 +1213,31 @@ public class StudioWindow extends JFrame implements WindowListener {
         refreshServerList();
         refreshServer();
 
-        toolbar.add(Box.createRigidArea(new Dimension(3,0)));
-        toolbar.add(new JLabel(I18n.getString("Server")));
-        toolbar.add(comboServer);
-        toolbar.add(txtServer);
-
-        Action[] actions = new Action[] {
+        Object[] actions = new Object[] {
+                Box.createRigidArea(new Dimension(3,0)),
+                new JLabel(I18n.getString("Server")),
+                comboServer, txtServer,
+                serverBackAction, serverForwardAction,
                 serverListAction, null,
-                stopAction, executeAction, refreshAction, null, openFileAction, saveFileAction, saveAsFileAction, null,
+                stopAction, executeAction, refreshAction, null,
                 openInExcel, null, exportAction, null, chartAction, null, undoAction, redoAction, null,
                 cutAction, copyAction, pasteAction, null, findAction, replaceAction, null, codeKxComAction };
 
-        for (Action action: actions) {
-            if (action == null) {
+        for (Object element: actions) {
+            if (element == null) {
                 toolbar.addSeparator();
-            } else {
+            } else if (element instanceof Action) {
+                Action action = (Action) element;
                 JButton button = toolbar.add(action);
                 button.setFocusable(false);
                 button.setMnemonic(KeyEvent.VK_UNDEFINED);
 
                 String name = (String) action.getValue(Action.NAME);
                 button.setName("toolbar" + name);
+            } else if (element instanceof Component) {
+                toolbar.add((Component)element);
+            } else {
+                throw new IllegalStateException("Internal error");
             }
         }
 
