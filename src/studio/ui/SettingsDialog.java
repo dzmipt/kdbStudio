@@ -48,6 +48,7 @@ public class SettingsDialog extends EscapeDialog {
     private JFormattedTextField txtCellMaxWidth;
     private JFormattedTextField txtMaxFractionDigits;
     private JFormattedTextField txtEmulateDoubleClickTimeout;
+    private JCheckBox chBoxOpenServerInCurrentTab;
     private JComboBox<ExecAllOption> comboBoxExecAll;
     private JComboBox<LineEnding> comboBoxLineEnding;
     private JCheckBox chBoxEmulateTab;
@@ -270,6 +271,9 @@ public class SettingsDialog extends EscapeDialog {
         editorFontSelection = new FontSelectionPanel(this, "Editor font: ", Config.FONT_EDITOR);
         resultFontSelection = new FontSelectionPanel(this, "Result table font: ", Config.FONT_TABLE);
 
+        chBoxOpenServerInCurrentTab = new JCheckBox("Open servers from popup menu in the current tab");
+        chBoxOpenServerInCurrentTab.setSelected(CONFIG.getBoolean(Config.SERVER_FROM_RESULT_IN_CURRENT));
+
         JLabel lblAuthMechanism = new JLabel("Authentication:");
         JLabel lblUser = new JLabel("  User:");
         JLabel lblPassword = new JLabel("  Password:");
@@ -318,6 +322,7 @@ public class SettingsDialog extends EscapeDialog {
                         .addLineAndGlue(lblResultTabsCount, txtTabsCount)
                         .addLine(lblMaxCharsInResult, txtMaxCharsInResult, lblMaxCharsInTableCell, txtMaxCharsInTableCell)
                         .addLine(lblCellRightPadding, txtCellRightPadding, lblCellMaxWidth, txtCellMaxWidth)
+                        .addLineAndGlue(chBoxOpenServerInCurrentTab)
         );
         layout.linkSize(SwingConstants.HORIZONTAL, lblCellRightPadding, txtMaxFractionDigits, txtEmulateDoubleClickTimeout, txtTabsCount,
                 txtMaxCharsInResult, txtMaxCharsInTableCell, txtCellRightPadding, txtCellMaxWidth);
@@ -387,6 +392,7 @@ public class SettingsDialog extends EscapeDialog {
         CONFIG.setEnum(Config.ACTION_ON_EXIT, (ActionOnExit)comboBoxActionOnExit.getSelectedItem());
         CONFIG.setBoolean(Config.AUTO_SAVE, isAutoSave());
         CONFIG.setEnum(Config.DEFAULT_LINE_ENDING, getDefaultLineEnding());
+        CONFIG.setBoolean(Config.SERVER_FROM_RESULT_IN_CURRENT, chBoxOpenServerInCurrentTab.isSelected());
 
         int maxFractionDigits = getMaxFractionDigits();
         CONFIG.setInt(Config.MAX_FRACTION_DIGITS, maxFractionDigits);

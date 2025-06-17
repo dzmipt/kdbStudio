@@ -1,3 +1,4 @@
+* Setting to open servers from the result grid popup menu in the current editor tab
 * Adding server back/forward actions which also work with mouse back/forward buttons
 * Chart merging
 * Charting shortcuts:
