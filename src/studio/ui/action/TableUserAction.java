@@ -48,7 +48,7 @@ public abstract class TableUserAction extends UserAction {
             int aRow = getRow();
             int aCol = getColumn();
             if (aRow == -1 || aCol == -1) return;
-            studioWindow.addResultTab(new QueryResult((K.KBase)table.getValueAt(aRow, aCol)), "a cell from previous result");
+            studioWindow.addResultTab(new QueryResult((K.KBase)table.getValueAt(aRow, aCol)), "cell from previous result");
         }
     }
 
@@ -72,7 +72,7 @@ public abstract class TableUserAction extends UserAction {
             }
 
             studioWindow.addResultTab(new QueryResult(
-                    new K.Dict(new K.KSymbolVector(names), new K.KList(values))), "a line from previous result");
+                    new K.Dict(new K.KSymbolVector(names), new K.KList(values))), "line from previous result");
         }
     }
 }

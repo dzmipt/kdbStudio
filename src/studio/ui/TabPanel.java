@@ -3,8 +3,8 @@ package studio.ui;
 import kx.K4Exception;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import studio.kdb.ListModel;
 import studio.kdb.*;
+import studio.kdb.ListModel;
 import studio.ui.action.QueryResult;
 import studio.ui.action.QueryTask;
 
@@ -174,10 +174,9 @@ public class TabPanel extends JPanel {
         ensureTabLimit(tabbedPane);
         putClientProperty(JTabbedPane.class, tabbedPane);
         String title = makeTitle();
-        tabbedPane.addTab(title, type.icon, this);
+        tabbedPane.addTab(title, type.icon, this, tooltip);
         int tabIndex = tabbedPane.getTabCount() - 1;
         tabbedPane.setSelectedIndex(tabIndex);
-        tabbedPane.setToolTipTextAt(tabIndex, tooltip);
         updateToolbarLocation(tabbedPane);
     }
 
