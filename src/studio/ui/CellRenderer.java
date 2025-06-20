@@ -33,14 +33,21 @@ class CellRenderer extends DefaultTableCellRenderer {
     private static final Color markSelColor = Util.blendColors(markColor, selColor);
 
     private KFormatContext formatContextWithType, formatContextNoType;
+    private final JTable table;
     private final TableMarkers markers;
 
-    public CellRenderer(TableMarkers markers) {
+    public CellRenderer(JTable table, TableMarkers markers) {
+        this.table = table;
         this.markers = markers;
         setFormatContext(KFormatContext.DEFAULT);
         setHorizontalAlignment(SwingConstants.LEFT);
         setOpaque(true);
         setBackground(UIManager.getColor("Table.background"));
+    }
+
+    @Override
+    public FontMetrics getFontMetrics(Font font) {
+        return table.getFontMetrics(font);
     }
 
     public void setFormatContext(KFormatContext formatContext) {

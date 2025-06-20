@@ -9,8 +9,11 @@ import java.awt.*;
 
 public class TableHeaderRenderer extends DefaultTableCellRenderer {
 
-    public TableHeaderRenderer() {
+    private final JTable table;
+
+    public TableHeaderRenderer(JTable table) {
         super();
+        this.table = table;
         setHorizontalAlignment(SwingConstants.LEFT);
         setVerticalAlignment(SwingConstants.CENTER);
         setOpaque(true);
@@ -24,6 +27,11 @@ public class TableHeaderRenderer extends DefaultTableCellRenderer {
         setFont(Config.getInstance().getFont(Config.FONT_TABLE));
         setBackground(UIManager.getColor("TableHeader.background"));
         setForeground(UIManager.getColor("TableHeader.foreground"));
+    }
+
+    @Override
+    public FontMetrics getFontMetrics(Font font) {
+        return table.getFontMetrics(font);
     }
 
     public void setFont(Font f) {

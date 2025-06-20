@@ -51,6 +51,8 @@ public class QGrid extends JPanel implements MouseWheelListener, SearchPanelList
 
     private long doubleClickTimeout;
 
+    private GraphicsConfiguration graphicsConfiguration = null;
+
     public void setFormatContext(KFormatContext formatContext) {
         this.formatContext = formatContext;
         cellRenderer.setFormatContext(formatContext);
@@ -103,7 +105,7 @@ public class QGrid extends JPanel implements MouseWheelListener, SearchPanelList
             }
         };
 
-        tableHeaderRenderer = new TableHeaderRenderer();
+        tableHeaderRenderer = new TableHeaderRenderer(table);
         table.getTableHeader().setDefaultRenderer(tableHeaderRenderer);
         table.setShowHorizontalLines(true);
 
@@ -115,7 +117,7 @@ public class QGrid extends JPanel implements MouseWheelListener, SearchPanelList
         ToolTipManager.sharedInstance().unregisterComponent(table.getTableHeader());
 
         markers = new TableMarkers(model.getColumnCount());
-        cellRenderer = new CellRenderer(markers);
+        cellRenderer = new CellRenderer(table, markers);
 
         for (int i = 0; i < model.getColumnCount(); i++) {
             TableColumn col = table.getColumnModel().getColumn(i);
@@ -145,6 +147,18 @@ public class QGrid extends JPanel implements MouseWheelListener, SearchPanelList
         });
 
         widthAdjuster = new WidthAdjuster(table, scrollPane);
+
+        table.addHierarchyListener(new HierarchyListener() {
+            @Override
+            public void hierarchyChanged(HierarchyEvent e) {
+                GraphicsConfiguration gc = table.getGraphicsConfiguration();
+                if (graphicsConfiguration != gc) {
+                    graphicsConfiguration = gc;
+                    widthAdjuster.resizeAllColumns(false);
+                }
+            }
+        });
+
 
         scrollPane.setWheelScrollingEnabled(true);
         scrollPane.getViewport().setBackground(UIManager.getColor("Table.background"));
