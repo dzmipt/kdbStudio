@@ -728,14 +728,12 @@ public class StudioWindow extends JFrame implements WindowListener {
 
         nextEditorTabAction = UserAction.create("Next tab",
                 "Select next editor tab", KeyEvent.VK_N,
-                    Util.MAC_OS_X ? KeyStroke.getKeyStroke(KeyEvent.VK_RIGHT, menuShortcutKeyMask | InputEvent.ALT_MASK ) :
-                                    KeyStroke.getKeyStroke(KeyEvent.VK_TAB, menuShortcutKeyMask),
+                    KeyStroke.getKeyStroke(KeyEvent.VK_RIGHT, menuShortcutKeyMask | InputEvent.ALT_MASK ),
                 e -> editor.getEditorsPanel().selectNextTab(true));
 
         prevEditorTabAction = UserAction.create("Previous tab",
                 "Select previous editor tab", KeyEvent.VK_P,
-                Util.MAC_OS_X ? KeyStroke.getKeyStroke(KeyEvent.VK_LEFT, menuShortcutKeyMask | InputEvent.ALT_MASK ) :
-                        KeyStroke.getKeyStroke(KeyEvent.VK_TAB, menuShortcutKeyMask | InputEvent.SHIFT_MASK),
+                KeyStroke.getKeyStroke(KeyEvent.VK_LEFT, menuShortcutKeyMask | InputEvent.ALT_MASK ),
                 e -> editor.getEditorsPanel().selectNextTab(false));
 
         lineEndingActions = new UserAction[LineEnding.values().length];
