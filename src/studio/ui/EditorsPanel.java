@@ -21,9 +21,7 @@ import java.awt.event.FocusEvent;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 
 public class EditorsPanel extends JPanel {
 
@@ -58,7 +56,6 @@ public class EditorsPanel extends JPanel {
     private void initTabbedEditors() {
         tabbedEditors = new DraggableTabbedPane("Editor");
         tabbedEditors.setName("editorTabbedPane" + studioWindow.nextEditorTabbedPaneNameIndex());
-        removeFocusChangeKeysForWindows(tabbedEditors);
         ClosableTabbedPane.makeCloseable(tabbedEditors, (index, force) -> closeTab(getEditorTab(index)) );
         tabbedEditors.addChangeListener(e -> activateSelectedEditor());
         tabbedEditors.addFocusListener(new FocusAdapter() {
@@ -148,8 +145,6 @@ public class EditorsPanel extends JPanel {
                 editor.getEditorsPanel().studioWindow.updateEditor(editor);
             }
         });
-        removeFocusChangeKeysForWindows(textArea);
-
         JComponent editorPane = editor.getPane();
         editorPane.putClientProperty(EditorTab.class, editor);
 
@@ -352,23 +347,6 @@ public class EditorsPanel extends JPanel {
                 return;
             }
         }
-    }
-
-    private void removeFocusChangeKeysForWindows(JComponent component) {
-        if (Util.MAC_OS_X) return;
-
-        KeyStroke ctrlTab = KeyStroke.getKeyStroke("ctrl TAB");
-        KeyStroke ctrlShiftTab = KeyStroke.getKeyStroke("ctrl shift TAB");
-
-        // Remove ctrl-tab from normal focus traversal
-        Set<AWTKeyStroke> forwardKeys = new HashSet<>(component.getFocusTraversalKeys(KeyboardFocusManager.FORWARD_TRAVERSAL_KEYS));
-        forwardKeys.remove(ctrlTab);
-        component.setFocusTraversalKeys(KeyboardFocusManager.FORWARD_TRAVERSAL_KEYS, forwardKeys);
-
-        // Remove ctrl-shift-tab from normal focus traversal
-        Set<AWTKeyStroke> backwardKeys = new HashSet<>(component.getFocusTraversalKeys(KeyboardFocusManager.BACKWARD_TRAVERSAL_KEYS));
-        backwardKeys.remove(ctrlShiftTab);
-        component.setFocusTraversalKeys(KeyboardFocusManager.BACKWARD_TRAVERSAL_KEYS, backwardKeys);
     }
 
     public static void refreshEditorTitle(EditorTab editorTab) {
