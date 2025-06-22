@@ -15,7 +15,7 @@ public class Toolbar extends JToolBar {
         updateTooltipText(btn);
 
         a.addPropertyChangeListener( e-> {
-            if (e.getPropertyName() == Action.ACCELERATOR_KEY) {
+            if (e.getPropertyName().equals(Action.ACCELERATOR_KEY)) {
                 updateTooltipText(btn);
             }
         });

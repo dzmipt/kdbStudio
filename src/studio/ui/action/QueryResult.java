@@ -59,7 +59,7 @@ public class QueryResult {
     }
 
     public K.KBase getResult() {
-        return result.getObject();
+        return result == null ? null : result.getObject();
     }
 
     public KMessage getKMessage() {

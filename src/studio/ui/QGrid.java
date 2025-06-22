@@ -19,6 +19,7 @@ import java.util.regex.PatternSyntaxException;
 //@TODO: Should it be really a JPanel? It looks it should be just a JTabel. And anyway any additional components could be added to TabPanel
 public class QGrid extends JPanel implements MouseWheelListener, SearchPanelListener {
     private StudioWindow studioWindow;
+    private final ResultTab resultTab;
     private final KTableModel model;
     private final JTable table;
     private final WidthAdjuster widthAdjuster;
@@ -59,8 +60,9 @@ public class QGrid extends JPanel implements MouseWheelListener, SearchPanelList
         table.repaint();
     }
 
-    public QGrid(StudioWindow studioWindow, KTableModel model) {
+    public QGrid(StudioWindow studioWindow, ResultTab resultTab, KTableModel model) {
         this.studioWindow = studioWindow;
+        this.resultTab = resultTab;
         this.model = model;
 
         InputMap inputMap = getInputMap(JComponent.WHEN_ANCESTOR_OF_FOCUSED_COMPONENT);

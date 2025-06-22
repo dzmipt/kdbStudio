@@ -25,8 +25,8 @@ class ExcelExporter {
         return FORMATTER.format(x);
     }
 
-    public static void exportTableX(final JFrame frame, final TabPanel tab, final File file,
-                             final boolean openIt) {
+    public static void exportTableX(final JFrame frame, final ResultTab tab, final File file,
+                                    final boolean openIt) {
         if (tab == null) return;
 
         QGrid grid = tab.getGrid();
@@ -121,7 +121,7 @@ class ExcelExporter {
         return workbook;
     }
 
-    private static void addDetails(Workbook workbook, TabPanel tab) {
+    private static void addDetails(Workbook workbook, ResultTab tab) {
         QueryResult queryResult = tab.getQueryResult();
         String server = null;
         String query = null;

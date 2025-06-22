@@ -84,7 +84,7 @@ public class StudioWindow extends JFrame implements WindowListener {
     private JSplitPane splitpane;
     private JPanel topPanel;
     private MainStatusBar mainStatusBar;
-    private DraggableTabbedPane tabbedPane;
+    private DraggableTabbedPane resultsPane;
     private SearchPanel editorSearchPanel;
     private SearchPanel resultSearchPanel;
     private ServerList serverList;
@@ -240,12 +240,12 @@ public class StudioWindow extends JFrame implements WindowListener {
         executeCurrentLineAction.setEnabled(!queryRunning);
         refreshAction.setEnabled(lastQuery != null && !queryRunning);
 
-        TabPanel tab = getSelectedResultPane();
+        ResultTab tab = getSelectedResultTab();
         if (tab == null) {
             setActionsEnabled(false, exportAction, chartAction, openInExcel, refreshAction);
         } else {
             exportAction.setEnabled(tab.isTable());
-            chartAction.setEnabled(tab.getType() == TabPanel.ResultType.TABLE);
+            chartAction.setEnabled(tab.getType() == ResultType.TABLE);
             openInExcel.setEnabled(tab.isTable());
             refreshAction.setEnabled(true);
             tab.refreshActionState();
@@ -253,7 +253,7 @@ public class StudioWindow extends JFrame implements WindowListener {
     }
 
     private void exportAsExcel(final String filename) {
-        ExcelExporter.exportTableX(this,getSelectedResultPane(),new File(filename),false);
+        ExcelExporter.exportTableX(this, getSelectedResultTab(),new File(filename),false);
     }
 
     private void exportAsDelimited(final TableModel model,final String filename,final char delimiter) {
@@ -655,7 +655,7 @@ public class StudioWindow extends JFrame implements WindowListener {
                 KeyEvent.VK_O, null, e -> {
                     try {
                         File file = File.createTempFile("studioExport", ".xlsx");
-                        ExcelExporter.exportTableX(this, getSelectedResultPane(), file, true);
+                        ExcelExporter.exportTableX(this, getSelectedResultTab(), file, true);
                     } catch (IOException ex) {
                         log.error("Failed to create temporary file", ex);
                         StudioOptionPane.showError(this, "Failed to Open in Excel " + ex.getMessage(),"Error");
@@ -674,7 +674,7 @@ public class StudioWindow extends JFrame implements WindowListener {
         toggleCommaFormatAction = UserAction.create("Toggle Comma Format", Util. COMMA_ICON, "Add/remove thousands separator in selected result",
                 KeyEvent.VK_J, KeyStroke.getKeyStroke(KeyEvent.VK_J, menuShortcutKeyMask),
                 e -> {
-                    TabPanel tab = getSelectedResultPane();
+                    ResultTab tab = getSelectedResultTab();
                     if (tab != null) tab.toggleCommaFormatting();
                 });
 
@@ -802,11 +802,11 @@ public class StudioWindow extends JFrame implements WindowListener {
     public static void refreshResultSettings() {
         long doubleClickTimeout = CONFIG.getInt(Config.EMULATED_DOUBLE_CLICK_TIMEOUT);
         for (StudioWindow window: allWindows) {
-            int count = window.tabbedPane.getTabCount();
+            int count = window.resultsPane.getTabCount();
             for (int index=0; index<count; index++) {
-                TabPanel tabPanel = window.getResultPane(index);
-                tabPanel.setDoubleClickTimeout(doubleClickTimeout);
-                tabPanel.refreshFont();
+                ResultTab resultTab = window.getResultTab(index);
+                resultTab.setDoubleClickTimeout(doubleClickTimeout);
+                resultTab.refreshFont();
             }
         }
     }
@@ -1276,15 +1276,15 @@ public class StudioWindow extends JFrame implements WindowListener {
     private void toggleDividerOrientation() {
         if (splitpane.getOrientation() == JSplitPane.VERTICAL_SPLIT) {
             splitpane.setOrientation(JSplitPane.HORIZONTAL_SPLIT);
-            tabbedPane.setTabPlacement(JTabbedPane.LEFT);
+            resultsPane.setTabPlacement(JTabbedPane.LEFT);
         } else {
             splitpane.setOrientation(JSplitPane.VERTICAL_SPLIT);
-            tabbedPane.setTabPlacement(JTabbedPane.TOP);
+            resultsPane.setTabPlacement(JTabbedPane.TOP);
         }
 
-        int count = tabbedPane.getTabCount();
+        int count = resultsPane.getTabCount();
         for (int index = 0; index<count; index++) {
-            ((TabPanel)tabbedPane.getComponent(index)).updateToolbarLocation(tabbedPane);
+            ((ResultTab) resultsPane.getComponent(index)).updateToolbarLocation(resultsPane);
         }
 
         splitpane.setDividerLocation(0.5);
@@ -1331,14 +1331,14 @@ public class StudioWindow extends JFrame implements WindowListener {
     private void refreshResultTab() {
         refreshActionState();
 
-        TabPanel tab = getSelectedResultPane();
+        ResultTab tab = getSelectedResultTab();
         if (tab == null) return;
 
         if (tab.getEditor() != null) {
             mainStatusBar.updateStatuses(tab.getEditor().getTextArea());
         } else if (tab.getGrid() != null) {
             mainStatusBar.updateStatuses(tab.getGrid().getTable());
-        } else if (tab.getType() == TabPanel.ResultType.ERROR) {
+        } else if (tab.getType() == ResultType.ERROR) {
             mainStatusBar.resetStatuses();
         }
     }
@@ -1346,7 +1346,7 @@ public class StudioWindow extends JFrame implements WindowListener {
     private void resultTabDragged(DragEvent event) {
         DraggableTabbedPane targetPane = event.getTargetPane();
         StudioWindow targetStudiowWindow = (StudioWindow) targetPane.getClientProperty(StudioWindow.class);
-        ((TabPanel)targetPane.getComponentAt(event.getTargetIndex())).setStudioWindow(targetStudiowWindow);
+        ((ResultTab)targetPane.getComponentAt(event.getTargetIndex())).setStudioWindow(targetStudiowWindow);
     }
 
     public StudioWindow(Server server, String filename) {
@@ -1369,7 +1369,7 @@ public class StudioWindow extends JFrame implements WindowListener {
         editorSearchPanel = new SearchPanel( () -> editor.getPane() );
         editorSearchPanel.setName("SearchPanel");
         mainStatusBar = new MainStatusBar();
-        tabbedPane = initResultPane();
+        resultsPane = initResultPane();
         resultSearchPanel = initResultSearchPanel();
 
         // We need to have some editor initialized to prevent NPE
@@ -1394,7 +1394,7 @@ public class StudioWindow extends JFrame implements WindowListener {
         topPanel.setMinimumSize(new Dimension(0,0));
 
         JPanel bottomPanel = new JPanel(new BorderLayout());
-        bottomPanel.add(tabbedPane, BorderLayout.CENTER);
+        bottomPanel.add(resultsPane, BorderLayout.CENTER);
         bottomPanel.add(resultSearchPanel, BorderLayout.NORTH);
         bottomPanel.setMinimumSize(new Dimension(0,0));
         splitpane = initSplitPane(topPanel, bottomPanel);
@@ -1435,12 +1435,12 @@ public class StudioWindow extends JFrame implements WindowListener {
             }
             @Override
             public boolean isPinned(int index) {
-                TabPanel panel = (TabPanel)tabbedPane.getComponentAt(index);
+                ResultTab panel = (ResultTab)tabbedPane.getComponentAt(index);
                 return panel.isPinned();
             }
             @Override
             public void setPinned(int index, boolean pinned) {
-                TabPanel panel = (TabPanel)tabbedPane.getComponentAt(index);
+                ResultTab panel = (ResultTab)tabbedPane.getComponentAt(index);
                 panel.setPinned(pinned);
             }
         });
@@ -1453,16 +1453,16 @@ public class StudioWindow extends JFrame implements WindowListener {
         tabbedPane.putClientProperty(StudioWindow.class, this);
         tabbedPane.addDragListener( evt -> resultTabDragged(evt));
         tabbedPane.addChangeListener(e -> {
-            TabPanel tabPanel = getSelectedResultPane();
-            if (tabPanel != null) tabPanel.refreshActionState();
+            ResultTab resultTab = getSelectedResultTab();
+            if (resultTab != null) resultTab.refreshActionState();
         });
         return tabbedPane;
     }
 
     private SearchPanel initResultSearchPanel() {
         SearchPanel resultSearchPanel = new SearchPanel(() -> {
-            if (tabbedPane.getTabCount() == 0) return null;
-            TabPanel resultTab = getSelectedResultPane();
+            if (resultsPane.getTabCount() == 0) return null;
+            ResultTab resultTab = getSelectedResultTab();
             EditorPane editorPane = resultTab.getEditor();
             if (editorPane != null) return editorPane;
 
@@ -1693,7 +1693,7 @@ public class StudioWindow extends JFrame implements WindowListener {
     }
 
     private JTable getSelectedTable() {
-        TabPanel tab = (TabPanel) tabbedPane.getSelectedComponent();
+        ResultTab tab = (ResultTab) resultsPane.getSelectedComponent();
         if (tab == null) return null;
 
         QGrid grid = tab.getGrid();
@@ -1702,17 +1702,17 @@ public class StudioWindow extends JFrame implements WindowListener {
         return grid.getTable();
     }
 
-    private TabPanel getResultPane(int index) {
-        return (TabPanel)tabbedPane.getComponentAt(index);
+    private ResultTab getResultTab(int index) {
+        return (ResultTab) resultsPane.getComponentAt(index);
     }
 
-    private TabPanel getSelectedResultPane() {
-        return (TabPanel) tabbedPane.getSelectedComponent();
+    private ResultTab getSelectedResultTab() {
+        return (ResultTab) resultsPane.getSelectedComponent();
     }
 
     public void addResultTab(QueryResult queryResult, String tooltip) {
-        TabPanel tab = new TabPanel(this, queryResult);
-        tab.addInto(tabbedPane, getTooltipText(tooltip, queryResult.getKMessage()));
+        ResultTab tab = new ResultTab(this, queryResult);
+        tab.addInto(resultsPane, getTooltipText(tooltip, queryResult.getKMessage()));
     }
 
     private static String getTooltipText(String tooltip, KMessage message) {
