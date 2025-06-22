@@ -221,6 +221,7 @@ public class TabPanel extends JPanel {
             textArea.setCaretPosition(0);
             textArea.scrollRectToVisible(new Rectangle(0, 0, 1, 1));  // Scroll to top
         }
+        if (grid != null) grid.resizeColumns();
     }
 
     public void toggleCommaFormatting() {

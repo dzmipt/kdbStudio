@@ -1,3 +1,5 @@
+* Fix issue with incorrect table's column width calculation on Windows with scaled display
+    * Column width is also adjusted now after altering decimal formatting
 * Setting to open servers from the result grid popup menu in the current editor tab
 * Adding server back/forward actions which also work with mouse back/forward buttons
 * Chart merging

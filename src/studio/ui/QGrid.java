@@ -154,7 +154,7 @@ public class QGrid extends JPanel implements MouseWheelListener, SearchPanelList
                 GraphicsConfiguration gc = table.getGraphicsConfiguration();
                 if (graphicsConfiguration != gc) {
                     graphicsConfiguration = gc;
-                    widthAdjuster.resizeAllColumns(false);
+                    widthAdjuster.revalidate();
                 }
             }
         });
@@ -316,6 +316,11 @@ public class QGrid extends JPanel implements MouseWheelListener, SearchPanelList
 
         Config.getInstance().setFont(Config.FONT_TABLE, font);
         StudioWindow.refreshResultSettings();
+    }
+
+    public void resizeColumns() {
+        widthAdjuster.revalidate();
+        revalidate();
     }
 
     public void setFont(Font font) {
