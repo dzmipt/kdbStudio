@@ -23,4 +23,8 @@ public enum ResultType {
     public Icon getIcon() {
         return icon;
     }
+
+    public boolean isTable() {
+        return this == TABLE || this == LIST;
+    }
 }

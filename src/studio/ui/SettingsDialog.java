@@ -49,6 +49,7 @@ public class SettingsDialog extends EscapeDialog {
     private JFormattedTextField txtMaxFractionDigits;
     private JFormattedTextField txtEmulateDoubleClickTimeout;
     private JCheckBox chBoxOpenServerInCurrentTab;
+    private JCheckBox chBoxInspectResultInCurrentTab;
     private JComboBox<ExecAllOption> comboBoxExecAll;
     private JComboBox<LineEnding> comboBoxLineEnding;
     private JCheckBox chBoxEmulateTab;
@@ -273,6 +274,8 @@ public class SettingsDialog extends EscapeDialog {
 
         chBoxOpenServerInCurrentTab = new JCheckBox("Open servers from popup menu in the current tab");
         chBoxOpenServerInCurrentTab.setSelected(CONFIG.getBoolean(Config.SERVER_FROM_RESULT_IN_CURRENT));
+        chBoxInspectResultInCurrentTab = new JCheckBox("Inspect result in the current tab");
+        chBoxInspectResultInCurrentTab.setSelected(CONFIG.getBoolean(Config.INSPECT_RESULT_IN_CURRENT));
 
         JLabel lblAuthMechanism = new JLabel("Authentication:");
         JLabel lblUser = new JLabel("  User:");
@@ -323,6 +326,8 @@ public class SettingsDialog extends EscapeDialog {
                         .addLine(lblMaxCharsInResult, txtMaxCharsInResult, lblMaxCharsInTableCell, txtMaxCharsInTableCell)
                         .addLine(lblCellRightPadding, txtCellRightPadding, lblCellMaxWidth, txtCellMaxWidth)
                         .addLineAndGlue(chBoxOpenServerInCurrentTab)
+                        .addLineAndGlue(chBoxInspectResultInCurrentTab)
+
         );
         layout.linkSize(SwingConstants.HORIZONTAL, lblCellRightPadding, txtMaxFractionDigits, txtEmulateDoubleClickTimeout, txtTabsCount,
                 txtMaxCharsInResult, txtMaxCharsInTableCell, txtCellRightPadding, txtCellMaxWidth);
@@ -393,6 +398,7 @@ public class SettingsDialog extends EscapeDialog {
         CONFIG.setBoolean(Config.AUTO_SAVE, isAutoSave());
         CONFIG.setEnum(Config.DEFAULT_LINE_ENDING, getDefaultLineEnding());
         CONFIG.setBoolean(Config.SERVER_FROM_RESULT_IN_CURRENT, chBoxOpenServerInCurrentTab.isSelected());
+        CONFIG.setBoolean(Config.INSPECT_RESULT_IN_CURRENT, chBoxInspectResultInCurrentTab.isSelected());
 
         int maxFractionDigits = getMaxFractionDigits();
         CONFIG.setInt(Config.MAX_FRACTION_DIGITS, maxFractionDigits);

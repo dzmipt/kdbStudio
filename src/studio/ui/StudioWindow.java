@@ -135,7 +135,10 @@ public class StudioWindow extends JFrame implements WindowListener {
     private UserAction addServerAction;
     private UserAction removeServerAction;
     private UserAction toggleCommaFormatAction;
+    private UserAction uploadAction;
     private UserAction findInResultAction;
+    private UserAction prevResultAction;
+    private UserAction nextResultAction;
     private UserAction nextEditorTabAction;
     private UserAction prevEditorTabAction;
     private UserAction[] lineEndingActions;
@@ -242,12 +245,16 @@ public class StudioWindow extends JFrame implements WindowListener {
 
         ResultTab tab = getSelectedResultTab();
         if (tab == null) {
-            setActionsEnabled(false, exportAction, chartAction, openInExcel, refreshAction);
+            setActionsEnabled(false, exportAction, chartAction, openInExcel, refreshAction, uploadAction, prevResultAction, nextResultAction);
         } else {
-            exportAction.setEnabled(tab.isTable());
-            chartAction.setEnabled(tab.getType() == ResultType.TABLE);
-            openInExcel.setEnabled(tab.isTable());
+            ResultType type = tab.getType();
+            exportAction.setEnabled(type.isTable());
+            chartAction.setEnabled(type == ResultType.TABLE);
+            openInExcel.setEnabled(type.isTable());
             refreshAction.setEnabled(true);
+            uploadAction.setEnabled(type != ResultType.ERROR);
+            prevResultAction.setEnabled(tab.hasPreviousResult());
+            nextResultAction.setEnabled(tab.hasNextResult());
             tab.refreshActionState();
         }
     }
@@ -671,16 +678,38 @@ public class StudioWindow extends JFrame implements WindowListener {
         refreshAction = UserAction.create(I18n.getString("Refresh"), Util.REFRESH_ICON, "Refresh the result set",
                 KeyEvent.VK_R, KeyStroke.getKeyStroke(KeyEvent.VK_Y, menuShortcutKeyMask | InputEvent.SHIFT_MASK), e -> refreshQuery());
 
-        toggleCommaFormatAction = UserAction.create("Toggle Comma Format", Util. COMMA_ICON, "Add/remove thousands separator in selected result",
+        toggleCommaFormatAction = UserAction.create("Toggle Comma Format", Util.COMMA_ICON, "Add/remove thousands separator in selected result",
                 KeyEvent.VK_J, KeyStroke.getKeyStroke(KeyEvent.VK_J, menuShortcutKeyMask),
                 e -> {
                     ResultTab tab = getSelectedResultTab();
                     if (tab != null) tab.toggleCommaFormatting();
                 });
 
+        uploadAction = UserAction.create("Upload to server", Util.UPLOAD_ICON, "Upload grid to current server",
+                KeyEvent.VK_U, KeyStroke.getKeyStroke(KeyEvent.VK_U, menuShortcutKeyMask),
+                e -> {
+                    ResultTab tab = getSelectedResultTab();
+                    if (tab != null) tab.upload(e);
+                });
+
         findInResultAction = UserAction.create("Find in Result", Util.FIND_ICON, "Find in result tab",
                 KeyEvent.VK_F, KeyStroke.getKeyStroke(KeyEvent.VK_F, menuShortcutKeyMask | InputEvent.SHIFT_MASK),
                 e -> resultSearchPanel.setVisible(true) );
+
+        prevResultAction = UserAction.create("Previous result", Util.LEFT_ICON, "Show previous result",
+                KeyEvent.VK_Q, KeyStroke.getKeyStroke(KeyEvent.VK_COMMA, StudioWindow.menuShortcutKeyMask | InputEvent.ALT_DOWN_MASK),
+                e -> {
+                    ResultTab tab = getSelectedResultTab();
+                    if (tab != null) tab.navigateCard(false);
+                });
+
+        nextResultAction = UserAction.create(
+                "Next result", Util.RIGHT_ICON, "Show next result",
+                KeyEvent.VK_W, KeyStroke.getKeyStroke(KeyEvent.VK_PERIOD, StudioWindow.menuShortcutKeyMask | InputEvent.ALT_DOWN_MASK),
+                e -> {
+                    ResultTab tab = getSelectedResultTab();
+                    if (tab != null) tab.navigateCard(true);
+                });
 
         aboutAction = UserAction.create(I18n.getString("About"), Util.ABOUT_ICON, "About Studio for kdb+",
                 KeyEvent.VK_E, null, e -> about());
@@ -1071,7 +1100,7 @@ public class StudioWindow extends JFrame implements WindowListener {
         menu.setMnemonic(KeyEvent.VK_Q);
 
         addToMenu(menu, executeCurrentLineAction, executeCurrentLineAndChartAction, executeAction, executeAndChartAction, stopAction, refreshAction,
-                toggleCommaFormatAction, findInResultAction);
+                toggleCommaFormatAction, uploadAction, findInResultAction, prevResultAction, nextResultAction);
         menubar.add(menu);
 
         //Window menu

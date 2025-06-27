@@ -198,8 +198,8 @@ public class QGrid extends JPanel implements MouseWheelListener, SearchPanelList
                 KeyEvent.VK_H, null,
                 new CopyTableSelectionAction(CopyTableSelectionAction.Format.Html, table));
 
-        inspectCellAction = new TableUserAction.InspectCellAction(studioWindow, table);
-        inspectLineAction = new TableUserAction.InspectLineAction(studioWindow, table);
+        inspectCellAction = new TableUserAction.InspectCellAction(resultTab, table);
+        inspectLineAction = new TableUserAction.InspectLineAction(resultTab, table);
 
         popupMenu.add(inspectCellAction);
         popupMenu.add(inspectLineAction);

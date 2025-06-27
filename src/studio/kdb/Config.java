@@ -75,6 +75,7 @@ public class Config  {
     public static final String DEFAULT_AUTH_CONFIG = configDefault("defaultAuthConfig", ConfigType.DEFAULT_AUTH_CONFIG, DefaultAuthConfig.DEFAULT);
     public static final String TABLE_CONN_EXTRACTOR = configDefault("tableExtractorConfig", ConfigType.TABLE_CONN_EXTRACTOR, TableConnExtractor.DEFAULT);
     public static final String SERVER_FROM_RESULT_IN_CURRENT = configDefault("gridOpenServersInCurrentTab", ConfigType.BOOLEAN, true);
+    public static final String INSPECT_RESULT_IN_CURRENT = configDefault("inspectResultInCurrentTab", ConfigType.BOOLEAN, true);
     public static final String COLOR_TOKEN_CONFIG = configDefault("tokenColors", ConfigType.COLOR_TOKEN_CONFIG, ColorTokenConfig.DEFAULT);
     public static final String SERVER_HISTORY = configDefault("serverHistory", ConfigType.SERVER_HISTORY, new ServerHistoryConfig(20, List.of()));
     public static final String CHART_COLORSETS = configDefault("chartColorSets", ConfigType.CHART_COLOR_SETS, ColorSets.DEFAULT);

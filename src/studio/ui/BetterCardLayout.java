@@ -52,7 +52,8 @@ public class BetterCardLayout implements LayoutManager, ContainerListener {
     public void hide(Component component) {
         int index = getIndex(component);
         if (index == selected) {
-            next();
+            if (hasNext()) next();
+            else select(0);
         }
     }
 
@@ -72,12 +73,29 @@ public class BetterCardLayout implements LayoutManager, ContainerListener {
         }
     }
 
-    public void next() {
-        select(selected+1 >= parent.getComponentCount() ? 0 : selected+1);
+    public void removeAllAfterSelected() {
+        for (int index = parent.getComponentCount() - 1; index>selected; index-- ) {
+            parent.remove(parent.getComponent(index));
+        }
     }
 
+    public boolean hasNext() {
+        return selected+1 < parent.getComponentCount();
+    }
+
+    public void next() {
+        if (hasNext()) {
+            select(selected + 1);
+        }
+    }
+
+    public boolean hasPrevious() {
+        return selected > 0;
+    }
     public void previous() {
-        select(selected <= 0 ? parent.getComponentCount() - 1 : selected-1);
+        if (hasPrevious()) {
+            select(selected-1);
+        }
     }
 
     public int getSelected() {

@@ -12,9 +12,7 @@ import javax.swing.*;
 import javax.swing.border.EtchedBorder;
 import javax.swing.text.JTextComponent;
 import java.awt.*;
-import java.awt.event.ActionEvent;
-import java.awt.event.InputEvent;
-import java.awt.event.KeyEvent;
+import java.awt.event.*;
 import java.util.function.Consumer;
 
 public class ResultTab extends JPanel {
@@ -25,7 +23,8 @@ public class ResultTab extends JPanel {
     private Toolbar toolbar = null;
     private UserAction formatAction;
     private UserAction uploadAction;
-//    private JButton btnLeft, btnRight;
+    private UserAction previousCardAction;
+    private UserAction nextCardAction;
     private KFormatContext formatContext = new KFormatContext(KFormatContext.DEFAULT);
     private boolean pinned = false;
 
@@ -39,10 +38,64 @@ public class ResultTab extends JPanel {
 
         pnlCards = new JPanel();
         cardLayout = new BetterCardLayout(pnlCards);
-        pnlCards.add(new ResultPane(studioWindow, this, queryResult));
         add(pnlCards, BorderLayout.CENTER);
-
         initComponents();
+
+        addResultInside(queryResult);
+    }
+
+    private void addDeepMouseListener(Component comp, MouseListener listener) {
+        comp.addMouseListener(listener);
+        if (! (comp instanceof Container)) return;
+        for (Component child: ((Container)comp).getComponents()) {
+            addDeepMouseListener(child, listener);
+        }
+    }
+
+    public void addResult(QueryResult queryResult, String tooltip) {
+        boolean reuse = Config.getInstance().getBoolean(Config.INSPECT_RESULT_IN_CURRENT);
+        if (reuse) addResultInside(queryResult);
+        else studioWindow.addResultTab(queryResult, tooltip);
+        studioWindow.refreshActionState();
+    }
+
+    private void addResultInside(QueryResult queryResult) {
+        cardLayout.removeAllAfterSelected();
+        ResultPane resultPane = new ResultPane(studioWindow, this, queryResult);
+        addDeepMouseListener(resultPane, new MouseAdapter() {
+            @Override
+            public void mousePressed(MouseEvent e) {
+                if (e.getButton() == 4) navigateCard(false);
+                else if (e.getButton() == 5) navigateCard(true);
+            }
+        });
+        pnlCards.add(resultPane);
+        toolbar.setVisible(resultPane.getType() != ResultType.ERROR);
+        refresh();
+    }
+
+    public void navigateCard(boolean next) {
+        if (next) {
+            cardLayout.next();
+        } else {
+            cardLayout.previous();
+        }
+        refresh();
+    }
+
+    public boolean hasPreviousResult() {
+        return cardLayout.hasPrevious();
+    }
+
+    public boolean hasNextResult() {
+        return cardLayout.hasNext();
+    }
+
+    private void refresh() {
+        previousCardAction.setEnabled(hasPreviousResult());
+        nextCardAction.setEnabled(hasNextResult());
+        updateTitle();
+        studioWindow.refreshActionState();
     }
 
     private ResultPane getResultPane() {
@@ -77,11 +130,13 @@ public class ResultTab extends JPanel {
         uploadAction.setEnabled(! studioWindow.isQueryRunning());
     }
 
-    private void upload(ActionEvent evt) {
+    public void upload(ActionEvent evt) {
+        K.KBase obj = getQueryResult().getResult();
+        if (obj == null) return;
         String varName = StudioOptionPane.showInputDialog(studioWindow, "Enter variable name", "Upload to Server");
         if (varName == null) return;
         varName = varName.trim();
-        studioWindow.getActiveEditor().executeQuery(QueryTask.upload(varName, getQueryResult().getResult()));
+        studioWindow.getActiveEditor().executeQuery(QueryTask.upload(varName, obj));
     }
 
     private void initComponents() {
@@ -91,22 +146,32 @@ public class ResultTab extends JPanel {
         ).toggleButton(Util.COMMA_ICON);
 
         uploadAction = UserAction.create(
-                "Upload", Util.UPLOAD_ICON, "Upload to server",
-                KeyEvent.VK_U, null, this::upload );
-
+                "Upload", Util.UPLOAD_ICON, "Upload to current server",
+                KeyEvent.VK_U, KeyStroke.getKeyStroke(KeyEvent.VK_U, StudioWindow.menuShortcutKeyMask), this::upload );
 
         UserAction findAction = UserAction.create(
                 "Find in result", Util.FIND_ICON, "Find in result",
-                KeyEvent.VK_F, KeyStroke.getKeyStroke(KeyEvent.VK_F, StudioWindow.menuShortcutKeyMask | InputEvent.SHIFT_MASK),
+                KeyEvent.VK_F, KeyStroke.getKeyStroke(KeyEvent.VK_F, StudioWindow.menuShortcutKeyMask | InputEvent.SHIFT_DOWN_MASK),
                 e -> studioWindow.getResultSearchPanel().setVisible(true) );
+
+        previousCardAction = UserAction.create(
+                "Previous result", Util.LEFT_ICON, "Show previous result",
+                KeyEvent.VK_Q, KeyStroke.getKeyStroke(KeyEvent.VK_COMMA, StudioWindow.menuShortcutKeyMask | InputEvent.ALT_DOWN_MASK),
+                e -> navigateCard(false)
+        );
+
+        nextCardAction = UserAction.create(
+                "Next result", Util.RIGHT_ICON, "Show next result",
+                KeyEvent.VK_W, KeyStroke.getKeyStroke(KeyEvent.VK_PERIOD, StudioWindow.menuShortcutKeyMask | InputEvent.ALT_DOWN_MASK),
+                e -> navigateCard(true)
+        );
 
         toolbar = new Toolbar();
         toolbar.setFloatable(false);
         toolbar.setButtonBorder(BorderFactory.createEtchedBorder(EtchedBorder.LOWERED));
         toolbar.setGap(16);
-        toolbar.addAll(formatAction, uploadAction, findAction);
+        toolbar.addAll(formatAction, uploadAction, findAction, previousCardAction, nextCardAction);
 
-        toolbar.setVisible(getType() != ResultType.ERROR);
         updateFormatting(null);
 
         refreshFont();
@@ -142,25 +207,36 @@ public class ResultTab extends JPanel {
     public void addInto(JTabbedPane tabbedPane, String tooltip) {
         ensureTabLimit(tabbedPane);
         putClientProperty(JTabbedPane.class, tabbedPane);
-        String title = makeTitle();
+        String title = getTitle();
         tabbedPane.addTab(title, getType().getIcon(), this, tooltip);
         int tabIndex = tabbedPane.getTabCount() - 1;
         tabbedPane.setSelectedIndex(tabIndex);
         updateToolbarLocation(tabbedPane);
     }
 
-    public String makeTitle() {
-        String title = (isPinned() ? "\u2191 " : "") + getType().getTitle();
+    public String getTitle() {
+        StringBuilder title = new StringBuilder();
+        if (isPinned()) title.append("\u2191 ");
+        title.append(getType().getTitle()).append(' ');
         QGrid grid = getGrid();
         if (grid != null) {
-            title = title + " [" + grid.getRowCount() + " rows] ";
+            title.append('[').append(grid.getRowCount()).append(" rows]");
         }
-        return title;
+        int index = cardLayout.getSelected();
+        if (index > 0) {
+            title.append(" - ").append(index);
+        }
+        title.append(' ');
+        return title.toString();
     }
 
     public void updateTitle() {
         JTabbedPane parentPane = (JTabbedPane)getClientProperty(JTabbedPane.class);
-        parentPane.setTitleAt(parentPane.indexOfComponent(this), makeTitle());
+        if (parentPane == null) return;
+        int index = parentPane.indexOfComponent(this);
+        if (index == -1) return;
+        parentPane.setTitleAt(index, getTitle());
+        parentPane.setIconAt(index, getType().getIcon());
     }
 
     public void updateToolbarLocation(JTabbedPane tabbedPane) {
@@ -219,10 +295,6 @@ public class ResultTab extends JPanel {
 
     public EditorPane getEditor() {
         return getResultPane().getEditor();
-    }
-
-    public boolean isTable() {
-        return getGrid() != null;
     }
 
     public boolean isPinned() {
