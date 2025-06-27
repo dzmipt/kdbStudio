@@ -61,7 +61,7 @@ public class KXYSeries extends XYSeries {
     }
 
     public KXYSeries(KColumn xColumn, KColumn yColumn) {
-        super(yColumn.getName(),true, false);
+        super(yColumn.getName(),false, true);
 
         double aminY = Double.MAX_VALUE;
         double amaxY = Double.MIN_VALUE;
@@ -80,13 +80,13 @@ public class KXYSeries extends XYSeries {
             aminY = Math.min(aminY, yDouble);
             amaxY = Math.max(amaxY, yDouble);
             data.add(new XYDataItem(xDouble, yDouble));
-            data.sort( (o1, o2) -> {
-                double d = o1.getXValue() - o2.getXValue();
-                if (d<0) return -1;
-                if (d>0) return 1;
-                return 0;
-            } );
         }
+        data.sort( (o1, o2) -> {
+            double d = o1.getXValue() - o2.getXValue();
+            if (d<0) return -1;
+            if (d>0) return 1;
+            return 0;
+        } );
 
         minY = aminY;
         maxY = amaxY;
