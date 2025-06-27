@@ -12,6 +12,7 @@ import javax.swing.*;
 import javax.swing.border.EtchedBorder;
 import javax.swing.text.JTextComponent;
 import java.awt.*;
+import java.awt.event.ActionEvent;
 import java.awt.event.InputEvent;
 import java.awt.event.KeyEvent;
 import java.util.function.Consumer;
@@ -21,10 +22,10 @@ public class ResultTab extends JPanel {
 
     private final BetterCardLayout cardLayout;
     private final JPanel pnlCards;
-    private JToolBar toolbar = null;
-    private JToggleButton tglBtnComma;
-    private JButton uploadBtn = null;
-    private JButton btnLeft, btnRight;
+    private Toolbar toolbar = null;
+    private UserAction formatAction;
+    private UserAction uploadAction;
+//    private JButton btnLeft, btnRight;
     private KFormatContext formatContext = new KFormatContext(KFormatContext.DEFAULT);
     private boolean pinned = false;
 
@@ -73,12 +74,10 @@ public class ResultTab extends JPanel {
     }
 
     public void refreshActionState() {
-        if (uploadBtn != null) {
-            uploadBtn.setEnabled(! studioWindow.isQueryRunning());
-        }
+        uploadAction.setEnabled(! studioWindow.isQueryRunning());
     }
 
-    private void upload() {
+    private void upload(ActionEvent evt) {
         String varName = StudioOptionPane.showInputDialog(studioWindow, "Enter variable name", "Upload to Server");
         if (varName == null) return;
         varName = varName.trim();
@@ -86,41 +85,29 @@ public class ResultTab extends JPanel {
     }
 
     private void initComponents() {
-        KeyStroke keyStroke = KeyStroke.getKeyStroke(KeyEvent.VK_J, StudioWindow.menuShortcutKeyMask);
-        tglBtnComma = new JToggleButton(Util.COMMA_CROSSED_ICON);
-        tglBtnComma.setSelectedIcon(Util.COMMA_ICON);
+        formatAction = UserAction.create(
+                "Toggle decimal format", Util.COMMA_CROSSED_ICON, "Add comma as thousands separators for numbers",
+                KeyEvent.VK_T, KeyStroke.getKeyStroke(KeyEvent.VK_J, StudioWindow.menuShortcutKeyMask), this::updateFormatting
+        ).toggleButton(Util.COMMA_ICON);
 
-        tglBtnComma.setBorder(BorderFactory.createEtchedBorder(EtchedBorder.LOWERED));
-        tglBtnComma.setToolTipText(Util.getTooltipWithAccelerator("Add comma as thousands separators for numbers", keyStroke));
-        tglBtnComma.setFocusable(false);
-        tglBtnComma.addActionListener(e -> {
-            updateFormatting();
-        });
+        uploadAction = UserAction.create(
+                "Upload", Util.UPLOAD_ICON, "Upload to server",
+                KeyEvent.VK_U, null, this::upload );
 
-        uploadBtn = new JButton(Util.UPLOAD_ICON);
-        uploadBtn.setName("UploadButton");
-        uploadBtn.setToolTipText("Upload to server");
-        uploadBtn.setBorder(BorderFactory.createEtchedBorder(EtchedBorder.LOWERED));
-        uploadBtn.setFocusable(false);
-        uploadBtn.addActionListener(e -> upload());
 
-        keyStroke = KeyStroke.getKeyStroke(KeyEvent.VK_F, StudioWindow.menuShortcutKeyMask | InputEvent.SHIFT_MASK);
+        UserAction findAction = UserAction.create(
+                "Find in result", Util.FIND_ICON, "Find in result",
+                KeyEvent.VK_F, KeyStroke.getKeyStroke(KeyEvent.VK_F, StudioWindow.menuShortcutKeyMask | InputEvent.SHIFT_MASK),
+                e -> studioWindow.getResultSearchPanel().setVisible(true) );
 
-        JButton findBtn = new JButton(Util.FIND_ICON);
-        findBtn.setToolTipText(Util.getTooltipWithAccelerator("Find in result", keyStroke));
-        findBtn.setBorder(BorderFactory.createEtchedBorder(EtchedBorder.LOWERED));
-        findBtn.setFocusable(false);
-        findBtn.addActionListener(e -> studioWindow.getResultSearchPanel().setVisible(true));
-
-        toolbar = new JToolBar();
+        toolbar = new Toolbar();
         toolbar.setFloatable(false);
-        toolbar.add(tglBtnComma);
-        toolbar.add(Box.createRigidArea(new Dimension(16,16)));
-        toolbar.add(uploadBtn);
-        toolbar.add(Box.createRigidArea(new Dimension(16,16)));
-        toolbar.add(findBtn);
+        toolbar.setButtonBorder(BorderFactory.createEtchedBorder(EtchedBorder.LOWERED));
+        toolbar.setGap(16);
+        toolbar.addAll(formatAction, uploadAction, findAction);
+
         toolbar.setVisible(getType() != ResultType.ERROR);
-        updateFormatting();
+        updateFormatting(null);
 
         refreshFont();
     }
@@ -189,8 +176,8 @@ public class ResultTab extends JPanel {
         }
     }
 
-    private void updateFormatting() {
-        formatContext.setShowThousandsComma(tglBtnComma.isSelected());
+    private void updateFormatting(ActionEvent evt) {
+        formatContext.setShowThousandsComma(formatAction.isSelected());
         forEachResultPane(resultPane -> {
             QGrid grid = resultPane.getGrid();
             if (grid != null) {
@@ -215,8 +202,7 @@ public class ResultTab extends JPanel {
     }
 
     public void toggleCommaFormatting() {
-        if (tglBtnComma == null) return;
-        tglBtnComma.doClick();
+        formatAction.click();
     }
 
     public void setDoubleClickTimeout(long doubleClickTimeout) {

@@ -5,6 +5,9 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 
 public abstract class UserAction extends AbstractAction {
+
+    public final static String TOGGLE_ICON = "ToggleIcon";
+
     public UserAction(String text,
                       Icon icon,
                       String desc,
@@ -37,6 +40,22 @@ public abstract class UserAction extends AbstractAction {
         KeyStroke keyStroke = getKeyStroke();
         if (keyStroke != null) builder.append(" - ").append(keyStroke);
         return builder.toString();
+    }
+
+    public UserAction toggleButton(Icon icon) {
+        putValue(TOGGLE_ICON, icon);
+        return this;
+    }
+
+    public boolean isSelected() {
+        return getValue(Action.SELECTED_KEY) == Boolean.TRUE;
+    }
+
+    public void click() {
+        if (getValue(TOGGLE_ICON) != null) {
+            putValue(Action.SELECTED_KEY, !isSelected());
+        }
+        actionPerformed(new ActionEvent(this, ActionEvent.ACTION_PERFORMED, "click"));
     }
 
     public UserAction addActionToComponent(JComponent component) {

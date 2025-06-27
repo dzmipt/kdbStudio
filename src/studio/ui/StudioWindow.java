@@ -78,7 +78,7 @@ public class StudioWindow extends JFrame implements WindowListener {
     private JComboBox<String> comboServer;
     private JTextField txtServer;
     private String lastQuery = null;
-    private JToolBar toolbar;
+    private Toolbar toolbar;
     private EditorsPanel rootEditorsPanel;
     private EditorTab editor; // should be NotNull
     private JSplitPane splitpane;
@@ -1221,23 +1221,7 @@ public class StudioWindow extends JFrame implements WindowListener {
                 openInExcel, null, exportAction, null, chartAction, null, undoAction, redoAction, null,
                 cutAction, copyAction, pasteAction, null, findAction, replaceAction, null, codeKxComAction };
 
-        for (Object element: actions) {
-            if (element == null) {
-                toolbar.addSeparator();
-            } else if (element instanceof Action) {
-                Action action = (Action) element;
-                JButton button = toolbar.add(action);
-                button.setFocusable(false);
-                button.setMnemonic(KeyEvent.VK_UNDEFINED);
-
-                String name = (String) action.getValue(Action.NAME);
-                button.setName("toolbar" + name);
-            } else if (element instanceof Component) {
-                toolbar.add((Component)element);
-            } else {
-                throw new IllegalStateException("Internal error");
-            }
-        }
+        toolbar.addAll(actions);
 
         refreshActionState();
     }

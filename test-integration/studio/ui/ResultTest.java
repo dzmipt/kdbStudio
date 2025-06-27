@@ -49,15 +49,15 @@ public class ResultTest extends StudioTest {
     @Test
     public void testUploadButtonEnabled() {
         execute();
-        frameFixture.button("UploadButton").requireEnabled();
+        frameFixture.button("toolbarUpload").requireEnabled();
 
         execute();
-        frameFixture.button("UploadButton").requireEnabled();
+        frameFixture.button("toolbarUpload").requireEnabled();
 
         JTabbedPaneFixture tabbedPaneFixture = frameFixture.tabbedPane("ResultTabbedPane");
         tabbedPaneFixture.selectTab(0);
 
-        frameFixture.button("UploadButton").requireEnabled();
+        frameFixture.button("toolbarUpload").requireEnabled();
 
     }
 
