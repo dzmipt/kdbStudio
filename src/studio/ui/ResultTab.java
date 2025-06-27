@@ -71,6 +71,7 @@ public class ResultTab extends JPanel {
         });
         pnlCards.add(resultPane);
         toolbar.setVisible(resultPane.getType() != ResultType.ERROR);
+        refreshFont();
         refresh();
     }
 
@@ -173,8 +174,6 @@ public class ResultTab extends JPanel {
         toolbar.addAll(formatAction, uploadAction, findAction, previousCardAction, nextCardAction);
 
         updateFormatting(null);
-
-        refreshFont();
     }
 
     public void refreshFont() {
