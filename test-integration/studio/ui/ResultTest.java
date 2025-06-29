@@ -1,6 +1,7 @@
 package studio.ui;
 
 import kx.K4AccessException;
+import kx.K4Exception;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.assertj.swing.data.TableCell;
@@ -103,6 +104,34 @@ public class ResultTest extends StudioTest {
         String[] labels = popupMenu.menuLabels();
         log.info("Got the following menu items {}", Arrays.toString(labels));
         Assert.assertEquals("Open b:3", labels[0]);
+    }
+
+    @Test
+    public void testSimpleListResult() {
+        MockQSession.setResponse(new K.KSymbolVector("aaa","bb"));
+        execute();
+        JTableFixture table = frameFixture.panel("resultPanel0").table();
+        table.requireColumnCount(1);
+        table.requireRowCount(2);
+        table.requireColumnNamed("value");
+        table.requireCellValue(TableCell.row(0).column(0), "aaa");
+        table.requireCellValue(TableCell.row(1).column(0), "bb");
+    }
+
+    @Test
+    public void testSimpleConsoleResult() {
+        MockQSession.setResponse(new K.KCharacterVector("result"));
+        execute();
+        frameFixture.panel("resultPanel0").textBox().requireText("\"result\"");
+    }
+
+    @Test
+    public void testKError() {
+        MockQSession.setResponse(new K4Exception("kxError"));
+        execute();
+        JTextComponentFixture txtFixture = frameFixture.panel("resultPanel0").textBox();
+        Assert.assertTrue(txtFixture.text().contains("'kxError"));
+        txtFixture.foreground().requireEqualTo(Color.red);
     }
 
     @Test

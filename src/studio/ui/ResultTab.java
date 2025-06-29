@@ -72,6 +72,7 @@ public class ResultTab extends JPanel {
         pnlCards.add(resultPane);
         toolbar.setVisible(resultPane.getType() != ResultType.ERROR);
         refreshFont();
+        updateFormatting(null);
         refresh();
     }
 
