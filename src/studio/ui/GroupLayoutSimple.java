@@ -55,7 +55,7 @@ public class GroupLayoutSimple extends GroupLayout {
                 SequentialGroup lineGroup = createSequentialGroup();
                 for (int i=0; i<line.components.length; i++) {
                     Component component = line.components[i];
-                    if (maxWidthComponents.contains(component)) {
+                    if (stack.maxWidth || maxWidthComponents.contains(component)) {
                         lineGroup.addComponent(component);
                     } else {
                         lineGroup.addComponent(component, PREFERRED_SIZE, PREFERRED_SIZE, PREFERRED_SIZE);
@@ -90,8 +90,16 @@ public class GroupLayoutSimple extends GroupLayout {
         setVerticalGroup(verticalGroup);
     }
 
+    public static Stack maxWidthStack() {
+        Stack stack = new Stack();
+        stack.maxWidth = true;
+        return stack;
+    }
+
     public static class Stack {
         List<Line> lines = new ArrayList<>();
+        boolean maxWidth = false;
+
         public Stack addLine(Component... line) {
             lines.add(new Line(line, false));
             return this;
