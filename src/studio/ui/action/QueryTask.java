@@ -5,25 +5,32 @@ import kx.KMessage;
 import kx.ProgressCallback;
 import studio.kdb.K;
 import studio.kdb.Session;
+import studio.ui.StudioWindow;
 
 import java.io.IOException;
 
 public abstract class QueryTask {
 
-    public static QueryTask query(String queryText) {
-        return new Query(queryText, false);
+    protected final StudioWindow studioWindow;
+
+    protected QueryTask(StudioWindow studioWindow) {
+        this.studioWindow = studioWindow;
     }
 
-    public static QueryTask queryAndChart(String queryText) {
-        return new Query(queryText, true);
+    public static QueryTask query(StudioWindow studioWindow, String queryText) {
+        return new Query(studioWindow, queryText, false);
     }
 
-    public static QueryTask upload(String varName, K.KBase kObject) {
-        return new Upload(varName, kObject);
+    public static QueryTask queryAndChart(StudioWindow studioWindow, String queryText) {
+        return new Query(studioWindow, queryText, true);
     }
 
-    public static QueryTask connect() {
-        return new Connect();
+    public static QueryTask upload(StudioWindow studioWindow, String varName, K.KBase kObject) {
+        return new Upload(studioWindow, varName, kObject);
+    }
+
+    public static QueryTask connect(StudioWindow studioWindow) {
+        return new Connect(studioWindow);
     }
 
     public abstract String getQueryText();
@@ -42,7 +49,8 @@ public abstract class QueryTask {
         private final String query;
         private final boolean chartAfter;
 
-        Query (String query, boolean chartAfter) {
+        Query (StudioWindow studioWindow, String query, boolean chartAfter) {
+            super(studioWindow);
             this.query = query;
             this.chartAfter = chartAfter;
         }
@@ -59,7 +67,7 @@ public abstract class QueryTask {
 
         @Override
         public KMessage execute(Session session, ProgressCallback progress) throws IOException, K4Exception, InterruptedException {
-            return session.execute(new K.KCharacterVector(query), progress);
+            return session.execute(studioWindow, new K.KCharacterVector(query), progress);
         }
     }
 
@@ -67,7 +75,8 @@ public abstract class QueryTask {
         private String varName;
         private K.KBase kObject;
 
-        Upload(String varName, K.KBase kObject) {
+        Upload(StudioWindow studioWindow, String varName, K.KBase kObject) {
+            super(studioWindow);
             this.varName = varName;
             this.kObject = kObject;
         }
@@ -80,12 +89,14 @@ public abstract class QueryTask {
         @Override
         public KMessage execute(Session session, ProgressCallback progress) throws IOException, K4Exception, InterruptedException {
             K.KBase query = new K.KList(new K.Function("{x set y}"), new K.KSymbol(varName), kObject);
-            return session.execute(query, progress);
+            return session.execute(studioWindow, query, progress);
         }
     }
 
     private static class Connect extends QueryTask {
-        Connect() {}
+        Connect(StudioWindow studioWindow) {
+            super(studioWindow);
+        }
 
         @Override
         public String getQueryText() {
@@ -94,7 +105,7 @@ public abstract class QueryTask {
 
         @Override
         public KMessage execute(Session session, ProgressCallback progress) throws IOException, K4Exception, InterruptedException {
-            session.connect();
+            session.connect(studioWindow);
             return null;
         }
 

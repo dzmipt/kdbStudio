@@ -1,12 +1,13 @@
 package kx;
 
 import studio.kdb.K;
+import studio.kdb.KDBTrustManager;
 
-import javax.net.ssl.SSLSocket;
-import javax.net.ssl.SSLSocketFactory;
+import javax.net.ssl.*;
 import java.io.*;
 import java.net.InetSocketAddress;
 import java.net.Socket;
+import java.security.GeneralSecurityException;
 
 public class KConnection {
 
@@ -74,23 +75,58 @@ public class KConnection {
         return closed;
     }
 
-    public synchronized void connect() throws IOException, K4AccessException {
+    private SSLSocket createSSLSocket(KDBTrustManager trustManager) throws IOException {
+        Socket plainSocket = null;
+        try {
+            SSLSocketFactory sslSocketFactory;
+            if (trustManager != null) {
+                SSLContext ctx = SSLContext.getInstance("TLS");
+                ctx.init(null, new TrustManager[]{trustManager}, null);
+                sslSocketFactory = ctx.getSocketFactory();
+            } else {
+                sslSocketFactory = (SSLSocketFactory) SSLSocketFactory.getDefault();
+            }
+
+            for (; ; ) {
+                try {
+                    if (plainSocket != null) {
+                        plainSocket.close();
+                    }
+                    plainSocket = bindSocket();
+                    SSLSocket socket = (SSLSocket) sslSocketFactory.createSocket(plainSocket, host, port, true);
+                    socket.startHandshake();
+                    return socket;
+                } catch (SSLHandshakeException e) {
+                    if (trustManager == null || !trustManager.isReconnect()) throw e;
+                }
+            }
+        } catch (GeneralSecurityException|IOException e) {
+            if (plainSocket != null) {
+                plainSocket.close();
+            }
+            if (e instanceof IOException) throw (IOException) e;
+            throw new IOException("Security exception: " + e.getMessage(), e);
+        }
+    }
+
+    private Socket bindSocket() throws IOException {
+        Socket socket = new Socket();
+        socket.setReceiveBufferSize(1024 * 1024);
+        socket.connect(new InetSocketAddress(host, port));
+        return socket;
+    }
+
+    public synchronized void connect(KDBTrustManager trustManager) throws IOException, K4AccessException {
         if ( !closed ) return;
 
         String userPassword = authentication == null ? "" : authentication.getUserPassword();
-        s = new Socket();
-        s.setReceiveBufferSize(1024 * 1024);
-        s.connect(new InetSocketAddress(host, port));
 
         if (useTLS) {
-            try {
-                s = ((SSLSocketFactory) SSLSocketFactory.getDefault()).createSocket(s, host, port, true);
-                ((SSLSocket) s).startHandshake();
-            } catch (IOException e) {
-                s.close();
-                throw e;
-            }
+            s = createSSLSocket(trustManager);
+        } else {
+            s = bindSocket();
         }
+
         io(s);
         java.io.ByteArrayOutputStream baos = new ByteArrayOutputStream();
         baos.write((userPassword + "\3").getBytes());
@@ -146,9 +182,9 @@ public class KConnection {
         return sentBytes;
     }
 
-    public synchronized KMessage k(K.KBase x, ProgressCallback progress) throws K4Exception, IOException, InterruptedException {
+    public synchronized KMessage k(KDBTrustManager trustManager, K.KBase x, ProgressCallback progress) throws K4Exception, IOException, InterruptedException {
         try {
-            connect(); // will do nothing if it is already connected
+            connect(trustManager); // will do nothing if it is already connected
             socketReader.setProgressCallback(progress);
             K.KTimestamp sentTime = K.KTimestamp.now();
             long sentBytes = send(x);
@@ -163,7 +199,7 @@ public class KConnection {
     }
 
     public KMessage k(K.KBase x) throws K4Exception, IOException, InterruptedException {
-        return k(x, null);
+        return k(null, x, null);
     }
 
     private class SocketReader extends Thread {

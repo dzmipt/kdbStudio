@@ -3,15 +3,21 @@ package studio.utils;
 import javax.naming.InvalidNameException;
 import javax.naming.ldap.LdapName;
 import javax.naming.ldap.Rdn;
+import javax.net.ssl.TrustManagerFactory;
+import javax.net.ssl.X509TrustManager;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.OutputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.security.GeneralSecurityException;
+import java.security.KeyStore;
 import java.security.Principal;
 import java.security.cert.CertificateEncodingException;
 import java.security.cert.CertificateException;
 import java.security.cert.CertificateFactory;
 import java.security.cert.X509Certificate;
+import java.util.Arrays;
 import java.util.Base64;
 import java.util.Collection;
 import java.util.Optional;
@@ -72,6 +78,67 @@ public class TLSUtils {
             }
         } catch (InvalidNameException e) {}
         return null;
+    }
+
+    private static X509TrustManager getTrustManager(KeyStore ks) throws GeneralSecurityException {
+        TrustManagerFactory tmf = TrustManagerFactory.getInstance(TrustManagerFactory.getDefaultAlgorithm());
+        tmf.init(ks);
+        return (X509TrustManager) Arrays.stream(tmf.getTrustManagers())
+                .filter(t -> t instanceof X509TrustManager)
+                .findFirst()
+                .orElseThrow(() -> new GeneralSecurityException("No X509TrustManager found"));
+    }
+
+    public static X509TrustManager getDefaultTrustManager() throws GeneralSecurityException{
+        return getTrustManager((KeyStore)null);
+    }
+
+    public static X509TrustManager trustManagerFromJKS(Path path) throws GeneralSecurityException, IOException {
+        return trustManagerFromJKS(path, null);
+    }
+
+    public static X509TrustManager trustManagerFromJKS(Path path, String password) throws IOException, GeneralSecurityException {
+        return getTrustManager(getKeyStore(path, password));
+    }
+
+    public static X509TrustManager getTrustManager(X509Certificate root) throws GeneralSecurityException {
+        try {
+            KeyStore ks = KeyStore.getInstance(KeyStore.getDefaultType());
+            ks.load(null, null);
+            ks.setCertificateEntry("rootCA", root);
+            return getTrustManager(ks);
+        } catch (IOException e) {
+            throw new GeneralSecurityException("Unexpected IOException: " + e.getMessage(), e);
+        }
+    }
+
+    private static KeyStore getKeyStore(Path path, String password) throws IOException, GeneralSecurityException {
+        char[] pass = password == null ?  new char[0] : password.toCharArray();
+        KeyStore ks = KeyStore.getInstance("JKS");
+        if (Files.exists(path)) {
+            try (InputStream in = Files.newInputStream(path)) {
+                ks.load(in, pass);
+            }
+        } else {
+            ks.load(null, pass);
+        }
+        return ks;
+
+    }
+
+    public static void addCAToJKS(Path path, X509Certificate root) throws IOException, GeneralSecurityException {
+        KeyStore ks = getKeyStore(path, null);
+        String cn = getAttribute(root.getSubjectDN(), "CN");
+        if (cn == null) cn = "rootCA";
+        String alias = cn;
+        for (int index = 1; ks.isCertificateEntry(alias); index++ ) {
+            alias = cn + "." + index;
+        }
+
+        ks.setCertificateEntry(alias, root);
+        try (OutputStream out = Files.newOutputStream(path)) {
+            ks.store(out, new char[0]);
+        }
     }
 
 }

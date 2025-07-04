@@ -125,7 +125,7 @@ public class Server {
     }
 
     public String getConnectionString() {
-        return "`:" + getHost() + ":" + getPort();
+        return conn.toString(false);
     }
 
     public String getConnectionStringWithPwd() {

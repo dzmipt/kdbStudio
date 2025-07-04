@@ -115,8 +115,8 @@ public class Session implements ConnectionStateListener, KAuthentication {
         Session.sessionCreator = sessionCreator;
     }
 
-    public KMessage execute(K.KBase x, ProgressCallback progress) throws K4Exception, IOException, InterruptedException {
-        return kConn.k(x, progress);
+    public KMessage execute(StudioWindow studioWindow, K.KBase x, ProgressCallback progress) throws K4Exception, IOException, InterruptedException {
+        return kConn.k(new KDBTrustManager(studioWindow), x, progress);
     }
 
     public boolean isClosed() {
@@ -127,8 +127,8 @@ public class Session implements ConnectionStateListener, KAuthentication {
         kConn.close();
     }
 
-    public void connect() throws IOException, K4Exception {
-        kConn.connect();
+    public void connect(StudioWindow studioWindow) throws IOException, K4Exception {
+        kConn.connect(new KDBTrustManager(studioWindow));
     }
 
     public Server getServer() {

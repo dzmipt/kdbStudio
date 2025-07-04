@@ -1597,7 +1597,7 @@ public class StudioWindow extends JFrame implements WindowListener {
     }
 
     public void refreshQuery() {
-        editor.executeQuery(QueryTask.query(lastQuery));
+        editor.executeQuery(QueryTask.query(this, lastQuery));
     }
 
     public void executeQueryCurrentLine(boolean chart) {
@@ -1618,7 +1618,7 @@ public class StudioWindow extends JFrame implements WindowListener {
             return;
         }
 
-        QueryTask queryTask = chart ? QueryTask.queryAndChart(text) : QueryTask.query(text);
+        QueryTask queryTask = chart ? QueryTask.queryAndChart(this, text) : QueryTask.query(this, text);
         editor.executeQuery(queryTask);
         lastQuery = text;
     }

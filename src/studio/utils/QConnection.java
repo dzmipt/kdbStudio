@@ -91,18 +91,24 @@ public class QConnection {
 
     @Override
     public String toString() {
+        return toString(true);
+    }
+
+    public String toString(boolean includeUserPassword) {
         StringBuilder str = new StringBuilder("`:");
         if (useTLS) str.append(TCPS_PREFIX);
         str.append(host).append(':').append(port);
 
-        if (user.isEmpty() && password.isEmpty()) return str.toString();
-        str.append(':').append(user);
-
-        if (password.isEmpty()) return str.toString();
-        str.append(':').append(password);
-
+        if (includeUserPassword &&
+                (!user.isEmpty() || !password.isEmpty()) ) {
+            str.append(':').append(user);
+            if (! password.isEmpty()) {
+                str.append(':').append(password);
+            }
+        }
         return str.toString();
     }
+
 
     public static Server getByConnection(String connection , String defaultAuth,
                                          Credentials defaultCredentials, Collection<Server> servers) {

@@ -182,7 +182,7 @@ public class EditorTab implements FileWatcher.Listener, EditorStatusBarCallback 
             studioWindow.setServer(newServer);
         }
 
-        executeQuery(QueryTask.connect());
+        executeQuery(QueryTask.connect(studioWindow));
     }
 
     @Override

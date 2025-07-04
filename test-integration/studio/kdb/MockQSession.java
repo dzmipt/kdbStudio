@@ -91,7 +91,7 @@ public class MockQSession extends KConnection {
     }
 
     @Override
-    public synchronized KMessage k(K.KBase x, ProgressCallback progress) throws K4Exception, IOException {
+    public synchronized KMessage k(KDBTrustManager trustManager, K.KBase x, ProgressCallback progress) throws K4Exception, IOException {
         log.info("MockQSession.k - query execution");
         queryCount.getAndIncrement();
         closed = false;

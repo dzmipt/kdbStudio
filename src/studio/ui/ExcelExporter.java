@@ -133,10 +133,10 @@ class ExcelExporter {
             Sheet sheet = workbook.createSheet("Query Details");
             Row row = sheet.createRow(0);
             row.createCell(0).setCellValue("Server:");
-            row.createCell(1).setCellValue(tab.getQueryResult().getServer().getConnectionString());
+            row.createCell(1).setCellValue(server);
             row = sheet.createRow(1);
             row.createCell(0).setCellValue("Query:");
-            row.createCell(1).setCellValue(tab.getQueryResult().getQuery());
+            row.createCell(1).setCellValue(query);
         }
 
     }

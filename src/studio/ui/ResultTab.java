@@ -138,7 +138,7 @@ public class ResultTab extends JPanel {
         String varName = StudioOptionPane.showInputDialog(studioWindow, "Enter variable name", "Upload to Server");
         if (varName == null) return;
         varName = varName.trim();
-        studioWindow.getActiveEditor().executeQuery(QueryTask.upload(varName, obj));
+        studioWindow.getActiveEditor().executeQuery(QueryTask.upload(studioWindow, varName, obj));
     }
 
     private void initComponents() {
