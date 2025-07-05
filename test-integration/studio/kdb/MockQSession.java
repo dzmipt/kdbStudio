@@ -89,6 +89,8 @@ public class MockQSession extends KConnection {
         log.info("MockQSession.k - query execution");
         queryCount.getAndIncrement();
 
+        getConnectionContext().setConnected(true);
+
         if (lock != null) {
             log.info("MockQSession.k - locking");
             try {
