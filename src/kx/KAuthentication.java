@@ -4,5 +4,5 @@ import java.io.IOException;
 
 public interface KAuthentication {
 
-    String getUserPassword() throws IOException;
+    String getUserPassword(ConnectionContext context) throws IOException;
 }

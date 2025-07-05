@@ -60,9 +60,9 @@ public class Session implements ConnectionStateListener, KAuthentication {
     }
 
     @Override
-    public void connectionStateChange(boolean connected) {
+    public void connectionStateChange(ConnectionContext context) {
         for(EditorTab editor: editors) {
-            editor.setSessionConnection(connected);
+            editor.setSessionContext(context);
         }
     }
 
@@ -119,8 +119,8 @@ public class Session implements ConnectionStateListener, KAuthentication {
         return kConn.k(new KDBTrustManager(studioWindow), x, progress);
     }
 
-    public boolean isClosed() {
-        return kConn.isClosed();
+    public ConnectionContext getConnectionContext() {
+        return kConn.getConnectionContext();
     }
 
     public void close() {
@@ -150,15 +150,17 @@ public class Session implements ConnectionStateListener, KAuthentication {
     }
 
     @Override
-    public String getUserPassword() throws IOException {
+    public String getUserPassword(ConnectionContext context) throws IOException {
         try {
+            String authMethod = server.getAuthenticationMechanism();
             log.info("Getting authentication credential for {} with auth.method {}",
-                    server.getDescription(true), server.getAuthenticationMechanism());
+                    server.getDescription(true), authMethod);
 
-            Class<?> clazz = AuthenticationManager.getInstance().lookup(server.getAuthenticationMechanism());
+            Class<?> clazz = AuthenticationManager.getInstance().lookup(authMethod);
             if (clazz == null) {
-                throw new RuntimeException("Unknown Auth.method: " + server.getAuthenticationMechanism());
+                throw new RuntimeException("Unknown Auth.method: " + authMethod);
             }
+            context.setAuthMethod(authMethod);
             IAuthenticationMechanism authenticationMechanism = (IAuthenticationMechanism) clazz.newInstance();
 
             authenticationMechanism.setProperties(server.getAsProperties());

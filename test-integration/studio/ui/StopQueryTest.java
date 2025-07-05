@@ -45,7 +45,7 @@ public class StopQueryTest extends StudioTest {
 
         MockQSession[] sessions = MockQSession.getLastActiveSessions();
         assertEquals(1, sessions.length);
-        assertTrue(sessions[0].isClosed());
+        assertFalse(sessions[0].getConnectionContext().isConnected());
         int sessionCount = MockQSession.getAllSessions().size();
 
 
@@ -57,7 +57,7 @@ public class StopQueryTest extends StudioTest {
 
         //We do not create a new session. But the session should be opened now
         assertEquals(sessionCount, MockQSession.getAllSessions().size());
-        assertFalse(sessions[0].isClosed());
+        assertTrue(sessions[0].getConnectionContext().isConnected());
 
     }
 }

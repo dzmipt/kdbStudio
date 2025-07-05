@@ -1,5 +1,6 @@
 package studio.ui;
 
+import kx.ConnectionContext;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -239,8 +240,8 @@ public class EditorTab implements FileWatcher.Listener, EditorStatusBarCallback 
         return studioWindow;
     }
 
-    public void setSessionConnection(boolean connected) {
-        editorPane.setSessionConnected(connected, getServer().getAuthenticationMechanism());
+    public void setSessionContext(ConnectionContext context) {
+        editorPane.setSessionContext(context);
     }
 
     public void setStudioWindow(StudioWindow studioWindow) {
@@ -337,7 +338,7 @@ public class EditorTab implements FileWatcher.Listener, EditorStatusBarCallback 
             session.removeTab(this);
         }
         session = Session.newSession(this);
-        setSessionConnection(!session.isClosed());
+        setSessionContext(session.getConnectionContext());
 
         getTextArea().setBackground(getServer().getBackgroundColor());
 

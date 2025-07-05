@@ -63,7 +63,7 @@ public class ConnectionStats {
         for (Session session: sessionsCount.keySet()) {
             serverNames[index] = session.getServer().getFullName();
             servers[index] = session.getServer().getConnectionString().substring(1);
-            statuses[index] = session.isClosed() ? "Disconnected" : "Connected";
+            statuses[index] = session.getConnectionContext().isConnected() ? "Connected" : "Disconnected";
             numbers[index] = sessionsCount.get(session);
 
             K.KBase[] values = session.getConnectionStats().getValues();

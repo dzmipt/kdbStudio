@@ -1,5 +1,6 @@
 package studio.ui;
 
+import kx.ConnectionContext;
 import org.fife.ui.rtextarea.RTextScrollPane;
 import org.fife.ui.rtextarea.SearchContext;
 import org.fife.ui.rtextarea.SearchEngine;
@@ -68,8 +69,8 @@ public class EditorPane extends JPanel implements MouseWheelListener, SearchPane
         editorStatusBar.stopClock();
     }
 
-    public void setSessionConnected(boolean connected, String authMethod) {
-        editorStatusBar.setSessionConnected(connected, authMethod);
+    public void setSessionContext(ConnectionContext context) {
+        editorStatusBar.setSessionContext(context);
     }
 
     public void setEditorStatusBarCallback(EditorStatusBarCallback callback) {

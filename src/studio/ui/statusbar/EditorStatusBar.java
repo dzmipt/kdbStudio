@@ -1,5 +1,6 @@
 package studio.ui.statusbar;
 
+import kx.ConnectionContext;
 import studio.core.AuthenticationManager;
 import studio.ui.MinSizeLabel;
 import studio.ui.UserAction;
@@ -92,9 +93,9 @@ public class EditorStatusBar extends StatusBar {
         refreshConnectedLabel();
     }
 
-    public void setSessionConnected(boolean connected, String authMethod) {
-        sessionConnected = connected;
-        this.authMethod = authMethod;
+    public void setSessionContext(ConnectionContext context) {
+        sessionConnected = context.isConnected();
+        this.authMethod = context.getAuthMethod();
 
         refreshConnectedLabel();
     }

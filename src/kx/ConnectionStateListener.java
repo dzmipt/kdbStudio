@@ -4,7 +4,7 @@ import java.io.IOException;
 
 public interface ConnectionStateListener {
 
-    void connectionStateChange(boolean connected);
+    void connectionStateChange(ConnectionContext context);
     void checkIncomingLimit(long msgLength) throws IOException;
 
 }

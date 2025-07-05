@@ -69,11 +69,10 @@ public class MockQSession extends KConnection {
         }
     }
 
-    private boolean closed = true;
-
     MockQSession() {
         super("no host", 0, false);
         index = sessionIndex++;
+        getConnectionContext().setConnected(true);
     }
 
     public int getIndex() {
@@ -82,19 +81,13 @@ public class MockQSession extends KConnection {
 
     @Override
     public void close() {
-        closed = true;
-    }
-
-    @Override
-    public boolean isClosed() {
-        return closed;
+        getConnectionContext().setConnected(false);
     }
 
     @Override
     public synchronized KMessage k(KDBTrustManager trustManager, K.KBase x, ProgressCallback progress) throws K4Exception, IOException {
         log.info("MockQSession.k - query execution");
         queryCount.getAndIncrement();
-        closed = false;
 
         if (lock != null) {
             log.info("MockQSession.k - locking");
@@ -112,7 +105,7 @@ public class MockQSession extends KConnection {
         if (kError != null) throw kError;
 
         if (ioException != null) {
-            closed = true;
+            close();
             throw ioException;
         }
 

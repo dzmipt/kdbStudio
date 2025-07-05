@@ -14,13 +14,13 @@ public class KConnection {
     private final String host;
     private final int port;
     private final boolean useTLS;
-    private volatile boolean closed = true;
 
     private DataInputStream inputStream;
     private OutputStream outputStream;
     private Socket s;
 
     private SocketReader socketReader;
+    private final ConnectionContext connectionContext;
     private ConnectionStateListener connectionStateListener = null;
     private final KAuthentication authentication;
     private final KConnectionStats stats = new KConnectionStats();
@@ -47,9 +47,9 @@ public class KConnection {
             socketReader = null;
         }
 
-        if (closed) return;
+        if (! connectionContext.isConnected()) return;
 
-        closed = true;
+        connectionContext.setConnected(false);
         stats.disconnected();
 
         if (inputStream != null)
@@ -66,13 +66,12 @@ public class KConnection {
             } catch (IOException e) {}
         }
         if (connectionStateListener != null) {
-            connectionStateListener.connectionStateChange(false);
+            connectionStateListener.connectionStateChange(connectionContext);
         }
     }
 
-
-    public boolean isClosed() {
-        return closed;
+    public ConnectionContext getConnectionContext() {
+        return connectionContext;
     }
 
     private SSLSocket createSSLSocket(KDBTrustManager trustManager) throws IOException {
@@ -80,6 +79,7 @@ public class KConnection {
         try {
             SSLSocketFactory sslSocketFactory;
             if (trustManager != null) {
+                trustManager.setContext(connectionContext);
                 SSLContext ctx = SSLContext.getInstance("TLS");
                 ctx.init(null, new TrustManager[]{trustManager}, null);
                 sslSocketFactory = ctx.getSocketFactory();
@@ -117,9 +117,9 @@ public class KConnection {
     }
 
     public synchronized void connect(KDBTrustManager trustManager) throws IOException, K4AccessException {
-        if ( !closed ) return;
+        if (connectionContext.isConnected() ) return;
 
-        String userPassword = authentication == null ? "" : authentication.getUserPassword();
+        String userPassword = authentication == null ? "" : authentication.getUserPassword(connectionContext);
 
         if (useTLS) {
             s = createSSLSocket(trustManager);
@@ -131,12 +131,11 @@ public class KConnection {
         java.io.ByteArrayOutputStream baos = new ByteArrayOutputStream();
         baos.write((userPassword + "\3").getBytes());
         baos.write(0);
-        baos.flush();
         outputStream.write(baos.toByteArray());
         if (inputStream.read() == -1) {
             throw new K4AccessException();
         }
-        closed = false;
+        connectionContext.setConnected(true);
         stats.connected();
 
         socketReader = new SocketReader(s);
@@ -145,7 +144,7 @@ public class KConnection {
         socketReader.start();
 
         if (connectionStateListener != null) {
-            connectionStateListener.connectionStateChange(true);
+            connectionStateListener.connectionStateChange(connectionContext);
         }
     }
 
@@ -154,6 +153,7 @@ public class KConnection {
     }
 
     public KConnection(String h, int p, boolean useTLS, KAuthentication authentication) {
+        connectionContext = new ConnectionContext();
         host = h;
         port = p;
         this.authentication = authentication;

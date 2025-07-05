@@ -1,5 +1,6 @@
 package studio.kdb;
 
+import kx.ConnectionContext;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import studio.ui.EscapeDialog;
@@ -27,7 +28,7 @@ public class KDBTrustManager implements X509TrustManager {
 
     private boolean reconnect = true;
     private X509Certificate acceptCertificate;
-    private X509Certificate[] chain;
+    private ConnectionContext context = null;
 
     private static ProxyTrustManager instance;
 
@@ -74,8 +75,13 @@ public class KDBTrustManager implements X509TrustManager {
         this.reconnect = reconnect;
     }
 
-    public X509Certificate[] getCertificateChain() {
-        return chain;
+    public void setContext(ConnectionContext context) {
+        this.context = context;
+        context.setSecure(true);
+    }
+
+    public ConnectionContext getContext() {
+        return context;
     }
 
     @Override
@@ -85,35 +91,33 @@ public class KDBTrustManager implements X509TrustManager {
 
     @Override
     public void checkServerTrusted(X509Certificate[] chain, String authType) throws CertificateException {
-        this.chain = chain;
+        context.setCertChain(chain);
         if (acceptCertificate != null && acceptCertificate.equals(chain[0])) return;
 
         CertificateException certException;
         try {
             instance.checkServerTrusted(chain, authType);
+            context.setTrusted(true);
             return;
         } catch (CertificateException e) {
             certException = e;
             log.warn("Got exception on validation server certificate: {}", certException.getMessage());
         }
 
+        context.setTrusted(false);
         boolean canStore = false;
         try {
-            new ProxyTrustManager(instance, TLSUtils.getTrustManager(chain[chain.length - 1]));
+            new ProxyTrustManager(instance, TLSUtils.getTrustManager(chain[chain.length - 1])).checkServerTrusted(chain, authType);
             canStore = true;
         } catch (GeneralSecurityException ignored) { }
 
         CertChainInfoDialog dialog = new CertChainInfoDialog(studioWindow, chain,
                 canStore ? CertChainInfoDialog.Mode.AcceptAndStore : CertChainInfoDialog.Mode.AcceptOnly);
 
-        if (dialog.getResult() == EscapeDialog.DialogResult.CANCELLED) {
-            setReconnect(false);
-            throw certException;
-        }
+        setReconnect(dialog.getResult() == EscapeDialog.DialogResult.ACCEPTED);
 
         if (dialog.getModeResult() == CertChainInfoDialog.Mode.AcceptOnly) {
             this.acceptCertificate = chain[0];
-            setReconnect(true);
         } else {
             try {
                 log.info("Adding new root to the trust store");
@@ -126,8 +130,8 @@ public class KDBTrustManager implements X509TrustManager {
                         "Can't save trust store");
                 this.acceptCertificate = chain[0];
             }
-            setReconnect(true);
         }
+        throw certException;
     }
 
     @Override
