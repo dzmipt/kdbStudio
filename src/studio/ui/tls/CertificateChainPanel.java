@@ -1,6 +1,10 @@
 package studio.ui.tls;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import studio.ui.GroupLayoutSimple;
+import studio.ui.StudioOptionPane;
+import studio.ui.Util;
 import studio.utils.TLSUtils;
 
 import javax.swing.*;
@@ -24,29 +28,22 @@ import java.util.Locale;
 
 public class CertificateChainPanel extends JPanel {
 
+    private final static Logger log = LogManager.getLogger();
+
     private final static DateTimeFormatter dateFormatter = DateTimeFormatter
             .ofLocalizedDateTime(FormatStyle.LONG)
             .withLocale(Locale.getDefault());
 
-    private final boolean showChain;
     private final X509Certificate[] certificates;
 
     private JComponent pnlChain;
     private JTree tree;
     private JTextField txtSubject, txtIssuer, txtFrom, txtUntil, txtSerial, txtPublicKey, txtCertificate;
 
-    public CertificateChainPanel(X509Certificate certificate) {
-        certificates = new X509Certificate[] {certificate};
-        showChain = false;
-        initComponents();
-    }
-
     public CertificateChainPanel(X509Certificate[] certificates) {
         this.certificates = certificates;
-        showChain = true;
         initComponents();
     }
-
 
     private void initComponents() {
         txtSubject = getTextField();
@@ -58,10 +55,11 @@ public class CertificateChainPanel extends JPanel {
         txtCertificate = getTextField();
 
         pnlChain = new JPanel(new BorderLayout());
+        tree = getTree();
+        pnlChain.add(tree, BorderLayout.CENTER);
+        pnlChain.add(getButtonPanel(), BorderLayout.EAST);
+
         JLabel lblChain = getLabel("Certificate Chain:");
-        pnlChain.setVisible(showChain);
-        lblChain.setVisible(showChain);
-        initTree();
 
 
         GroupLayoutSimple layout = new GroupLayoutSimple(this);
@@ -89,10 +87,8 @@ public class CertificateChainPanel extends JPanel {
         select(certificates[0]);
     }
 
-    private void initTree() {
-        if (!showChain) return;
-
-        tree = new JTree(new Node(certificates.length-1, null));
+    private JTree getTree() {
+        JTree tree = new JTree(new Node(certificates.length-1, null));
 
         DefaultTreeCellRenderer renderer = new DefaultTreeCellRenderer();
         renderer.setLeafIcon(null);
@@ -121,7 +117,47 @@ public class CertificateChainPanel extends JPanel {
 
         tree.setMaximumSize(new Dimension(Integer.MAX_VALUE, Integer.MAX_VALUE));
         tree.setBorder(UIManager.getBorder("TextField.border"));
-        pnlChain = tree;
+        return tree;
+    }
+
+    private Component getButtonPanel() {
+        JButton btnCopyCert = new JButton("Copy selected");
+        btnCopyCert.addActionListener(
+                e-> copy(getSelectedCertificate())
+        );
+
+        JButton btnCopyChain = new JButton("Copy chain");
+        btnCopyChain.addActionListener(
+                e-> copy(certificates)
+        );
+
+        Box boxButtons = Box.createVerticalBox();
+        boxButtons.add(Box.createVerticalGlue());
+        boxButtons.add(btnCopyChain);
+        boxButtons.add(Box.createVerticalGlue());
+        boxButtons.add(btnCopyCert);
+        boxButtons.add(Box.createVerticalGlue());
+
+        boxButtons.setBorder(BorderFactory.createEmptyBorder(0,5,0,0));
+        return boxButtons;
+    }
+
+    private void copy(X509Certificate certificate) {
+        try {
+            Util.copyTextToClipboard(TLSUtils.convertToPem(certificate));
+        } catch (CertificateEncodingException e) {
+            log.error("Error during certificate conversion", e);
+            StudioOptionPane.showError(this,"Error", e.getMessage());
+        }
+    }
+
+    private void copy(X509Certificate[] chain) {
+        try {
+            Util.copyTextToClipboard(TLSUtils.convertToPem(chain));
+        } catch (CertificateEncodingException e) {
+            log.error("Error during certificate chain conversion", e);
+            StudioOptionPane.showError(this,"Error", e.getMessage());
+        }
     }
 
     private JLabel getLabel(String text) {
@@ -201,8 +237,6 @@ public class CertificateChainPanel extends JPanel {
     }
 
     public X509Certificate getSelectedCertificate() {
-        if (!showChain) return certificates[0];
-
         Node aNode = (Node) tree.getLastSelectedPathComponent();
         if (aNode == null) return null;
 

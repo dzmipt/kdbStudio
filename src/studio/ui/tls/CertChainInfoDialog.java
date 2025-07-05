@@ -3,13 +3,9 @@ package studio.ui.tls;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import studio.ui.EscapeDialog;
-import studio.ui.StudioOptionPane;
-import studio.ui.Util;
-import studio.utils.TLSUtils;
 
 import javax.swing.*;
 import java.awt.*;
-import java.security.cert.CertificateEncodingException;
 import java.security.cert.X509Certificate;
 
 public class CertChainInfoDialog extends EscapeDialog {
@@ -31,27 +27,12 @@ public class CertChainInfoDialog extends EscapeDialog {
         initComponents(owner, mode);
     }
 
-    public CertChainInfoDialog(Component owner, X509Certificate certificate) {
-        super(owner, "Certificate");
-        chainPanel = new CertificateChainPanel(certificate);
-        initComponents(owner, Mode.Info);
-    }
-
     public Mode getModeResult() {
         return result;
     }
 
     private void initComponents(Component owner, Mode mode) {
-        JButton btnCopyCert = new JButton("Copy as PEM");
-        btnCopyCert.addActionListener(
-                e-> copy(chainPanel.getSelectedCertificate())
-        );
-
-        JButton btnCopyChain = new JButton("Copy chain as PEM");
-        btnCopyChain.addActionListener(
-                e-> copy(chainPanel.getChain())
-        );
-
+        if (mode != Mode.Info) setTitle("Non secure connection. Do you want to trust?");
         JButton btnAccept = new JButton("Accept now");
         btnAccept.setToolTipText("Accept only for current session");
         btnAccept.addActionListener(
@@ -61,7 +42,7 @@ public class CertChainInfoDialog extends EscapeDialog {
                 }
         );
 
-        JButton btnAcceptAndStore = new JButton("Persist");
+        JButton btnAcceptAndStore = new JButton("Accept and Persist");
         btnAcceptAndStore.setToolTipText("Accept for current session and persist the top certificate to the trust store");
         btnAcceptAndStore.addActionListener(
                 e -> {
@@ -78,10 +59,6 @@ public class CertChainInfoDialog extends EscapeDialog {
         );
 
         Box boxButtons = Box.createHorizontalBox();
-        boxButtons.add(Box.createHorizontalGlue());
-        boxButtons.add(btnCopyCert);
-        boxButtons.add(Box.createHorizontalGlue());
-        boxButtons.add(btnCopyChain);
 
         if (mode == Mode.AcceptOnly || mode == Mode.AcceptAndStore) {
             boxButtons.add(Box.createHorizontalGlue());
@@ -105,21 +82,4 @@ public class CertChainInfoDialog extends EscapeDialog {
         alignAndShow();
     }
 
-    private void copy(X509Certificate certificate) {
-        try {
-            Util.copyTextToClipboard(TLSUtils.convertToPem(certificate));
-        } catch (CertificateEncodingException e) {
-            log.error("Error during certificate conversion", e);
-            StudioOptionPane.showError(this,"Error", e.getMessage());
-        }
-    }
-
-    private void copy(X509Certificate[] chain) {
-        try {
-            Util.copyTextToClipboard(TLSUtils.convertToPem(chain));
-        } catch (CertificateEncodingException e) {
-            log.error("Error during certificate chain conversion", e);
-            StudioOptionPane.showError(this,"Error", e.getMessage());
-        }
-    }
 }
