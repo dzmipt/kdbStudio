@@ -2,7 +2,6 @@ package studio.ui;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import studio.core.AuthenticationManager;
 import studio.kdb.Config;
 import studio.kdb.Server;
 import studio.kdb.Workspace;
@@ -432,25 +431,22 @@ public class EditorsPanel extends JPanel {
     }
     private static Server getServer(Workspace.Tab tab) {
         Config config = Config.getInstance();
-        Server server = Server.NO_SERVER;
+
         String serverFullname = tab.getServerFullName();
         if (serverFullname != null) {
-            server = config.getServerConfig().getServer(serverFullname);
+            return config.getServerConfig().getServer(serverFullname);
         }
-        if (server != Server.NO_SERVER) return server;
+
 
         String connectionString = tab.getServerConnection();
-        if (connectionString != null) {
-            server = config.getServerByConnectionString(connectionString);
-        }
-
         String auth = tab.getServerAuth();
-        if (auth == null) return server;
-
-        if (AuthenticationManager.getInstance().lookup(auth) != null) {
-            server = server.newAuthMethod(auth);
+        if (auth == null) {
+            auth = config.getDefaultAuthMechanism();
         }
-        return server;
+
+        if (connectionString == null) return Server.NO_SERVER.newAuthMethod(auth);
+
+        return config.getServerByConnectionString(connectionString, auth);
     }
 
     private EditorTab getEditorTab(int index) {

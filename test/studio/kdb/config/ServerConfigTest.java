@@ -4,12 +4,14 @@ import org.junit.jupiter.api.Test;
 import studio.kdb.Server;
 import studio.kdb.ServerTreeNode;
 import studio.utils.FileConfig;
+import studio.utils.QConnection;
 
 import java.awt.*;
 import java.io.File;
 import java.io.IOException;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class ServerConfigTest {
 
@@ -65,6 +67,33 @@ public class ServerConfigTest {
         root.add(s3);
         root.add(s4);
         testWriteRead(root);
+    }
+
+    @Test
+    public void testGetByQConnection() throws IOException {
+        File file = File.createTempFile("serverConfig", "json");
+        file.delete();
+        ServerConfig config = new ServerConfig(new FileConfig(file.toPath()));
+        assertEquals(0, config.getServers().length);
+
+        QConnection conn = new QConnection("host", 1234, "uuser", "pwd",true);
+        Server aServer = config.getServer(conn, "auth");
+        assertEquals("host", aServer.getHost());
+        assertEquals(1234, aServer.getPort());
+        assertEquals("uuser", aServer.getUsername());
+        assertEquals("pwd", aServer.getPassword());
+        assertTrue(aServer.getUseTLS());
+        assertEquals("auth", aServer.getAuthenticationMechanism());
+        assertEquals("", aServer.getName());
+        assertEquals(Color.WHITE, aServer.getBackgroundColor());
+
+
+        config.addServer(server);
+        assertEquals(1, config.getServers().length);
+        aServer = config.getServer(conn, "auth");
+        assertEquals(new Color(1,2,3), aServer.getBackgroundColor());
+        assertEquals("name", aServer.getName());
+
     }
 
 }

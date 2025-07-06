@@ -13,11 +13,11 @@ import org.junit.Test;
 import studio.core.DefaultAuthenticationMechanism;
 import studio.kdb.Config;
 import studio.kdb.Server;
+import studio.utils.QConnection;
 
 import java.awt.*;
 
 import static org.assertj.swing.edt.GuiActionRunner.execute;
-import static org.assertj.swing.timing.Pause.pause;
 import static org.junit.Assert.assertEquals;
 
 public class ServerTest extends StudioTest {
@@ -43,6 +43,21 @@ public class ServerTest extends StudioTest {
     @AfterClass
     public static void resetMock() {
         ColorChooser.mock(null);
+    }
+
+    @Test
+    public void testGetQConnection() {
+        QConnection conn = server1.getConnection();
+        assertEquals("`:testHost:1111:user:password",  conn.toString());
+        assertEquals("`:testHost:1111",  conn.toString(false));
+
+        conn = conn.changeTLS(true);
+        assertEquals("`:tcps://testHost:1111:user:password",  conn.toString());
+        assertEquals("`:tcps://testHost:1111",  conn.toString(false));
+
+        conn = conn.changeUserPassword("u","p");
+        assertEquals("`:tcps://testHost:1111:u:p",  conn.toString());
+        assertEquals("`:tcps://testHost:1111",  conn.toString(false));
     }
 
     @Test

@@ -1,15 +1,16 @@
 package studio.utils;
 
 import studio.core.Credentials;
+import studio.core.DefaultAuthenticationMechanism;
 import studio.kdb.Server;
 import studio.kdb.ServerTreeNode;
 
 import javax.swing.tree.TreeNode;
+import java.awt.*;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.stream.Stream;
 
@@ -31,16 +32,27 @@ public class QPadConverter {
         return convert(line, new ServerTreeNode(), defaultAuth, defaultCredentials);
     }
 
-    private static Server convertConnection(String conn, String defaultAuth,
+    private static Server convertConnection(String connectionString, String defaultAuth,
                                             Credentials defaultCredentials) {
         try {
-            Server server = QConnection.getByConnection(conn, defaultAuth, defaultCredentials, Collections.emptyList());
-            String password = server.getPassword();
-            if (password.contains("?")) {
-                int index = password.indexOf('?');
-                server = server.newAuthMethod(password.substring(0, index));
+            String auth;
+            QConnection conn = new QConnection(connectionString);
+            String password = conn.getPassword();
+            int index = password.indexOf('?');
+            if (index >=0) {
+                auth = password.substring(0, index);
+                password = password.substring(index+1);
+                conn = conn.changeUserPassword(conn.getUser(), password);
+            } else {
+                if (conn.getUser().isEmpty() && conn.getPassword().isEmpty()) {
+                    conn = conn.changeUserPassword(defaultCredentials.getUsername(), defaultCredentials.getPassword());
+                    auth = defaultAuth;
+                } else {
+                    auth = DefaultAuthenticationMechanism.NAME;
+                }
             }
-            return server;
+
+            return new Server("", conn, auth, Color.WHITE, (ServerTreeNode) null);
         } catch (IllegalArgumentException e) {
             return Server.NO_SERVER;
         }

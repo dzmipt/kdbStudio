@@ -154,6 +154,7 @@ public class KConnection {
 
     public KConnection(String h, int p, boolean useTLS, KAuthentication authentication) {
         connectionContext = new ConnectionContext();
+        connectionContext.setSecure(useTLS);
         host = h;
         port = p;
         this.authentication = authentication;

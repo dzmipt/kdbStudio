@@ -50,7 +50,7 @@ public class QPadConverterTest {
         Server server = convert("`:server.com:11223:user:testAuth?password`Parent`folder`name");
         assertEquals("Parent/folder/name", server.getFullName());
         assertEquals("user", server.getUsername());
-        assertEquals("testAuth?password", server.getPassword());
+        assertEquals("password", server.getPassword());
         assertEquals("testAuth", server.getAuthenticationMechanism());
     }
 

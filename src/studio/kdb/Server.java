@@ -128,6 +128,10 @@ public class Server {
         return conn.toString(false);
     }
 
+    public QConnection getConnection() {
+        return conn;
+    }
+
     public String getConnectionStringWithPwd() {
         return conn.toString();
     }

@@ -371,7 +371,7 @@ public class QGrid extends JPanel implements MouseWheelListener, SearchPanelList
             newPopupMenu = new JPopupMenu();
             for (String connection : connections) {
                 Server server = Config.getInstance().getServerByConnectionString(connection);
-                String name = server.getName().length() == 0 ? connection : server.getName();
+                String name = server.getName().isEmpty() ? connection : server.getName();
                 Action action;
                 if (currentTab) {
                     action = UserAction.create("Open " + connection,

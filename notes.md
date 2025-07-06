@@ -1,3 +1,8 @@
+* UI for TLS connections
+    * Secure status in the status bar
+    * Certificate chain dialog
+    * Support untrusted TLS certificates
+    * Manage CA roots
 * Setting to inspect results in the same tab with navigation functionality 
 * Fix issue with incorrect table's column width calculation on Windows with scaled display
     * Column width is also adjusted now after altering decimal formatting

@@ -43,6 +43,11 @@ public class ConnectionContext {
         this.authMethod = authMethod;
     }
 
+    public X509Certificate getCertificate() {
+        if (certChain == null || certChain.length == 0) return null;
+        return certChain[0];
+    }
+
     public X509Certificate[] getCertChain() {
         return certChain;
     }

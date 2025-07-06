@@ -314,8 +314,17 @@ public class Config  {
         return getServerByConnectionString(connectionString, getDefaultAuthMechanism());
     }
 
-    public Server getServerByConnectionString(String connectionString, String authMethod) {
-        return QConnection.getByConnection(connectionString, authMethod, getDefaultCredentials(authMethod), serverConfig.allServers());
+    public Server getServerByConnectionString(String connectionString, String defaultAuthMethod) {
+        return getServerByConnection(new QConnection(connectionString), defaultAuthMethod);
+    }
+
+    public Server getServerByConnection(QConnection conn, String defaultAuthMethod) {
+        if (conn.getUser().isEmpty() && conn.getPassword().isEmpty()) {
+            conn = conn.changeUserPassword(getDefaultCredentials(defaultAuthMethod));
+        } else {
+            defaultAuthMethod = DefaultAuthenticationMechanism.NAME;
+        }
+        return serverConfig.getServer(conn, defaultAuthMethod);
     }
 
     public DefaultAuthConfig getDefaultAuthConfig() {

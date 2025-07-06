@@ -173,18 +173,23 @@ public class CertificateChainPanel extends JPanel {
     }
 
     private void select(X509Certificate certificate) {
-        txtSubject.setText(certificate.getSubjectDN().toString());
-        txtIssuer.setText(certificate.getIssuerDN().toString());
+        setText(txtSubject, certificate.getSubjectDN().toString());
+        setText(txtIssuer, certificate.getIssuerDN().toString());
 
-        txtFrom.setText(formatDate(certificate.getNotBefore()));
-        txtUntil.setText(formatDate(certificate.getNotAfter()));
+        setText(txtFrom, formatDate(certificate.getNotBefore()));
+        setText(txtUntil, formatDate(certificate.getNotAfter()));
 
         alert(txtFrom, ! certificate.getNotBefore().before(new Date()) );
         alert(txtUntil, ! certificate.getNotAfter().after(new Date()) );
 
-        txtSerial.setText(getSerial(certificate));
-        txtPublicKey.setText(sha256(certificate.getPublicKey().getEncoded()));
-        txtCertificate.setText(sha256(certificate));
+        setText(txtSerial, getSerial(certificate));
+        setText(txtPublicKey, sha256(certificate.getPublicKey().getEncoded()));
+        setText(txtCertificate, sha256(certificate));
+    }
+
+    private void setText(JTextField txtField, String text) {
+        txtField.setText(text);
+        txtField.setCaretPosition(0);
     }
 
     private String getSerial(X509Certificate certificate) {

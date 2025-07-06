@@ -3,15 +3,17 @@ package studio.kdb.config;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import studio.core.DefaultAuthenticationMechanism;
+import studio.kdb.Config;
 import studio.kdb.Server;
 import studio.kdb.ServerTreeNode;
 import studio.utils.FileConfig;
+import studio.utils.QConnection;
 
 import java.awt.*;
 import java.io.IOException;
 import java.io.Writer;
-import java.util.List;
 import java.util.*;
+import java.util.List;
 
 
 public class ServerConfig {
@@ -196,7 +198,27 @@ public class ServerConfig {
         return Server.NO_SERVER;
     }
 
+    public Server getServer(QConnection conn, String auth) {
+        String host = conn.getHost();
+        int port = conn.getPort();
+        String user = conn.getUser();
+        String password = conn.getPassword();
+        boolean useTLS = conn.isUseTLS();
 
+        for (Server s: servers.values()) {
+            if (s.getHost().equals(host) &&
+                    s.getPort() == port &&
+                    s.getUsername().equals(user) &&
+                    s.getPassword().equals(password) &&
+                    s.getUseTLS() == useTLS &&
+                    s.getAuthenticationMechanism().equals(auth)) {
+                return s;
+            }
+        }
+
+        Color bgColor = Config.getInstance().getColor(Config.COLOR_BACKGROUND);
+        return new Server("", host, port, user, password, bgColor, auth, useTLS);
+    }
 
 
     public boolean tryToLoadOldConifg(Properties config) {

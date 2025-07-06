@@ -71,6 +71,10 @@ public class Util {
     public final static ImageIcon PLUS2_ICON = getImage("/plus2.png");
     public final static ImageIcon LEFT_ICON = getImage("/left.png");
     public final static ImageIcon RIGHT_ICON = getImage("/right.png");
+    public final static ImageIcon LOCK_ICON = getImage("/lock.png");
+    public final static ImageIcon LOCK_CROSSED_ICON = getImage("/lock_crossed.png");
+    public final static ImageIcon UNLOCK_ICON = getImage("/unlock.png");
+
 
     public static boolean MAC_OS_X = (System.getProperty("os.name").toLowerCase().startsWith("mac os x"));
     public static boolean WINDOWS = (System.getProperty("os.name").toLowerCase().contains("win"));

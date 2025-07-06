@@ -13,10 +13,7 @@ import studio.ui.action.QueryResult;
 import studio.ui.action.QueryTask;
 import studio.ui.rstextarea.StudioRSyntaxTextArea;
 import studio.ui.statusbar.EditorStatusBarCallback;
-import studio.utils.Content;
-import studio.utils.FileReaderWriter;
-import studio.utils.FileWatcher;
-import studio.utils.LineEnding;
+import studio.utils.*;
 
 import javax.swing.*;
 import javax.swing.text.BadLocationException;
@@ -179,11 +176,24 @@ public class EditorTab implements FileWatcher.Listener, EditorStatusBarCallback 
     @Override
     public void connect(String authMethod) {
         if (! getServer().getAuthenticationMechanism().equals(authMethod)) {
-            Server newServer = Config.getInstance().getServerByConnectionString(getServer().getConnectionString(), authMethod);
+            Server newServer = Config.getInstance().getServerByConnection(getServer().getConnection(), authMethod);
             studioWindow.setServer(newServer);
         }
 
         executeQuery(QueryTask.connect(studioWindow));
+    }
+
+    @Override
+    public void connectTLS(boolean useTLS) {
+        if (getServer().getUseTLS() != useTLS) {
+            QConnection conn = getServer().getConnection().changeTLS(useTLS);
+            String auth = getServer().getAuthenticationMechanism();
+            Server newServer = Config.getInstance().getServerByConnection(conn, auth);
+            studioWindow.setServer(newServer);
+        }
+
+        executeQuery(QueryTask.connect(studioWindow));
+
     }
 
     @Override

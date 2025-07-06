@@ -1,12 +1,9 @@
 package studio.utils;
 
 import studio.core.Credentials;
-import studio.core.DefaultAuthenticationMechanism;
-import studio.kdb.Config;
 import studio.kdb.Server;
 
 import java.awt.*;
-import java.util.Collection;
 import java.util.Objects;
 
 public class QConnection {
@@ -110,31 +107,20 @@ public class QConnection {
     }
 
 
-    public static Server getByConnection(String connection , String defaultAuth,
-                                         Credentials defaultCredentials, Collection<Server> servers) {
+    public QConnection changeTLS(boolean newUseTLS) {
+        if (newUseTLS == this.useTLS) return this;
 
-        QConnection conn = new QConnection(connection);
-        String auth, user, password;
-        if (conn.user.isEmpty() && conn.password.isEmpty()) {
-            auth = defaultAuth;
-            user = defaultCredentials.getUsername();
-            password = defaultCredentials.getPassword();
-        } else {
-            auth = DefaultAuthenticationMechanism.NAME;
-            user = conn.user;
-            password = conn.password;
-        }
+        return new QConnection(host, port, user, password, newUseTLS);
+    }
 
-        Color bgColor = Config.getInstance().getColor(Config.COLOR_BACKGROUND);
+    public QConnection changeUserPassword(Credentials credentials) {
+        return changeUserPassword(credentials.getUsername(), credentials.getPassword());
+    }
 
-        for (Server s: servers) {
-            if (s.getHost().equals(conn.host) && s.getPort() == conn.port && s.getUsername().equals(user) && s.getPassword().equals(password)
-                        && s.getAuthenticationMechanism().equals(auth) && s.getUseTLS() == conn.useTLS) {
-                return s;
-            }
-        }
+    public QConnection changeUserPassword(String newUser, String newPassword) {
+        if (Objects.equals(newUser, this.user) && Objects.equals(newPassword, this.password)) return this;
 
-        return new Server("", conn.host, conn.port, user, password, bgColor, auth, conn.useTLS);
+        return new QConnection(host, port, newUser, newPassword, useTLS);
     }
 
     @Override

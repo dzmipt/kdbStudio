@@ -5,57 +5,61 @@ import studio.core.AuthenticationManager;
 import studio.ui.MinSizeLabel;
 import studio.ui.UserAction;
 import studio.ui.Util;
+import studio.ui.tls.CertChainInfoDialog;
 
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
+import java.security.cert.X509Certificate;
+import java.util.LinkedHashMap;
+import java.util.Map;
 
 public class EditorStatusBar extends StatusBar {
 
+    private final JLabel lblTLS;
     private final MinSizeLabel lblConnection;
 
     private final Timer timer;
     private long clock;
-    private boolean sessionConnected = false;
-    private String authMethod = "";
+    private ConnectionContext connectionContext = new ConnectionContext();
     private EditorStatusBarCallback editorStatusBarCallback = null;
 
-    private String[] knonwAuthMethods;
-    private UserAction[] actionsConnect;
-    private UserAction actionUnkownAuthConnect = null;
-
-    private UserAction actionDisconnect;
-
     private final static Cursor cursor = Cursor.getPredefinedCursor(Cursor.HAND_CURSOR);
-    private final static String CONNECTED = "Connected";
     private final static String DISCONNECTED = "Disconnected";
 
+    private Action disconnectAction;
+    private Map<String, Action> authMethodMapActions;
+    private Action tlsConnectAction;
+    private Action nonTlsConnectAction;
+    private Action tlsTrustedDisconnectAction;
+    private Action tlsUntrustedDisconnectAction;
+    private Action nonTlsDisconnectAction;
+    private Action showTlsChainAction;
+
     public EditorStatusBar() {
-        initActions();
+        lblTLS = new JLabel(Util.UNLOCK_ICON);
+        lblTLS.setCursor(cursor);
+        addComponent(lblTLS);
+        lblTLS.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mousePressed(MouseEvent e) {
+                if (editorStatusBarCallback == null) return;
+                getLblTLSPopupMenu().show(lblTLS, e.getX(), e.getY());
+            }
+        });
 
         lblConnection = new MinSizeLabel("");
         lblConnection.setHorizontalAlignment(JLabel.CENTER);
-        lblConnection.setMinimumWidth("1:00:00", CONNECTED, DISCONNECTED);
+        lblConnection.setMinimumWidth("1:00:00", DISCONNECTED);
         lblConnection.setCursor(cursor);
         addComponent(lblConnection);
         lblConnection.addMouseListener(new MouseAdapter() {
             @Override
             public void mousePressed(MouseEvent e) {
                 if (editorStatusBarCallback == null) return;
-
-                JPopupMenu menu = new JPopupMenu();
-                JMenuItem menuItem = menu.add(actionDisconnect);
-                menuItem.setDisabledIcon(menuItem.getIcon());
-                menu.addSeparator();
-                if (actionUnkownAuthConnect != null) menu.add(actionUnkownAuthConnect);
-                for (Action action: actionsConnect) {
-                    menuItem = menu.add(action);
-                    menuItem.setDisabledIcon(menuItem.getIcon());
-                }
-
-                menu.show(lblConnection, e.getX(), e.getY());
+                getLblConnectionPopupMenu().show(lblConnection, e.getX(), e.getY());
             }
         });
 
@@ -63,24 +67,86 @@ public class EditorStatusBar extends StatusBar {
         refreshConnectedLabel();
     }
 
-    private void initActions() {
-        knonwAuthMethods = AuthenticationManager.getInstance().getAuthenticationMechanisms();
-        actionsConnect = new UserAction[knonwAuthMethods.length];
-        for (int index = 0; index < knonwAuthMethods.length; index++) {
-            String auth = knonwAuthMethods[index];
-            actionsConnect[index] = UserAction.create(auth,
-                    auth.equals(authMethod) ? Util.CHECK_ICON : Util.BLANK_ICON,
-                    e -> this.editorStatusBarCallback.connect(auth) );
+    private JPopupMenu getLblConnectionPopupMenu() {
+        JPopupMenu menu = new JPopupMenu();
+        if (connectionContext.isConnected()) {
+            menu.add(disconnectAction);
+            if (authMethodMapActions.size()>1) {
+                menu.addSeparator();
+            }
         }
-        actionUnkownAuthConnect = null;
+        for (String authMethod: authMethodMapActions.keySet()) {
+            if (connectionContext.isConnected() && authMethod.equals(connectionContext.getAuthMethod())) continue;
+            menu.add(authMethodMapActions.get(authMethod));
+        }
 
-        actionDisconnect = UserAction.create("Disconnect", Util.ERROR_SMALL_ICON,
-                e -> this.editorStatusBarCallback.disconnect()
+        return menu;
+    }
+
+    private JPopupMenu getLblTLSPopupMenu() {
+        JPopupMenu menu = new JPopupMenu();
+        if (connectionContext.isConnected()) {
+            if (connectionContext.isSecure()) {
+                if (connectionContext.isTrusted()) menu.add(tlsTrustedDisconnectAction);
+                else menu.add(tlsUntrustedDisconnectAction);
+
+                menu.add(nonTlsConnectAction);
+            } else {
+                menu.add(tlsConnectAction);
+                menu.add(nonTlsDisconnectAction);
+            }
+        } else {
+            menu.add(tlsConnectAction);
+            menu.add(nonTlsConnectAction);
+        }
+
+        menu.addSeparator();
+        showTlsChainAction.setEnabled(connectionContext.getCertificate() != null);
+        menu.add(showTlsChainAction);
+
+        return menu;
+    }
+
+
+
+    private void initActions() {
+        if (editorStatusBarCallback == null) return;
+
+        disconnectAction = UserAction.create("Disconnect", editorStatusBarCallback::disconnect);
+        String[] authMethods = AuthenticationManager.getInstance().getAuthenticationMechanisms();
+        authMethodMapActions = new LinkedHashMap<>();
+        for (String authMethod: authMethods) {
+            authMethodMapActions.put(authMethod,
+                    UserAction.create(
+                            String.format("<html>Connect with <i>%s</i></html>", authMethod),
+                            () -> editorStatusBarCallback.connect(authMethod)
+                    ));
+        }
+
+        tlsConnectAction = UserAction.create("Connect secure",
+                Util.LOCK_ICON,
+                () -> editorStatusBarCallback.connectTLS(true)
         );
+        nonTlsConnectAction = UserAction.create("Connect insecure",
+                Util.UNLOCK_ICON,
+                () -> editorStatusBarCallback.connectTLS(false)
+        );
+
+        tlsTrustedDisconnectAction = UserAction.create("Disconnect",
+                Util.LOCK_ICON, editorStatusBarCallback::disconnect );
+        tlsUntrustedDisconnectAction = UserAction.create("Disconnect",
+                Util.LOCK_CROSSED_ICON, editorStatusBarCallback::disconnect );
+        nonTlsDisconnectAction = UserAction.create("Disconnect",
+                Util.UNLOCK_ICON, editorStatusBarCallback::disconnect );
+
+        showTlsChainAction = UserAction.create("Show certificate chain",
+                    () -> new CertChainInfoDialog(EditorStatusBar.this, connectionContext.getCertChain())
+                );
     }
 
     public void setEditorStatusBarCallback(EditorStatusBarCallback editorStatusBarCallback) {
         this.editorStatusBarCallback = editorStatusBarCallback;
+        initActions();
     }
 
     public void startClock() {
@@ -94,46 +160,36 @@ public class EditorStatusBar extends StatusBar {
     }
 
     public void setSessionContext(ConnectionContext context) {
-        sessionConnected = context.isConnected();
-        this.authMethod = context.getAuthMethod();
-
+        this.connectionContext = context;
         refreshConnectedLabel();
     }
 
     private void refreshConnectedLabel() {
-        lblConnection.setText(sessionConnected ? authMethod : DISCONNECTED);
-        if (sessionConnected) {
-            lblConnection.setToolTipText("Connected with '"+authMethod+"'");
+        String authMethod = connectionContext.getAuthMethod();
+        lblConnection.setText(connectionContext.isConnected() ? authMethod : DISCONNECTED);
+        if (connectionContext.isConnected()) {
+            lblConnection.setToolTipText(String.format("<html>Connected with <i>%s</i></html>", authMethod));
         } else {
-            lblConnection.setToolTipText("Disconnected");
+            lblConnection.setToolTipText(null);
         }
 
-        boolean found = false;
-        for (int index = 0; index < knonwAuthMethods.length; index++) {
-            UserAction action = actionsConnect[index];
-            String auth = knonwAuthMethods[index];
-            if (auth.equals(authMethod)) {
-                action.setIcon(Util.CHECK_ICON);
-                action.setText(authMethod + (sessionConnected ? " (Connected)" : "") );
-                action.setEnabled(!sessionConnected);
-                found = true;
+
+        if (connectionContext.isSecure()) {
+            if (connectionContext.isTrusted()) {
+                lblTLS.setIcon(Util.LOCK_ICON);
             } else {
-                action.setIcon(Util.BLANK_ICON);
-                action.setText(auth);
-                action.setEnabled(true);
+                lblTLS.setIcon(Util.LOCK_CROSSED_ICON);
             }
-        }
-
-        if (found) {
-            actionUnkownAuthConnect = null;
         } else {
-            actionUnkownAuthConnect = UserAction.create(authMethod + (sessionConnected ? " (Connected)" : ""), Util.CHECK_ICON,
-                    e -> this.editorStatusBarCallback.connect(authMethod) );
+            lblTLS.setIcon(Util.UNLOCK_ICON);
         }
 
-        actionDisconnect.setText(sessionConnected ? "Disconnect" : "(Disconnected)");
-        actionDisconnect.setEnabled(sessionConnected);
-
+        X509Certificate certificate = connectionContext.getCertificate();
+        if (certificate == null) {
+            lblTLS.setToolTipText(null);
+        } else {
+            lblTLS.setToolTipText(certificate.getSubjectDN().toString());
+        }
     }
 
     private void timerClockAction(ActionEvent event) {

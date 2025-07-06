@@ -7,8 +7,8 @@ public class MinSizeLabel extends JLabel {
 
     private int minWidth;
 
-    public MinSizeLabel() {
-        super();
+    public MinSizeLabel(Icon icon) {
+        super(icon);
     }
 
     public MinSizeLabel(String text) {
