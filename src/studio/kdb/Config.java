@@ -311,20 +311,22 @@ public class Config  {
     // host:port
     // If user and password are not found, defaults form default AuthenticationMechanism are used
     public Server getServerByConnectionString(String connectionString) {
-        return getServerByConnectionString(connectionString, getDefaultAuthMechanism());
-    }
-
-    public Server getServerByConnectionString(String connectionString, String defaultAuthMethod) {
-        return getServerByConnection(new QConnection(connectionString), defaultAuthMethod);
-    }
-
-    public Server getServerByConnection(QConnection conn, String defaultAuthMethod) {
+        QConnection conn = new QConnection(connectionString);
+        String authMethod = DefaultAuthenticationMechanism.NAME;
         if (conn.getUser().isEmpty() && conn.getPassword().isEmpty()) {
-            conn = conn.changeUserPassword(getDefaultCredentials(defaultAuthMethod));
-        } else {
-            defaultAuthMethod = DefaultAuthenticationMechanism.NAME;
+            authMethod = getDefaultAuthMechanism();
+            conn = conn.changeUserPassword(getDefaultCredentials(authMethod));
         }
-        return serverConfig.getServer(conn, defaultAuthMethod);
+        return serverConfig.getServer(conn, authMethod);
+    }
+
+    public Server getServer(QConnection conn, String authMethod) {
+        return serverConfig.getServer(conn, authMethod);
+    }
+
+    public Server getServerByNewAuthMethod(QConnection conn, String authMethod) {
+        conn = conn.changeUserPassword(getDefaultCredentials(authMethod));
+        return serverConfig.getServer(conn, authMethod);
     }
 
     public DefaultAuthConfig getDefaultAuthConfig() {
