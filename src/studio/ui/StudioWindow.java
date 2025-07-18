@@ -161,7 +161,7 @@ public class StudioWindow extends JFrame implements WindowListener {
 
     private final static int MAX_SERVERS_TO_CLONE = 20;
 
-    private static final Config CONFIG = Config.getInstance();
+    public static final Config CONFIG = Config.getInstance();
     
     public int nextEditorNameIndex() {
         return editorNameIndex++;

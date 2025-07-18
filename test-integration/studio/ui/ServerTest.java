@@ -9,7 +9,6 @@ import org.assertj.swing.timing.Condition;
 import org.assertj.swing.timing.Pause;
 import org.junit.*;
 import studio.core.DefaultAuthenticationMechanism;
-import studio.kdb.Config;
 import studio.kdb.Server;
 import studio.kdb.ServerTreeNode;
 import studio.kdb.config.ServerConfig;
@@ -33,7 +32,7 @@ public class ServerTest extends StudioTest {
 
         Color color2 = new Color(158, 215, 246);
 
-        ServerConfig serverConfig = Config.getInstance().getServerConfig();
+        ServerConfig serverConfig = StudioWindow.CONFIG.getServerConfig();
         serverConfig.setRoot(new ServerTreeNode());
         server1 = new Server(NAME1, "testHost", 1111, "user", "password", color1,
                 DefaultAuthenticationMechanism.NAME, false);
@@ -46,7 +45,7 @@ public class ServerTest extends StudioTest {
 
     @After
     public void removeServers() {
-        Config.getInstance().getServerConfig().setRoot(new ServerTreeNode());
+        StudioWindow.CONFIG.getServerConfig().setRoot(new ServerTreeNode());
     }
 
     @AfterClass
