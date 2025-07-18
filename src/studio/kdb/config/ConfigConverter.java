@@ -51,6 +51,7 @@ public class ConfigConverter implements JsonConverter{
         Set<String> keys = new HashSet<>(json.keySet());
         for (String key: keys) {
             JsonElement colors = json.get(key);
+            if (! colors.isJsonArray()) continue;
 
             JsonObject newValue = new JsonObject();
             newValue.add("background",

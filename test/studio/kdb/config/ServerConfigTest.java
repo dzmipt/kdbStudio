@@ -1,9 +1,11 @@
 package studio.kdb.config;
 
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import studio.kdb.Server;
 import studio.kdb.ServerTreeNode;
 import studio.utils.FileConfig;
+import studio.utils.MockConfig;
 import studio.utils.QConnection;
 
 import java.awt.*;
@@ -14,6 +16,11 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class ServerConfigTest {
+
+    @BeforeAll
+    public static void mockConfig() throws IOException {
+        MockConfig.mock();
+    }
 
     public void assertDeepEquals(ServerTreeNode node1, ServerTreeNode node2) {
         assertEquals(node1.isFolder(), node2.isFolder());

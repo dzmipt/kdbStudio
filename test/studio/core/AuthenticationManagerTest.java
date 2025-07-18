@@ -1,12 +1,12 @@
 package studio.core;
 
-import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import studio.core.plugins.A;
 import studio.core.plugins.B;
 import studio.core.plugins.C;
 import studio.utils.MockConfig;
+import studio.utils.log4j.EnvConfig;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -44,7 +44,6 @@ public class AuthenticationManagerTest {
     }
 
     private static Path tmpDir;
-    private static String userDir;
 
     @BeforeAll
     public static void prepare() throws IOException {
@@ -59,8 +58,7 @@ public class AuthenticationManagerTest {
         buildJar(folderDir.resolve("a.jar"), A.class);
         buildJar(folderDir.resolve("b.jar"), B.class);
 
-        userDir = System.getProperty("user.dir");
-        System.setProperty("user.dir", tmpDir.toString());
+        EnvConfig.setPluginFolder(pluginDir);
     }
 
     @Test
@@ -101,11 +99,6 @@ public class AuthenticationManagerTest {
 
     }
 
-
-    @AfterAll
-    public static void cleanup() throws IOException {
-        System.setProperty("user.dir", userDir);
-    }
 
     private static void buildJar(Path jarFile, Class... classes) throws IOException {
         FileOutputStream fos = new FileOutputStream(jarFile.toFile());

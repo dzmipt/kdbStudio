@@ -13,6 +13,7 @@ public class EnvConfig implements StrLookup {
     private final static String STUDIO_CONFIG_HOME = "KDBSTUDIO_CONFIG_HOME";
     private final static String environment = System.getProperty("env");
     private final static Path homeFolder = Paths.get(getValue(STUDIO_CONFIG_HOME, System.getProperty("user.home") + "/.studioforkdb"));
+    private static Path pluginFolder = Paths.get(System.getProperty("user.dir")).resolve("plugins");
 
     private static Path baseFolder = null;
 
@@ -21,10 +22,13 @@ public class EnvConfig implements StrLookup {
     }
 
     public static Path getPluginFolder() {
-        return Paths.get(System.getProperty("user.dir")).resolve("plugins");
+        return pluginFolder;
+    }
+    public static void setPluginFolder(Path pluginFolder) {
+        EnvConfig.pluginFolder = pluginFolder;
     }
 
-    //Useful method which could be used in test environment to point to a pre-configured or empty location
+    //Useful method, which could be used in test environment to point to a pre-configured or empty location
     public static void setBaseFolder(Path baseFolder) {
         EnvConfig.baseFolder = baseFolder;
     }

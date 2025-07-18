@@ -23,20 +23,20 @@ public class MockConfig extends Config {
 
     private static Path basePath;
 
-    public static synchronized void mock() throws IOException {
-        if (initialized) return;
-
+    public static synchronized void mock(Path newBasePath) throws IOException {
+        basePath = newBasePath;
         FilesBackup.setEnabled(false);
-        basePath = createTempDir();
         EnvConfig.setBaseFolder(basePath);
         Config.instance = new MockConfig(basePath);
+
+        if (initialized) return;
 
         LoggerContext context = LoggerContext.getContext(false);
         for (Logger logger: context.getLoggers() ) {
             Appender[] appenders = logger.getAppenders().values().toArray(new Appender[0]);
             for(Appender appender: appenders) {
                 if (appender instanceof RollingFileAppender ||
-                    appender instanceof AsyncAppender) {
+                        appender instanceof AsyncAppender) {
                     logger.removeAppender(appender);
                     logger.addAppender(NullAppender.createAppender("null"));
                 }
@@ -44,6 +44,11 @@ public class MockConfig extends Config {
         }
 
         initialized = true;
+
+    }
+
+    public static synchronized void mock() throws IOException {
+        mock(createTempDir());
     }
 
     private static List<Path> tmpDirs = new ArrayList<>();
