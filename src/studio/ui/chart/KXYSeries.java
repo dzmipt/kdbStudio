@@ -88,9 +88,13 @@ public class KXYSeries extends XYSeries {
             return 0;
         } );
 
-        minY = aminY;
-        maxY = amaxY;
-        minX = data.get(0).getXValue();
-        maxX = data.get( data.size() - 1 ).getXValue();
+        if (data.isEmpty()) {
+            minX = maxX = minY = maxY = Double.NaN;
+        } else {
+            minY = aminY;
+            maxY = amaxY;
+            minX = data.get(0).getXValue();
+            maxX = data.get(data.size() - 1).getXValue();
+        }
     }
 }
