@@ -1,18 +1,18 @@
 package studio.ui;
 
 
+import org.assertj.swing.edt.GuiActionRunner;
 import org.assertj.swing.fixture.DialogFixture;
 import org.assertj.swing.fixture.JComboBoxFixture;
 import org.assertj.swing.fixture.JTextComponentFixture;
 import org.assertj.swing.timing.Condition;
 import org.assertj.swing.timing.Pause;
-import org.junit.AfterClass;
-import org.junit.BeforeClass;
-import org.junit.Ignore;
-import org.junit.Test;
+import org.junit.*;
 import studio.core.DefaultAuthenticationMechanism;
 import studio.kdb.Config;
 import studio.kdb.Server;
+import studio.kdb.ServerTreeNode;
+import studio.kdb.config.ServerConfig;
 import studio.utils.QConnection;
 
 import java.awt.*;
@@ -27,17 +27,26 @@ public class ServerTest extends StudioTest {
     private final static String NAME1 = "bgServerTest1";
     private final static String NAME2 = "bgServerTest2";
 
-    @BeforeClass
-    public static void initServer() {
+    @Before
+    public void initServers() {
         Color color1 = new Color(255, 127, 127);
 
         Color color2 = new Color(158, 215, 246);
 
+        ServerConfig serverConfig = Config.getInstance().getServerConfig();
+        serverConfig.setRoot(new ServerTreeNode());
         server1 = new Server(NAME1, "testHost", 1111, "user", "password", color1,
                 DefaultAuthenticationMechanism.NAME, false);
         server2 = new Server(NAME2, "testHost", 1111, "user", "password", color2,
                 DefaultAuthenticationMechanism.NAME, false);
-        Config.getInstance().getServerConfig().addServers(false, server1, server2);
+        serverConfig.addServers(false, server1, server2);
+
+        GuiActionRunner.execute(StudioWindow::refreshAll);
+    }
+
+    @After
+    public void removeServers() {
+        Config.getInstance().getServerConfig().setRoot(new ServerTreeNode());
     }
 
     @AfterClass
