@@ -158,13 +158,17 @@ public class EditorStatusBar extends StatusBar {
 
 
         if (connectionContext.isSecure()) {
-            if (connectionContext.isTrusted()) {
-                lblTLS.setIcon(Util.LOCK_ICON);
+            if (connectionContext.isConnected()) {
+                if (connectionContext.isTrusted()) {
+                    lblTLS.setIcon(Util.LOCK_ICON);
+                } else {
+                    lblTLS.setIcon(Util.LOCK_CROSSED_ICON);
+                }
             } else {
-                lblTLS.setIcon(Util.LOCK_CROSSED_ICON);
+                lblTLS.setIcon(Util.UNLOCK_ICON);
             }
         } else {
-            lblTLS.setIcon(Util.UNLOCK_ICON);
+            lblTLS.setIcon(Util.BLANK_ICON);
         }
 
         X509Certificate certificate = connectionContext.getCertificate();
