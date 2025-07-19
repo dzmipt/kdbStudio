@@ -33,9 +33,6 @@ public class EditorStatusBar extends StatusBar {
     private Map<String, Action> authMethodMapActions;
     private Action tlsConnectAction;
     private Action nonTlsConnectAction;
-    private Action tlsTrustedDisconnectAction;
-    private Action tlsUntrustedDisconnectAction;
-    private Action nonTlsDisconnectAction;
     private Action showTlsChainAction;
 
     public EditorStatusBar() {
@@ -68,15 +65,15 @@ public class EditorStatusBar extends StatusBar {
     }
 
     private JPopupMenu getLblConnectionPopupMenu() {
+        disconnectAction.setEnabled(connectionContext.isConnected());
+
         JPopupMenu menu = new JPopupMenu();
-        if (connectionContext.isConnected()) {
-            menu.add(disconnectAction);
-            if (authMethodMapActions.size()>1) {
-                menu.addSeparator();
-            }
-        }
+        menu.add(disconnectAction);
+        menu.addSeparator();
+
         for (String authMethod: authMethodMapActions.keySet()) {
-            if (connectionContext.isConnected() && authMethod.equals(connectionContext.getAuthMethod())) continue;
+            Action action = authMethodMapActions.get(authMethod);
+            action.setEnabled(!connectionContext.isConnected() || !authMethod.equals(connectionContext.getAuthMethod()));
             menu.add(authMethodMapActions.get(authMethod));
         }
 
@@ -84,22 +81,15 @@ public class EditorStatusBar extends StatusBar {
     }
 
     private JPopupMenu getLblTLSPopupMenu() {
+        disconnectAction.setEnabled(connectionContext.isConnected());
+        tlsConnectAction.setEnabled(!connectionContext.isConnected() || !connectionContext.isSecure());
+        nonTlsConnectAction.setEnabled(!connectionContext.isConnected() || connectionContext.isSecure());
+
         JPopupMenu menu = new JPopupMenu();
-        if (connectionContext.isConnected()) {
-            if (connectionContext.isSecure()) {
-                if (connectionContext.isTrusted()) menu.add(tlsTrustedDisconnectAction);
-                else menu.add(tlsUntrustedDisconnectAction);
-
-                menu.add(nonTlsConnectAction);
-            } else {
-                menu.add(tlsConnectAction);
-                menu.add(nonTlsDisconnectAction);
-            }
-        } else {
-            menu.add(tlsConnectAction);
-            menu.add(nonTlsConnectAction);
-        }
-
+        menu.add(disconnectAction);
+        menu.addSeparator();
+        menu.add(tlsConnectAction);
+        menu.add(nonTlsConnectAction);
         menu.addSeparator();
         showTlsChainAction.setEnabled(connectionContext.getCertificate() != null);
         menu.add(showTlsChainAction);
@@ -117,8 +107,7 @@ public class EditorStatusBar extends StatusBar {
         authMethodMapActions = new LinkedHashMap<>();
         for (String authMethod: authMethods) {
             authMethodMapActions.put(authMethod,
-                    UserAction.create(
-                            String.format("<html>Connect with <i>%s</i></html>", authMethod),
+                    UserAction.create(authMethod,
                             () -> editorStatusBarCallback.connect(authMethod)
                     ));
         }
@@ -132,12 +121,6 @@ public class EditorStatusBar extends StatusBar {
                 () -> editorStatusBarCallback.connectTLS(false)
         );
 
-        tlsTrustedDisconnectAction = UserAction.create("Disconnect",
-                Util.LOCK_ICON, editorStatusBarCallback::disconnect );
-        tlsUntrustedDisconnectAction = UserAction.create("Disconnect",
-                Util.LOCK_CROSSED_ICON, editorStatusBarCallback::disconnect );
-        nonTlsDisconnectAction = UserAction.create("Disconnect",
-                Util.UNLOCK_ICON, editorStatusBarCallback::disconnect );
 
         showTlsChainAction = UserAction.create("Show certificate chain",
                     () -> new CertChainInfoDialog(EditorStatusBar.this, connectionContext.getCertChain())
