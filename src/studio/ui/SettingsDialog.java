@@ -272,7 +272,7 @@ public class SettingsDialog extends EscapeDialog {
         editorFontSelection = new FontSelectionPanel(this, "Editor font: ", Config.FONT_EDITOR);
         resultFontSelection = new FontSelectionPanel(this, "Result table font: ", Config.FONT_TABLE);
 
-        chBoxOpenServerInCurrentTab = new JCheckBox("Open servers from popup menu in the current tab");
+        chBoxOpenServerInCurrentTab = new JCheckBox("Open servers from popup menu in the current editor tab");
         chBoxOpenServerInCurrentTab.setSelected(CONFIG.getBoolean(Config.SERVER_FROM_RESULT_IN_CURRENT));
         chBoxInspectResultInCurrentTab = new JCheckBox("Inspect result in the current tab");
         chBoxInspectResultInCurrentTab.setSelected(CONFIG.getBoolean(Config.INSPECT_RESULT_IN_CURRENT));

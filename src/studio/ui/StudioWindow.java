@@ -508,6 +508,7 @@ public class StudioWindow extends JFrame implements WindowListener {
 
             EditorsPanel.refreshEditorTitle(editor);
             refreshServer();
+            editor.getTextArea().requestFocus();
         }
     }
 
