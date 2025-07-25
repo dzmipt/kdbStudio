@@ -76,7 +76,8 @@ public class Util {
     public final static ImageIcon LOCK_CROSSED_ICON = getImage("/lock_crossed.png");
     public final static ImageIcon UNLOCK_ICON = getImage("/unlock.png");
 
-    public final static int menuShortcutKeyMask = java.awt.Toolkit.getDefaultToolkit().getMenuShortcutKeyMaskEx();
+    public final static int menuShortcutKeyMask = GraphicsEnvironment.isHeadless() ? KeyEvent.CTRL_DOWN_MASK :
+                                                    java.awt.Toolkit.getDefaultToolkit().getMenuShortcutKeyMaskEx();
 
     public static boolean MAC_OS_X = (System.getProperty("os.name").toLowerCase().startsWith("mac os x"));
     public static boolean WINDOWS = (System.getProperty("os.name").toLowerCase().contains("win"));
