@@ -7,6 +7,7 @@ import studio.utils.Transferables;
 import javax.swing.*;
 import java.awt.*;
 import java.awt.datatransfer.StringSelection;
+import java.awt.event.InputEvent;
 import java.awt.event.KeyEvent;
 import java.net.URI;
 import java.net.URL;
@@ -75,26 +76,26 @@ public class Util {
     public final static ImageIcon LOCK_CROSSED_ICON = getImage("/lock_crossed.png");
     public final static ImageIcon UNLOCK_ICON = getImage("/unlock.png");
 
+    public final static int menuShortcutKeyMask = java.awt.Toolkit.getDefaultToolkit().getMenuShortcutKeyMaskEx();
 
     public static boolean MAC_OS_X = (System.getProperty("os.name").toLowerCase().startsWith("mac os x"));
     public static boolean WINDOWS = (System.getProperty("os.name").toLowerCase().contains("win"));
 
     public static boolean Java8Minus = System.getProperty("java.version").startsWith("1.");
 
-
     private static boolean mockFitToScreen = false;
     private final static Logger log = LogManager.getLogger();
 
     public static Color blendColors(Color... colors) {
         float ratio = 1f / ((float) colors.length);
-        int r = 0, g = 0, b = 0, a = 0;
+        float r = 0, g = 0, b = 0, a = 0;
         for (Color color : colors) {
             r += color.getRed() * ratio;
             g += color.getGreen() * ratio;
             b += color.getBlue() * ratio;
             a += color.getAlpha() * ratio;
         }
-        return new Color(r, g, b, a);
+        return new Color((int)r, (int)g, (int)b, (int)a);
     }
 
     public static ImageIcon getImage(String strFilename) {
@@ -131,8 +132,19 @@ public class Util {
         child.setLocation(x,y);
     }
 
+    public static KeyStroke getMenuShortcut(int keyCode, int additionalModifiers) {
+        @SuppressWarnings("MagicConstant")
+        KeyStroke keyStroke = KeyStroke.getKeyStroke(keyCode, menuShortcutKeyMask | additionalModifiers);
+        return keyStroke;
+    }
+
+    public static KeyStroke getMenuShortcut(int keyCode) {
+        return getMenuShortcut(keyCode, 0);
+    }
+
+
     public static String getAcceleratorString(KeyStroke keyStroke) {
-        return KeyEvent.getKeyModifiersText(keyStroke.getModifiers()) + (MAC_OS_X ? "": "+") +
+        return InputEvent.getModifiersExText(keyStroke.getModifiers()) + (MAC_OS_X ? "": "+") +
                 KeyEvent.getKeyText(keyStroke.getKeyCode());
     }
 

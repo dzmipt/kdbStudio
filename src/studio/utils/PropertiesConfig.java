@@ -100,7 +100,7 @@ public class PropertiesConfig extends Properties {
         log.info("Saving config to file {} with number of properties {}", path, size());
 
         try (TmpfileOutputStream out = FilesBackup.getInstance().newFileOutputStream(path)) {
-            byte[] lineSeparator = System.getProperty("line.separator").getBytes(CHARSET);
+            byte[] lineSeparator = System.lineSeparator().getBytes(CHARSET);
 
             BufferedReader reader = new BufferedReader(
                     new InputStreamReader(new ByteArrayInputStream(buffer.toByteArray()), CHARSET));

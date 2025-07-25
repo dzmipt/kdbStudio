@@ -11,6 +11,7 @@ import javax.swing.table.TableCellRenderer;
 import javax.swing.table.TableColumn;
 import javax.swing.table.TableColumnModel;
 import java.awt.*;
+import java.awt.event.InputEvent;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.util.Arrays;
@@ -63,8 +64,8 @@ public class WidthAdjuster extends MouseAdapter {
 
     @Override
     public void mouseClicked(final MouseEvent e) {
-        if ((e.getModifiers() & Event.ALT_MASK) > 0) {
-            if ( (resizeIndex == -1) || (e.getModifiers() & Event.SHIFT_MASK) == 0 ) {
+        if ((e.getModifiersEx() & InputEvent.ALT_DOWN_MASK) > 0) {
+            if ( (resizeIndex == -1) || (e.getModifiersEx() & InputEvent.SHIFT_DOWN_MASK) == 0 ) {
                 resizeIndex = getViewColumn(e);
             }
             select(e);
@@ -97,7 +98,7 @@ public class WidthAdjuster extends MouseAdapter {
     }
 
     private void select(MouseEvent e) {
-        if ((e.getModifiers() & Event.ALT_MASK) == 0) return;
+        if ((e.getModifiersEx() & InputEvent.ALT_DOWN_MASK) == 0) return;
 
         int index = getViewColumn(e);
         table.setRowSelectionInterval(0,table.getRowCount() - 1);

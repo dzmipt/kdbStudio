@@ -25,7 +25,7 @@ public class ResultTab extends JPanel {
     private UserAction uploadAction;
     private UserAction previousCardAction;
     private UserAction nextCardAction;
-    private KFormatContext formatContext = new KFormatContext(KFormatContext.DEFAULT);
+    private final KFormatContext formatContext = new KFormatContext(KFormatContext.DEFAULT);
     private boolean pinned = false;
 
     private final static Logger log = LogManager.getLogger();
@@ -144,27 +144,27 @@ public class ResultTab extends JPanel {
     private void initComponents() {
         formatAction = UserAction.create(
                 "Toggle decimal format", Util.COMMA_CROSSED_ICON, "Add comma as thousands separators for numbers",
-                KeyEvent.VK_T, KeyStroke.getKeyStroke(KeyEvent.VK_J, StudioWindow.menuShortcutKeyMask), this::updateFormatting
+                KeyEvent.VK_T, Util.getMenuShortcut(KeyEvent.VK_J), this::updateFormatting
         ).toggleButton(Util.COMMA_ICON);
 
         uploadAction = UserAction.create(
                 "Upload", Util.UPLOAD_ICON, "Upload to current server",
-                KeyEvent.VK_U, KeyStroke.getKeyStroke(KeyEvent.VK_U, StudioWindow.menuShortcutKeyMask), this::upload );
+                KeyEvent.VK_U, Util.getMenuShortcut(KeyEvent.VK_U), this::upload );
 
         UserAction findAction = UserAction.create(
                 "Find in result", Util.FIND_ICON, "Find in result",
-                KeyEvent.VK_F, KeyStroke.getKeyStroke(KeyEvent.VK_F, StudioWindow.menuShortcutKeyMask | InputEvent.SHIFT_DOWN_MASK),
+                KeyEvent.VK_F, Util.getMenuShortcut(KeyEvent.VK_F, InputEvent.SHIFT_DOWN_MASK),
                 e -> studioWindow.getResultSearchPanel().setVisible(true) );
 
         previousCardAction = UserAction.create(
                 "Previous result", Util.LEFT_ICON, "Show previous result",
-                KeyEvent.VK_Q, KeyStroke.getKeyStroke(KeyEvent.VK_COMMA, StudioWindow.menuShortcutKeyMask | InputEvent.ALT_DOWN_MASK),
+                KeyEvent.VK_Q, Util.getMenuShortcut(KeyEvent.VK_COMMA, InputEvent.ALT_DOWN_MASK),
                 e -> navigateCard(false)
         );
 
         nextCardAction = UserAction.create(
                 "Next result", Util.RIGHT_ICON, "Show next result",
-                KeyEvent.VK_W, KeyStroke.getKeyStroke(KeyEvent.VK_PERIOD, StudioWindow.menuShortcutKeyMask | InputEvent.ALT_DOWN_MASK),
+                KeyEvent.VK_W, Util.getMenuShortcut(KeyEvent.VK_PERIOD, InputEvent.ALT_DOWN_MASK),
                 e -> navigateCard(true)
         );
 
@@ -216,7 +216,7 @@ public class ResultTab extends JPanel {
 
     public String getTitle() {
         StringBuilder title = new StringBuilder();
-        if (isPinned()) title.append("\u2191 ");
+        if (isPinned()) title.append("↑ ");
         title.append(getType().getTitle()).append(' ');
         QGrid grid = getGrid();
         if (grid != null) {

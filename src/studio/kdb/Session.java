@@ -54,7 +54,7 @@ public class Session implements ConnectionStateListener, KAuthentication {
 
     public void removeTab(EditorTab editor) {
         editors.remove(editor);
-        if (editors.size() == 0) {
+        if (editors.isEmpty()) {
             close();
         }
     }
@@ -166,9 +166,9 @@ public class Session implements ConnectionStateListener, KAuthentication {
             authenticationMechanism.setProperties(server.getAsProperties());
             Credentials credentials = authenticationMechanism.getCredentials();
 
-            if (credentials.getUsername().length() > 0) {
+            if (!credentials.getUsername().isEmpty()) {
                 String p = credentials.getPassword();
-                return credentials.getUsername() + ((p.length() == 0) ? "" : ":" + p);
+                return credentials.getUsername() + ((p.isEmpty()) ? "" : ":" + p);
             } else {
                 return "";
             }

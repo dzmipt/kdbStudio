@@ -79,7 +79,7 @@ public class EditorPane extends JPanel implements MouseWheelListener, SearchPane
 
     @Override
     public void mouseWheelMoved(MouseWheelEvent e) {
-        if ((e.getModifiers() & StudioWindow.menuShortcutKeyMask) == 0) return;
+        if ((e.getModifiersEx() & Util.menuShortcutKeyMask) == 0) return;
 
         Font font = Config.getInstance().getFont(Config.FONT_EDITOR);
         int newFontSize = font.getSize() + e.getWheelRotation();

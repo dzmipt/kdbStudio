@@ -12,8 +12,8 @@ import java.awt.datatransfer.StringSelection;
 import java.awt.dnd.*;
 import java.awt.event.*;
 import java.awt.image.BufferedImage;
-import java.util.List;
 import java.util.*;
+import java.util.List;
 import java.util.stream.Collectors;
 
 public class ColorListComponent extends JComponent implements DropTargetListener {
@@ -397,7 +397,7 @@ public class ColorListComponent extends JComponent implements DropTargetListener
         f.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         f.setContentPane(comp);
         f.setSize(400,200);
-        f.show();
+        f.setVisible(true);
 
     }
 }

@@ -25,7 +25,6 @@ import studio.utils.log4j.EnvConfig;
 
 import javax.swing.*;
 import javax.swing.plaf.basic.BasicSplitPaneUI;
-import javax.swing.table.TableModel;
 import javax.swing.text.BadLocationException;
 import javax.swing.text.JTextComponent;
 import java.awt.*;
@@ -78,16 +77,15 @@ public class StudioWindow extends JFrame implements WindowListener {
     private JComboBox<String> comboServer;
     private JTextField txtServer;
     private String lastQuery = null;
-    private Toolbar toolbar;
-    private EditorsPanel rootEditorsPanel;
+    private final Toolbar toolbar;
+    private final EditorsPanel rootEditorsPanel;
     private EditorTab editor; // should be NotNull
-    private JSplitPane splitpane;
-    private JPanel topPanel;
-    private MainStatusBar mainStatusBar;
-    private DraggableTabbedPane resultsPane;
-    private SearchPanel editorSearchPanel;
-    private SearchPanel resultSearchPanel;
-    private ServerList serverList;
+    private final JSplitPane splitpane;
+    private final MainStatusBar mainStatusBar;
+    private final DraggableTabbedPane resultsPane;
+    private final SearchPanel editorSearchPanel;
+    private final SearchPanel resultSearchPanel;
+    private final ServerList serverList;
 
     private UserAction serverBackAction;
     private UserAction serverForwardAction;
@@ -152,12 +150,10 @@ public class StudioWindow extends JFrame implements WindowListener {
     private int resultNameIndex = 0;
 
 
-    private static List<StudioWindow> allWindows = new ArrayList<>();
+    private final static List<StudioWindow> allWindows = new ArrayList<>();
     private static StudioWindow activeWindow = null;
 
     private final List<Server> serverHistory;
-
-    public final static int menuShortcutKeyMask = java.awt.Toolkit.getDefaultToolkit().getMenuShortcutKeyMask();
 
     private final static int MAX_SERVERS_TO_CLONE = 20;
 
@@ -184,7 +180,7 @@ public class StudioWindow extends JFrame implements WindowListener {
         if (server != Server.NO_SERVER) {
             caption.append(" @ ");
             String fullName = server.getFullName();
-            if (fullName.length()>0) caption.append(fullName);
+            if (!fullName.isEmpty()) caption.append(fullName);
             else caption.append(server.getHost()).append(":").append(server.getPort());
         }
 
@@ -208,10 +204,10 @@ public class StudioWindow extends JFrame implements WindowListener {
         refreshAllMenus();
     }
 
-    private void setActionsEnabled(boolean value, Action... actions) {
+    private void disableActions(Action... actions) {
         for (Action action: actions) {
             if (action != null) {
-                action.setEnabled(value);
+                action.setEnabled(false);
             }
         }
     }
@@ -245,7 +241,7 @@ public class StudioWindow extends JFrame implements WindowListener {
 
         ResultTab tab = getSelectedResultTab();
         if (tab == null) {
-            setActionsEnabled(false, exportAction, chartAction, openInExcel, refreshAction, uploadAction, prevResultAction, nextResultAction);
+            disableActions(exportAction, chartAction, openInExcel, refreshAction, uploadAction, prevResultAction, nextResultAction);
         } else {
             ResultType type = tab.getType();
             exportAction.setEnabled(type.isTable());
@@ -263,7 +259,8 @@ public class StudioWindow extends JFrame implements WindowListener {
         ExcelExporter.exportTableX(this, getSelectedResultTab(),new File(filename),false);
     }
 
-    private void exportAsDelimited(final TableModel model,final String filename,final char delimiter) {
+    private void exportAsDelimited(final KTableModel model,final String filename,final char delimiter) {
+        if (model == null) return;
         UIManager.put("ProgressMonitor.progressText","Studio for kdb+");
         final ProgressMonitor pm = new ProgressMonitor(this,"Exporting data to " + filename,
                 "0% complete",0,100);
@@ -273,7 +270,7 @@ public class StudioWindow extends JFrame implements WindowListener {
 
         Runnable runner = () -> {
             if (filename != null) {
-                String lineSeparator = System.getProperty("line.separator");
+                String lineSeparator = System.lineSeparator();
 
                 try (BufferedWriter fw = new BufferedWriter(new FileWriter(filename))) {
                     for(int col = 0; col < model.getColumnCount(); col++) {
@@ -294,7 +291,7 @@ public class StudioWindow extends JFrame implements WindowListener {
                         fw.write(lineSeparator);
                         if (pm.isCanceled()) break;
                         int progress = (100 * r) / maxRow;
-                        String note = "" + progress + "% complete";
+                        String note = progress + "% complete";
                         SwingUtilities.invokeLater( () -> {
                             pm.setProgress(progress);
                             pm.setNote(note);
@@ -316,7 +313,7 @@ public class StudioWindow extends JFrame implements WindowListener {
         t.start();
     }
 
-    private void exportAsXml(final TableModel model,final String filename) {
+    private void exportAsXml(final KTableModel model,final String filename) {
         UIManager.put("ProgressMonitor.progressText","Studio for kdb+");
         final ProgressMonitor pm = new ProgressMonitor(this,"Exporting data to " + filename,
                 "0% complete",0,100);
@@ -326,7 +323,7 @@ public class StudioWindow extends JFrame implements WindowListener {
 
         Runnable runner = () -> {
             if (filename != null) {
-                String lineSeparator = System.getProperty("line.separator");;
+                String lineSeparator = System.lineSeparator();
 
                 try (BufferedWriter fw = new BufferedWriter(new FileWriter(filename))) {
                     fw.write("<R>");
@@ -353,7 +350,7 @@ public class StudioWindow extends JFrame implements WindowListener {
 
                         if (pm.isCanceled()) break;
                         int progress = (100 * r) / maxRow;
-                        String note = "" + progress + "% complete";
+                        String note = progress + "% complete";
                         SwingUtilities.invokeLater(() -> {
                             pm.setProgress(progress);
                             pm.setNote(note);
@@ -376,15 +373,15 @@ public class StudioWindow extends JFrame implements WindowListener {
     }
 
     private void exportAsTxt(String filename) {
-        exportAsDelimited(getSelectedTable().getModel(),filename,'\t');
+        exportAsDelimited(getSelectedTableModel(), filename, '\t');
     }
 
     private void exportAsCSV(String filename) {
-        exportAsDelimited(getSelectedTable().getModel(),filename,',');
+        exportAsDelimited(getSelectedTableModel(), filename, ',');
     }
 
     private void export() {
-        if (getSelectedTable() == null) return;
+        if (getSelectedTableModel() == null) return;
 
         File file = FileChooser.chooseFile(this, Config.EXPORT_FILE_CHOOSER, JFileChooser.SAVE_DIALOG, "Export result set as",
                 null,
@@ -402,7 +399,7 @@ public class StudioWindow extends JFrame implements WindowListener {
             else if (filename.endsWith(".txt"))
                 exportAsTxt(filename);
             else if (filename.endsWith(".xml"))
-                exportAsXml(getSelectedTable().getModel(),filename);
+                exportAsXml(getSelectedTableModel(), filename);
             else
                 StudioOptionPane.showWarning(this,
                         "You did not specify what format to export the file as.\n Cancelling data export",
@@ -514,11 +511,11 @@ public class StudioWindow extends JFrame implements WindowListener {
 
     private void initActions() {
         serverBackAction = UserAction.create("Back", Util.LEFT_ICON, "Previous server", KeyEvent.VK_B,
-                KeyStroke.getKeyStroke(KeyEvent.VK_OPEN_BRACKET, menuShortcutKeyMask | InputEvent.SHIFT_MASK),
+                Util.getMenuShortcut(KeyEvent.VK_OPEN_BRACKET, InputEvent.SHIFT_DOWN_MASK),
                 e -> editor.navigateHistoryServer(false)
                 );
         serverForwardAction = UserAction.create("Forward", Util.RIGHT_ICON, "Next server", KeyEvent.VK_F,
-                KeyStroke.getKeyStroke(KeyEvent.VK_CLOSE_BRACKET, menuShortcutKeyMask | InputEvent.SHIFT_MASK),
+                Util.getMenuShortcut(KeyEvent.VK_CLOSE_BRACKET, InputEvent.SHIFT_DOWN_MASK),
                 e -> editor.navigateHistoryServer(true)
         );
 
@@ -529,35 +526,35 @@ public class StudioWindow extends JFrame implements WindowListener {
                 KeyEvent.VK_A, null, e -> arrangeAll());
 
         minMaxDividerAction = UserAction.create(I18n.getString("MaximizeEditorPane"), "Maximize editor pane",
-                KeyEvent.VK_M, KeyStroke.getKeyStroke(KeyEvent.VK_M, menuShortcutKeyMask),
+                KeyEvent.VK_M, Util.getMenuShortcut(KeyEvent.VK_M),
                 e -> minMaxDivider());
 
         toggleDividerOrientationAction = UserAction.create(I18n.getString("ToggleDividerOrientation"),
                 "Toggle the window divider's orientation", KeyEvent.VK_C, null, e -> toggleDividerOrientation());
 
         closeTabAction = UserAction.create("Close Tab",  "Close current tab", KeyEvent.VK_W,
-                KeyStroke.getKeyStroke(KeyEvent.VK_W, menuShortcutKeyMask), e -> editor.getEditorsPanel().closeTab(editor));
+                Util.getMenuShortcut(KeyEvent.VK_W), e -> editor.getEditorsPanel().closeTab(editor));
 
         closeFileAction = UserAction.create("Close Window",  "Close current window (close all tabs)",
                 KeyEvent.VK_C, null, e -> close());
 
         openFileAction = UserAction.create(I18n.getString("Open"), Util.FOLDER_ICON, "Open a script", KeyEvent.VK_O,
-                KeyStroke.getKeyStroke(KeyEvent.VK_O, menuShortcutKeyMask), e -> openFile());
+                Util.getMenuShortcut(KeyEvent.VK_O), e -> openFile());
 
         newWindowAction = UserAction.create(I18n.getString("NewWindow"),  "Open a new window",
-                KeyEvent.VK_N, KeyStroke.getKeyStroke(KeyEvent.VK_N, menuShortcutKeyMask | InputEvent.SHIFT_MASK),
+                KeyEvent.VK_N, Util.getMenuShortcut(KeyEvent.VK_N, InputEvent.SHIFT_DOWN_MASK),
                 e -> new StudioWindow(editor.getServer(), null) );
 
         newTabAction = UserAction.create("New Tab",  "Open a new tab", KeyEvent.VK_T,
-                KeyStroke.getKeyStroke(KeyEvent.VK_N, menuShortcutKeyMask),
+                Util.getMenuShortcut(KeyEvent.VK_N),
                 e -> addTab(null));
 
         serverListAction = UserAction.create(I18n.getString("ServerList"), Util.TEXT_TREE_ICON, "Show server list",
-                KeyEvent.VK_L, KeyStroke.getKeyStroke(KeyEvent.VK_L, menuShortcutKeyMask | InputEvent.SHIFT_MASK),
+                KeyEvent.VK_L, Util.getMenuShortcut(KeyEvent.VK_L, InputEvent.SHIFT_DOWN_MASK),
                 e -> showServerList(false));
 
         serverHistoryAction = UserAction.create("Server History", "Recent selected servers", KeyEvent.VK_R,
-                KeyStroke.getKeyStroke(KeyEvent.VK_R, menuShortcutKeyMask | InputEvent.SHIFT_MASK),
+                Util.getMenuShortcut(KeyEvent.VK_R, InputEvent.SHIFT_DOWN_MASK),
                 e -> showServerList(true));
 
         loadServerTreeAction = UserAction.create("Load Servers...", Util.FOLDER_ICON, "Load Server Tree from json",
@@ -632,11 +629,11 @@ public class StudioWindow extends JFrame implements WindowListener {
 
 
         saveFileAction = UserAction.create(I18n.getString("Save"), Util.DISKS_ICON, "Save the script",
-                KeyEvent.VK_S, KeyStroke.getKeyStroke(KeyEvent.VK_S, menuShortcutKeyMask),
+                KeyEvent.VK_S, Util.getMenuShortcut(KeyEvent.VK_S),
                 e -> EditorsPanel.saveEditor(editor));
 
         saveAllFilesAction = UserAction.create("Save All...",  "Save all files",
-                KeyEvent.VK_L, KeyStroke.getKeyStroke(KeyEvent.VK_S, menuShortcutKeyMask | InputEvent.SHIFT_MASK),
+                KeyEvent.VK_L, Util.getMenuShortcut(KeyEvent.VK_S, InputEvent.SHIFT_DOWN_MASK),
                 e -> saveAll());
 
         saveAsFileAction = UserAction.create(I18n.getString("SaveAs"), Util.SAVE_AS_ICON, "Save script as",
@@ -646,14 +643,14 @@ public class StudioWindow extends JFrame implements WindowListener {
                 KeyEvent.VK_E, null, e -> export());
 
         chartAction = UserAction.create(I18n.getString("Chart"), Util.CHART_ICON, "Chart current data set",
-                KeyEvent.VK_C, KeyStroke.getKeyStroke(KeyEvent.VK_G, menuShortcutKeyMask), e -> chart() );
+                KeyEvent.VK_C, Util.getMenuShortcut(KeyEvent.VK_G), e -> chart() );
 
         executeAndChartAction = UserAction.create("Execute and Chart", Util.EXECUTE_AND_CHART, "Execute and chart",
-                KeyEvent.VK_H, KeyStroke.getKeyStroke(KeyEvent.VK_E, menuShortcutKeyMask | InputEvent.SHIFT_DOWN_MASK),
+                KeyEvent.VK_H, Util.getMenuShortcut(KeyEvent.VK_E, InputEvent.SHIFT_DOWN_MASK),
                 e -> executeQuery(true) );
 
         executeCurrentLineAndChartAction = UserAction.create("Execute CurrentLine and Chart", Util.EXECUTE_AND_CHART, "Execute current line and chart",
-                KeyEvent.VK_H, KeyStroke.getKeyStroke(KeyEvent.VK_ENTER, menuShortcutKeyMask | InputEvent.SHIFT_DOWN_MASK),
+                KeyEvent.VK_H, Util.getMenuShortcut(KeyEvent.VK_ENTER, InputEvent.SHIFT_DOWN_MASK),
                 e -> executeQueryCurrentLine(true) );
 
         stopAction = UserAction.create(I18n.getString("Stop"), Util.STOP_ICON, "Stop the query",
@@ -671,34 +668,34 @@ public class StudioWindow extends JFrame implements WindowListener {
                 });
 
         executeAction = UserAction.create(I18n.getString("Execute"), Util.TABLE_SQL_RUN_ICON, "Execute the full or highlighted text as a query",
-                KeyEvent.VK_E, KeyStroke.getKeyStroke(KeyEvent.VK_E, menuShortcutKeyMask), e -> executeQuery(false));
+                KeyEvent.VK_E, Util.getMenuShortcut(KeyEvent.VK_E), e -> executeQuery(false));
 
         executeCurrentLineAction = UserAction.create(I18n.getString("ExecuteCurrentLine"), Util.RUN_ICON, "Execute the current line as a query",
-                KeyEvent.VK_ENTER, KeyStroke.getKeyStroke(KeyEvent.VK_ENTER, menuShortcutKeyMask), e -> executeQueryCurrentLine(false));
+                KeyEvent.VK_ENTER, Util.getMenuShortcut(KeyEvent.VK_ENTER), e -> executeQueryCurrentLine(false));
 
         refreshAction = UserAction.create(I18n.getString("Refresh"), Util.REFRESH_ICON, "Refresh the result set",
-                KeyEvent.VK_R, KeyStroke.getKeyStroke(KeyEvent.VK_Y, menuShortcutKeyMask | InputEvent.SHIFT_MASK), e -> refreshQuery());
+                KeyEvent.VK_R, Util.getMenuShortcut(KeyEvent.VK_Y, InputEvent.SHIFT_DOWN_MASK), e -> refreshQuery());
 
         toggleCommaFormatAction = UserAction.create("Toggle Comma Format", Util.COMMA_ICON, "Add/remove thousands separator in selected result",
-                KeyEvent.VK_J, KeyStroke.getKeyStroke(KeyEvent.VK_J, menuShortcutKeyMask),
+                KeyEvent.VK_J, Util.getMenuShortcut(KeyEvent.VK_J),
                 e -> {
                     ResultTab tab = getSelectedResultTab();
                     if (tab != null) tab.toggleCommaFormatting();
                 });
 
         uploadAction = UserAction.create("Upload to server", Util.UPLOAD_ICON, "Upload grid to current server",
-                KeyEvent.VK_U, KeyStroke.getKeyStroke(KeyEvent.VK_U, menuShortcutKeyMask),
+                KeyEvent.VK_U, Util.getMenuShortcut(KeyEvent.VK_U),
                 e -> {
                     ResultTab tab = getSelectedResultTab();
                     if (tab != null) tab.upload(e);
                 });
 
         findInResultAction = UserAction.create("Find in Result", Util.FIND_ICON, "Find in result tab",
-                KeyEvent.VK_F, KeyStroke.getKeyStroke(KeyEvent.VK_F, menuShortcutKeyMask | InputEvent.SHIFT_MASK),
+                KeyEvent.VK_F, Util.getMenuShortcut(KeyEvent.VK_F, InputEvent.SHIFT_DOWN_MASK),
                 e -> resultSearchPanel.setVisible(true) );
 
         prevResultAction = UserAction.create("Previous result", Util.LEFT_ICON, "Show previous result",
-                KeyEvent.VK_Q, KeyStroke.getKeyStroke(KeyEvent.VK_COMMA, StudioWindow.menuShortcutKeyMask | InputEvent.ALT_DOWN_MASK),
+                KeyEvent.VK_Q, Util.getMenuShortcut(KeyEvent.VK_COMMA, InputEvent.ALT_DOWN_MASK),
                 e -> {
                     ResultTab tab = getSelectedResultTab();
                     if (tab != null) tab.navigateCard(false);
@@ -706,7 +703,7 @@ public class StudioWindow extends JFrame implements WindowListener {
 
         nextResultAction = UserAction.create(
                 "Next result", Util.RIGHT_ICON, "Show next result",
-                KeyEvent.VK_W, KeyStroke.getKeyStroke(KeyEvent.VK_PERIOD, StudioWindow.menuShortcutKeyMask | InputEvent.ALT_DOWN_MASK),
+                KeyEvent.VK_W, Util.getMenuShortcut(KeyEvent.VK_PERIOD, InputEvent.ALT_DOWN_MASK),
                 e -> {
                     ResultTab tab = getSelectedResultTab();
                     if (tab != null) tab.navigateCard(true);
@@ -731,39 +728,39 @@ public class StudioWindow extends JFrame implements WindowListener {
                 });
 
         copyAction = UserAction.create(I18n.getString("Copy"), Util.COPY_ICON, "Copy the selected text to the clipboard",
-                KeyEvent.VK_C, KeyStroke.getKeyStroke(KeyEvent.VK_C,menuShortcutKeyMask), editorCopyAction);
+                KeyEvent.VK_C, Util.getMenuShortcut(KeyEvent.VK_C), editorCopyAction);
 
         cutAction = UserAction.create(I18n.getString("Cut"), Util.CUT_ICON, "Cut the selected text",
-                KeyEvent.VK_T, KeyStroke.getKeyStroke(KeyEvent.VK_X,menuShortcutKeyMask), editorCutAction);
+                KeyEvent.VK_T, Util.getMenuShortcut(KeyEvent.VK_X), editorCutAction);
 
         pasteAction = UserAction.create(I18n.getString("Paste"), Util.PASTE_ICON, "Paste text from the clipboard",
-                KeyEvent.VK_P, KeyStroke.getKeyStroke(KeyEvent.VK_V,menuShortcutKeyMask), editorPasteAction);
+                KeyEvent.VK_P, Util.getMenuShortcut(KeyEvent.VK_V), editorPasteAction);
 
         findAction = UserAction.create(I18n.getString("Find"), Util.FIND_ICON, "Find text in the document",
-                KeyEvent.VK_F, KeyStroke.getKeyStroke(KeyEvent.VK_F,menuShortcutKeyMask), editorFindAction);
+                KeyEvent.VK_F, Util.getMenuShortcut(KeyEvent.VK_F), editorFindAction);
 
         replaceAction = UserAction.create(I18n.getString("Replace"), Util.REPLACE_ICON, "Replace text in the document",
-                KeyEvent.VK_R, KeyStroke.getKeyStroke(KeyEvent.VK_R,menuShortcutKeyMask), editorReplaceAction);
+                KeyEvent.VK_R, Util.getMenuShortcut(KeyEvent.VK_R), editorReplaceAction);
 
         convertTabsToSpacesAction = UserAction.create("Convert tabs to spaces", editorConvertTabsToSpacesAction);
 
         selectAllAction = UserAction.create(I18n.getString("SelectAll"), "Select all text in the document",
-                KeyEvent.VK_A, KeyStroke.getKeyStroke(KeyEvent.VK_A,menuShortcutKeyMask), editorSelectAllAction);
+                KeyEvent.VK_A, Util.getMenuShortcut(KeyEvent.VK_A), editorSelectAllAction);
 
         undoAction = UserAction.create(I18n.getString("Undo"), Util.UNDO_ICON, "Undo the last change to the document",
-                KeyEvent.VK_U, KeyStroke.getKeyStroke(KeyEvent.VK_Z,menuShortcutKeyMask), editorUndoAction);
+                KeyEvent.VK_U, Util.getMenuShortcut(KeyEvent.VK_Z), editorUndoAction);
 
         redoAction = UserAction.create(I18n.getString("Redo"), Util.REDO_ICON, "Redo the last change to the document",
-                KeyEvent.VK_R, KeyStroke.getKeyStroke(KeyEvent.VK_Y,menuShortcutKeyMask), editorRedoAction);
+                KeyEvent.VK_R, Util.getMenuShortcut(KeyEvent.VK_Y), editorRedoAction);
 
         nextEditorTabAction = UserAction.create("Next tab",
                 "Select next editor tab", KeyEvent.VK_N,
-                    KeyStroke.getKeyStroke(KeyEvent.VK_RIGHT, menuShortcutKeyMask | InputEvent.ALT_MASK ),
+                Util.getMenuShortcut(KeyEvent.VK_RIGHT, InputEvent.ALT_DOWN_MASK ),
                 e -> editor.getEditorsPanel().selectNextTab(true));
 
         prevEditorTabAction = UserAction.create("Previous tab",
                 "Select previous editor tab", KeyEvent.VK_P,
-                KeyStroke.getKeyStroke(KeyEvent.VK_LEFT, menuShortcutKeyMask | InputEvent.ALT_MASK ),
+                Util.getMenuShortcut(KeyEvent.VK_LEFT, InputEvent.ALT_DOWN_MASK ),
                 e -> editor.getEditorsPanel().selectNextTab(false));
 
         lineEndingActions = new UserAction[LineEnding.values().length];
@@ -777,7 +774,7 @@ public class StudioWindow extends JFrame implements WindowListener {
         }
 
         wordWrapAction = UserAction.create("Word wrap",  "Word wrap for all tabs",
-                KeyEvent.VK_W, KeyStroke.getKeyStroke(KeyEvent.VK_W, menuShortcutKeyMask | InputEvent.SHIFT_MASK),
+                KeyEvent.VK_W, Util.getMenuShortcut(KeyEvent.VK_W, InputEvent.SHIFT_DOWN_MASK),
                 e -> toggleWordWrap());
 
         splitEditorRight = UserAction.create("Split right",  "Split vertically",
@@ -856,8 +853,8 @@ public class StudioWindow extends JFrame implements WindowListener {
 
     private static volatile boolean quitting = false;
 
-    public static boolean quit() {
-        if (quitting) return true;
+    public static void quit() {
+        if (quitting) return;
         quitting = true;
 
         WorkspaceSaver.setEnabled(false);
@@ -882,19 +879,18 @@ public class StudioWindow extends JFrame implements WindowListener {
                     });
                     if (!complete) {
                         quitting = false;
-                        return false;
+                        return;
                     }
                 }
             }
         } finally {
-            if (allWindows.size() > 0) {
+            if (!allWindows.isEmpty()) {
                 activeWindow.toFront();
             }
             WorkspaceSaver.setEnabled(true);
         }
         WorkspaceSaver.save(getWorkspace());
         CONFIG.exit();
-        return true;
     }
 
     public void close() {
@@ -971,7 +967,7 @@ public class StudioWindow extends JFrame implements WindowListener {
         for (int i = 0; i < mru.size(); i++) {
             final String filename = mru.get(i);
 
-            JMenuItem item = new JMenuItem("" + (i + 1) + " " + filename);
+            JMenuItem item = new JMenuItem((i + 1) + " " + filename);
             if (i<mnems.length()) {
                 item.setMnemonic(mnems.charAt(i));
             }
@@ -1014,7 +1010,7 @@ public class StudioWindow extends JFrame implements WindowListener {
 
             for (int index = 0; index < count; index++) {
                 StudioWindow window = allWindows.get(index);
-                windowMenuActions[index] = UserAction.create("" + (index + 1) + " " + window.getCaption(),
+                windowMenuActions[index] = UserAction.create((index + 1) + " " + window.getCaption(),
                         window == this ? Util.CHECK_ICON : Util.BLANK_ICON, "", 0 , null,
                         e -> ensureDeiconified(window));
             }
@@ -1028,7 +1024,7 @@ public class StudioWindow extends JFrame implements WindowListener {
 
             for(int index = 0; index < charts.size(); index++) {
                 Chart chart = charts.get(index);
-                UserAction action = UserAction.create("" + (index + 1) + " " + chart.getChartTitle(),
+                UserAction action = UserAction.create((index + 1) + " " + chart.getChartTitle(),
                         Util.BLANK_ICON, "", 0, null,
                         e -> ensureDeiconified(chart.getFrame()) );
 
@@ -1127,12 +1123,12 @@ public class StudioWindow extends JFrame implements WindowListener {
         int state = f.getExtendedState();
         state = state & ~Frame.ICONIFIED;
         f.setExtendedState(state);
-        f.show();
+        f.setVisible(true);
     }
 
     private void selectConnectionString() {
         String connection = txtServer.getText().trim();
-        if (connection.length() == 0) return;
+        if (connection.isEmpty()) return;
         Server server = editor.getServer();
         if (server != Server.NO_SERVER && server.getConnectionString().equals(connection)) return;
 
@@ -1160,7 +1156,9 @@ public class StudioWindow extends JFrame implements WindowListener {
     }
 
     private void selectServerName() {
-        String selection = comboServer.getSelectedItem().toString();
+        Object selectedItem = comboServer.getSelectedItem();
+        if (selectedItem == null) return;
+        String selection = selectedItem.toString();
         if(! CONFIG.getServerConfig().getServerNames().contains(selection)) return;
 
         setServer(CONFIG.getServerConfig().getServer(selection));
@@ -1389,7 +1387,7 @@ public class StudioWindow extends JFrame implements WindowListener {
         // We need to have some editor initialized to prevent NPE
         editor = new EditorTab(this);
         initToolbar();
-        topPanel = new JPanel(new BorderLayout());
+        JPanel topPanel = new JPanel(new BorderLayout());
 
         rootEditorsPanel = new EditorsPanel(this, workspaceWindow);
 
@@ -1465,7 +1463,7 @@ public class StudioWindow extends JFrame implements WindowListener {
             }
         });
         tabbedPane.putClientProperty(StudioWindow.class, this);
-        tabbedPane.addDragListener( evt -> resultTabDragged(evt));
+        tabbedPane.addDragListener(this::resultTabDragged);
         tabbedPane.addChangeListener(e -> {
             ResultTab resultTab = getSelectedResultTab();
             if (resultTab != null) resultTab.refreshActionState();
@@ -1588,7 +1586,7 @@ public class StudioWindow extends JFrame implements WindowListener {
             allWindows.get(index).toFront();
         }
 
-        if (allWindows.size() == 0) {
+        if (allWindows.isEmpty()) {
             new StudioWindow(Server.NO_SERVER, null);
         }
 
@@ -1625,13 +1623,13 @@ public class StudioWindow extends JFrame implements WindowListener {
     }
 
     public void chart() {
-        JTable table = getSelectedTable();
-        if (table == null) {
+        KTableModel tableModel = getSelectedTableModel();
+        if (tableModel == null) {
             StudioOptionPane.showWarning(this, "Can only chart from table result", "Table expected");
             return;
         }
 
-        new Chart((KTableModel) table.getModel());
+        new Chart(tableModel);
     }
 
     public MainStatusBar getMainStatusBar() {
@@ -1693,27 +1691,27 @@ public class StudioWindow extends JFrame implements WindowListener {
                 text = text.substring(lrPos,pos).trim();
             }
         }
-        catch (BadLocationException e) {
+        catch (BadLocationException ignored) {
         }
 
         if (text != null) {
             text = text.trim();
 
-            if (text.length() == 0)
+            if (text.isEmpty())
                 text = null;
         }
 
         return text;
     }
 
-    private JTable getSelectedTable() {
+    private KTableModel getSelectedTableModel() {
         ResultTab tab = (ResultTab) resultsPane.getSelectedComponent();
         if (tab == null) return null;
 
         QGrid grid = tab.getGrid();
         if (grid == null) return null;
 
-        return grid.getTable();
+        return (KTableModel) grid.getTable().getModel();
     }
 
     private ResultTab getResultTab(int index) {

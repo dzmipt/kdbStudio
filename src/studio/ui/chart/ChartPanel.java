@@ -18,6 +18,7 @@ import javax.swing.*;
 import javax.swing.event.EventListenerList;
 import java.awt.*;
 import java.awt.event.ActionEvent;
+import java.awt.event.InputEvent;
 import java.awt.event.KeyEvent;
 import java.awt.event.MouseEvent;
 import java.awt.geom.Point2D;
@@ -32,10 +33,10 @@ public class ChartPanel extends studio.ui.chart.patched.ChartPanel {
     private final Action lineAction;
     private final Action copyAction;
     private final Action saveAction;
-    private final Action propertiesAction;
-    private final Action resetZoomAction;
-    private final Action zoomInAction;
-    private final Action zoomOutAction;
+//    private final Action propertiesAction;
+//    private final Action resetZoomAction;
+//    private final Action zoomInAction;
+//    private final Action zoomOutAction;
 
     private final EventListenerList listenerList = new EventListenerList();
     private boolean addingLine = false;
@@ -43,7 +44,6 @@ public class ChartPanel extends studio.ui.chart.patched.ChartPanel {
     private Line selectedLine = null;
 
     private static final int LINE_SELECTION_SENSITIVITY = 100;
-    private static final int DRAG_LINE_MASK = java.awt.Toolkit.getDefaultToolkit().getMenuShortcutKeyMask();
 
     public ChartPanel(JFreeChart chart) {
         super(chart);
@@ -62,21 +62,21 @@ public class ChartPanel extends studio.ui.chart.patched.ChartPanel {
         setMouseWheelEnabled(true);
         setMouseZoomable(true, true);
 
-        copyAction = addAccelerator(copyItem, KeyStroke.getKeyStroke(KeyEvent.VK_C, DRAG_LINE_MASK));
+        copyAction = addAccelerator(copyItem, Util.getMenuShortcut(KeyEvent.VK_C));
         copyAction.putValue(Action.SMALL_ICON, Util.COPY_ICON);
         copyAction.putValue(Action.SHORT_DESCRIPTION, "Copy the chart");
 
-        saveAction = addAccelerator(pngItem, KeyStroke.getKeyStroke(KeyEvent.VK_S, DRAG_LINE_MASK));
+        saveAction = addAccelerator(pngItem, Util.getMenuShortcut(KeyEvent.VK_S));
         saveAction.putValue(Action.SMALL_ICON, Util.DISKS_ICON);
         saveAction.putValue(Action.SHORT_DESCRIPTION, "Save the chart");
 
-        propertiesAction = addAccelerator(propertiesItem, KeyStroke.getKeyStroke(KeyEvent.VK_ENTER, KeyEvent.ALT_MASK));
-        zoomInAction = addAccelerator(zoomInBothMenuItem, KeyStroke.getKeyStroke(KeyEvent.VK_PLUS, DRAG_LINE_MASK),
-                                                          KeyStroke.getKeyStroke(KeyEvent.VK_EQUALS, DRAG_LINE_MASK),
-                                                          KeyStroke.getKeyStroke(KeyEvent.VK_ADD, DRAG_LINE_MASK));
-        zoomOutAction = addAccelerator(zoomOutBothMenuItem, KeyStroke.getKeyStroke(KeyEvent.VK_MINUS, DRAG_LINE_MASK),
-                                                            KeyStroke.getKeyStroke(KeyEvent.VK_SUBTRACT, DRAG_LINE_MASK));
-        resetZoomAction = addAccelerator(zoomResetBothMenuItem, KeyStroke.getKeyStroke(KeyEvent.VK_ESCAPE, 0));
+        /*propertiesAction = */ addAccelerator(propertiesItem, KeyStroke.getKeyStroke(KeyEvent.VK_ENTER, KeyEvent.ALT_DOWN_MASK));
+        /*zoomInAction = */ addAccelerator(zoomInBothMenuItem, Util.getMenuShortcut(KeyEvent.VK_PLUS),
+                                                          Util.getMenuShortcut(KeyEvent.VK_EQUALS),
+                                                          Util.getMenuShortcut(KeyEvent.VK_ADD));
+        /*zoomOutAction = */ addAccelerator(zoomOutBothMenuItem, Util.getMenuShortcut(KeyEvent.VK_MINUS),
+                                                            Util.getMenuShortcut(KeyEvent.VK_SUBTRACT));
+        /*resetZoomAction = */ addAccelerator(zoomResetBothMenuItem, KeyStroke.getKeyStroke(KeyEvent.VK_ESCAPE, 0));
 
         lineAction = UserAction.create("Add line", Util.LINE_ICON, "Add a line", KeyEvent.VK_L,null,
                                         e -> addLineAction() );
@@ -190,6 +190,17 @@ public class ChartPanel extends studio.ui.chart.patched.ChartPanel {
         yCrosshair.setVisible(true);
     }
 
+    @SuppressWarnings("deprecation")
+    private final static int CTRL_MASK = InputEvent.CTRL_MASK;
+    @SuppressWarnings("deprecation")
+    private final static int ALT_MASK = InputEvent.ALT_MASK;
+
+    private int getPanMask() {
+        if (this.panMask == CTRL_MASK) return InputEvent.CTRL_DOWN_MASK;
+        if (this.panMask == ALT_MASK) return InputEvent.ALT_DOWN_MASK;
+        return this.panMask;
+    }
+
     @Override
     public void mousePressed(MouseEvent e) {
         JFreeChart chart = getChart();
@@ -203,8 +214,7 @@ public class ChartPanel extends studio.ui.chart.patched.ChartPanel {
             return;
         }
         Plot plot = chart.getPlot();
-        int mods = e.getModifiers();
-        if ((mods & this.panMask) == this.panMask) {
+        if ((e.getModifiersEx() & getPanMask()) != 0) {
             // can we pan this plot?
             if (plot instanceof Pannable) {
                 Pannable pannable = (Pannable) plot;
@@ -351,7 +361,7 @@ public class ChartPanel extends studio.ui.chart.patched.ChartPanel {
         if (selectedLine == null) return false;
 
 
-        if ((event.getModifiers() & DRAG_LINE_MASK) == DRAG_LINE_MASK) {
+        if ((event.getModifiersEx() & Util.menuShortcutKeyMask) == Util.menuShortcutKeyMask) {
             selectedLine.dragTo(event.getPoint());
         } else {
             selectedLine.moveTo(toPlot(event.getPoint()));
@@ -367,6 +377,7 @@ public class ChartPanel extends studio.ui.chart.patched.ChartPanel {
         int newSelectedIndex = -1;
         double shortestDist = Double.POSITIVE_INFINITY;
 
+        @SuppressWarnings("rawtypes")
         List list = plot.getAnnotations();
         for(int index = 0; index<list.size(); index++) {
             Line line = (Line) list.get(index);

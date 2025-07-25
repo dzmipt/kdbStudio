@@ -19,13 +19,11 @@ import java.util.regex.PatternSyntaxException;
 //@TODO: Should it be really a JPanel? It looks it should be just a JTabel. And anyway any additional components could be added to TabPanel
 public class QGrid extends JPanel implements MouseWheelListener, SearchPanelListener {
     private StudioWindow studioWindow;
-    private final ResultTab resultTab;
     private final KTableModel model;
     private final JTable table;
     private final WidthAdjuster widthAdjuster;
     private final TableRowHeader tableRowHeader;
     private final TableHeaderRenderer tableHeaderRenderer;
-    private final JScrollPane scrollPane;
     private final CellRenderer cellRenderer;
 
     private final TableMarkers markers;
@@ -45,10 +43,7 @@ public class QGrid extends JPanel implements MouseWheelListener, SearchPanelList
     }
 
     private final JPopupMenu popupMenu = new JPopupMenu();
-    private final UserAction copyExcelFormatAction;
-    private final UserAction copyHtmlFormatAction;
     private final TableUserAction inspectCellAction;
-    private final TableUserAction inspectLineAction;
 
     private long doubleClickTimeout;
 
@@ -62,7 +57,6 @@ public class QGrid extends JPanel implements MouseWheelListener, SearchPanelList
 
     public QGrid(StudioWindow studioWindow, ResultTab resultTab, KTableModel model) {
         this.studioWindow = studioWindow;
-        this.resultTab = resultTab;
         this.model = model;
 
         InputMap inputMap = getInputMap(JComponent.WHEN_ANCESTOR_OF_FOCUSED_COMPONENT);
@@ -76,8 +70,8 @@ public class QGrid extends JPanel implements MouseWheelListener, SearchPanelList
             }
         };
 
-        KeyStroke keyStroke = KeyStroke.getKeyStroke(KeyEvent.VK_F, StudioWindow.menuShortcutKeyMask);
-        KeyStroke keyStroke1 = KeyStroke.getKeyStroke(KeyEvent.VK_F, StudioWindow.menuShortcutKeyMask | InputEvent.SHIFT_MASK);
+        KeyStroke keyStroke = Util.getMenuShortcut(KeyEvent.VK_F);
+        KeyStroke keyStroke1 = Util.getMenuShortcut(KeyEvent.VK_F, InputEvent.SHIFT_DOWN_MASK);
 
         inputMap.put(keyStroke, "searchPanel");
         inputMap.put(keyStroke1, "searchPanel");
@@ -129,7 +123,7 @@ public class QGrid extends JPanel implements MouseWheelListener, SearchPanelList
         table.setAutoResizeMode(JTable.AUTO_RESIZE_OFF);
         table.setShowVerticalLines(true);
         table.getTableHeader().setReorderingAllowed(true);
-        scrollPane = new JScrollPane(table);
+        JScrollPane scrollPane = new JScrollPane(table);
         scrollPane.addMouseWheelListener(this);
 
         tableRowHeader = new TableRowHeader(table);
@@ -188,18 +182,18 @@ public class QGrid extends JPanel implements MouseWheelListener, SearchPanelList
         setLayout(new BorderLayout());
         add(scrollPane, BorderLayout.CENTER);
 
-        copyExcelFormatAction = UserAction.create("Copy selection (Excel format)",
-                Util.COPY_ICON,"Copy the selected cells to the clipboard using Excel format",
-                KeyEvent.VK_E,null,
+        UserAction copyExcelFormatAction = UserAction.create("Copy selection (Excel format)",
+                Util.COPY_ICON, "Copy the selected cells to the clipboard using Excel format",
+                KeyEvent.VK_E, null,
                 new CopyTableSelectionAction(CopyTableSelectionAction.Format.Excel, table));
 
-        copyHtmlFormatAction = UserAction.create("Copy selection (HTML)",
+        UserAction copyHtmlFormatAction = UserAction.create("Copy selection (HTML)",
                 Util.COPY_ICON, "Copy the selected cells to the clipboard using HTML",
                 KeyEvent.VK_H, null,
                 new CopyTableSelectionAction(CopyTableSelectionAction.Format.Html, table));
 
         inspectCellAction = new TableUserAction.InspectCellAction(resultTab, table);
-        inspectLineAction = new TableUserAction.InspectLineAction(resultTab, table);
+        TableUserAction inspectLineAction = new TableUserAction.InspectLineAction(resultTab, table);
 
         popupMenu.add(inspectCellAction);
         popupMenu.add(inspectLineAction);
@@ -219,7 +213,7 @@ public class QGrid extends JPanel implements MouseWheelListener, SearchPanelList
                 int row = table.rowAtPoint(e.getPoint());
                 int col = table.columnAtPoint(e.getPoint());
 
-                if ((e.getModifiers() & InputEvent.ALT_MASK) == InputEvent.ALT_MASK ) doubleClick(row, col);
+                if ((e.getModifiersEx() & InputEvent.ALT_DOWN_MASK) == InputEvent.ALT_DOWN_MASK ) doubleClick(row, col);
                 else if (row == lastRow && col == lastCol &&
                         System.currentTimeMillis() - lastTimestamp < doubleClickTimeout) {
                     doubleClick(row, col);
@@ -309,7 +303,7 @@ public class QGrid extends JPanel implements MouseWheelListener, SearchPanelList
 
     @Override
     public void mouseWheelMoved(MouseWheelEvent e) {
-        if ((e.getModifiers() & StudioWindow.menuShortcutKeyMask) == 0) return;
+        if ((e.getModifiersEx() & Util.menuShortcutKeyMask) == 0) return;
 
         Font font = Config.getInstance().getFont(Config.FONT_TABLE);
         int newFontSize = font.getSize() + e.getWheelRotation();

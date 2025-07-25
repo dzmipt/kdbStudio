@@ -33,8 +33,7 @@ public class ServerList extends EscapeDialog implements NodeSelectedListener {
     private static final String JTABBED_TREE_LABEL = "Servers - tree";
     private static final String JTABBED_LIST_LABEL = "Servers - list";
 
-    private static final int menuShortcutKeyMask = java.awt.Toolkit.getDefaultToolkit().getMenuShortcutKeyMask();
-    private final KeyStroke TREE_VIEW_KEYSTROKE = KeyStroke.getKeyStroke(KeyEvent.VK_T, menuShortcutKeyMask);
+    private final KeyStroke TREE_VIEW_KEYSTROKE = Util.getMenuShortcut(KeyEvent.VK_T);
 
     public ServerList(Window parent, Rectangle bounds) {
         super(parent, "Server List");
@@ -160,7 +159,7 @@ public class ServerList extends EscapeDialog implements NodeSelectedListener {
         toolbar.add(filter);
         filter.requestFocus();
 
-        serverHistoryList = new JList();
+        serverHistoryList = new JList<>();
         serverHistoryList.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
         serverHistoryList.addMouseListener(new MouseAdapter() {
             @Override

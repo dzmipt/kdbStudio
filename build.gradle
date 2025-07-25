@@ -9,12 +9,12 @@ apply plugin: 'maven-publish'
 apply plugin: 'signing'
 
 group = "com.github.dzmipt"
-archivesBaseName = "kdbStudio"
+//archivesBaseName = "kdbStudio"
 version = "dz5.0"
 
 compileJava {
-    sourceCompatibility = JavaVersion.VERSION_1_9
-    targetCompatibility = JavaVersion.VERSION_1_9
+    sourceCompatibility = JavaVersion.VERSION_11
+    targetCompatibility = JavaVersion.VERSION_11
 }
 
 repositories {
@@ -73,7 +73,7 @@ dependencies {
     // It will require review during the jfreechart upgrade.
     implementation group: 'org.jfree', name: 'jfreechart', version: '1.5.3'
     implementation group: 'org.apache.poi', name: 'poi', version: '5.4.0'
-    implementation group: 'org.apache.poi', name: 'poi-ooxml', version: '5.4.0'
+    implementation group: 'org.apache.poi', name: 'poi-ooxml', version: '5.4.1'
     implementation group: 'org.drjekyll', name: 'fontchooser', version: '2.4'
     implementation group: 'net.java.dev.jna', name: 'jna', version: '5.10.0'
     implementation group: 'org.drjekyll', name: 'fontchooser', version: '2.5.2'
@@ -91,7 +91,8 @@ test {
     useJUnitPlatform()
 }
 
-task integrationTest(type: Test, dependsOn: build) {
+tasks.register('integrationTest', Test) {
+    dependsOn build
     description = 'Runs integration tests.'
     group = 'verification'
 
@@ -138,37 +139,37 @@ def getGitRevNumber = { ->
     return ", commit number: $rev, hash: $hash"
 }
 
-task getBuildHash {
+tasks.register('getBuildHash') {
     doLast {
         file("resources/build.txt").text = buildTime() + getGitRevNumber()
     }
 }
 
-task convertNotes (type: JavaExec) {
+tasks.register('convertNotes', JavaExec) {
     mainClass = 'com.github.rjeschke.txtmark.Run'
     classpath = configurations.txtmark
     args 'notes.md'
-    standardOutput new FileOutputStream(new File(projectDir,"resources/notes.html"))
+    standardOutput new FileOutputStream(new File(projectDir, "resources/notes.html"))
 }
 
-task copyLog4JPluginDat(type: Copy) {
+tasks.register('copyLog4JPluginDat', Copy) {
     dependsOn 'compileJava'
     from 'build/classes/java/main/META-INF'
     into 'resources/META-INF'
 }
 
-task delBuildLog4JPluginDat(type: Delete) {
+tasks.register('delBuildLog4JPluginDat', Delete) {
     dependsOn 'copyLog4JPluginDat'
     delete 'build/classes/java/main/META-INF'
 }
 
-task moveBuildLog4JPluginDat() {
+tasks.register('moveBuildLog4JPluginDat') {
     dependsOn 'copyLog4JPluginDat', 'delBuildLog4JPluginDat'
 }
 
 processResources.dependsOn('getBuildHash', 'convertNotes', 'moveBuildLog4JPluginDat')
 
-task sourcesJar(type: Jar) {
+tasks.register('sourcesJar', Jar) {
     archiveClassifier.set("sources")
     duplicatesStrategy = 'warn'
     from sourceSets.main.allSource
@@ -180,7 +181,7 @@ javadoc {
 
 javadoc.options.addStringOption('Xdoclint:none', '-quiet')
 
-task javadocJar(type: Jar) {
+tasks.register('javadocJar', Jar) {
     archiveClassifier.set("javadoc")
     from javadoc
 }
