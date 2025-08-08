@@ -230,35 +230,40 @@ publishing {
         }
     }
     repositories {
-        if(project.version.endsWith('-SNAPSHOT')) {
-            maven {
-                url "https://oss.sonatype.org/content/repositories/snapshots/"
-                mavenContent {
-                    snapshotsOnly()
-                }
-                credentials {
-                    username pubUsername
-                    password pubPassword
-                }
-                authentication {
-                    basic(BasicAuthentication)
-                }
+        maven {
+            url "https://ossrh-staging-api.central.sonatype.com/service/local/staging/deploy/maven2/"
+            mavenContent {
+                releasesOnly()
             }
-        } else {
-            maven {
-                url "https://s01.oss.sonatype.org/content/repositories/releases/"
-                mavenContent {
-                    releasesOnly()
-                }
-                credentials {
-                    username pubUsername
-                    password pubPassword
-                }
-                authentication {
-                    basic(BasicAuthentication)
-                }
+            credentials {
+                username pubUsername
+                password pubPassword
+            }
+            authentication {
+                basic(BasicAuthentication)
             }
         }
+    }
+}
+
+tasks.register('postPublish', Exec) {
+    def url = "https://ossrh-staging-api.central.sonatype.com/manual/upload/defaultRepository/com.github.dzmipt"
+    // Encode user:password as Base64
+    def token = Base64.encoder.encodeToString("${pubUsername}:${pubPassword}".bytes)
+
+    // Execute curl command
+    commandLine 'curl',
+            '-X', 'POST',
+            url,
+            '-H', 'accept: */*',
+            '-d', '',
+            '--header', "Authorization: Bearer ${token}"
+}
+
+// Run postPublish only when publish succeeds
+tasks.named('publish') {
+    doLast {
+        tasks.named('postPublish').get().exec()
     }
 }
 
