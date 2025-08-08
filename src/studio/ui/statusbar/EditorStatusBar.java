@@ -117,7 +117,7 @@ public class EditorStatusBar extends StatusBar {
                 () -> editorStatusBarCallback.connectTLS(true)
         );
         nonTlsConnectAction = UserAction.create("Connect insecure",
-                Util.UNLOCK_ICON,
+                Util.BLANK_ICON,
                 () -> editorStatusBarCallback.connectTLS(false)
         );
 
