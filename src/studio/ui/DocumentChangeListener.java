@@ -5,7 +5,7 @@ import javax.swing.event.DocumentListener;
 
 public interface DocumentChangeListener extends DocumentListener {
 
-    public void documentChanged(DocumentEvent e);
+    void documentChanged(DocumentEvent e);
 
     @Override
     default void insertUpdate(DocumentEvent e) {
