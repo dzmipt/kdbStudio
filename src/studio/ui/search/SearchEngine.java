@@ -33,6 +33,7 @@ public class SearchEngine {
             if (!matcher.find(pos)) return SearchResult.NOT_FOUND;
             int start = matcher.start();
             int end = matcher.end();
+            if (pos == end) return SearchResult.NOT_FOUND;
 
             if (!wholeWord) {
                 return new SearchResult(matcher);
