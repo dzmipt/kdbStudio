@@ -1,3 +1,5 @@
+* Fix unexpected focus change and incorrect server drop down selection
+
 `dz6.0` 2025.08.08
 -----
 * UI for TLS connections
