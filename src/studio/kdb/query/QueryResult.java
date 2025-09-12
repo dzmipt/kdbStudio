@@ -1,4 +1,4 @@
-package studio.ui.action;
+package studio.kdb.query;
 
 import kx.KMessage;
 import studio.kdb.K;
@@ -6,26 +6,28 @@ import studio.kdb.Server;
 
 public class QueryResult {
 
-    private final String query;
+    private final QueryTask queryTask;
     private final Server server;
-    private final boolean chartAfter;
     private KMessage result = null;
     private Throwable error = null;
     private boolean complete = false;
 
     public QueryResult(K.KBase kObject) {
-        this(null, "", false);
+        this(QueryTask.queryResult(null, kObject), null);
         setResult(new KMessage(kObject));
     }
 
-    public QueryResult(Server server, String query, boolean chartAfter) {
+    public QueryResult(QueryTask queryTask, Server server) {
+        this.queryTask = queryTask;
         this.server = server;
-        this.query = query;
-        this.chartAfter = chartAfter;
     }
 
     public boolean isChartAfter() {
-        return chartAfter;
+        return isComplete() && queryTask.isChartAfter();
+    }
+
+    public QueryExecutedListener getQueryExecutedListener() {
+        return queryTask.getQueryExecutedListener();
     }
 
     public void setResult(KMessage result) {
@@ -51,7 +53,7 @@ public class QueryResult {
     }
 
     public String getQuery() {
-        return query;
+        return queryTask.getQueryText();
     }
 
     public Server getServer() {

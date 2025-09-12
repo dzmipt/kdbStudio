@@ -13,7 +13,8 @@ public class ConvertTabsToSpacesAction extends EditorPaneAction {
     }
 
     @Override
-    protected void actionPerformed(ActionEvent e, EditorPane pane) {
+    protected boolean actionPerformed(ActionEvent e, EditorPane pane) {
         pane.getTextArea().convertTabsToSpaces();
+        return true;
     }
 }

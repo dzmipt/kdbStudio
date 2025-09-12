@@ -1,4 +1,4 @@
-package studio.ui.action;
+package studio.kdb.query;
 
 import kx.K4Exception;
 import kx.KMessage;
@@ -12,9 +12,14 @@ import java.io.IOException;
 public abstract class QueryTask {
 
     protected final StudioWindow studioWindow;
+    private QueryExecutedListener queryExecutedListener = null;
 
     protected QueryTask(StudioWindow studioWindow) {
         this.studioWindow = studioWindow;
+    }
+
+    public static QueryTask queryResult(StudioWindow studioWindow, K.KBase result) {
+        return new QueryResultTask(studioWindow, result);
     }
 
     public static QueryTask query(StudioWindow studioWindow, String queryText) {
@@ -45,7 +50,35 @@ public abstract class QueryTask {
         return false;
     }
 
-    private static class Query extends QueryTask {
+    public QueryExecutedListener getQueryExecutedListener() {
+        return queryExecutedListener;
+    }
+
+    public void setQueryExecutedListener(QueryExecutedListener queryExecutedListener) {
+        this.queryExecutedListener = queryExecutedListener;
+    }
+
+    private static class QueryResultTask extends QueryTask {
+
+        private final KMessage kMessage;
+
+        QueryResultTask(StudioWindow studioWindow, K.KBase result) {
+            super(studioWindow);
+            kMessage = new KMessage(result);
+        }
+
+        @Override
+        public String getQueryText() {
+            return "";
+        }
+
+        @Override
+        public KMessage execute(Session session, ProgressCallback progress) throws IOException, K4Exception, InterruptedException {
+            return kMessage;
+        }
+    }
+
+    static class Query extends QueryTask {
         private final String query;
         private final boolean chartAfter;
 

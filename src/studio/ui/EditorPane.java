@@ -8,6 +8,7 @@ import org.fife.ui.rtextarea.SearchResult;
 import studio.kdb.Config;
 import studio.ui.rstextarea.RSTextAreaFactory;
 import studio.ui.rstextarea.StudioRSyntaxTextArea;
+import studio.ui.rstextarea.autocompletion.AutoCompletionWindow;
 import studio.ui.search.SearchAction;
 import studio.ui.search.SearchPanel;
 import studio.ui.search.SearchPanelListener;
@@ -91,9 +92,11 @@ public class EditorPane extends JPanel implements MouseWheelListener, SearchPane
         StudioWindow.refreshResultSettings();
     }
 
-    public void hideSearchPanel() {
+    public boolean hideSearchPanel() {
+        boolean wasVisible = searchPanel.isVisible();
         searchPanel.setVisible(false);
         textArea.setHighlighter(null); // workaround to clear all marks
+        return wasVisible;
     }
 
     public void showSearchPanel(boolean showReplace) {
@@ -104,6 +107,21 @@ public class EditorPane extends JPanel implements MouseWheelListener, SearchPane
     public StudioRSyntaxTextArea getTextArea() {
         return textArea;
     }
+
+    public AutoCompletionWindow getAutoCompletionWindow() {
+        return (AutoCompletionWindow) textArea.getClientProperty(AutoCompletionWindow.class);
+    }
+
+    public AutoCompletionWindow newAutoCompletionWindow() {
+        AutoCompletionWindow autoCompletionWindow = new AutoCompletionWindow(textArea);
+        textArea.putClientProperty(AutoCompletionWindow.class, autoCompletionWindow);
+        return autoCompletionWindow;
+    }
+
+    public void removeAutoCompletionWindow() {
+        textArea.putClientProperty(AutoCompletionWindow.class, null);
+    }
+
 
     @Override
     public void search(SearchContext context, SearchAction action) {

@@ -13,7 +13,7 @@ public class HideSearchPanelAction extends EditorPaneAction {
     }
 
     @Override
-    protected void actionPerformed(ActionEvent e, EditorPane pane) {
-        pane.hideSearchPanel();
+    protected boolean actionPerformed(ActionEvent e, EditorPane pane) {
+        return pane.hideSearchPanel();
     }
 }

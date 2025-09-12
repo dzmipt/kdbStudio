@@ -3,6 +3,7 @@ package studio.ui.action;
 import kx.KConnectionStats;
 import studio.kdb.K;
 import studio.kdb.Session;
+import studio.kdb.query.QueryResult;
 import studio.ui.StudioWindow;
 
 import java.util.HashMap;

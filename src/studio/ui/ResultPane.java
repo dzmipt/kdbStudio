@@ -4,7 +4,7 @@ import kx.K4Exception;
 import studio.kdb.K;
 import studio.kdb.KTableModel;
 import studio.kdb.ListModel;
-import studio.ui.action.QueryResult;
+import studio.kdb.query.QueryResult;
 
 import javax.swing.*;
 import java.awt.*;

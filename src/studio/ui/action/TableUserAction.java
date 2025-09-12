@@ -1,6 +1,7 @@
 package studio.ui.action;
 
 import studio.kdb.K;
+import studio.kdb.query.QueryResult;
 import studio.ui.ResultTab;
 import studio.ui.UserAction;
 import studio.ui.Util;

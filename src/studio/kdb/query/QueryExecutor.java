@@ -1,4 +1,4 @@
-package studio.ui.action;
+package studio.kdb.query;
 
 import kx.K4Exception;
 import kx.KConnection;
@@ -123,7 +123,7 @@ public class QueryExecutor implements ProgressCallback {
 
         @Override
         protected QueryResult doInBackground() {
-            QueryResult result = new QueryResult(server, queryTask.getQueryText(), queryTask.isChartAfter());
+            QueryResult result = new QueryResult(queryTask, server);
             queryLog.info("#{}: query {}({})\n{}",queryIndex, server.getFullName(), server.getConnectionString(), queryTask.getQueryText());
             try {
                 session = getSession();
@@ -164,7 +164,7 @@ public class QueryExecutor implements ProgressCallback {
             try {
                 QueryResult result;
                 if (isCancelled()) {
-                    result = new QueryResult(server, queryTask.getQueryText(), false);
+                    result = new QueryResult(queryTask, server);
                     queryLog.info("#{}: Cancelled", queryIndex);
                 } else {
                     result = get();

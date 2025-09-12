@@ -5,8 +5,8 @@ import org.apache.logging.log4j.Logger;
 import studio.kdb.Config;
 import studio.kdb.K;
 import studio.kdb.KFormatContext;
-import studio.ui.action.QueryResult;
-import studio.ui.action.QueryTask;
+import studio.kdb.query.QueryResult;
+import studio.kdb.query.QueryTask;
 
 import javax.swing.*;
 import javax.swing.border.EtchedBorder;
@@ -74,15 +74,19 @@ public class ResultTab extends JPanel {
         refreshFont();
         updateFormatting(null);
         refresh();
+        resultPane.requestFocus();
     }
 
     public void navigateCard(boolean next) {
+        Component focusOwner = KeyboardFocusManager.getCurrentKeyboardFocusManager().getFocusOwner();
+        boolean hasFocus = focusOwner != null && SwingUtilities.isDescendingFrom(focusOwner, this);
         if (next) {
             cardLayout.next();
         } else {
             cardLayout.previous();
         }
         refresh();
+        if (hasFocus) requestFocus();
     }
 
     public boolean hasPreviousResult() {

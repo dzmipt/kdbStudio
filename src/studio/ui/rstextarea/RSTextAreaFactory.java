@@ -66,6 +66,9 @@ public class RSTextAreaFactory {
 
         actions.addAll(insertPairedActions);
 
+        actions.add(new ShowAutoCompletionAction());
+        actions.add(new HideAutoCompletionAction());
+
         actions.add(new CopyCutAsStyledTextAction(false));
         actions.add(new CopyCutAsStyledTextAction(true));
 
@@ -106,7 +109,10 @@ public class RSTextAreaFactory {
 
         inputMap.put(KeyStroke.getKeyStroke(KeyEvent.VK_F,      defaultModifier), FindReplaceAction.findAction);
         inputMap.put(KeyStroke.getKeyStroke(KeyEvent.VK_R,      defaultModifier), FindReplaceAction.replaceAction);
-        inputMap.put(KeyStroke.getKeyStroke(KeyEvent.VK_ESCAPE,      0), HideSearchPanelAction.action);
+        inputMap.put(KeyStroke.getKeyStroke(KeyEvent.VK_ESCAPE,      0),
+                        MultiAction.newAction(actionMap, HideAutoCompletionAction.action, HideSearchPanelAction.action)  );
+        inputMap.put(KeyStroke.getKeyStroke(KeyEvent.VK_SPACE, InputEvent.CTRL_DOWN_MASK), ShowAutoCompletionAction.action);
+
         inputMap.put(KeyStroke.getKeyStroke(KeyEvent.VK_SLASH, defaultModifier), CommentAction.action);
 
         for (KeyStroke ks: inputMap.allKeys() ) {
@@ -150,6 +156,8 @@ public class RSTextAreaFactory {
         textArea.setTabSize(Config.getInstance().getInt(Config.EDITOR_TAB_SIZE));
 
         textArea.setInsertPairedCharacters(Config.getInstance().getBoolean(Config.RSTA_INSERT_PAIRED_CHAR));
+
+//        textArea.putClientProperty(AutoCompletionWindow.class, new AutoCompletionWindow(textArea));
         return textArea;
     }
 

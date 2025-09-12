@@ -8,9 +8,10 @@ import org.fife.ui.rsyntaxtextarea.RSyntaxTextArea;
 import studio.kdb.Config;
 import studio.kdb.Server;
 import studio.kdb.Session;
-import studio.ui.action.QueryExecutor;
-import studio.ui.action.QueryResult;
-import studio.ui.action.QueryTask;
+import studio.kdb.query.QueryExecutedListener;
+import studio.kdb.query.QueryExecutor;
+import studio.kdb.query.QueryResult;
+import studio.kdb.query.QueryTask;
 import studio.ui.rstextarea.StudioRSyntaxTextArea;
 import studio.ui.statusbar.EditorStatusBarCallback;
 import studio.utils.*;
@@ -151,7 +152,10 @@ public class EditorTab implements FileWatcher.Listener, EditorStatusBarCallback 
         }
 
         try {
-            if (queryResult.hasResultObject()) {
+            QueryExecutedListener listener = queryResult.getQueryExecutedListener();
+            if (listener != null) {
+                listener.onQueryExecuted(queryResult);
+            } else if (queryResult.hasResultObject()) {
                 studioWindow.addResultTab(queryResult, "Executed at server: " + queryResult.getServer().getDescription(true) );
                 if (queryResult.isChartAfter()) {
                     studioWindow.chart();

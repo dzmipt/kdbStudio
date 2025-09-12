@@ -17,8 +17,9 @@ public class FindReplaceAction extends EditorPaneAction {
     }
 
     @Override
-    protected void actionPerformed(ActionEvent e, EditorPane pane) {
-        if (replace && !pane.getTextArea().isEditable()) return;
+    protected boolean actionPerformed(ActionEvent e, EditorPane pane) {
+        if (replace && !pane.getTextArea().isEditable()) return false;
         pane.showSearchPanel(replace);
+        return true;
     }
 }
