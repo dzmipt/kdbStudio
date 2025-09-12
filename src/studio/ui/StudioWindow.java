@@ -74,7 +74,7 @@ public class StudioWindow extends JFrame implements WindowListener {
 
     private boolean loading = true;
 
-    private JComboBox<String> comboServer;
+    private StringComboBox comboServer;
     private JTextField txtServer;
     private String lastQuery = null;
     private final Toolbar toolbar;
@@ -1145,6 +1145,7 @@ public class StudioWindow extends JFrame implements WindowListener {
     }
 
     private void showServerList(boolean selectHistory) {
+        log.info("Show server list from {}", getTitle());
         Server selectedServer = serverList.showServerTree(editor.getServer(), serverHistory, selectHistory);
 
         if (selectedServer == null || selectedServer.equals(editor.getServer())) return;
@@ -1156,9 +1157,8 @@ public class StudioWindow extends JFrame implements WindowListener {
     }
 
     private void selectServerName() {
-        Object selectedItem = comboServer.getSelectedItem();
-        if (selectedItem == null) return;
-        String selection = selectedItem.toString();
+        String selection = comboServer.getSelectedItem();
+        if (selection == null) return;
         if(! CONFIG.getServerConfig().getServerNames().contains(selection)) return;
 
         setServer(CONFIG.getServerConfig().getServer(selection));
@@ -1198,16 +1198,17 @@ public class StudioWindow extends JFrame implements WindowListener {
             newNames.addAll(names);
             names = newNames;
         }
-        comboServer.setModel(new DefaultComboBoxModel<>(names.toArray(new String[0])));
 
-        comboServer.setSelectedItem(name);
+        comboServer.setItems(names);
+
+        comboServer.getModel().setSelectedItem(name);
     }
 
 
     private void refreshServer() {
         Server server = editor.getServer();
         String name = server == Server.NO_SERVER ? "" : server.getFullName();
-        comboServer.setSelectedItem(name);
+            comboServer.setSelectedItem(name);
 
         refreshConnectionText();
         refreshActionState();
@@ -1215,7 +1216,7 @@ public class StudioWindow extends JFrame implements WindowListener {
 
 
     private void initToolbar() {
-        comboServer = new JComboBox<>();
+        comboServer = new StringComboBox();
         comboServer.setVisible(CONFIG.getBoolean(Config.SHOW_SERVER_COMBOBOX));
         comboServer.setName("serverDropDown");
         comboServer.setToolTipText("Select the server context");
