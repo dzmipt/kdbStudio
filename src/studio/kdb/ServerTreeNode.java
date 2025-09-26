@@ -1,14 +1,18 @@
 package studio.kdb;
 
 import javax.swing.tree.DefaultMutableTreeNode;
+import javax.swing.tree.MutableTreeNode;
 import javax.swing.tree.TreeNode;
 import java.util.Collections;
 import java.util.List;
+import java.util.Objects;
 import java.util.Vector;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 public class ServerTreeNode extends DefaultMutableTreeNode {
+
+    public final static ServerTreeNode ROOT = new ServerTreeNode();
 
     public ServerTreeNode() {
         this("");
@@ -76,6 +80,18 @@ public class ServerTreeNode extends DefaultMutableTreeNode {
         ServerTreeNode serverTreeNode = new ServerTreeNode(folder);
         insert(serverTreeNode, index);
         return serverTreeNode;
+    }
+
+    @Override
+    public void insert(MutableTreeNode newChild, int childIndex) {
+        ServerTreeNode child = (ServerTreeNode) newChild;
+        if (! child.isFolder()) {
+            Server server = child.getServer();
+            if (! server.getFolderPath().equals(this.getFolderPath())) {
+                newChild = new ServerTreeNode(server.newParent(this));
+            }
+        }
+        super.insert(newChild, childIndex);
     }
 
     // Remove direct child
@@ -219,5 +235,26 @@ public class ServerTreeNode extends DefaultMutableTreeNode {
 
     public String fullPath() {
         return Stream.of(getPath()).skip(1).map(n->n.toString()).collect(Collectors.joining("/"));
+    }
+
+    @Override
+    public int hashCode() {
+        return userObject.hashCode();
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (! (obj instanceof ServerTreeNode)) return false;
+        ServerTreeNode other = (ServerTreeNode) obj;
+
+        if (isFolder() != other.isFolder()) return false;
+        if (! userObject.equals(other.userObject)) return false;
+        if (Objects.equals(getParent(), other.getParent())) return false;
+
+        if (isFolder()) {
+            if (! children.equals(other.children)) return false;
+        }
+
+        return true;
     }
 }

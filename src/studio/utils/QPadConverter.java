@@ -77,7 +77,7 @@ public class QPadConverter {
                         .map(folder -> folder.length()==0 ? "[empty]" : folder )
                         .map(ServerTreeNode::new).toArray(TreeNode[]:: new);
         ServerTreeNode folder = root.findPath(folderNodes, true);
-        server = server.newFolder(folder);
+        server = server.newParent(folder);
         folder.add(server);
         return server;
     }

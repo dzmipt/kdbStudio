@@ -11,9 +11,11 @@ import studio.utils.QConnection;
 import java.awt.*;
 import java.io.File;
 import java.io.IOException;
+import java.net.URISyntaxException;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.*;
 
 public class ServerConfigTest {
 
@@ -66,7 +68,7 @@ public class ServerConfigTest {
     public void testComplexServer() throws IOException {
         Server s2 = server.newName("name2");
         Server s3 = s2.newAuthMethod("auth2");
-        Server s4 = s3.newFolder(new ServerTreeNode("someFolder"));
+        Server s4 = s3.newParent(new ServerTreeNode("someFolder"));
 
         ServerTreeNode root = new ServerTreeNode();
         root.add(server);
@@ -100,6 +102,37 @@ public class ServerConfigTest {
         aServer = config.getServer(conn, "auth");
         assertEquals(new Color(1,2,3), aServer.getBackgroundColor());
         assertEquals("name", aServer.getName());
+
+    }
+
+    @Test
+    public void testLoad() throws URISyntaxException {
+        Path path = Paths.get(ServerConfigTest.class.getClassLoader().getResource("servers.json").toURI());
+        ServerConfig config = new ServerConfig(new FileConfig(path));
+        ServerTreeNode root = config.getServerTree();
+
+        assertEquals(5, root.getChildCount());
+        assertFalse(root.getChild(0).isFolder());
+        assertFalse(root.getChild(1).isFolder());
+        assertFalse(root.getChild(2).isFolder());
+        assertTrue(root.getChild(3).isFolder());
+        assertTrue(root.getChild(3).getChild(0).isFolder());
+        Server server1 = root.getChild(3).getChild(0).getChild(0).getServer();
+
+        assertTrue(root.getChild(4).isFolder());
+        assertTrue(root.getChild(4).getChild(0).isFolder());
+        assertEquals(2,root.getChild(4).getChild(0).getChildCount());
+
+        Server server2 = root.getChild(4).getChild(0).getChild(0).getServer();
+        Server server3 = root.getChild(4).getChild(0).getChild(1).getServer();
+
+        assertEquals("f1/m1/s.1", server1.getFullName());
+        assertEquals("f2/m1/s.1", server2.getFullName());
+        assertEquals("f2/m1/s1", server3.getFullName());
+
+        assertEquals("`:tcps://localhost:12341", server1.getConnectionString());
+        assertEquals("`:tcps://localhost:12342", server2.getConnectionString());
+        assertEquals("`:localhost:12343", server3.getConnectionString());
 
     }
 

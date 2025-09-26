@@ -83,7 +83,7 @@ public class QConnection {
     }
 
     public Server toServer(String name, String authMethod, Color bgColor) {
-        return new Server(name, host, port, user, password, bgColor, authMethod, useTLS);
+        return new Server(name, this, authMethod, bgColor);
     }
 
     @Override

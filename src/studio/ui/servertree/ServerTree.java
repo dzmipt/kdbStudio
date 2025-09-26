@@ -311,7 +311,7 @@ public class ServerTree extends JTree implements TreeExpansionListener {
             newNode = new ServerTreeNode(name);
         } else {
             Server server = Server.newServer();
-            server = server.newFolder(parent);
+            server = server.newParent(parent);
 
             EditServerForm serverForm = new EditServerForm(this, server);
             serverForm.alignAndShow();

@@ -16,8 +16,7 @@ public class Server {
     private final Color backgroundColor;
     private final String name;
     private final QConnection conn;
-    private final List<String> folderPath;
-    private final static List<String> ROOT_FOLDER = (List<String>) Collections.EMPTY_LIST;
+    private final ServerTreeNode parent;
 
     public static final Server NO_SERVER = new Server("", "", 0, "", "", Color.WHITE, DefaultAuthenticationMechanism.NAME, false);
 
@@ -52,16 +51,21 @@ public class Server {
         String authMethod = Config.getInstance().getDefaultAuthMechanism();
         Credentials credentials = Config.getInstance().getDefaultCredentials(authMethod);
         QConnection conn = new QConnection("", 0, credentials.getUsername(), credentials.getPassword(), false);
-        return new Server("", conn, authMethod, Color.WHITE, ROOT_FOLDER);
+        return new Server("", conn, authMethod, Color.WHITE, null);
     }
 
     @Override
     public boolean equals(Object obj) {
         if (!(obj instanceof Server)) return false;
         Server s = (Server) obj;
-        return s.name.equals(name)
-                && Objects.equals(s.conn, conn)
-                && Objects.equals(s.authenticationMechanism ,authenticationMechanism);
+        boolean res =  s.name.equals(name)
+                    && Objects.equals(s.conn, conn)
+                    && Objects.equals(s.authenticationMechanism ,authenticationMechanism);
+
+        if (! res) return false;
+        if (parent == null|| s.parent == null) return true;
+
+        return parent.getFolderPath().equals(s.parent.getFolderPath());
     }
 
     @Override
@@ -78,25 +82,26 @@ public class Server {
         this(name, new QConnection(host, port, username, password, useTLS), authenticationMechanism, backgroundColor, parent);
     }
 
-    public Server(String name, QConnection conn, String authMethod, Color bgColor, ServerTreeNode parent) {
-        this(name, conn, authMethod, bgColor,
-                parent == null ? ROOT_FOLDER : parent.getFolderPath() );
+    public Server(String name, QConnection conn, String authMethod, Color bgColor) {
+        this(name, conn, authMethod, bgColor, null);
     }
 
-    public Server(String name, QConnection conn, String authMethod, Color bgColor, List<String> folderPath) {
+    public Server(String name, QConnection conn, String authMethod, Color bgColor, ServerTreeNode parent) {
+        if (parent != null && ! parent.isFolder()) throw new IllegalArgumentException("Parent ServerTreeNode can be folder only");
+
         this.name = name;
         this.conn = conn;
         this.backgroundColor = bgColor;
         this.authenticationMechanism = authMethod;
-        this.folderPath = folderPath;
+        this.parent = parent;
     }
 
     public Server newName(String name) {
-        return new Server(name, conn, authenticationMechanism, backgroundColor, folderPath);
+        return new Server(name, conn, authenticationMechanism, backgroundColor, parent);
     }
 
     public Server newAuthMethod(String authMethod){
-        return new Server(name, conn, authMethod, backgroundColor, folderPath);
+        return new Server(name, conn, authMethod, backgroundColor, parent);
     }
 
     public String getName() {
@@ -104,12 +109,13 @@ public class Server {
     }
 
     public String getFullName() {
-        if (folderPath.size() < 2) return  name;
+        if (parent == null || parent.isRoot()) return name;
         return getFolderName() + "/" + name;
     }
 
     public String getFolderName() {
-        return folderPath.stream().skip(1).collect(Collectors.joining("/"));
+        if (parent == null) return "";
+        return parent.getFolderPath().stream().skip(1).collect(Collectors.joining("/"));
     }
 
     public String getHost() {
@@ -149,11 +155,12 @@ public class Server {
     }
 
     public List<String> getFolderPath() {
-        return folderPath;
+        if (parent == null) return Collections.EMPTY_LIST;
+        return parent.getFolderPath();
     }
 
-    public Server newFolder(ServerTreeNode folder) {
-        return new Server(name, conn, authenticationMechanism, backgroundColor, folder.getFolderPath());
+    public Server newParent(ServerTreeNode parent) {
+        return new Server(name, conn, authenticationMechanism, backgroundColor, parent);
     }
 
 }

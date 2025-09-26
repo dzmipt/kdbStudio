@@ -91,7 +91,7 @@ public class ServerForm extends EscapeDialog {
 
         ServerTreeNode newFolder = serverList.showFolders(folder);
         if (newFolder != null && newFolder != folder) {
-            server = server.newFolder(newFolder);
+            server = server.newParent(newFolder);
             updateFolderLabel();
         }
     }

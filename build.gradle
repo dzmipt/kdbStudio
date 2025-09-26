@@ -39,6 +39,7 @@ sourceSets {
             include 'syntax.csv'
             include 'studio13.properties'
             include 'studio14.properties'
+            include 'servers.json'
         }
     }
     intTest {

@@ -1,0 +1,61 @@
+{
+  "name": "",
+  "children": [
+    {
+      "name": "Local12345",
+      "handle": "`:localhost:12345",
+      "bgColor": "fefefe",
+      "authMethod": "Plain"
+    },
+    {
+      "name": "Local12341 (secure)",
+      "handle": "`:tcps://localhost:12341",
+      "bgColor": "fefefe",
+      "authMethod": "Plain"
+    },
+    {
+      "name": "Local12341",
+      "handle": "`:localhost:12341",
+      "bgColor": "fefefe",
+      "authMethod": "Plain"
+    },
+    {
+      "name": "f1",
+      "children": [
+        {
+          "name": "m1",
+          "children": [
+            {
+              "name": "s.1",
+              "handle": "`:tcps://localhost:12341",
+              "bgColor": "fefefe",
+              "authMethod": "Plain"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "f2",
+      "children": [
+        {
+          "name": "m1",
+          "children": [
+            {
+              "name": "s.1",
+              "handle": "`:tcps://localhost:12342",
+              "bgColor": "fefefe",
+              "authMethod": "Plain"
+            },
+            {
+              "name": "s1",
+              "handle": "`:localhost:12343",
+              "bgColor": "fefefe",
+              "authMethod": "Plain"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

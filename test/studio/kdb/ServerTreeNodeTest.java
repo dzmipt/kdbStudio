@@ -5,6 +5,7 @@ import studio.core.DefaultAuthenticationMechanism;
 
 import javax.swing.tree.TreeNode;
 import java.awt.*;
+import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -51,16 +52,32 @@ public class ServerTreeNodeTest {
                 DefaultAuthenticationMechanism.NAME, false);
 
         assertEquals(name1, server1.getFullName());
+        assertTrue(server1.getFolderPath().isEmpty());
 
         ServerTreeNode root = new ServerTreeNode();
         ServerTreeNode parent = root.add("parent");
         ServerTreeNode childFolder = parent.add("childFolder");
-        Server s1 = server1.newFolder(childFolder);
+        Server s1 = server1.newParent(childFolder);
 
         assertEquals("parent/childFolder/" + name1, s1.getFullName());
 
-        Server s2 = server2.newFolder(root);
+        Server s2 = server2.newParent(root);
         assertEquals(name2, s2.getFullName());
+
+        ServerTreeNode root2 = new ServerTreeNode();
+        ServerTreeNode folder = root2.add("folder");
+
+        root2.add(server1);
+        folder.add(server2);
+
+        Server serverInTree1 = root2.getChild(1).getServer();
+        Server serverInTree2 = root2.getChild("folder").getChild(0).getServer();
+
+        assertEquals(name1, serverInTree1.getFullName());
+        assertEquals("folder/" + name2, serverInTree2.getFullName());
+
+        assertEquals(List.of(""), serverInTree1.getFolderPath());
+        assertEquals(List.of("", "folder"), serverInTree2.getFolderPath());
     }
 
 }

@@ -83,7 +83,7 @@ public class ServerConfig {
             Server server = node.getServer();
             ServerTreeNode parent = (ServerTreeNode) node.getParent();
             if (!server.getFolderPath().equals(parent.getFolderPath()) ) {
-                server = server.newFolder(parent);
+                server = server.newParent(parent);
             }
             String name = server.getFullName();
             servers.put(name, server);
