@@ -399,7 +399,7 @@ public class Config  {
         return studioConfig.getBoolean(key);
     }
     public boolean setBoolean(String key, boolean value) {
-        return studioConfig.setDouble(key, value);
+        return studioConfig.setBoolean(key, value);
     }
 
     public <T extends Enum<T>> T getEnum(String key) {

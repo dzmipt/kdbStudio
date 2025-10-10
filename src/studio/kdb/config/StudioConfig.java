@@ -10,8 +10,8 @@ import java.awt.*;
 import java.io.IOException;
 import java.io.Writer;
 import java.time.Instant;
-import java.util.List;
 import java.util.*;
+import java.util.List;
 
 public class StudioConfig {
 
@@ -258,7 +258,7 @@ public class StudioConfig {
 
     }
 
-    public boolean setDouble(String key, boolean value) {
+    public boolean setBoolean(String key, boolean value) {
         return set(key, value);
     }
 
