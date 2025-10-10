@@ -1,4 +1,5 @@
 * Fix unexpected focus change and incorrect server drop down selection
+* Pop-up menu in toolbar buttons for navigation history for previous/next server
 
 `dz6.0` 2025.08.08
 -----

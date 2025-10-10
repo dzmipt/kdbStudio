@@ -374,16 +374,30 @@ public class EditorTab implements FileWatcher.Listener, EditorStatusBarCallback 
         return serverIndex>0;
     }
 
-    public void navigateHistoryServer(boolean forward) {
-        if (forward) {
-            if (!hasNextServerInHistory()) return;
-            serverIndex++;
-        } else {
-            if (! hasPreviousServerInHistory()) return;
-            serverIndex--;
+    public List<String> getNavigationList(boolean forward) {
+        int count = serverHistory.size();
+        int inc = forward ? 1 : -1;
+
+        List<String> list = new ArrayList<>();
+
+        for (int index = serverIndex + inc; index>=0 && index<count; index+= inc) {
+            list.add(serverHistory.get(index).getDescription(true));
         }
+
+        return list;
+    }
+
+    public void navigateHistoryServer(int shift, boolean forward) {
+        int newIndex = serverIndex + shift * (forward ? 1 : -1);
+        if (newIndex < 0 || newIndex >= serverHistory.size()) return;
+
+        serverIndex = newIndex;
         serverRefreshed();
         studioWindow.setServer(getServer());
+    }
+
+    public void navigateHistoryServer(boolean forward) {
+        navigateHistoryServer(1, forward);
     }
 
     public LineEnding getLineEnding() {

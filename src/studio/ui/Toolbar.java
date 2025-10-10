@@ -37,6 +37,15 @@ public class Toolbar extends JToolBar {
         }
     }
 
+    public AbstractButton getButton(Action a) {
+        for (Component comp: getComponents()) {
+            if (! (comp instanceof AbstractButton)) continue;
+            AbstractButton btn = (AbstractButton) comp;
+            if (btn.getAction().equals(a)) return btn;
+        }
+        return null;
+    }
+
     @Override
     public JButton add(Action a) {
         AbstractButton btn = addCustom(a);

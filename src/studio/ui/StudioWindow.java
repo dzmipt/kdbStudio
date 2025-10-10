@@ -1252,7 +1252,47 @@ public class StudioWindow extends JFrame implements WindowListener {
 
         toolbar.addAll(actions);
 
+        addNavigationList(toolbar.getButton(serverBackAction), false);
+        addNavigationList(toolbar.getButton(serverForwardAction), true);
+
         refreshActionState();
+    }
+
+    private void addNavigationList(AbstractButton button, boolean forward) {
+        button.addMouseListener(new MouseAdapter() {
+
+            private void checkPopup(MouseEvent e) {
+                if (! e.isPopupTrigger()) return;
+
+                List<String> list = editor.getNavigationList(forward);
+                int count = list.size();
+                if (count == 0) return;
+
+                JPopupMenu menu = new JPopupMenu();
+                for (int index = 0; index <count; index++) {
+                    JMenuItem menuItem = new JMenuItem(list.get(index));
+                    final int shift = index + 1;
+                    menuItem.addActionListener(actionEvent-> {
+                        editor.navigateHistoryServer(shift, forward);
+                    });
+
+                    menu.add(menuItem);
+                }
+
+                menu.show(button, e.getX(), e.getY());
+            }
+
+
+            @Override
+            public void mousePressed(MouseEvent e) {
+                checkPopup(e);
+            }
+
+            @Override
+            public void mouseReleased(MouseEvent e) {
+                checkPopup(e);
+            }
+        });
     }
 
     private int dividerLastPosition; // updated from property change listener
