@@ -209,6 +209,14 @@ public class Util {
         return fitToScreen;
     }
 
+    public static <T extends Component> T findParent(Component component, Class<T> clazz) {
+        while (component != null) {
+            if (clazz.isInstance(component)) return clazz.cast(component);
+            component = component.getParent();
+        }
+        return null;
+    }
+
     public static void setMockFitToScreen(boolean isMock) {
         log.info("mock fitToScreen: {}", isMock);
         mockFitToScreen = isMock;
