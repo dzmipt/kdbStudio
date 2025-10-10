@@ -62,41 +62,40 @@ public class AuthenticationManagerTest {
     }
 
     @Test
-    public void testPluginLoading() throws ClassNotFoundException, IllegalAccessException, MalformedURLException, URISyntaxException, NoSuchMethodException, InvocationTargetException {
+    public void testPluginLoading() throws ClassNotFoundException, IllegalAccessException, IOException, NoSuchMethodException, InvocationTargetException {
         ProxyBlockedClassLoader proxyCL = new ProxyBlockedClassLoader(AuthenticationManagerTest.class.getClassLoader());
         proxyCL.block(AuthenticationManager.class.getName(),
                 A.class.getName(),
                 B.class.getName(),
                 C.class.getName());
 
-        URLClassLoader urlClassLoader = new URLClassLoader(new URL[] {
-                new URL(String.format("jar:file:%s/!/", tmpDir.resolve("auth.jar")))
-        }, proxyCL);
+        URL[] urls = new URL[] {
+                new URL(String.format("jar:file:%s/!/", tmpDir.resolve("auth.jar"))) };
 
+        try ( URLClassLoader urlClassLoader = new URLClassLoader(urls, proxyCL) ) {
+            Class clazz = urlClassLoader.loadClass(AuthenticationManager.class.getName());
+            Method getInstanceMethod = clazz.getDeclaredMethod("getInstance");
+            Object authManager = getInstanceMethod.invoke(null);
+            String[] mechanisms = (String[]) clazz.getDeclaredMethod("getAuthenticationMechanisms").invoke(authManager);
+            Method lookupMethod = clazz.getDeclaredMethod("lookup", String.class);
 
-        Class clazz = urlClassLoader.loadClass(AuthenticationManager.class.getName());
-        Method getInstanceMethod = clazz.getDeclaredMethod("getInstance");
-        Object authManager = getInstanceMethod.invoke(null);
-        String[] mechanisms = (String[]) clazz.getDeclaredMethod("getAuthenticationMechanisms").invoke(authManager);
-        Method  lookupMethod = clazz.getDeclaredMethod("lookup", String.class);
+            Class clazzA = (Class) lookupMethod.invoke(authManager, "A");
+            Class clazzB = (Class) lookupMethod.invoke(authManager, "B");
+            Class clazzC = (Class) lookupMethod.invoke(authManager, "C");
 
-        Class clazzA = (Class)lookupMethod.invoke(authManager,"A");
-        Class clazzB = (Class)lookupMethod.invoke(authManager,"B");
-        Class clazzC = (Class)lookupMethod.invoke(authManager,"C");
+            assertEquals(4, mechanisms.length);
 
-        assertEquals(4, mechanisms.length);
+            assertEquals(A.class.getName(), clazzA.getName());
+            assertEquals(B.class.getName(), clazzB.getName());
+            assertEquals(C.class.getName(), clazzC.getName());
 
-        assertEquals(A.class.getName(), clazzA.getName());
-        assertEquals(B.class.getName(), clazzB.getName());
-        assertEquals(C.class.getName(), clazzC.getName());
+            assertNotEquals(A.class, clazzA);
+            assertNotEquals(B.class, clazzB);
+            assertNotEquals(C.class, clazzC);
 
-        assertNotEquals(A.class, clazzA);
-        assertNotEquals(B.class, clazzB);
-        assertNotEquals(C.class, clazzC);
-
-        assertNotEquals(clazzA.getClassLoader(), clazzC.getClassLoader());
-        assertEquals(clazzA.getClassLoader(), clazzB.getClassLoader());
-
+            assertNotEquals(clazzA.getClassLoader(), clazzC.getClassLoader());
+            assertEquals(clazzA.getClassLoader(), clazzB.getClassLoader());
+        }
     }
 
 
