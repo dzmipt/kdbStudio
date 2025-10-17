@@ -79,7 +79,6 @@ public class Studio {
         FlatDarculaLaf.installLafInfo();
         FlatMacDarkLaf.installLafInfo();
 
-        studio.ui.I18n.setLocale(Locale.getDefault());
         System.setProperty("awt.useSystemAAFontSettings","on");
         System.setProperty("swing.aatext", "true");
 

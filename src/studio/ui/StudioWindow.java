@@ -522,14 +522,14 @@ public class StudioWindow extends JFrame implements WindowListener {
         cleanAction = UserAction.create("Clean", Util.NEW_DOCUMENT_ICON, "Clean editor script", KeyEvent.VK_N,
                 null, e -> newFile());
 
-        arrangeAllAction = UserAction.create(I18n.getString("ArrangeAll"),  "Arrange all windows on screen",
+        arrangeAllAction = UserAction.create("Arrange All",  "Arrange all windows on screen",
                 KeyEvent.VK_A, null, e -> arrangeAll());
 
-        minMaxDividerAction = UserAction.create(I18n.getString("MaximizeEditorPane"), "Maximize editor pane",
+        minMaxDividerAction = UserAction.create("Maximize Editor Pane", "Maximize editor pane",
                 KeyEvent.VK_M, Util.getMenuShortcut(KeyEvent.VK_M),
                 e -> minMaxDivider());
 
-        toggleDividerOrientationAction = UserAction.create(I18n.getString("ToggleDividerOrientation"),
+        toggleDividerOrientationAction = UserAction.create("Toggle Divider Orientation",
                 "Toggle the window divider's orientation", KeyEvent.VK_C, null, e -> toggleDividerOrientation());
 
         closeTabAction = UserAction.create("Close Tab",  "Close current tab", KeyEvent.VK_W,
@@ -538,10 +538,10 @@ public class StudioWindow extends JFrame implements WindowListener {
         closeFileAction = UserAction.create("Close Window",  "Close current window (close all tabs)",
                 KeyEvent.VK_C, null, e -> close());
 
-        openFileAction = UserAction.create(I18n.getString("Open"), Util.FOLDER_ICON, "Open a script", KeyEvent.VK_O,
+        openFileAction = UserAction.create("Open...", Util.FOLDER_ICON, "Open a script", KeyEvent.VK_O,
                 Util.getMenuShortcut(KeyEvent.VK_O), e -> openFile());
 
-        newWindowAction = UserAction.create(I18n.getString("NewWindow"),  "Open a new window",
+        newWindowAction = UserAction.create("New Window",  "Open a new window",
                 KeyEvent.VK_N, Util.getMenuShortcut(KeyEvent.VK_N, InputEvent.SHIFT_DOWN_MASK),
                 e -> new StudioWindow(editor.getServer(), null) );
 
@@ -549,7 +549,7 @@ public class StudioWindow extends JFrame implements WindowListener {
                 Util.getMenuShortcut(KeyEvent.VK_N),
                 e -> addTab(null));
 
-        serverListAction = UserAction.create(I18n.getString("ServerList"), Util.TEXT_TREE_ICON, "Show server list",
+        serverListAction = UserAction.create("Server List", Util.TEXT_TREE_ICON, "Show server list",
                 KeyEvent.VK_L, Util.getMenuShortcut(KeyEvent.VK_L, InputEvent.SHIFT_DOWN_MASK),
                 e -> showServerList(false));
 
@@ -576,7 +576,7 @@ public class StudioWindow extends JFrame implements WindowListener {
                 KeyEvent.VK_S, null, e -> ConnectionStats.getStats(this));
 
 
-        editServerAction = UserAction.create(I18n.getString("Edit"), Util.SERVER_INFORMATION_ICON, "Edit the server details",
+        editServerAction = UserAction.create("Edit", Util.SERVER_INFORMATION_ICON, "Edit the server details",
                 KeyEvent.VK_E, null, e -> {
                     EditServerForm f = new EditServerForm(this, editor.getServer());
                     f.alignAndShow();
@@ -592,7 +592,7 @@ public class StudioWindow extends JFrame implements WindowListener {
                 });
 
 
-        addServerAction = UserAction.create(I18n.getString("Add"), Util.ADD_SERVER_ICON, "Configure a new server",
+        addServerAction = UserAction.create("Add...", Util.ADD_SERVER_ICON, "Configure a new server",
                 KeyEvent.VK_A, null, e -> {
                     AddServerForm f = new AddServerForm(this, editor.getServer());
                     f.alignAndShow();
@@ -604,7 +604,7 @@ public class StudioWindow extends JFrame implements WindowListener {
                     }
                 });
 
-        removeServerAction = UserAction.create(I18n.getString("Remove"), Util.DELETE_SERVER_ICON, "Remove this server",
+        removeServerAction = UserAction.create("Remove", Util.DELETE_SERVER_ICON, "Remove this server",
                 KeyEvent.VK_R, null, e -> {
                     int choice = JOptionPane.showOptionDialog(this,
                             "Remove server " + editor.getServer().getFullName() + " from list?",
@@ -628,7 +628,7 @@ public class StudioWindow extends JFrame implements WindowListener {
                 });
 
 
-        saveFileAction = UserAction.create(I18n.getString("Save"), Util.DISKS_ICON, "Save the script",
+        saveFileAction = UserAction.create("Save", Util.DISKS_ICON, "Save the script",
                 KeyEvent.VK_S, Util.getMenuShortcut(KeyEvent.VK_S),
                 e -> EditorsPanel.saveEditor(editor));
 
@@ -636,13 +636,13 @@ public class StudioWindow extends JFrame implements WindowListener {
                 KeyEvent.VK_L, Util.getMenuShortcut(KeyEvent.VK_S, InputEvent.SHIFT_DOWN_MASK),
                 e -> saveAll());
 
-        saveAsFileAction = UserAction.create(I18n.getString("SaveAs"), Util.SAVE_AS_ICON, "Save script as",
+        saveAsFileAction = UserAction.create("Save As...", Util.SAVE_AS_ICON, "Save script as",
                 KeyEvent.VK_A, null, e -> EditorsPanel.saveAsFile(editor));
 
-        exportAction = UserAction.create(I18n.getString("Export"), Util.EXPORT_ICON, "Export result set",
+        exportAction = UserAction.create("Export...", Util.EXPORT_ICON, "Export result set",
                 KeyEvent.VK_E, null, e -> export());
 
-        chartAction = UserAction.create(I18n.getString("Chart"), Util.CHART_ICON, "Chart current data set",
+        chartAction = UserAction.create("Chart", Util.CHART_ICON, "Chart current data set",
                 KeyEvent.VK_C, Util.getMenuShortcut(KeyEvent.VK_G), e -> chart() );
 
         executeAndChartAction = UserAction.create("Execute and Chart", Util.EXECUTE_AND_CHART, "Execute and chart",
@@ -653,10 +653,10 @@ public class StudioWindow extends JFrame implements WindowListener {
                 KeyEvent.VK_H, Util.getMenuShortcut(KeyEvent.VK_ENTER, InputEvent.SHIFT_DOWN_MASK),
                 e -> executeQueryCurrentLine(true) );
 
-        stopAction = UserAction.create(I18n.getString("Stop"), Util.STOP_ICON, "Stop the query",
+        stopAction = UserAction.create("Stop", Util.STOP_ICON, "Stop the query",
                 KeyEvent.VK_S, null, e -> editor.getQueryExecutor().cancel());
 
-        openInExcel = UserAction.create(I18n.getString("OpenInExcel"), Util.EXCEL_ICON, "Open in Excel",
+        openInExcel = UserAction.create("Open in Excel", Util.EXCEL_ICON, "Open in Excel",
                 KeyEvent.VK_O, null, e -> {
                     try {
                         File file = File.createTempFile("studioExport", ".xlsx");
@@ -667,13 +667,13 @@ public class StudioWindow extends JFrame implements WindowListener {
                     }
                 });
 
-        executeAction = UserAction.create(I18n.getString("Execute"), Util.TABLE_SQL_RUN_ICON, "Execute the full or highlighted text as a query",
+        executeAction = UserAction.create("Execute", Util.TABLE_SQL_RUN_ICON, "Execute the full or highlighted text as a query",
                 KeyEvent.VK_E, Util.getMenuShortcut(KeyEvent.VK_E), e -> executeQuery(false));
 
-        executeCurrentLineAction = UserAction.create(I18n.getString("ExecuteCurrentLine"), Util.RUN_ICON, "Execute the current line as a query",
+        executeCurrentLineAction = UserAction.create("Execute Current Line", Util.RUN_ICON, "Execute the current line as a query",
                 KeyEvent.VK_ENTER, Util.getMenuShortcut(KeyEvent.VK_ENTER), e -> executeQueryCurrentLine(false));
 
-        refreshAction = UserAction.create(I18n.getString("Refresh"), Util.REFRESH_ICON, "Refresh the result set",
+        refreshAction = UserAction.create("Refresh", Util.REFRESH_ICON, "Refresh the result set",
                 KeyEvent.VK_R, Util.getMenuShortcut(KeyEvent.VK_Y, InputEvent.SHIFT_DOWN_MASK), e -> refreshQuery());
 
         toggleCommaFormatAction = UserAction.create("Toggle Comma Format", Util.COMMA_ICON, "Add/remove thousands separator in selected result",
@@ -709,10 +709,10 @@ public class StudioWindow extends JFrame implements WindowListener {
                     if (tab != null) tab.navigateCard(true);
                 });
 
-        aboutAction = UserAction.create(I18n.getString("About"), Util.ABOUT_ICON, "About Studio for kdb+",
+        aboutAction = UserAction.create("About", Util.ABOUT_ICON, "About Studio for kdb+",
                 KeyEvent.VK_E, null, e -> about());
 
-        exitAction = UserAction.create(I18n.getString("Exit"), "Close this window",
+        exitAction = UserAction.create("Exit", "Close this window",
                 KeyEvent.VK_X, e -> quit());
 
         settingsAction = UserAction.create("Settings",  "Settings",
@@ -727,30 +727,30 @@ public class StudioWindow extends JFrame implements WindowListener {
                     }
                 });
 
-        copyAction = UserAction.create(I18n.getString("Copy"), Util.COPY_ICON, "Copy the selected text to the clipboard",
+        copyAction = UserAction.create("Copy", Util.COPY_ICON, "Copy the selected text to the clipboard",
                 KeyEvent.VK_C, Util.getMenuShortcut(KeyEvent.VK_C), editorCopyAction);
 
-        cutAction = UserAction.create(I18n.getString("Cut"), Util.CUT_ICON, "Cut the selected text",
+        cutAction = UserAction.create("Cut", Util.CUT_ICON, "Cut the selected text",
                 KeyEvent.VK_T, Util.getMenuShortcut(KeyEvent.VK_X), editorCutAction);
 
-        pasteAction = UserAction.create(I18n.getString("Paste"), Util.PASTE_ICON, "Paste text from the clipboard",
+        pasteAction = UserAction.create("Paste", Util.PASTE_ICON, "Paste text from the clipboard",
                 KeyEvent.VK_P, Util.getMenuShortcut(KeyEvent.VK_V), editorPasteAction);
 
-        findAction = UserAction.create(I18n.getString("Find"), Util.FIND_ICON, "Find text in the document",
+        findAction = UserAction.create("Find...", Util.FIND_ICON, "Find text in the document",
                 KeyEvent.VK_F, Util.getMenuShortcut(KeyEvent.VK_F), editorFindAction);
 
-        replaceAction = UserAction.create(I18n.getString("Replace"), Util.REPLACE_ICON, "Replace text in the document",
+        replaceAction = UserAction.create("Replace...", Util.REPLACE_ICON, "Replace text in the document",
                 KeyEvent.VK_R, Util.getMenuShortcut(KeyEvent.VK_R), editorReplaceAction);
 
         convertTabsToSpacesAction = UserAction.create("Convert tabs to spaces", editorConvertTabsToSpacesAction);
 
-        selectAllAction = UserAction.create(I18n.getString("SelectAll"), "Select all text in the document",
+        selectAllAction = UserAction.create("Select All", "Select all text in the document",
                 KeyEvent.VK_A, Util.getMenuShortcut(KeyEvent.VK_A), editorSelectAllAction);
 
-        undoAction = UserAction.create(I18n.getString("Undo"), Util.UNDO_ICON, "Undo the last change to the document",
+        undoAction = UserAction.create("Undo", Util.UNDO_ICON, "Undo the last change to the document",
                 KeyEvent.VK_U, Util.getMenuShortcut(KeyEvent.VK_Z), editorUndoAction);
 
-        redoAction = UserAction.create(I18n.getString("Redo"), Util.REDO_ICON, "Redo the last change to the document",
+        redoAction = UserAction.create("Redo", Util.REDO_ICON, "Redo the last change to the document",
                 KeyEvent.VK_R, Util.getMenuShortcut(KeyEvent.VK_Y), editorRedoAction);
 
         nextEditorTabAction = UserAction.create("Next tab",
@@ -1038,15 +1038,15 @@ public class StudioWindow extends JFrame implements WindowListener {
         openMRUMenu = new JMenu("Open Recent");
         openMRUMenu.setIcon(Util.BLANK_ICON);
 
-        cloneMenu = new JMenu(I18n.getString("Clone"));
+        cloneMenu = new JMenu("Clone");
         cloneMenu.setIcon(Util.DATA_COPY_ICON);
 
-        windowMenu = new JMenu(I18n.getString("Window"));
+        windowMenu = new JMenu("Window");
         windowMenu.setMnemonic(KeyEvent.VK_W);
 
 
-        JMenuBar menubar = new JMenuBar();
-        JMenu menu = new JMenu(I18n.getString("File"));
+        JMenuBar menuBar = new JMenuBar();
+        JMenu menu = new JMenu("File");
         menu.setMnemonic(KeyEvent.VK_F);
 
         addToMenu(menu, newWindowAction, newTabAction, openFileAction);
@@ -1062,10 +1062,10 @@ public class StudioWindow extends JFrame implements WindowListener {
         if (!Studio.hasMacOSSystemMenu()) {
             addToMenu(menu, null, exitAction);
         }
-        menubar.add(menu);
+        menuBar.add(menu);
 
 
-        menu = new JMenu(I18n.getString("Edit"));
+        menu = new JMenu("Edit");
         menu.setMnemonic(KeyEvent.VK_E);
 
         addToMenu(menu, undoAction, redoAction, null, cutAction, copyAction, pasteAction, null);
@@ -1080,9 +1080,9 @@ public class StudioWindow extends JFrame implements WindowListener {
         menu.add(lineEndingSubMenu);
 
         addToMenu(menu, cleanAction, selectAllAction, null, findAction, replaceAction, convertTabsToSpacesAction);
-        menubar.add(menu);
+        menuBar.add(menu);
 
-        menu = new JMenu(I18n.getString("Server"));
+        menu = new JMenu("Server");
         menu.setMnemonic(KeyEvent.VK_S);
 
         addToMenu(menu, addServerAction, editServerAction, removeServerAction);
@@ -1091,32 +1091,32 @@ public class StudioWindow extends JFrame implements WindowListener {
         addToMenu(menu, null, serverBackAction, serverForwardAction,
                 serverListAction, serverHistoryAction, loadServerTreeAction, exportServerTreeAction, importFromQPadAction, null, connectionStatsAction);
 
-        menubar.add(menu);
+        menuBar.add(menu);
 
-        menu = new JMenu(I18n.getString("Query"));
+        menu = new JMenu("Query");
         menu.setMnemonic(KeyEvent.VK_Q);
 
         addToMenu(menu, executeCurrentLineAction, executeCurrentLineAndChartAction, executeAction, executeAndChartAction, stopAction, refreshAction,
                 toggleCommaFormatAction, uploadAction, findInResultAction, prevResultAction, nextResultAction);
-        menubar.add(menu);
+        menuBar.add(menu);
 
         //Window menu
         addToMenu(windowMenu, splitEditorRight, splitEditorDown, null, minMaxDividerAction, toggleDividerOrientationAction,
                 arrangeAllAction, nextEditorTabAction, prevEditorTabAction);
 
         windowMenuWindowIndex = windowMenu.getMenuComponentCount();
-        menubar.add(windowMenu);
+        menuBar.add(windowMenu);
 
-        menu = new JMenu(I18n.getString("Help"));
+        menu = new JMenu("Help");
         menu.setMnemonic(KeyEvent.VK_H);
         menu.add(new JMenuItem(codeKxComAction));
         if (!Studio.hasMacOSSystemMenu())
             menu.add(new JMenuItem(aboutAction));
-        menubar.add(menu);
+        menuBar.add(menu);
 
-        setNamesInMenu(menubar);
+        setNamesInMenu(menuBar);
 
-        setJMenuBar(menubar);
+        setJMenuBar(menuBar);
     }
 
     private void ensureDeiconified(JFrame f) {
@@ -1548,14 +1548,16 @@ public class StudioWindow extends JFrame implements WindowListener {
         splitpane.setContinuousLayout(true);
 
         splitpane.addPropertyChangeListener(JSplitPane.DIVIDER_LOCATION_PROPERTY,new PropertyChangeListener(){
-            public void propertyChange(PropertyChangeEvent pce){
-                String s = splitpane.getDividerLocation()>=splitpane.getMaximumDividerLocation() ?
-                        I18n.getString("MinimizeEditorPane")
-                        : splitpane.getDividerLocation()<=splitpane.getMinimumDividerLocation() ?
-                        I18n.getString("RestoreEditorPane"):
-                        I18n.getString("MaximizeEditorPane");
-                minMaxDividerAction.putValue(Action.SHORT_DESCRIPTION,s);
-                minMaxDividerAction.putValue(Action.NAME,s);
+            public void propertyChange(PropertyChangeEvent pce) {
+                int dividerLocation = splitpane.getDividerLocation();
+                String actionName =
+                        dividerLocation >= splitpane.getMaximumDividerLocation() ?
+                                "Minimize Editor Pane" :
+                                dividerLocation <= splitpane.getMinimumDividerLocation() ?
+                                    "Restore Editor Pane" :
+                                    "Maximize Editor Pane" ;
+                minMaxDividerAction.putValue(Action.SHORT_DESCRIPTION, actionName);
+                minMaxDividerAction.putValue(Action.NAME, actionName);
                 if(splitpane.getDividerLocation()<splitpane.getMaximumDividerLocation()&&splitpane.getDividerLocation()>splitpane.getMinimumDividerLocation())
                     dividerLastPosition=splitpane.getDividerLocation();
             }

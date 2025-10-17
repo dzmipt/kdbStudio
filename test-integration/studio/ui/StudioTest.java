@@ -25,7 +25,6 @@ import java.awt.*;
 import java.io.File;
 import java.io.IOException;
 import java.util.List;
-import java.util.Locale;
 import java.util.concurrent.TimeUnit;
 
 import static java.awt.event.KeyEvent.*;
@@ -75,7 +74,6 @@ abstract public class StudioTest extends AssertJSwingJUnitTestCase {
         expectedNumberOfErrors = 0;
         LogErrors.reset();
 
-        studio.ui.I18n.setLocale(Locale.getDefault());
         studioWindow = execute( () -> new StudioWindow(Server.NO_SERVER, null) );
         frameFixture = new FrameFixture(robot(), studioWindow);
 

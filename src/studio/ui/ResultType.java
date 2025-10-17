@@ -4,7 +4,7 @@ import javax.swing.*;
 
 public enum ResultType {
     ERROR("Error Details ", Util.ERROR_SMALL_ICON),
-    TEXT(I18n.getString("ConsoleView"), Util.CONSOLE_ICON),
+    TEXT("Console View", Util.CONSOLE_ICON),
     LIST("List", Util.TABLE_ICON),
     TABLE("Table", Util.TABLE_ICON);
 
