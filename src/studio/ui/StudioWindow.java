@@ -17,6 +17,7 @@ import studio.ui.dndtabbedpane.DraggableTabbedPane;
 import studio.ui.rstextarea.ConvertTabsToSpacesAction;
 import studio.ui.rstextarea.FindReplaceAction;
 import studio.ui.rstextarea.RSTextAreaFactory;
+import studio.ui.rstextarea.StudioRSyntaxTextArea;
 import studio.ui.search.SearchPanel;
 import studio.ui.statusbar.MainStatusBar;
 import studio.utils.Content;
@@ -812,11 +813,11 @@ public class StudioWindow extends JFrame implements WindowListener {
 
     public static void refreshEditorsSettings() {
         executeAll(editorTab -> {
-                RSyntaxTextArea editor = editorTab.getTextArea();
+            StudioRSyntaxTextArea editor = editorTab.getTextArea();
                 editor.setHighlightCurrentLine(CONFIG.getBoolean(Config.RSTA_HIGHLIGHT_CURRENT_LINE));
                 editor.setAnimateBracketMatching(CONFIG.getBoolean(Config.RSTA_ANIMATE_BRACKET_MATCHING));
                 editor.setLineWrap(CONFIG.getBoolean(Config.RSTA_WORD_WRAP));
-                editor.setFont(CONFIG.getFont(Config.FONT_EDITOR));
+                editor.setSyntaxScheme(CONFIG.getFont(Config.FONT_EDITOR), CONFIG.getColorTokenConfig());
 
                 editor.setTabSize(CONFIG.getInt(Config.EDITOR_TAB_SIZE));
                 editor.setTabsEmulated(CONFIG.getBoolean(Config.EDITOR_TAB_EMULATED));

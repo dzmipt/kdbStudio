@@ -1,9 +1,13 @@
 package studio.ui.rstextarea;
 
 import org.fife.ui.rsyntaxtextarea.RSyntaxTextArea;
+import org.fife.ui.rsyntaxtextarea.Style;
+import org.fife.ui.rsyntaxtextarea.SyntaxScheme;
 import org.fife.ui.rtextarea.Gutter;
 import org.fife.ui.rtextarea.RTextArea;
 import org.fife.ui.rtextarea.RUndoManager;
+import studio.kdb.config.ColorTokenConfig;
+import studio.qeditor.RSToken;
 
 import java.awt.*;
 
@@ -38,6 +42,24 @@ public class StudioRSyntaxTextArea extends RSyntaxTextArea {
     public void setBackground(Color bg) {
         super.setBackground(bg);
         if (gutter != null) gutter.setBackground(bg);
+    }
+
+    public void setSyntaxScheme(Font font, ColorTokenConfig tokenConfig) {
+        setFont(font);
+        SyntaxScheme scheme = new SyntaxScheme(false);
+        Style[] defaultStyles = scheme.getStyles();
+        Style[] styles = new Style[RSToken.NUM_TOKEN_TYPES];
+        System.arraycopy(defaultStyles, 0, styles, 0, defaultStyles.length);
+        for (RSToken token: RSToken.values()) {
+            if (token.getFontStyle() != Font.PLAIN) font = font.deriveFont(token.getFontStyle());
+            Color color = tokenConfig.getColor(token.getColorToken());
+            Style style = new Style(color, null, font);
+
+            styles[token.getTokenType()] = style;
+        }
+        scheme.setStyles(styles);
+
+        setSyntaxScheme(scheme);
     }
 
     public void setActionsUpdateListener(Runnable actionUpdateListener) {

@@ -361,6 +361,10 @@ public class Config  {
         return (ColorTokenConfig) studioConfig.get(Config.COLOR_TOKEN_CONFIG);
     }
 
+    public boolean setColorTokenConfig(ColorTokenConfig colorTokenConfig) {
+        return studioConfig.set(Config.COLOR_TOKEN_CONFIG, colorTokenConfig);
+    }
+
     public ServerTreeNode getServerTree() {
         return serverConfig.getServerTree();
     }

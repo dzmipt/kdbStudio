@@ -1,6 +1,7 @@
 * Fix unexpected focus change and incorrect server drop down selection
 * Pop-up menu in toolbar buttons for navigation history for previous/next server
 * adding additional L&F including dark schemas
+* Adding Settings of colors for syntax highlighting
 
 `dz6.0` 2025.08.08
 -----

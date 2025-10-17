@@ -5,21 +5,25 @@ import studio.kdb.Config;
 import studio.ui.Util;
 
 import javax.swing.*;
+import javax.swing.event.ChangeEvent;
+import javax.swing.event.ChangeListener;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.util.ArrayList;
+import java.util.List;
 
 public class FontSelectionPanel extends JPanel implements ActionListener {
 
     private Font font;
     private JLabel fontLabel;
     private JDialog ownerDialog;
-    private String configKey;
 
-    public FontSelectionPanel(JDialog ownerDialog, String label, String configKey) {
+    private final List<ChangeListener> listeners = new ArrayList<>();
+
+    public FontSelectionPanel(JDialog ownerDialog, String label, Font font) {
         super();
         this.ownerDialog = ownerDialog;
-        this.configKey = configKey;
 
         setLayout(new BoxLayout(this, BoxLayout.LINE_AXIS));
 
@@ -39,18 +43,22 @@ public class FontSelectionPanel extends JPanel implements ActionListener {
         add(Box.createRigidArea(new Dimension(5,0)));
         add(dialogBtn);
 
-        updateFont(Config.getInstance().getFont(configKey));
+        updateFont(font);
     }
 
-    private void updateFont(Font font) {
+    private boolean updateFont(Font font) {
+        if (font.equals(this.font)) return false;
+
         this.font = font;
         fontLabel.setFont(font);
         fontLabel.setText(font.getFontName());
         revalidate();
+
+        return true;
     }
 
-    public boolean saveSettings() {
-        return Config.getInstance().setFont(configKey, font);
+    public Font getSelectedFont() {
+        return font;
     }
 
     @Override
@@ -64,13 +72,28 @@ public class FontSelectionPanel extends JPanel implements ActionListener {
 
         if (dialog.isCancelSelected()) return;
 
-        updateFont(dialog.getSelectedFont());
+        if ( updateFont(dialog.getSelectedFont()) ) {
+            fireEvent();
+        }
+    }
+
+    public void addChangeListener(ChangeListener listener) {
+        listeners.add(listener);
+    }
+
+    public void removeChangeListener(ChangeListener listener) {
+        listeners.remove(listener);
+    }
+
+    private void fireEvent() {
+        ChangeEvent event = new ChangeEvent(this);
+        listeners.forEach(l -> l.stateChanged(event));
     }
 
     public static void main(String[] args) {
         JDialog d = new JDialog((Frame)null, "Test", true);
 
-        d.setContentPane(new FontSelectionPanel(d, "Select font:", Config.FONT_EDITOR));
+        d.setContentPane(new FontSelectionPanel(d, "Select font:", Config.getInstance().getFont(Config.FONT_EDITOR)));
         d.setSize(600, 400);
         d.setVisible(true);
     }

@@ -9,8 +9,6 @@ import studio.ui.GroupLayoutSimple;
 
 import javax.swing.*;
 import javax.swing.text.NumberFormatter;
-import java.util.LinkedHashMap;
-import java.util.Map;
 
 public class SettingsGeneralTab extends SettingsTab {
 
@@ -25,7 +23,6 @@ public class SettingsGeneralTab extends SettingsTab {
     private final JCheckBox chBoxShowServerCombo;
     private final JCheckBox chBoxAutoSave;
     private final JComboBox<ActionOnExit> comboBoxActionOnExit;
-    private final JComboBox<CustomiszedLookAndFeelInfo> comboBoxLookAndFeel;
 
     private static final Config CONFIG = Config.getInstance();
 
@@ -39,12 +36,6 @@ public class SettingsGeneralTab extends SettingsTab {
         comboBoxAuthMechanism.getModel().setSelectedItem(CONFIG.getDefaultAuthMechanism());
         comboBoxAuthMechanism.addItemListener(e -> refreshCredentials());
         refreshCredentials();
-
-        JLabel lblLookAndFeel = new JLabel("Look and Feel:");
-
-        LookAndFeels lookAndFeels = new LookAndFeels();
-        comboBoxLookAndFeel = new JComboBox<>(lookAndFeels.getLookAndFeels());
-        CustomiszedLookAndFeelInfo lf = lookAndFeels.getLookAndFeel(CONFIG.getString(Config.LOOK_AND_FEEL));
 
         chBoxSessionInvalidation = new JCheckBox("Kdb connections are invalidated every ");
         chBoxSessionInvalidation.setSelected(CONFIG.getBoolean(Config.SESSION_INVALIDATION_ENABLED));
@@ -64,8 +55,6 @@ public class SettingsGeneralTab extends SettingsTab {
         comboBoxKdbMessageSizeAction = new JComboBox<>(KdbMessageLimitAction.values());
         comboBoxKdbMessageSizeAction.setSelectedItem(CONFIG.getEnum(Config.KDB_MESSAGE_SIZE_LIMIT_ACTION));
 
-        comboBoxLookAndFeel.setSelectedItem(lf);
-
         chBoxShowServerCombo = new JCheckBox("Show server drop down list in the toolbar");
         chBoxShowServerCombo.setSelected(CONFIG.getBoolean(Config.SHOW_SERVER_COMBOBOX));
 
@@ -82,7 +71,6 @@ public class SettingsGeneralTab extends SettingsTab {
         GroupLayoutSimple layout = new GroupLayoutSimple(this);
         layout.setStacks(
                 new GroupLayoutSimple.Stack()
-                        .addLineAndGlue(lblLookAndFeel, comboBoxLookAndFeel)
                         .addLineAndGlue(chBoxShowServerCombo, chBoxAutoSave)
                         .addLineAndGlue(lblActionOnExit, comboBoxActionOnExit)
                         .addLineAndGlue(chBoxSessionInvalidation, txtSessionInvalidation, lblSessionInvalidationSuffix)
@@ -116,10 +104,6 @@ public class SettingsGeneralTab extends SettingsTab {
         return chBoxShowServerCombo.isSelected();
     }
 
-    public String getLookAndFeelClassName() {
-        return ((CustomiszedLookAndFeelInfo)comboBoxLookAndFeel.getSelectedItem()).getClassName();
-    }
-
     public boolean isAutoSave() {
         return chBoxAutoSave.isSelected();
     }
@@ -140,38 +124,6 @@ public class SettingsGeneralTab extends SettingsTab {
 
         CONFIG.setEnum(Config.ACTION_ON_EXIT, (ActionOnExit)comboBoxActionOnExit.getSelectedItem());
         CONFIG.setBoolean(Config.AUTO_SAVE, isAutoSave());
-
-        changed = CONFIG.setString(Config.LOOK_AND_FEEL, getLookAndFeelClassName());
-        result.setChangedLF(changed);
-
-    }
-
-    private static class LookAndFeels {
-        private Map<String, CustomiszedLookAndFeelInfo> mapLookAndFeels;
-
-        public LookAndFeels() {
-            mapLookAndFeels = new LinkedHashMap<>();
-            for (UIManager.LookAndFeelInfo lf: UIManager.getInstalledLookAndFeels()) {
-                mapLookAndFeels.put(lf.getClassName(), new CustomiszedLookAndFeelInfo(lf));
-            }
-        }
-        public CustomiszedLookAndFeelInfo[] getLookAndFeels() {
-            return mapLookAndFeels.values().toArray(new CustomiszedLookAndFeelInfo[0]);
-        }
-        public CustomiszedLookAndFeelInfo getLookAndFeel(String className) {
-            return mapLookAndFeels.get(className);
-        }
-    }
-
-    private static class CustomiszedLookAndFeelInfo extends UIManager.LookAndFeelInfo {
-        public CustomiszedLookAndFeelInfo(UIManager.LookAndFeelInfo lfInfo) {
-            super(lfInfo.getName(), lfInfo.getClassName());
-        }
-
-        @Override
-        public String toString() {
-            return getName();
-        }
     }
 
 }
