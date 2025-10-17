@@ -357,7 +357,8 @@ public class EditorTab implements FileWatcher.Listener, EditorStatusBarCallback 
     }
 
     public void setServer(Server server) {
-        if (getServer().equals(server)) return;
+        Server oldServer = getServer();
+        if (oldServer.equals(server) && oldServer.getBackgroundColor().equals(server.getBackgroundColor())) return;
 
         serverHistory.subList(serverIndex+1, serverHistory.size()).clear();
         serverHistory.add(server);
