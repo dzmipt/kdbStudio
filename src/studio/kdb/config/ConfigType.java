@@ -250,9 +250,11 @@ public enum ConfigType {
             Map<ColorToken, Color> map = new HashMap<>();
             JsonObject json = jsonElement.getAsJsonObject();
             for (String key: json.keySet()) {
-                ColorToken token = ColorToken.valueOf(key.toUpperCase());
-                Color color = (Color) COLOR.fromJson(json.get(key), null);
-                map.put(token, color);
+                try {
+                    ColorToken token = ColorToken.valueOf(key.toUpperCase());
+                    Color color = (Color) COLOR.fromJson(json.get(key), null);
+                    map.put(token, color);
+                } catch (IllegalArgumentException ignore) {}
             }
             return new ColorTokenConfig(map);
         }

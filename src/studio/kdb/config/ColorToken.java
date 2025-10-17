@@ -5,9 +5,9 @@ import java.awt.*;
 public enum ColorToken {
     DEFAULT("Default", Color.BLACK),
     ERROR("Error", Color.RED),
-    WHITESPACE("Whitespace", Color.BLACK),
+//    WHITESPACE("Whitespace", Color.BLACK),
     BRACKET("Brackets", Color.BLACK),
-    OPERATOR("Operators", Color.BLACK),
+//    OPERATOR("Operators", Color.BLACK),
     COMMAND("Commands", new Color(240,180,0)),
     SYSTEM("System", new Color(240,180,0)),
     EOLCOMMENT("Comments", Color.GRAY),
