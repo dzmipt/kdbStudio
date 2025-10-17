@@ -1,5 +1,11 @@
 package studio.core;
 
+import com.formdev.flatlaf.FlatDarculaLaf;
+import com.formdev.flatlaf.FlatDarkLaf;
+import com.formdev.flatlaf.FlatIntelliJLaf;
+import com.formdev.flatlaf.FlatLightLaf;
+import com.formdev.flatlaf.themes.FlatMacDarkLaf;
+import com.formdev.flatlaf.themes.FlatMacLightLaf;
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -59,15 +65,16 @@ public class Studio {
             System.setProperty("com.apple.mrj.application.live-resize","true");
             System.setProperty("com.apple.macos.smallTabs","true");
             System.setProperty("com.apple.mrj.application.growbox.intrudes","false");
+            System.setProperty( "apple.awt.application.appearance", "system" );
         }
 
-        String lookAndFeelClassName = Config.getInstance().getString(Config.LOOK_AND_FEEL);
-        try {
-            UIManager.setLookAndFeel(lookAndFeelClassName);
-        } catch (Exception e) {
-            // go on with default one
-            log.warn("Can't set LookAndFeel from Config {}", lookAndFeelClassName, e);
-        }
+        FlatLightLaf.installLafInfo();
+        FlatMacLightLaf.installLafInfo();
+        FlatIntelliJLaf.installLafInfo();
+
+        FlatDarkLaf.installLafInfo();
+        FlatDarculaLaf.installLafInfo();
+        FlatMacDarkLaf.installLafInfo();
 
         studio.ui.I18n.setLocale(Locale.getDefault());
         System.setProperty("awt.useSystemAAFontSettings","on");
@@ -120,7 +127,15 @@ public class Studio {
         return serverHistory.size() == 0 ? Server.NO_SERVER : serverHistory.get(0);
     }
 
-    private static void initLF() {
+    public static void initLF() {
+        String lookAndFeelClassName = Config.getInstance().getString(Config.LOOK_AND_FEEL);
+        try {
+            UIManager.setLookAndFeel(lookAndFeelClassName);
+        } catch (Exception e) {
+            // go on with default one
+            log.warn("Can't set LookAndFeel from Config {}", lookAndFeelClassName, e);
+        }
+
         if (Util.MAC_OS_X) {
             InputMap im = (InputMap) UIManager.get("TextField.focusInputMap");
             im.put(KeyStroke.getKeyStroke(KeyEvent.VK_C, KeyEvent.META_DOWN_MASK), DefaultEditorKit.copyAction);

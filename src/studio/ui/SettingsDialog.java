@@ -1,5 +1,7 @@
 package studio.ui;
 
+import com.formdev.flatlaf.FlatLaf;
+import studio.core.Studio;
 import studio.ui.settings.*;
 
 import javax.swing.*;
@@ -68,8 +70,8 @@ public class SettingsDialog extends EscapeDialog {
             StudioWindow.refreshResultSettings();
         }
         if (result.isChangedLF()) {
-            StudioOptionPane.showMessage(this, "Look and Feel was changed. " +
-                    "New L&F will take effect on the next start up.", "Look and Feel Setting Changed");
+            Studio.initLF();
+            FlatLaf.updateUI();
         }
 
     }

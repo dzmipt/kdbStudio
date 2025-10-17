@@ -9,7 +9,7 @@ import studio.ui.GroupLayoutSimple;
 
 import javax.swing.*;
 import javax.swing.text.NumberFormatter;
-import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.Map;
 
 public class SettingsGeneralTab extends SettingsTab {
@@ -150,7 +150,7 @@ public class SettingsGeneralTab extends SettingsTab {
         private Map<String, CustomiszedLookAndFeelInfo> mapLookAndFeels;
 
         public LookAndFeels() {
-            mapLookAndFeels = new HashMap<>();
+            mapLookAndFeels = new LinkedHashMap<>();
             for (UIManager.LookAndFeelInfo lf: UIManager.getInstalledLookAndFeels()) {
                 mapLookAndFeels.put(lf.getClassName(), new CustomiszedLookAndFeelInfo(lf));
             }
