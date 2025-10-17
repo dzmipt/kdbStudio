@@ -34,6 +34,12 @@ public class StudioRSyntaxTextArea extends RSyntaxTextArea {
         if (gutter != null) gutter.setLineNumberFont(font);
     }
 
+    @Override
+    public void setBackground(Color bg) {
+        super.setBackground(bg);
+        if (gutter != null) gutter.setBackground(bg);
+    }
+
     public void setActionsUpdateListener(Runnable actionUpdateListener) {
         this.actionsUpdateListener = actionUpdateListener;
     }
