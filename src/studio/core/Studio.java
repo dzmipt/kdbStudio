@@ -4,6 +4,8 @@ import com.formdev.flatlaf.FlatDarculaLaf;
 import com.formdev.flatlaf.FlatDarkLaf;
 import com.formdev.flatlaf.FlatIntelliJLaf;
 import com.formdev.flatlaf.FlatLightLaf;
+import com.formdev.flatlaf.extras.FlatInspector;
+import com.formdev.flatlaf.extras.FlatUIDefaultsInspector;
 import com.formdev.flatlaf.themes.FlatMacDarkLaf;
 import com.formdev.flatlaf.themes.FlatMacLightLaf;
 import org.apache.logging.log4j.Level;
@@ -57,7 +59,7 @@ public class Studio {
         initLogger();
         WindowsAppUserMode.setMainId();
 
-        if(System.getProperty("os.name","").contains("OS X")){
+        if(Util.MAC_OS_X){
             System.setProperty("apple.laf.useScreenMenuBar","true");
             //     System.setProperty("apple.awt.brushMetalLook", "true");
             System.setProperty("apple.awt.showGrowBox","true");
@@ -66,6 +68,7 @@ public class Studio {
             System.setProperty("com.apple.macos.smallTabs","true");
             System.setProperty("com.apple.mrj.application.growbox.intrudes","false");
             System.setProperty( "apple.awt.application.appearance", "system" );
+            System.setProperty("flatlaf.useWindowDecorations", "true");
         }
 
         FlatLightLaf.installLafInfo();
@@ -218,6 +221,9 @@ public class Studio {
 
     //Executed on the Event Dispatcher Thread
     private static void init(String[] args) {
+        FlatInspector.install( "ctrl shift alt X" );
+        FlatUIDefaultsInspector.install( "ctrl shift alt Y" );
+
 //        debugFocusTransfer();
         log.info("Start Studio with args {}", Arrays.asList(args));
         log.info("Process pid is {}", ProcessHandle.current().pid());
