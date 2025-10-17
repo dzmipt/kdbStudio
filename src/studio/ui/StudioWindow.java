@@ -1242,7 +1242,7 @@ public class StudioWindow extends JFrame implements WindowListener {
 
         Object[] actions = new Object[] {
                 Box.createRigidArea(new Dimension(3,0)),
-                new JLabel(I18n.getString("Server")),
+                new JLabel("Server: "),
                 comboServer, txtServer,
                 serverBackAction, serverForwardAction,
                 serverListAction, null,
@@ -1588,6 +1588,16 @@ public class StudioWindow extends JFrame implements WindowListener {
         contentPane.add(toolbar, BorderLayout.NORTH);
         contentPane.add(central, BorderLayout.CENTER);
         contentPane.add(statusBar, BorderLayout.SOUTH);
+
+        if (Util.MAC_OS_X) {
+            getRootPane().putClientProperty( "apple.awt.fullWindowContent", true );
+            getRootPane().putClientProperty( "apple.awt.transparentTitleBar", true );
+
+            JPanel macOSContentPane = new JPanel(new BorderLayout());
+            macOSContentPane.add(Box.createVerticalStrut(30), BorderLayout.NORTH);
+            macOSContentPane.add(contentPane, BorderLayout.CENTER);
+            contentPane = macOSContentPane;
+        }
 
         setContentPane(contentPane);
         setDefaultCloseOperation(WindowConstants.DO_NOTHING_ON_CLOSE);
