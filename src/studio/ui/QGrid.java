@@ -22,6 +22,7 @@ import java.util.regex.PatternSyntaxException;
 
 //@TODO: Should it be really a JPanel? It looks it should be just a JTabel. And anyway any additional components could be added to TabPanel
 public class QGrid extends JPanel implements MouseWheelListener, SearchPanelListener {
+    private final JScrollPane scrollPane;
     private StudioWindow studioWindow;
     private final KTableModel model;
     private final JTable table;
@@ -37,6 +38,7 @@ public class QGrid extends JPanel implements MouseWheelListener, SearchPanelList
     private KFormatContext formatContext = KFormatContext.DEFAULT;
 
     private static final Logger log = LogManager.getLogger();
+    private JLabel rowCountLabel;
 
     public JTable getTable() {
         return table;
@@ -127,7 +129,7 @@ public class QGrid extends JPanel implements MouseWheelListener, SearchPanelList
         table.setAutoResizeMode(JTable.AUTO_RESIZE_OFF);
         table.setShowVerticalLines(true);
         table.getTableHeader().setReorderingAllowed(true);
-        JScrollPane scrollPane = new JScrollPane(table);
+        scrollPane = new JScrollPane(table);
         scrollPane.addMouseWheelListener(this);
 
         tableRowHeader = new TableRowHeader(table);
@@ -161,26 +163,17 @@ public class QGrid extends JPanel implements MouseWheelListener, SearchPanelList
 
 
         scrollPane.setWheelScrollingEnabled(true);
-        scrollPane.getViewport().setBackground(UIManager.getColor("Table.background"));
 
-        JLabel rowCountLabel = new IndexHeader(model, scrollPane);
+        rowCountLabel = new IndexHeader(model, scrollPane);
         rowCountLabel.setHorizontalAlignment(SwingConstants.CENTER);
         rowCountLabel.setVerticalAlignment(SwingConstants.BOTTOM);
         rowCountLabel.setOpaque(false);
-        rowCountLabel.setBorder(UIManager.getBorder("TableHeader.cellBorder"));
-        rowCountLabel.setFont(UIManager.getFont("TableHeader.font"));
-        rowCountLabel.setBackground(UIManager.getColor("TableHeader.background"));
-        rowCountLabel.setForeground(UIManager.getColor("TableHeader.foreground"));
         scrollPane.setCorner(JScrollPane.UPPER_LEFT_CORNER, rowCountLabel);
 
         rowCountLabel = new JLabel("");
         rowCountLabel.setHorizontalAlignment(SwingConstants.RIGHT);
         rowCountLabel.setVerticalAlignment(SwingConstants.CENTER);
         rowCountLabel.setOpaque(true);
-        rowCountLabel.setBorder(UIManager.getBorder("TableHeader.cellBorder"));
-        rowCountLabel.setFont(UIManager.getFont("Table.font"));
-        rowCountLabel.setBackground(UIManager.getColor("TableHeader.background"));
-        rowCountLabel.setForeground(UIManager.getColor("TableHeader.foreground"));
         scrollPane.setCorner(JScrollPane.UPPER_RIGHT_CORNER, rowCountLabel);
 
         setLayout(new BorderLayout());
@@ -274,6 +267,26 @@ public class QGrid extends JPanel implements MouseWheelListener, SearchPanelList
 
         studioWindow.getMainStatusBar().bindTable(table);
         initSearch();
+        updateUI();
+    }
+
+    @Override
+    public void updateUI() {
+        CellRenderer.installUI();
+        super.updateUI();
+
+        if (scrollPane == null) return ; //called from super constructor. not yet initialized
+        scrollPane.getViewport().setBackground(UIManager.getColor("Table.background"));
+
+        rowCountLabel.setBorder(UIManager.getBorder("TableHeader.cellBorder"));
+        rowCountLabel.setFont(UIManager.getFont("TableHeader.font"));
+        rowCountLabel.setBackground(UIManager.getColor("TableHeader.background"));
+        rowCountLabel.setForeground(UIManager.getColor("TableHeader.foreground"));
+
+        rowCountLabel.setBorder(UIManager.getBorder("TableHeader.cellBorder"));
+        rowCountLabel.setFont(UIManager.getFont("Table.font"));
+        rowCountLabel.setBackground(UIManager.getColor("TableHeader.background"));
+        rowCountLabel.setForeground(UIManager.getColor("TableHeader.foreground"));
     }
 
     private void resetSearch() {

@@ -12,8 +12,8 @@ public class StatusBar extends Box {
 
     private String oldStatus = "";
 
-    private final int yGap;
-    private final int xGap;
+    private int yGap;
+    private int xGap;
 
     public StatusBar() {
         super(BoxLayout.X_AXIS);
@@ -21,9 +21,6 @@ public class StatusBar extends Box {
         tempStatusTimer =  new Timer(3000, this::tempStatusTimerAction);
         tempStatusTimer.setRepeats(false);
 
-        FontMetrics fm = getFontMetrics(UIManager.getFont("Label.font"));
-        yGap = Math.round(0.1f * fm.getHeight());
-        xGap = Math.round(0.25f * SwingUtilities.computeStringWidth(fm, "x"));
 
 
         lblStatus = new JLabel(" ");
@@ -34,6 +31,14 @@ public class StatusBar extends Box {
 
         boxStatus.setMinimumSize(new Dimension(0,0));
         add(boxStatus);
+    }
+
+    @Override
+    public void updateUI() {
+        super.updateUI();
+        FontMetrics fm = getFontMetrics(UIManager.getFont("Label.font"));
+        yGap = Math.round(0.1f * fm.getHeight());
+        xGap = Math.round(0.25f * SwingUtilities.computeStringWidth(fm, "x"));
     }
 
     protected void addComponent(JComponent component) {

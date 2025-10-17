@@ -18,6 +18,13 @@ public class TableHeaderRenderer extends DefaultTableCellRenderer {
         setHorizontalAlignment(SwingConstants.LEFT);
         setVerticalAlignment(SwingConstants.CENTER);
         setOpaque(true);
+
+        setFont(Config.getInstance().getFont(Config.FONT_TABLE));
+    }
+
+    @Override
+    public void updateUI() {
+        super.updateUI();
         Border border = UIManager.getBorder("TableHeader.cellBorder");
         if (border == null) {
             border = BorderFactory.createMatteBorder(0, 0, 2, 1, Color.BLACK);
@@ -25,7 +32,6 @@ public class TableHeaderRenderer extends DefaultTableCellRenderer {
         // add gap for sorter icon
         setBorder(BorderFactory.createCompoundBorder(border, BorderFactory.createEmptyBorder(5,2,1,0)));
 
-        setFont(Config.getInstance().getFont(Config.FONT_TABLE));
         setBackground(UIManager.getColor("TableHeader.background"));
         setForeground(UIManager.getColor("TableHeader.foreground"));
     }
