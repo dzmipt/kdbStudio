@@ -7,10 +7,7 @@ import org.assertj.swing.fixture.JComboBoxFixture;
 import org.assertj.swing.fixture.JTextComponentFixture;
 import org.assertj.swing.timing.Condition;
 import org.assertj.swing.timing.Pause;
-import org.junit.After;
-import org.junit.AfterClass;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.*;
 import studio.core.DefaultAuthenticationMechanism;
 import studio.kdb.Server;
 import studio.kdb.ServerTreeNode;
@@ -82,7 +79,7 @@ public class ServerTest extends StudioTest {
         assertEquals(server1.getBackgroundColor(), bgColor);
     }
 
-//    @Ignore("I think AssertJ-Swing doesn't work well with modal dialogs")
+    @Ignore("I think AssertJ-Swing doesn't work well with modal dialogs")
     @Test
     public void testChangeBackgroundColor() {
         JComboBoxFixture serverComboBox = frameFixture.comboBox("serverDropDown");
