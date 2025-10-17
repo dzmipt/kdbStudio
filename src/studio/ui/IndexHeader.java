@@ -1,6 +1,7 @@
-package studio.kdb;
+package studio.ui;
 
-import studio.ui.SorterDrawer;
+import studio.kdb.KTableModel;
+import studio.ui.grid.SorterDrawer;
 
 import javax.swing.*;
 import java.awt.*;

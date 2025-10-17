@@ -6,6 +6,10 @@ import org.fife.ui.rtextarea.SearchContext;
 import studio.kdb.*;
 import studio.ui.action.CopyTableSelectionAction;
 import studio.ui.action.TableUserAction;
+import studio.ui.grid.CellRenderer;
+import studio.ui.grid.TableHeaderRenderer;
+import studio.ui.grid.TableRowHeader;
+import studio.ui.grid.WidthAdjuster;
 import studio.ui.search.*;
 
 import javax.swing.*;

@@ -1,4 +1,6 @@
-package studio.ui;
+package studio.ui.grid;
+
+import studio.ui.Util;
 
 import javax.swing.*;
 import java.awt.*;

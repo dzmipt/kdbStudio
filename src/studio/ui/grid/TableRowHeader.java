@@ -1,4 +1,6 @@
-package studio.kdb;
+package studio.ui.grid;
+
+import studio.kdb.KTableModel;
 
 import javax.swing.*;
 import javax.swing.event.MouseInputAdapter;
