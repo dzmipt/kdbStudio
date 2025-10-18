@@ -17,7 +17,6 @@ import studio.ui.dndtabbedpane.DraggableTabbedPane;
 import studio.ui.rstextarea.ConvertTabsToSpacesAction;
 import studio.ui.rstextarea.FindReplaceAction;
 import studio.ui.rstextarea.RSTextAreaFactory;
-import studio.ui.rstextarea.StudioRSyntaxTextArea;
 import studio.ui.search.SearchPanel;
 import studio.ui.statusbar.MainStatusBar;
 import studio.utils.Content;
@@ -40,6 +39,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
+import java.util.function.Function;
 
 import static javax.swing.JSplitPane.VERTICAL_SPLIT;
 import static studio.ui.EscapeDialog.DialogResult.ACCEPTED;
@@ -453,10 +453,23 @@ public class StudioWindow extends JFrame implements WindowListener {
         refreshAllMenus();
     }
 
-    public static void executeAll(EditorsPanel.EditorTabAction action) {
+    public static boolean executeForAllEditors(Function<EditorTab, Boolean> action) {
         for (StudioWindow studioWindow: allWindows) {
-            studioWindow.execute(action);
+            for (EditorTab editor: studioWindow.rootEditorsPanel.getAllEditors(false) ) {
+                if (! action.apply(editor)) return false;
+            }
         }
+        return true;
+    }
+
+    public static boolean executeForAllResultTabs(Function<ResultTab, Boolean> action) {
+        for (StudioWindow window: allWindows) {
+            int count = window.resultsPane.getTabCount();
+            for (int index=0; index<count; index++) {
+                if (! action.apply(window.getResultTab(index))) return false;
+            }
+        }
+        return true;
     }
 
     public boolean execute(EditorsPanel.EditorTabAction action) {
@@ -465,7 +478,7 @@ public class StudioWindow extends JFrame implements WindowListener {
 
 
     private static void saveAll() {
-        executeAll(editorTab -> editorTab.saveFileOnDisk(false));
+        executeForAllEditors(editorTab -> editorTab.saveFileOnDisk(false));
     }
 
     private void arrangeAll() {
@@ -801,42 +814,8 @@ public class StudioWindow extends JFrame implements WindowListener {
     private void toggleWordWrap() {
         boolean value = CONFIG.getBoolean(Config.RSTA_WORD_WRAP);
         CONFIG.setBoolean(Config.RSTA_WORD_WRAP, !value);
-        refreshEditorsSettings();
+        SettingsDialog.refreshEditorsSettings();
         refreshActionState();
-    }
-
-    public static void refreshServerSettingsForAllWindows() {
-        for (StudioWindow window: allWindows) {
-            window.refreshServer();
-        }
-    }
-
-    public static void refreshEditorsSettings() {
-        executeAll(editorTab -> {
-            StudioRSyntaxTextArea editor = editorTab.getTextArea();
-                editor.setHighlightCurrentLine(CONFIG.getBoolean(Config.RSTA_HIGHLIGHT_CURRENT_LINE));
-                editor.setAnimateBracketMatching(CONFIG.getBoolean(Config.RSTA_ANIMATE_BRACKET_MATCHING));
-                editor.setLineWrap(CONFIG.getBoolean(Config.RSTA_WORD_WRAP));
-                editor.setSyntaxScheme(CONFIG.getFont(Config.FONT_EDITOR), CONFIG.getColorTokenConfig());
-
-                editor.setTabSize(CONFIG.getInt(Config.EDITOR_TAB_SIZE));
-                editor.setTabsEmulated(CONFIG.getBoolean(Config.EDITOR_TAB_EMULATED));
-
-                editor.setInsertPairedCharacters(CONFIG.getBoolean(Config.RSTA_INSERT_PAIRED_CHAR));
-                return true;
-            });
-    }
-
-    public static void refreshResultSettings() {
-        long doubleClickTimeout = CONFIG.getInt(Config.EMULATED_DOUBLE_CLICK_TIMEOUT);
-        for (StudioWindow window: allWindows) {
-            int count = window.resultsPane.getTabCount();
-            for (int index=0; index<count; index++) {
-                ResultTab resultTab = window.getResultTab(index);
-                resultTab.setDoubleClickTimeout(doubleClickTimeout);
-                resultTab.refreshFont();
-            }
-        }
     }
 
     public static StudioWindow[] getAllStudioWindows() {
@@ -1177,10 +1156,8 @@ public class StudioWindow extends JFrame implements WindowListener {
         }
     }
 
-    public static void refreshComboServerVisibility() {
-        for (StudioWindow window: allWindows) {
-            window.comboServer.setVisible(CONFIG.getBoolean(Config.SHOW_SERVER_COMBOBOX));
-        }
+    public StringComboBox getComboServer() {
+        return comboServer;
     }
 
     public static void refreshServerListAllWindows() {

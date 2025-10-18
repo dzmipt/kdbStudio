@@ -73,6 +73,26 @@ public class ServerConfig {
         }
     }
 
+    private ServerTreeNode updateBgColor(ServerTreeNode serverTreeNode, Color oldColor, Color newColor) {
+        ServerTreeNode result = new ServerTreeNode(serverTreeNode.getFolder());
+        for (ServerTreeNode child: serverTreeNode.childNodes()) {
+            if (child.isFolder()) {
+                result.add(updateBgColor(child, oldColor, newColor));
+            } else {
+                Server server = child.getServer();
+                if (server.getBackgroundColor().equals(oldColor)) {
+                    server = new Server(server.getName(), server.getConnection(), server.getAuthenticationMechanism(), newColor, result);
+                }
+                result.add(server);
+            }
+        }
+        return result;
+    }
+
+    public void updateBgColor(Color oldColor, Color newColor) {
+        setRoot(updateBgColor(serverTree, oldColor, newColor));
+    }
+
     public void setRoot(ServerTreeNode root) {
         this.serverTree = root;
         servers = new HashMap<>();

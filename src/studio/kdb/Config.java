@@ -413,9 +413,12 @@ public class Config  {
         return studioConfig.setEnum(key, value);
     }
 
-    //@TODO: do we need?
     public Color getColor(String key) {
         return studioConfig.getColor(key);
+    }
+
+    public boolean setColor(String key, Color value) {
+        return studioConfig.setColor(key, value);
     }
 
     public Font getFont(String key) {

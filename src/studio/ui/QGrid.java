@@ -328,7 +328,7 @@ public class QGrid extends JPanel implements MouseWheelListener, SearchPanelList
         font = font.deriveFont((float) newFontSize);
 
         Config.getInstance().setFont(Config.FONT_TABLE, font);
-        StudioWindow.refreshResultSettings();
+        SettingsDialog.refreshResultSettings();
     }
 
     public void resizeColumns() {

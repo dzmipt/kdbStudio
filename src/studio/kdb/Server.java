@@ -159,6 +159,10 @@ public class Server {
         return parent.getFolderPath();
     }
 
+    public boolean inServerTree() {
+        return parent != null;
+    }
+
     public Server newParent(ServerTreeNode parent) {
         return new Server(name, conn, authenticationMechanism, backgroundColor, parent);
     }

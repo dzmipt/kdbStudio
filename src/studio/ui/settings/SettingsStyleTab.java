@@ -34,8 +34,9 @@ public class SettingsStyleTab extends SettingsTab {
 
         editorFontSelection = new FontSelectionPanel(parentDialog, "Editor font: ", CONFIG.getFont(Config.FONT_EDITOR));
         resultFontSelection = new FontSelectionPanel(parentDialog, "Result table font: ", CONFIG.getFont(Config.FONT_TABLE));
-        colorTokenEditor = new ColorTokenEditor(CONFIG.getColorTokenConfig());
+        colorTokenEditor = new ColorTokenEditor(CONFIG.getColor(Config.COLOR_BACKGROUND), CONFIG.getColorTokenConfig());
         preview = RSTextAreaFactory.newTextArea(true);
+        preview.setBackground(colorTokenEditor.getBgColor());
         preview.setSyntaxScheme(editorFontSelection.getSelectedFont(), colorTokenEditor.getColorTokenConfig());
 
         scrollPane = new RTextScrollPane(preview);
@@ -50,6 +51,7 @@ public class SettingsStyleTab extends SettingsTab {
             preview.setFont(editorFontSelection.getSelectedFont());
         });
         colorTokenEditor.addChangeListener(e -> {
+            preview.setBackground(colorTokenEditor.getBgColor());
             preview.setSyntaxScheme(editorFontSelection.getSelectedFont(), colorTokenEditor.getColorTokenConfig());
         });
 
@@ -94,6 +96,8 @@ public class SettingsStyleTab extends SettingsTab {
 
         changed = CONFIG.setColorTokenConfig(colorTokenEditor.getColorTokenConfig());
         result.setRefreshResultSettings(changed);
+
+        CONFIG.setColor(Config.COLOR_BACKGROUND, colorTokenEditor.getBgColor());
 
         String lfClassName = ((CustomiszedLookAndFeelInfo)comboBoxLookAndFeel.getSelectedItem()).getClassName();
         changed = CONFIG.setString(Config.LOOK_AND_FEEL, lfClassName);

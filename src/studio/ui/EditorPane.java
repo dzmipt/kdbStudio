@@ -87,8 +87,8 @@ public class EditorPane extends JPanel implements MouseWheelListener, SearchPane
         font = font.deriveFont((float) newFontSize);
 
         Config.getInstance().setFont(Config.FONT_EDITOR, font);
-        StudioWindow.refreshEditorsSettings();
-        StudioWindow.refreshResultSettings();
+        SettingsDialog.refreshEditorsSettings();
+        SettingsDialog.refreshResultSettings();
     }
 
     public void hideSearchPanel() {

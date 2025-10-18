@@ -17,7 +17,7 @@ public class ConnectionStats {
     private static K.Flip getTable() {
         Map<Session, Integer> sessionsCount = new HashMap<>();
 
-        StudioWindow.executeAll(editor -> {
+        StudioWindow.executeForAllEditors(editor -> {
             Session session = editor.getSession();
             if (session == null) return true;
 

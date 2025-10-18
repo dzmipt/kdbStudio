@@ -16,13 +16,18 @@ import java.util.Map;
 
 public class ColorTokenEditor extends JPanel {
 
-    private final JLabel[] lblColorTokens;
-    private final ColorLabel[] colorLabels;
+    private final ColorLabel bgColorLabel;
     private final Map<ColorToken, Color> colorMap = new HashMap<>();
 
     private final List<ChangeListener> listeners = new ArrayList<>();
 
-    public ColorTokenEditor(ColorTokenConfig colorTokenConfig) {
+    public ColorTokenEditor(Color bgColor, ColorTokenConfig colorTokenConfig) {
+        bgColorLabel = new ColorLabel(bgColor);
+        bgColorLabel.setSingleClick(true);
+        bgColorLabel.addChangeListener(e -> {
+            fireEvent();
+        });
+
         int count = ColorToken.values().length;
         int colsCount = 6;
         int lines = count / colsCount;
@@ -33,24 +38,24 @@ public class ColorTokenEditor extends JPanel {
             stacks[cols] = new GroupLayoutSimple.Stack();
         }
 
-        lblColorTokens = new JLabel[count];
-        colorLabels = new ColorLabel[count];
-        for (int i = 0; i<count; i++) {
+        stacks[0].addLineAndGlue(bgColorLabel, new JLabel("Background"));
+
+        for (int i = 0; i<count -1; i++) {
             final ColorToken token = ColorToken.values()[i];
             Color color = colorTokenConfig.getColor(token);
             colorMap.put(token, color);
 
-            lblColorTokens[i] = new JLabel(token.getDescription());
-            colorLabels[i] = new ColorLabel(color);
-            colorLabels[i].setSingleClick(true);
+            JLabel lblToken = new JLabel(token.getDescription());
+            ColorLabel colorLabel = new ColorLabel(color);
+            colorLabel.setSingleClick(true);
 
-            colorLabels[i].addChangeListener(e -> {
+            colorLabel.addChangeListener(e -> {
                 Color newColor = ((ColorLabel)e.getSource()).getColor();
                 colorMap.put(token, newColor);
                 fireEvent();
             });
 
-            stacks[i / lines].addLineAndGlue(colorLabels[i], lblColorTokens[i]);
+            stacks[(i+1) / lines].addLineAndGlue(colorLabel, lblToken);
         }
 
         int emptyLines = lines*colsCount - count;
@@ -65,6 +70,10 @@ public class ColorTokenEditor extends JPanel {
 
     public ColorTokenConfig getColorTokenConfig() {
         return new ColorTokenConfig(colorMap);
+    }
+
+    public Color getBgColor() {
+        return bgColorLabel.getColor();
     }
 
     public void addChangeListener(ChangeListener listener) {
