@@ -69,8 +69,8 @@ public class SettingsDialog extends EscapeDialog {
 
         Color newBgColor = CONFIG.getColor(Config.COLOR_BACKGROUND);
         if (! newBgColor.equals(oldBgColor) ) {
-            int res = StudioOptionPane.showYesNoDialog(this, "Background color has been change.\n" +
-                    "Do you want to update background for all servers ?", "Background color changed");
+            int res = StudioOptionPane.showYesNoDialog(this, "Background color is changed.\n" +
+                    "Do you want to update background for all servers with old background color?", "Background color changed");
             if (res == JOptionPane.YES_OPTION) {
                 updateBgColor(oldBgColor, newBgColor);
             }
