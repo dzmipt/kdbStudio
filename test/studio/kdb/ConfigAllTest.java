@@ -160,7 +160,7 @@ public class ConfigAllTest {
         assertEquals(new Color(0x0000f0), colorTokenConfig.getColor(ColorToken.SYMBOL));
         assertEquals(new Color(0x0000ef), colorTokenConfig.getColor(ColorToken.KEYWORD));
         assertEquals(new Color(0x0000ee), colorTokenConfig.getColor(ColorToken.COMMAND));
-        assertEquals(new Color(0x0000ed), colorTokenConfig.getColor(ColorToken.SYSTEM));
+//        assertEquals(new Color(0x0000ed), colorTokenConfig.getColor(ColorToken.SYSTEM));
 //        assertEquals(new Color(0x020202), colorTokenConfig.getColor(ColorToken.WHITESPACE));
         assertEquals(new Color(0x030303), colorTokenConfig.getColor(ColorToken.DEFAULT));
         assertEquals(new Color(0x040404), colorTokenConfig.getColor(ColorToken.BRACKET));

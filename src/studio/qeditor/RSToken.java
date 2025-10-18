@@ -36,7 +36,7 @@ public enum RSToken {
     DATETIME(TokenTypes.DEFAULT_NUM_TOKEN_TYPES + 12, ColorToken.DATETIME),
     TIMESTAMP(TokenTypes.DEFAULT_NUM_TOKEN_TYPES + 13, ColorToken.TIMESTAMP),
     TIMESPAN(TokenTypes.DEFAULT_NUM_TOKEN_TYPES + 14, ColorToken.TIMESPAN),
-    SYSTEM(TokenTypes.PREPROCESSOR, ColorToken.SYSTEM),
+    SYSTEM(TokenTypes.PREPROCESSOR, ColorToken.COMMAND),
     COMMAND(TokenTypes.VARIABLE, ColorToken.COMMAND);
 
     public final static int NUM_TOKEN_TYPES = TokenTypes.DEFAULT_NUM_TOKEN_TYPES + 15;
