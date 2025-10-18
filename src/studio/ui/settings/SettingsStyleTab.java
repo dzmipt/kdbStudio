@@ -23,6 +23,18 @@ public class SettingsStyleTab extends SettingsTab {
 
     private static final Config CONFIG = Config.getInstance();
 
+    private final static String SAMPLE =
+            "/ Sample to check syntax highlight. The sample is editable.\n" +
+            "\\pwd\n" +
+            "func: {\n" +
+            "     vals:  (-100; 23i; 17h; 2.9979e8; 3.14e; 0xFF; 1b; 101b);\n" +
+            "     str:  (\"c\"; \"string and\"; `symbol);\n" +
+            "     temp: (2025.10.18; 2025.10.18D20:08:35.189; 0D01:15:00; 205.10.18T20:08;\n" +
+            "                    20:09; 20:10:45; 2025.10m);\n" +
+            "     : count each (vals; str; temp);\n" +
+            " };\n" +
+            "\"\\error\"\n";
+
     public SettingsStyleTab(JDialog parentDialog) {
         JLabel lblLookAndFeel = new JLabel("Look and Feel:");
 
@@ -36,8 +48,9 @@ public class SettingsStyleTab extends SettingsTab {
         resultFontSelection = new FontSelectionPanel(parentDialog, "Result table font: ", CONFIG.getFont(Config.FONT_TABLE));
         colorTokenEditor = new ColorTokenEditor(CONFIG.getColor(Config.COLOR_BACKGROUND), CONFIG.getColorTokenConfig());
         preview = RSTextAreaFactory.newTextArea(true);
-        preview.setBackground(colorTokenEditor.getBgColor());
         preview.setSyntaxScheme(editorFontSelection.getSelectedFont(), colorTokenEditor.getColorTokenConfig());
+        preview.setBackground(colorTokenEditor.getBgColor());
+        preview.setText(SAMPLE);
 
         scrollPane = new RTextScrollPane(preview);
         preview.setGutter(scrollPane.getGutter());
