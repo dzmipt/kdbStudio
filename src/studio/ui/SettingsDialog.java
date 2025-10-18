@@ -118,6 +118,15 @@ public class SettingsDialog extends EscapeDialog {
         StudioWindow.executeForAllResultTabs(resultTab -> {
             resultTab.setDoubleClickTimeout(doubleClickTimeout);
             resultTab.refreshFont();
+
+            resultTab.forEachResultPane(resultPane -> {
+                EditorPane editorPane = resultPane.getEditor();
+                if (editorPane == null) return;
+
+                StudioRSyntaxTextArea editor = editorPane.getTextArea();
+                editor.setBackground(CONFIG.getColor(Config.COLOR_BACKGROUND));
+                editor.setSyntaxScheme(CONFIG.getFont(Config.FONT_EDITOR), CONFIG.getColorTokenConfig());
+            });
             return true;
         });
     }

@@ -104,7 +104,7 @@ public class ResultTab extends JPanel {
         return (ResultPane) cardLayout.getSelectedComponent();
     }
 
-    private void forEachResultPane(Consumer<ResultPane> action) {
+    public void forEachResultPane(Consumer<ResultPane> action) {
         for (Component component: pnlCards.getComponents()) {
             action.accept((ResultPane) component);
         }

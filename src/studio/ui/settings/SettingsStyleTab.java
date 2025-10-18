@@ -103,14 +103,18 @@ public class SettingsStyleTab extends SettingsTab {
     public void saveSettings(SettingsSaveResult result) {
         boolean changed = CONFIG.setFont(Config.FONT_EDITOR, editorFontSelection.getSelectedFont());
         result.setRefreshEditorsSettings(changed);
+        result.setRefreshResultSettings(changed);
 
         changed = CONFIG.setFont(Config.FONT_TABLE, resultFontSelection.getSelectedFont());
         result.setRefreshResultSettings(changed);
 
         changed = CONFIG.setColorTokenConfig(colorTokenEditor.getColorTokenConfig());
+        result.setRefreshEditorsSettings(changed);
         result.setRefreshResultSettings(changed);
 
-        CONFIG.setColor(Config.COLOR_BACKGROUND, colorTokenEditor.getBgColor());
+        changed = CONFIG.setColor(Config.COLOR_BACKGROUND, colorTokenEditor.getBgColor());
+        result.setRefreshEditorsSettings(changed);
+        result.setRefreshResultSettings(changed);
 
         String lfClassName = ((CustomiszedLookAndFeelInfo)comboBoxLookAndFeel.getSelectedItem()).getClassName();
         changed = CONFIG.setString(Config.LOOK_AND_FEEL, lfClassName);
