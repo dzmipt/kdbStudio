@@ -599,7 +599,9 @@ public class StudioWindow extends JFrame implements WindowListener {
                             stopAction.actionPerformed(e);
 
                         Server newServer = f.getServer();
-                        CONFIG.getServerConfig().replaceServer(editor.getServer(), newServer);
+                        if (newServer.inServerTree()) {
+                            CONFIG.getServerConfig().replaceServer(editor.getServer(), newServer);
+                        }
                         setServer(newServer);
                         refreshAll();
                     }
@@ -611,9 +613,11 @@ public class StudioWindow extends JFrame implements WindowListener {
                     AddServerForm f = new AddServerForm(this, editor.getServer());
                     f.alignAndShow();
                     if (f.getResult() == ACCEPTED) {
-                        Server s = f.getServer();
-                        CONFIG.getServerConfig().addServer(s);
-                        setServer(s);
+                        Server server = f.getServer();
+                        if (server.inServerTree()) {
+                            CONFIG.getServerConfig().addServer(server);
+                        }
+                        setServer(server);
                         refreshAll();
                     }
                 });
@@ -969,7 +973,9 @@ public class StudioWindow extends JFrame implements WindowListener {
 
                 if (f.getResult() == ACCEPTED) {
                     clone = f.getServer();
-                    CONFIG.getServerConfig().addServer(clone);
+                    if (clone.inServerTree()) {
+                        CONFIG.getServerConfig().addServer(clone);
+                    }
                     setServer(clone);
                     refreshAll();
                 }

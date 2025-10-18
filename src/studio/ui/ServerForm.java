@@ -77,9 +77,9 @@ public class ServerForm extends EscapeDialog {
     }
 
     private void updateFolderLabel() {
-        String folderName = server.getFolderName();
-        if (folderName.equals("")) {
-            folderName = "/";
+        String folderName = "";
+        if (server.inServerTree()) {
+            folderName = server.getFolderName();
         }
         folderTextLabel.setText(folderName);
     }
@@ -280,31 +280,44 @@ public class ServerForm extends EscapeDialog {
     }
 
     private void onOk(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_onOk
-        txtName.setText(txtName.getText().trim());
-        txtHostname.setText(txtHostname.getText().trim());
-        txtUsername.setText(txtUsername.getText().trim());
-        txtPort.setText(txtPort.getText().trim());
-        txtPassword.setText(new String(txtPassword.getPassword()).trim());
+        try {
+            String name = txtName.getText().trim();
+            String host = txtHostname.getText().trim();
+            String user = txtUsername.getText().trim();
+            int port = Integer.parseInt(txtPort.getText().trim());
+            String password = new String(txtPassword.getPassword());
 
-        if (txtName.getText().length() == 0) {
-            StudioOptionPane.showError(this, "The server's name cannot be empty", "Studio for kdb+");
-            txtName.requestFocus();
-            return;
+            if (name.isEmpty() && server.inServerTree()) {
+                StudioOptionPane.showError(this, "The server's name cannot be empty", "Studio for kdb+");
+                txtName.requestFocus();
+                return;
+            }
+
+            if (server.inServerTree() &&
+                    !name.equals(server.getName()) &&
+                    server.getParent().getChildWithName(name) != null) {
+                StudioOptionPane.showError(this, "The server with such name already exist", "Studio for kdb+");
+                txtName.requestFocus();
+                return;
+            }
+
+
+            ServerTreeNode parent = null;
+            if (server.inServerTree()) {
+                parent = Config.getInstance().getServerTree().findPath(server.getFolderPath(), true);
+            }
+
+            server = new Server(name, host, port, user, password,
+                    sampleTextOnBackgroundTextField.getBackground(),
+                    (String) authenticationMechanism.getSelectedItem(),
+                    chkBoxUseTLS.isSelected(),
+                    parent
+            );
+            accept();
+        } catch (NumberFormatException e) {
+            StudioOptionPane.showError(this, "Can't parse port to integer", "Studio for kdb+");
+            txtPort.requestFocus();
         }
-
-        int port = txtPort.getText().trim().length() == 0 ? 0 : Integer.parseInt(txtPort.getText());
-        server = new Server(txtName.getText().trim(),
-                txtHostname.getText().trim(),
-                port,
-                txtUsername.getText().trim(),
-                new String(txtPassword.getPassword()),
-                sampleTextOnBackgroundTextField.getBackground(),
-                (String) authenticationMechanism.getSelectedItem(),
-                chkBoxUseTLS.isSelected(),
-                Config.getInstance().getServerTree().findPath(server.getFolderPath(), true)
-                );
-
-        accept();
     }
 
 

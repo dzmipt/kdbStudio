@@ -110,10 +110,21 @@ public class ServerTreeNode extends DefaultMutableTreeNode {
         return -1;
     }
 
-    public ServerTreeNode getChild(String folder) {
+    public ServerTreeNode getChildWithName(String name) {
         for(ServerTreeNode child: childNodes()) {
-            if (child.isFolder() && child.getFolder().equals(folder)) return child;
+            if (child.isFolder()) {
+                if (child.getFolder().equals(name)) return child;
+            } else {
+                if (child.getServer().getName().equals(name)) return child;
+            }
         }
+        return null;
+    }
+
+    public ServerTreeNode getChild(String folder) {
+        ServerTreeNode child = getChildWithName(folder);
+        if (child == null) return null;
+        if (child.isFolder()) return child;
         return null;
     }
 

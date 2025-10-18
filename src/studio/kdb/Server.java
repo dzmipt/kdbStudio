@@ -163,6 +163,10 @@ public class Server {
         return parent != null;
     }
 
+    public ServerTreeNode getParent() {
+        return parent;
+    }
+
     public Server newParent(ServerTreeNode parent) {
         return new Server(name, conn, authenticationMechanism, backgroundColor, parent);
     }

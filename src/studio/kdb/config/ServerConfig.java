@@ -192,11 +192,14 @@ public class ServerConfig {
             // ?? Is it possible
             return;
         }
+        if (oldServer.getFullName().equals(newServer.getFullName())
+            && servers.get(newServer.getFullName()) != Server.NO_SERVER) {
+            log.warn("Can't add  duplicate");
+            return;
+        }
+
         ServerTreeNode newFolder = serverTree.findPath(newServer.getFolderPath(), true);
 
-//        String name = oldServer.getFullName();
-//        serverNames.remove(name);
-//        servers.remove(name);
         int index = oldFolder.remove(oldServer);
         if (index == -1 || oldFolder!=newFolder) {
             index = newFolder.getChildCount();
