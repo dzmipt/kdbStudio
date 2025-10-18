@@ -1,26 +1,28 @@
 package studio.kdb;
 
-public enum KType {
-    Boolean(-1,"boolean", 'b'),
-    Guid(-2, "guid", 'g'),
-    Byte(-4, "byte", 'x'),
-    Short(-5, "short", 'h'),
-    Int(-6, "int", 'i'),
-    Long(-7, "long", 'j'),
-    Float(-8, "real", 'e'),
-    Double(-9, "float", 'f'),
-    Char(-10, "char", 'c'),
-    Symbol(-11, "symbol", 's'),
-    Timestamp(-12, "timestamp", 'p'),
-    Month(-13, "month", 'm'),
-    Date(-14, "date", 'd'),
-    Datetime(-15, "datetime", 'z'),
-    Timespan(-16, "timespan", 'n'),
-    Minute(-17, "minute", 'u'),
-    Second(-18, "second", 'v'),
-    Time(-19, "time", 't'),
+import studio.kdb.config.ColorToken;
 
-    TimeLong(-19000,"timeLong", 'l'),
+public enum KType {
+    Boolean(-1,"boolean", 'b', ColorToken.BOOLEAN),
+    Guid(-2, "guid", 'g', ColorToken.IDENTIFIER),
+    Byte(-4, "byte", 'x', ColorToken.BYTE),
+    Short(-5, "short", 'h', ColorToken.SHORT),
+    Int(-6, "int", 'i', ColorToken.INTEGER),
+    Long(-7, "long", 'j', ColorToken.LONG),
+    Float(-8, "real", 'e', ColorToken.REAL),
+    Double(-9, "float", 'f', ColorToken.FLOAT),
+    Char(-10, "char", 'c', ColorToken.CHARVECTOR),
+    Symbol(-11, "symbol", 's', ColorToken.SYMBOL),
+    Timestamp(-12, "timestamp", 'p', ColorToken.TIMESTAMP),
+    Month(-13, "month", 'm', ColorToken.MONTH),
+    Date(-14, "date", 'd', ColorToken.DATE),
+    Datetime(-15, "datetime", 'z', ColorToken.DATETIME),
+    Timespan(-16, "timespan", 'n', ColorToken.TIMESPAN),
+    Minute(-17, "minute", 'u', ColorToken.MINUTE),
+    Second(-18, "second", 'v', ColorToken.SECOND),
+    Time(-19, "time", 't', ColorToken.TIME),
+
+    TimeLong(-19000,"timeLong", 'l', ColorToken.TIMESTAMP),
 
     List(0),
     BooleanVector(Boolean, true),
@@ -64,6 +66,7 @@ public enum KType {
     private final char typeChar;
     private final KType elementType;
     private final boolean requireFormatEnding;
+    private final ColorToken colorToken;
 
     public int getType() {
         return type;
@@ -75,6 +78,10 @@ public enum KType {
 
     public char getTypeChar() {
         return typeChar;
+    }
+
+    public ColorToken getColorToken() {
+        return colorToken;
     }
 
     public String getVectorFormatEnding() {
@@ -91,26 +98,28 @@ public enum KType {
     }
 
     KType(int type) {
-        this(type, "", ' ');
+        this(type, "", ' ', ColorToken.DEFAULT);
     }
 
-    KType(int type, String name, char typeChar) {
-        this(type, name, typeChar, null, false);
+    KType(int type, String name, char typeChar, ColorToken colorToken) {
+        this(type, name, typeChar, null, false, colorToken);
     }
 
-    KType(int type, String name, char typeChar, KType elementType, boolean requireFormatEnding) {
+    KType(int type, String name, char typeChar, KType elementType, boolean requireFormatEnding, ColorToken colorToken) {
         this.type = type;
         this.elementType = elementType;
         this.name = name;
         this.typeChar = typeChar;
         this.requireFormatEnding = requireFormatEnding;
+        this.colorToken = colorToken;
     }
 
     KType(KType elementType) {
         this(elementType, false);
     }
     KType(KType elementType, boolean requireFormatEnding) {
-        this(-elementType.type, elementType.name, elementType.typeChar, elementType, requireFormatEnding);
+        this(-elementType.type, elementType.name,
+                elementType.typeChar, elementType, requireFormatEnding, elementType.colorToken);
     }
 
 }

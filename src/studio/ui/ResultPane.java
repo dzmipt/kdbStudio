@@ -1,10 +1,15 @@
 package studio.ui;
 
 import kx.K4Exception;
+import org.fife.ui.rsyntaxtextarea.RSyntaxDocument;
 import studio.kdb.K;
 import studio.kdb.KTableModel;
+import studio.kdb.KType;
 import studio.kdb.ListModel;
+import studio.kdb.config.ColorToken;
+import studio.qeditor.QTokenMakerFactory;
 import studio.ui.action.QueryResult;
+import studio.ui.rstextarea.StudioRSyntaxTextArea;
 
 import javax.swing.*;
 import java.awt.*;
@@ -34,6 +39,15 @@ public class ResultPane extends JPanel {
                 }
             } else {
                 editor = new EditorPane(false, studioWindow.getResultSearchPanel(), studioWindow.getMainStatusBar());
+                KType kType = result.getType();
+                boolean enlist = kType.isVector() && result.count() == 1;
+                ColorToken colorToken = kType.getColorToken();
+                if (colorToken != ColorToken.DEFAULT && ! enlist) {
+                    StudioRSyntaxTextArea textArea = editor.getTextArea();
+                    ((RSyntaxDocument)textArea.getDocument()).setTokenMakerFactory(QTokenMakerFactory.INSTANCE);
+                    String contentType = QTokenMakerFactory.getContentType(colorToken);
+                    textArea.setSyntaxEditingStyle(contentType);
+                }
                 component = editor;
                 type = ResultType.TEXT;
             }
