@@ -10,6 +10,8 @@ import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.condition.EnabledIfEnvironmentVariable;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -88,5 +90,27 @@ public class KSerialiseWrongStringTest {
         assertArrayEquals(data, out.toByteArray());
 
     }
+
+    @ParameterizedTest
+    @ValueSource(ints = { 0, 1, 10, 32, 65, 127, 128, 252, 255})
+    public void testChar(int iByte) throws IOException {
+        byte b = (byte) iByte;
+        byte[] data = new byte[]{
+                (byte) -10, //type: char
+                b
+        };
+
+        KMessage message = IPC.deserialise(data, false, false);
+        assertNull(message.getError());
+        K.KBase base = message.getObject();
+        assertEquals(KType.Char, base.getType());;
+
+        ByteArrayOutputStream out = new ByteArrayOutputStream();
+        base.serialise(out);
+
+        assertArrayEquals(data, out.toByteArray());
+
+    }
+
 
 }
