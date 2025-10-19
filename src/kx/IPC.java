@@ -51,8 +51,8 @@ public class IPC {
 
     public KMessage deserialise() {
         try {
-            if (b[0] == -128) {
-                j = 1;
+            if (b[j] == -128) {
+                j++;
                 return new KMessage(new K4Exception(rs().getString()));
             }
             return new KMessage(r());
@@ -188,7 +188,8 @@ public class IPC {
             } else {
                 return new K.MappedTable(d);
             }
-        }        n = ri();
+        }
+        n = ri();
         switch (t) {
             case 0: {
                 K.KBase[] array = new K.KBase[n];
