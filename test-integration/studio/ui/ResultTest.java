@@ -120,7 +120,7 @@ public class ResultTest extends StudioTest {
 
     @Test
     public void testSimpleConsoleResult() {
-        MockQSession.setResponse(new K.KCharacterVector("result"));
+        MockQSession.setResponse(new K.KString("result"));
         execute();
         frameFixture.panel("resultPanel0").textBox().requireText("\"result\"");
     }

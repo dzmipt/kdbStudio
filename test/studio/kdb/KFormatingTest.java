@@ -39,14 +39,14 @@ public class KFormatingTest {
         assertEquals("1 1,234 0W 0N", longVector.toString(comma));
 
         K.KList list = new K.KList(new K.KLong(12345), new K.KSymbol("12345"),
-                new K.KCharacterVector("12345"), new K.KDouble(12345.67));
+                new K.KString("12345"), new K.KDouble(12345.67));
         assertEquals("(12,345;12345;12345;12,345.67)", list.toString(comma));
     }
 
     @Test
     public void commaInOthers() {
         assertEquals("0x7b", new K.KByte((byte)123).toString(comma));
-        assertEquals("123456789", new K.KCharacterVector("123456789").toString(comma));
+        assertEquals("123456789", new K.KString("123456789").toString(comma));
         assertEquals("123456789", new K.KSymbol("123456789").toString(comma));
         assertEquals("2020.12.09", new K.KDate(7648).toString(comma));
     }

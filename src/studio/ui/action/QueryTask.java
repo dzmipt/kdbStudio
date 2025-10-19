@@ -67,7 +67,7 @@ public abstract class QueryTask {
 
         @Override
         public KMessage execute(Session session, ProgressCallback progress) throws IOException, K4Exception, InterruptedException {
-            return session.execute(studioWindow, new K.KCharacterVector(query), progress);
+            return session.execute(studioWindow, new K.KString(query), progress);
         }
     }
 

@@ -9,8 +9,8 @@ public class DictTableModel extends KTableModel {
 
         boolean keyFlip = dict.x instanceof K.Flip;
         boolean valueFlip = dict.y instanceof K.Flip;
-        keyCount = keyFlip ? ((K.Flip)dict.x).x.getLength() : 1;
-        int valueCount = valueFlip ? ((K.Flip)dict.y).x.getLength() : 1;
+        keyCount = keyFlip ? ((K.Flip)dict.x).x.count() : 1;
+        int valueCount = valueFlip ? ((K.Flip)dict.y).x.count() : 1;
 
         columns = new KColumn[keyCount + valueCount];
         for (int col = 0; col<columns.length; col++) {
@@ -22,7 +22,7 @@ public class DictTableModel extends KTableModel {
             String name;
             if (obj instanceof K.Flip) {
                 K.KSymbolVector v = ((K.Flip) obj).x;
-                name = v.at(index).s;
+                name = v.at(index).getString();
             } else { //list
                 name = keyColumn ? "key" : "value";
             }

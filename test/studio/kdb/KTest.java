@@ -139,9 +139,9 @@ public class KTest {
         check(new K.KCharacter(' '), " ", "\" \"");
         check(new K.KCharacter('a'), "a", "\"a\"");
 
-        check(new K.KCharacterVector(" a"), " a", "\" a\"");
-        check(new K.KCharacterVector(""), "", "\"\"");
-        check(new K.KCharacterVector("a"), "enlist a", "enlist \"a\"");
+        check(new K.KString(" a"), " a", "\" a\"");
+        check(new K.KString(""), "", "\"\"");
+        check(new K.KString("a"), "enlist a", "enlist \"a\"");
     }
 
     @Test

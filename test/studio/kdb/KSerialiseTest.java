@@ -39,14 +39,14 @@ public class KSerialiseTest {
         kConn = new KConnection("localhost", qPort, false);
 
         if (kServer == null) {
-            kConn.k(new K.KCharacterVector(".z.pg:{$[x~\"reset\";`.z.pg set value;x]}"));
+            kConn.k(new K.KString(".z.pg:{$[x~\"reset\";`.z.pg set value;x]}"));
         }
     }
 
     @AfterAll
     public static void exit() throws K4Exception, IOException, InterruptedException {
         if (kServer == null) {
-            kConn.k(new K.KCharacterVector("reset"));
+            kConn.k(new K.KString("reset"));
         }
         kConn.close();
 
@@ -137,7 +137,7 @@ public class KSerialiseTest {
     @Test
     public void testString() {
         for (String value: strings) {
-            test(new K.KCharacterVector(value));
+            test(new K.KString(value));
             for(char c: value.toCharArray()) {
                 test(new K.KCharacter(c));
             }
@@ -175,7 +175,7 @@ public class KSerialiseTest {
     @Test
     public void testList() {
         test(new K.KLongVector());
-        test(new K.KCharacterVector(""));
+        test(new K.KString(""));
         test(new K.KSymbolVector());
 
         test(new K.KList());
@@ -240,10 +240,10 @@ public class KSerialiseTest {
 
     @Test
     public void testDict() {
-        K.Dict d = new K.Dict(new K.KIntVector(13, -10, 5), new K.KCharacterVector("abc"));
+        K.Dict d = new K.Dict(new K.KIntVector(13, -10, 5), new K.KString("abc"));
         test(d);
 
-        K.Dict d1 = new K.Dict(new K.KLongVector(11, 111, 1111), new K.KList(new K.KIntVector(17),new K.KSymbol("xyz"), new K.KCharacterVector("test")));
+        K.Dict d1 = new K.Dict(new K.KLongVector(11, 111, 1111), new K.KList(new K.KIntVector(17),new K.KSymbol("xyz"), new K.KString("test")));
         d1.setAttr((byte)1);
         test(d1);
 
@@ -267,7 +267,7 @@ public class KSerialiseTest {
 
     @Test
     public void testNonAsciiStringEncoding() {
-        test(new K.KCharacterVector("Дима"));
+        test(new K.KString("Дима"));
     }
 
 }

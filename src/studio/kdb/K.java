@@ -9,6 +9,7 @@ import java.text.DecimalFormat;
 import java.time.*;
 import java.time.temporal.ChronoUnit;
 import java.util.*;
+import java.util.stream.Stream;
 
 public class K {
     private final static DecimalFormat nsFormatter = new DecimalFormat("000000000");
@@ -486,26 +487,26 @@ public class K {
 
     public static class Function extends KBase {
 
-        private final String body;
+        private final KString body;
 
         public Function(String body) {
+            this(new KString(body));
+        }
+
+        public Function(KString body) {
             super(KType.Function);
             this.body = body;
         }
 
-        public Function(KCharacterVector body) {
-            this(body.getString());
-        }
-
         @Override
         public StringBuilder format(StringBuilder builder, KFormatContext context) {
-            return super.format(builder, context).append(body);
+            return super.format(builder, context).append(body.getString());
         }
 
         @Override
         protected void serialiseData(OutputStream o) throws IOException {
             write(o, (byte) 0);
-            new KCharacterVector(body).serialise(o);
+            body.serialise(o);
         }
 
         @Override
@@ -747,39 +748,48 @@ public class K {
 
     public static class KSymbol extends KBase {
 
-        public String s;
+        public KString value;
+
+        public KSymbol(byte[] array) {
+            super(KType.Symbol);
+            this.value = new KString(array);
+        }
 
         public KSymbol(String s) {
             super(KType.Symbol);
-            this.s = s;
+            this.value = new KString(s);
+        }
+
+        public String getString() {
+            return value.getString();
         }
 
         public boolean isNull() {
-            return s.isEmpty();
+            return value.count() == 0;
         }
 
         @Override
         public StringBuilder format(StringBuilder builder, KFormatContext context) {
             builder = super.format(builder, context);
             if (context.showType()) builder.append("`");
-            return builder.append(s);
+            return builder.append(value.getString());
         }
 
         @Override
         public void serialiseData(OutputStream o) throws IOException {
-            o.write(s.getBytes(IPC.ENCODING));
+            o.write(value.getArray());
             write(o, (byte) 0);
         }
 
         @Override
         public int hashCode() {
-            return s.hashCode();
+            return value.getString().hashCode();
         }
 
         @Override
         public boolean equals(Object obj) {
             if (! (obj instanceof KSymbol)) return false;
-            return s.equals(((KSymbol)obj).s);
+            return value.equals(((KSymbol)obj).value);
         }
     }
 
@@ -809,6 +819,11 @@ public class K {
     public static class KCharacter extends KBase {
 
         public char c;
+
+        public KCharacter(byte b) {
+            super(KType.Char);
+            this.c = c;
+        }
 
         public KCharacter(char c) {
             super(KType.Char);
@@ -1206,7 +1221,7 @@ public class K {
             y = Y;
         }
 
-        //@TODO: change to somethign like setSortAttr
+        //@TODO: change to something like setSortAttr
         public void setAttr(byte attr) {
             this.attr = attr;
         }
@@ -1545,27 +1560,18 @@ public class K {
 
         @Override
         public int count() {
-            return getLength();
-        }
-
-        //@TODO: replace with count()
-        public int getLength() {
             return length;
-        }
-
-        public Object getArray() {
-            return array;
         }
 
         private final static String[] sAttr = new String[]{"", "`s#", "`u#", "`p#", "`g#"};
 
         //default implementation
         protected StringBuilder formatVector(StringBuilder builder, KFormatContext context) {
-            if (getLength() == 0) builder.append("`").append(getType().getName()).append("$()");
+            if (count() == 0) builder.append("`").append(getType().getName()).append("$()");
             else {
-                if (getLength() == 1) builder.append(enlist);
+                if (count() == 1) builder.append(enlist);
                 KFormatContext childContext = context.showType() ? new KFormatContext(context).setShowType(false) : context;
-                for (int i = 0; i < getLength(); i++) {
+                for (int i = 0; i < count(); i++) {
                     if (i > 0) builder.append(" ");
                     at(i).format(builder, childContext);
                 }
@@ -1637,19 +1643,19 @@ public class K {
 
         @Override
         protected StringBuilder formatVector(StringBuilder builder, KFormatContext context) {
-            if (getLength() == 1) builder.append(enlist);
+            if (count() == 1) builder.append(enlist);
             else builder.append("(");
-            for (int i = 0; i < getLength(); i++) {
+            for (int i = 0; i < count(); i++) {
                 if (i > 0) builder.append(";");
                 at(i).format(builder, context);
             }
-            if (getLength() != 1) builder.append(")");
+            if (count() != 1) builder.append(")");
             return builder;
         }
 
         @Override
         public void serialiseData(OutputStream o) throws IOException {
-            int length = getLength();
+            int length = count();
             write(o, (byte) 0);
             write(o, length);
             for (int index=0; index<length; index++) {
@@ -1803,10 +1809,10 @@ public class K {
 
         @Override
         protected StringBuilder formatVector(StringBuilder builder, KFormatContext context) {
-            if (getLength() == 0) builder.append("`boolean$()");
+            if (count() == 0) builder.append("`boolean$()");
             else {
-                if (getLength() == 1) builder.append(enlist);
-                for (int i = 0; i < getLength(); i++)
+                if (count() == 1) builder.append(enlist);
+                for (int i = 0; i < count(); i++)
                     builder.append(Array.getBoolean(array, i) ? "1" : "0");
                 builder.append("b");
             }
@@ -1826,11 +1832,11 @@ public class K {
 
         @Override
         protected StringBuilder formatVector(StringBuilder builder, KFormatContext context) {
-            if (getLength() == 0) builder.append("`byte$()");
+            if (count() == 0) builder.append("`byte$()");
             else {
-                if (getLength() == 1) builder.append(enlist);
+                if (count() == 1) builder.append(enlist);
                 builder.append("0x");
-                for (int i = 0; i < getLength(); i++) {
+                for (int i = 0; i < count(); i++) {
                     byte b = Array.getByte(array, i);
                     builder.append(Integer.toHexString((b >> 4) & 0xf))
                             .append(Integer.toHexString(b & 0xf));
@@ -1842,47 +1848,68 @@ public class K {
 
     public static class KSymbolVector extends KBaseVector<KSymbol> {
 
-        public KSymbolVector(String... array) {
+        private static KSymbol[] cast(String[] array) {
+            return Stream.of(array).map(KSymbol::new).toArray(KSymbol[]::new);
+        }
+
+        public KSymbolVector() {
+            super(new KSymbol[0], KType.SymbolVector);
+        }
+
+        public KSymbolVector(KSymbol... array) {
             super(array, KType.SymbolVector);
         }
 
+        public KSymbolVector(String... array) {
+            super(cast(array), KType.SymbolVector);
+        }
+
         public KSymbol at(int i) {
-            return new KSymbol((String) Array.get(array, i));
+            return (KSymbol) Array.get(array, i);
         }
 
         @Override
         protected StringBuilder formatVector(StringBuilder builder, KFormatContext context) {
-            if (getLength() == 0) builder.append("`symbol$()");
+            if (count() == 0) builder.append("`symbol$()");
             else {
-                if (getLength() == 1) builder.append(enlist);
-                for (int i = 0; i < getLength(); i++)
-                    builder.append("`").append(Array.get(array, i));
+                if (count() == 1) builder.append(enlist);
+                for (int i = 0; i < count(); i++)
+                    at(i).format(builder, KFormatContext.DEFAULT);
             }
             return builder;
         }
     }
 
-    public static class KCharacterVector extends KBaseVector<KCharacter> {
+    public static class KString extends KBaseVector<KCharacter> {
 
-        public KCharacterVector(String value) {
-            super(value.toCharArray(), KType.CharVector);
+        private final String value;
+
+        public KString(byte[] array) {
+            super(array, KType.CharVector);
+            this.value = new String(array, IPC.ENCODING);
+        }
+
+        public KString(String value) {
+            super(value.getBytes(IPC.ENCODING), KType.CharVector);
+            this.value = value;
         }
 
         public KCharacter at(int i) {
-            return new KCharacter(Array.getChar(array, i));
+            return new KCharacter(Array.getByte(array, i));
         }
 
         public String getString() {
-            return new String((char[]) array);
+            return value;
+        }
+
+        public byte[] getArray() {
+            return (byte[])array;
         }
 
         @Override
         protected StringBuilder formatVector(StringBuilder builder, KFormatContext context) {
-            if (getLength() == 1) {
-                char ch = Array.getChar(array, 0);
-                if (ch<=255) {
-                    builder.append(enlist);
-                }
+            if (count() == 1) {
+                builder.append(enlist);
             }
 
             if (context.showType()) builder.append("\"");
@@ -1894,9 +1921,8 @@ public class K {
         @Override
         public void serialiseData(OutputStream o) throws IOException {
             write(o, getAttr());
-            byte[] b = getString().getBytes(IPC.ENCODING);
-            write(o, b.length);
-            o.write(b);
+            write(o, count());
+            o.write((byte[]) array);
         }
     }
 }

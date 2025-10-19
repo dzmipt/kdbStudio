@@ -35,9 +35,9 @@ public class TableConnExtractorTest {
     private Object[][] getTable(String[][] values) {
         Object[][] res = new Object[values.length][];
         for (int row=0; row<values.length; row++) {
-            res[row] = new K.KCharacterVector[values[row].length];
+            res[row] = new K.KString[values[row].length];
             for (int col=0; col<values[row].length; col++) {
-                res[row][col] = new K.KCharacterVector(values[row][col]);
+                res[row][col] = new K.KString(values[row][col]);
             }
         }
         return res;

@@ -111,8 +111,8 @@ public class KCompareTest {
 
     @Test
     public void testString() {
-        testLess(new K.KCharacterVector("aab"), new K.KCharacterVector("abb"));
-        testLess(new K.KCharacterVector("aab"), new K.KCharacterVector("ab"));
+        testLess(new K.KString("aab"), new K.KString("abb"));
+        testLess(new K.KString("aab"), new K.KString("ab"));
     }
 
     @Test
@@ -120,8 +120,8 @@ public class KCompareTest {
         testLess(new K.KSymbol("aab"), new K.KSymbol("abb"));
         testLess(new K.KSymbol("aab"), new K.KSymbol("ab"));
 
-        testLess(new K.KCharacterVector("aab"), new K.KSymbol("abb"));
-        testLess(new K.KSymbol("aab"), new K.KCharacterVector("abb"));
+        testLess(new K.KString("aab"), new K.KSymbol("abb"));
+        testLess(new K.KSymbol("aab"), new K.KString("abb"));
 
     }
 

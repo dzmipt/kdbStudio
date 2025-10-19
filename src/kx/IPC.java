@@ -53,7 +53,7 @@ public class IPC {
         try {
             if (b[0] == -128) {
                 j = 1;
-                return new KMessage(new K4Exception(rs().s));
+                return new KMessage(new K4Exception(rs().getString()));
             }
             return new KMessage(r());
         } catch (UnsupportedEncodingException e) {
@@ -263,16 +263,17 @@ public class IPC {
                 return F;
             }
             case 10: {
-                String value = new String(b, j, n, ENCODING);
-                K.KCharacterVector C = new K.KCharacterVector(value);
+                byte[] array = new byte[n];
+                System.arraycopy(b, j, array, 0, n);
+                K.KString C = new K.KString(array);
                 C.setAttr(attr);
                 j += n;
                 return C;
             }
             case 11: {
-                String[] array = new String[n];
+                K.KSymbol[] array = new K.KSymbol[n];
                 for (; i < n; i++)
-                    array[i] = rs().s;
+                    array[i] = rs();
                 K.KSymbolVector S = new K.KSymbolVector(array);
                 S.setAttr(attr);
                 return S;
@@ -390,10 +391,11 @@ public class IPC {
         int n = j;
         for (; b[n] != 0; )
             ++n;
-        String s = new String(b, j, n - j, ENCODING);
+        byte[] array = new byte[n-j];
+        System.arraycopy(b, j, array, 0, n-j);
         j = n;
         ++j;
-        return new K.KSymbol(s);
+        return new K.KSymbol(array);
     }
 
     K.UnaryPrimitive rup() {
@@ -410,7 +412,7 @@ public class IPC {
 
     K.Function rfn() throws UnsupportedEncodingException {
         K.KSymbol s = rs();
-        return new K.Function((K.KCharacterVector) r());
+        return new K.Function((K.KString) r());
     }
 
     K.Feach rfeach() throws UnsupportedEncodingException {

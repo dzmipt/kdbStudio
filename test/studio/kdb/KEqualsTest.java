@@ -169,7 +169,7 @@ public class KEqualsTest {
         K.Adverb a5 = new K.Fscan(funcBinary);
         K.Adverb a6 = new K.FPrior(funcBinary);
 
-        K.Function funcBinary1 = new K.Function(new K.KCharacterVector("{x+y}"));
+        K.Function funcBinary1 = new K.Function(new K.KString("{x+y}"));
         K.Adverb a11 = new K.FEachLeft(funcBinary1);
 
         testEquals(a1,a11);
@@ -184,9 +184,9 @@ public class KEqualsTest {
     @ParameterizedTest
     @ValueSource(strings = { "", " ", "\"", "`", "some String", "a"})
     public void testString(String value) {
-        K.KBase k0 = new K.KCharacterVector(value);
-        K.KBase k1 = new K.KCharacterVector(value);
-        K.KBase kk = new K.KCharacterVector(value.length() == 0 ? " ": ((char) value.charAt(0)+1) + value.substring(1) );
+        K.KBase k0 = new K.KString(value);
+        K.KBase k1 = new K.KString(value);
+        K.KBase kk = new K.KString(value.length() == 0 ? " ": ((char) value.charAt(0)+1) + value.substring(1) );
 
         testEquals(k0, k1);
         testNotEquals(k0, kk);
