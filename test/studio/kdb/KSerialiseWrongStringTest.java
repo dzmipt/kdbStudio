@@ -80,6 +80,7 @@ public class KSerialiseWrongStringTest {
         K.KString str = (K.KString) base;
 
         assertEquals(2, str.count());
+        assertArrayEquals( new byte[] {(byte)252, (byte)252}, str.getArray());
 
         ByteArrayOutputStream out = new ByteArrayOutputStream();
         str.serialise(out);
