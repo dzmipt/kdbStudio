@@ -1,5 +1,7 @@
 package studio.kdb.config;
 
+import com.google.gson.JsonElement;
+import com.google.gson.JsonParser;
 import org.junit.jupiter.api.Test;
 import studio.core.Credentials;
 import studio.kdb.FileChooserConfig;
@@ -7,11 +9,10 @@ import studio.kdb.KType;
 
 import java.awt.*;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotEquals;
 
 public class ConfigTypeTest {
 
@@ -87,7 +88,7 @@ public class ConfigTypeTest {
     public void testColorTokenConfig() {
         check(ConfigType.COLOR_TOKEN_CONFIG, ColorTokenConfig.DEFAULT);
 
-        Map<ColorToken, Color> map = new HashMap<>();
+        ColorMap map = new ColorMap();
         map.put(ColorToken.DATE, new Color(11,22,33));
         check(ConfigType.COLOR_TOKEN_CONFIG, new ColorTokenConfig(map));
 
@@ -99,6 +100,20 @@ public class ConfigTypeTest {
     }
 
     @Test
+    public void testColorTokenConfigOneColorChange() {
+        Color newDefault = new Color(0x112233);
+        assertNotEquals(newDefault, ColorToken.DEFAULT.getColor());
+
+        String jsonText = "{\"DEFAULT\":\"112233\",\"SYSTEM\":\"F0B400\"}";
+        JsonElement json = JsonParser.parseString(jsonText);
+        ColorTokenConfig config = (ColorTokenConfig)ConfigType.COLOR_TOKEN_CONFIG.fromJson(json, null);
+
+        assertEquals(newDefault, config.getColor(ColorToken.DEFAULT));
+        assertEquals(ColorToken.SYMBOL.getColor(), config.getColor(ColorToken.SYMBOL));
+    }
+
+
+        @Test
     public void testServerHistory() {
         ServerHistoryConfig config = new ServerHistoryConfig(20, List.of());
         check(ConfigType.SERVER_HISTORY, config);

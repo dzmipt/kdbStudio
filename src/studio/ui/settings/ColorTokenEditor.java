@@ -1,5 +1,6 @@
 package studio.ui.settings;
 
+import studio.kdb.config.ColorMap;
 import studio.kdb.config.ColorToken;
 import studio.kdb.config.ColorTokenConfig;
 import studio.ui.ColorLabel;
@@ -10,14 +11,12 @@ import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 import java.awt.*;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 public class ColorTokenEditor extends JPanel {
 
     private final ColorLabel bgColorLabel;
-    private final Map<ColorToken, Color> colorMap = new HashMap<>();
+    private final ColorMap colorMap = new ColorMap();
 
     private final List<ChangeListener> listeners = new ArrayList<>();
 

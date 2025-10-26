@@ -12,8 +12,8 @@ import java.awt.*;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.List;
 import java.util.*;
+import java.util.List;
 import java.util.function.Consumer;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -169,7 +169,7 @@ public class ConfigToJsonConverter {
     }
 
     private void convertColorTokenConfig(StudioConfig config) {
-        Map<ColorToken, Color> map = new HashMap<>();
+        ColorMap map = new ColorMap();
         for(ColorToken token: ColorToken.values()) {
             String value = get("token." + token.name());
             if (value == null) continue;

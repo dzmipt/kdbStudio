@@ -8,16 +8,30 @@ public class ColorTokenConfig {
 
     private final Map<ColorToken, Color> colors;
 
-    public final static ColorTokenConfig DEFAULT = new ColorTokenConfig(new HashMap<>());
+    public final static ColorTokenConfig DEFAULT = new ColorTokenConfig(new ColorMap());
 
-    public ColorTokenConfig(Map<ColorToken, Color> colors) {
+    public ColorTokenConfig(ColorMap colors) {
         this.colors = new HashMap<>();
-        for (ColorToken token: colors.keySet()) {
-            Color color = colors.get(token);
-            if (!color.equals(token.getColor())) {
-                this.colors.put(token, color);
-            }
+        for (String key: colors.keySet()) {
+            try {
+                ColorToken token = ColorToken.valueOf(key);
+                Color color = colors.get(key);
+                if (!color.equals(token.getColor())) {
+                    this.colors.put(token, color);
+                }
+            } catch (IllegalArgumentException ignore) {}
         }
+    }
+
+    public ColorMap getMap() {
+        ColorMap map = new ColorMap();
+        for (ColorToken token: ColorToken.values()) {
+            Color color = colors.get(token);
+            if (color == null) continue;
+            if (token.getColor().equals(color)) continue;
+            map.put(token.name(), color);
+        }
+        return map;
     }
 
     public Color getColor(ColorToken token) {

@@ -244,31 +244,37 @@ public enum ConfigType {
             return json;
         }
     },
-    COLOR_TOKEN_CONFIG {
+    COLOR_MAP {
         @Override
         public Object fromJson(JsonElement jsonElement, Object defaultValue) {
-            Map<ColorToken, Color> map = new HashMap<>();
+            ColorMap map = new ColorMap();
             JsonObject json = jsonElement.getAsJsonObject();
             for (String key: json.keySet()) {
-                try {
-                    ColorToken token = ColorToken.valueOf(key.toUpperCase());
-                    Color color = (Color) COLOR.fromJson(json.get(key), null);
-                    map.put(token, color);
-                } catch (IllegalArgumentException ignore) {}
+                Color color = (Color) COLOR.fromJson(json.get(key), null);
+                map.put(key, color);
             }
-            return new ColorTokenConfig(map);
+            return map;
         }
 
         @Override
         public JsonElement toJson(Object value) {
-            ColorTokenConfig config = (ColorTokenConfig) value;
+            ColorMap map = (ColorMap)value ;
             JsonObject json = new JsonObject();
-            for (ColorToken token: ColorToken.values()) {
-                Color color = config.getColor(token);
-                if (color.equals(token.getColor())) continue;
-                json.add(token.name().toLowerCase(), COLOR.toJson(color));
+            for (Map.Entry<String, Color> entry: map.entrySet()) {
+                json.add(entry.getKey(), COLOR.toJson(entry.getValue()));
             }
             return json;
+        }
+    },
+    COLOR_TOKEN_CONFIG {
+        @Override
+        public Object fromJson(JsonElement jsonElement, Object defaultValue) {
+            return new ColorTokenConfig((ColorMap)COLOR_MAP.fromJson(jsonElement, defaultValue));
+        }
+
+        @Override
+        public JsonElement toJson(Object value) {
+            return COLOR_MAP.toJson( ((ColorTokenConfig)value).getMap() );
         }
     },
     SERVER_HISTORY {
