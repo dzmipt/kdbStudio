@@ -6,7 +6,7 @@ import org.fife.ui.rsyntaxtextarea.SyntaxScheme;
 import org.fife.ui.rtextarea.Gutter;
 import org.fife.ui.rtextarea.RTextArea;
 import org.fife.ui.rtextarea.RUndoManager;
-import studio.kdb.config.ColorTokenConfig;
+import studio.kdb.config.ColorMap;
 import studio.qeditor.RSToken;
 
 import java.awt.*;
@@ -44,7 +44,7 @@ public class StudioRSyntaxTextArea extends RSyntaxTextArea {
         if (gutter != null) gutter.setBackground(bg);
     }
 
-    public void setSyntaxScheme(Font font, ColorTokenConfig tokenConfig) {
+    public void setSyntaxScheme(Font font, ColorMap tokenConfig) {
         setFont(font);
         SyntaxScheme scheme = new SyntaxScheme(false);
         Style[] defaultStyles = scheme.getStyles();
@@ -52,7 +52,7 @@ public class StudioRSyntaxTextArea extends RSyntaxTextArea {
         System.arraycopy(defaultStyles, 0, styles, 0, defaultStyles.length);
         for (RSToken token: RSToken.values()) {
             if (token.getFontStyle() != Font.PLAIN) font = font.deriveFont(token.getFontStyle());
-            Color color = tokenConfig.getColor(token.getColorToken());
+            Color color = tokenConfig.get(token.getColorToken());
             Style style = new Style(color, null, font);
 
             styles[token.getTokenType()] = style;

@@ -137,34 +137,34 @@ public class ConfigAllTest {
     public void testTokenColors() {
         assertEquals(new Color(0xfefefe), config.getColor(Config.COLOR_BACKGROUND));
 
-        ColorTokenConfig colorTokenConfig = config.getColorTokenConfig();;
-        assertEquals(new Color(0x00ff00), colorTokenConfig.getColor(ColorToken.CHARVECTOR));
-        assertEquals(new Color(0xffff00), colorTokenConfig.getColor(ColorToken.EOLCOMMENT));
-        assertEquals(new Color(0xeeee00), colorTokenConfig.getColor(ColorToken.IDENTIFIER));
-//        assertEquals(new Color(0x010101), colorTokenConfig.getColor(ColorToken.OPERATOR));
-        assertEquals(new Color(0x0000ff), colorTokenConfig.getColor(ColorToken.BOOLEAN));
-        assertEquals(new Color(0x0000fe), colorTokenConfig.getColor(ColorToken.BYTE));
-        assertEquals(new Color(0x0000fd), colorTokenConfig.getColor(ColorToken.SHORT));
-        assertEquals(new Color(0x0000fc), colorTokenConfig.getColor(ColorToken.LONG));
-        assertEquals(new Color(0x0000fb), colorTokenConfig.getColor(ColorToken.REAL));
-        assertEquals(new Color(0x0000fa), colorTokenConfig.getColor(ColorToken.INTEGER));
-        assertEquals(new Color(0x0000f9), colorTokenConfig.getColor(ColorToken.FLOAT));
-        assertEquals(new Color(0x0000f8), colorTokenConfig.getColor(ColorToken.TIMESTAMP));
-        assertEquals(new Color(0x0000f7), colorTokenConfig.getColor(ColorToken.TIMESPAN));
-        assertEquals(new Color(0x0000f6), colorTokenConfig.getColor(ColorToken.DATETIME));
-        assertEquals(new Color(0x0000f5), colorTokenConfig.getColor(ColorToken.DATE));
-        assertEquals(new Color(0x0000f4), colorTokenConfig.getColor(ColorToken.MONTH));
-        assertEquals(new Color(0x0000f3), colorTokenConfig.getColor(ColorToken.MINUTE));
-        assertEquals(new Color(0x0000f2), colorTokenConfig.getColor(ColorToken.SECOND));
-        assertEquals(new Color(0x0000f1), colorTokenConfig.getColor(ColorToken.TIME));
-        assertEquals(new Color(0x0000f0), colorTokenConfig.getColor(ColorToken.SYMBOL));
-        assertEquals(new Color(0x0000ef), colorTokenConfig.getColor(ColorToken.KEYWORD));
-        assertEquals(new Color(0x0000ee), colorTokenConfig.getColor(ColorToken.COMMAND));
-//        assertEquals(new Color(0x0000ed), colorTokenConfig.getColor(ColorToken.SYSTEM));
-//        assertEquals(new Color(0x020202), colorTokenConfig.getColor(ColorToken.WHITESPACE));
-        assertEquals(new Color(0x030303), colorTokenConfig.getColor(ColorToken.DEFAULT));
-        assertEquals(new Color(0x040404), colorTokenConfig.getColor(ColorToken.BRACKET));
-        assertEquals(new Color(0xfe0101), colorTokenConfig.getColor(ColorToken.ERROR));
+        ColorMap colorTokenConfig = config.getColorTokenConfig();;
+        assertEquals(new Color(0x00ff00), colorTokenConfig.get(ColorToken.CHARVECTOR));
+        assertEquals(new Color(0xffff00), colorTokenConfig.get(ColorToken.EOLCOMMENT));
+        assertEquals(new Color(0xeeee00), colorTokenConfig.get(ColorToken.IDENTIFIER));
+//        assertEquals(new Color(0x010101), colorTokenConfig.get(ColorToken.OPERATOR));
+        assertEquals(new Color(0x0000ff), colorTokenConfig.get(ColorToken.BOOLEAN));
+        assertEquals(new Color(0x0000fe), colorTokenConfig.get(ColorToken.BYTE));
+        assertEquals(new Color(0x0000fd), colorTokenConfig.get(ColorToken.SHORT));
+        assertEquals(new Color(0x0000fc), colorTokenConfig.get(ColorToken.LONG));
+        assertEquals(new Color(0x0000fb), colorTokenConfig.get(ColorToken.REAL));
+        assertEquals(new Color(0x0000fa), colorTokenConfig.get(ColorToken.INTEGER));
+        assertEquals(new Color(0x0000f9), colorTokenConfig.get(ColorToken.FLOAT));
+        assertEquals(new Color(0x0000f8), colorTokenConfig.get(ColorToken.TIMESTAMP));
+        assertEquals(new Color(0x0000f7), colorTokenConfig.get(ColorToken.TIMESPAN));
+        assertEquals(new Color(0x0000f6), colorTokenConfig.get(ColorToken.DATETIME));
+        assertEquals(new Color(0x0000f5), colorTokenConfig.get(ColorToken.DATE));
+        assertEquals(new Color(0x0000f4), colorTokenConfig.get(ColorToken.MONTH));
+        assertEquals(new Color(0x0000f3), colorTokenConfig.get(ColorToken.MINUTE));
+        assertEquals(new Color(0x0000f2), colorTokenConfig.get(ColorToken.SECOND));
+        assertEquals(new Color(0x0000f1), colorTokenConfig.get(ColorToken.TIME));
+        assertEquals(new Color(0x0000f0), colorTokenConfig.get(ColorToken.SYMBOL));
+        assertEquals(new Color(0x0000ef), colorTokenConfig.get(ColorToken.KEYWORD));
+        assertEquals(new Color(0x0000ee), colorTokenConfig.get(ColorToken.COMMAND));
+//        assertEquals(new Color(0x0000ed), colorTokenConfig.get(ColorToken.SYSTEM));
+//        assertEquals(new Color(0x020202), colorTokenConfig.get(ColorToken.WHITESPACE));
+        assertEquals(new Color(0x030303), colorTokenConfig.get(ColorToken.DEFAULT));
+        assertEquals(new Color(0x040404), colorTokenConfig.get(ColorToken.BRACKET));
+        assertEquals(new Color(0xfe0101), colorTokenConfig.get(ColorToken.ERROR));
     }
 
 }

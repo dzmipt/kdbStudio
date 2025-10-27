@@ -86,17 +86,52 @@ public class ConfigTypeTest {
 
     @Test
     public void testColorTokenConfig() {
-        check(ConfigType.COLOR_TOKEN_CONFIG, ColorTokenConfig.DEFAULT);
+        check(ConfigType.COLOR_TOKEN_CONFIG, ColorMap.DEFAULT_COLOR_TOKEN_MAP);
+
+        ColorMap map = new ColorMap(ColorMap.DEFAULT_COLOR_TOKEN_MAP);
+        map.put(ColorToken.DATE, new Color(11,22,33));
+        check(ConfigType.COLOR_TOKEN_CONFIG, map);
+
+        map.put(ColorToken.ERROR, Color.RED);
+        check(ConfigType.COLOR_TOKEN_CONFIG, map);
+
+        map.put(ColorToken.ERROR, new Color(10, 20, 30));
+        check(ConfigType.COLOR_TOKEN_CONFIG, map);
+
+        check(ConfigType.COLOR_TOKEN_CONFIG, map);
+    }
+
+    @Test
+    public void testColorMap() {
+        check(ConfigType.COLOR_MAP, ColorMap.EMPTY);
 
         ColorMap map = new ColorMap();
         map.put(ColorToken.DATE, new Color(11,22,33));
-        check(ConfigType.COLOR_TOKEN_CONFIG, new ColorTokenConfig(map));
+        check(ConfigType.COLOR_MAP, map);
 
         map.put(ColorToken.ERROR, Color.RED);
-        check(ConfigType.COLOR_TOKEN_CONFIG, new ColorTokenConfig(map));
+        check(ConfigType.COLOR_MAP, map);
 
         map.put(ColorToken.ERROR, new Color(10, 20, 30));
-        check(ConfigType.COLOR_TOKEN_CONFIG, new ColorTokenConfig(map));
+        check(ConfigType.COLOR_MAP, map);
+
+        check(ConfigType.COLOR_MAP, map);
+
+        map = ColorMap.DEFAULT_COLOR_TOKEN_MAP;
+        check(ConfigType.COLOR_MAP, map);
+
+        map = map.cloneMap();
+        check(ConfigType.COLOR_MAP, map);
+
+        map = new ColorMap(map);
+        map.put("someName", new Color(10, 20, 30));
+        map.put(ColorToken.DEFAULT.name().toLowerCase(), new Color(21, 32, 43));
+        check(ConfigType.COLOR_MAP, map);
+
+        map = new ColorMap();
+        map.put("someName", new Color(10, 20, 30));
+        map.put(ColorToken.DEFAULT.name().toLowerCase(), new Color(21, 32, 43));
+        check(ConfigType.COLOR_MAP, map);
     }
 
     @Test
@@ -106,10 +141,10 @@ public class ConfigTypeTest {
 
         String jsonText = "{\"DEFAULT\":\"112233\",\"SYSTEM\":\"F0B400\"}";
         JsonElement json = JsonParser.parseString(jsonText);
-        ColorTokenConfig config = (ColorTokenConfig)ConfigType.COLOR_TOKEN_CONFIG.fromJson(json, null);
+        ColorMap config = (ColorMap)ConfigType.COLOR_TOKEN_CONFIG.fromJson(json, null);
 
-        assertEquals(newDefault, config.getColor(ColorToken.DEFAULT));
-        assertEquals(ColorToken.SYMBOL.getColor(), config.getColor(ColorToken.SYMBOL));
+        assertEquals(newDefault, config.get(ColorToken.DEFAULT));
+        assertEquals(ColorToken.SYMBOL.getColor(), config.get(ColorToken.SYMBOL));
     }
 
 

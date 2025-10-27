@@ -2,7 +2,6 @@ package studio.ui.settings;
 
 import studio.kdb.config.ColorMap;
 import studio.kdb.config.ColorToken;
-import studio.kdb.config.ColorTokenConfig;
 import studio.ui.ColorLabel;
 import studio.ui.GroupLayoutSimple;
 
@@ -20,7 +19,7 @@ public class ColorTokenEditor extends JPanel {
 
     private final List<ChangeListener> listeners = new ArrayList<>();
 
-    public ColorTokenEditor(Color bgColor, ColorTokenConfig colorTokenConfig) {
+    public ColorTokenEditor(Color bgColor, ColorMap colorTokenConfig) {
         bgColorLabel = new ColorLabel(bgColor);
         bgColorLabel.setSingleClick(true);
         bgColorLabel.addChangeListener(e -> {
@@ -41,7 +40,7 @@ public class ColorTokenEditor extends JPanel {
 
         for (int i = 0; i<count -1; i++) {
             final ColorToken token = ColorToken.values()[i];
-            Color color = colorTokenConfig.getColor(token);
+            Color color = colorTokenConfig.get(token);
             colorMap.put(token, color);
 
             JLabel lblToken = new JLabel(token.getDescription());
@@ -67,8 +66,8 @@ public class ColorTokenEditor extends JPanel {
         layout.setStacks(stacks);
     }
 
-    public ColorTokenConfig getColorTokenConfig() {
-        return new ColorTokenConfig(colorMap);
+    public ColorMap getColorTokenConfig() {
+        return colorMap;
     }
 
     public Color getBgColor() {

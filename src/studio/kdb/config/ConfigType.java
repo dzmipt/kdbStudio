@@ -260,21 +260,27 @@ public enum ConfigType {
         public JsonElement toJson(Object value) {
             ColorMap map = (ColorMap)value ;
             JsonObject json = new JsonObject();
-            for (Map.Entry<String, Color> entry: map.entrySet()) {
-                json.add(entry.getKey(), COLOR.toJson(entry.getValue()));
+            for (String key: map.keySet()) {
+                json.add(key, COLOR.toJson(map.get(key)));
             }
             return json;
+        }
+
+        @Override
+        public Object clone(Object value) {
+            return ((ColorMap)value).cloneMap();
         }
     },
     COLOR_TOKEN_CONFIG {
         @Override
         public Object fromJson(JsonElement jsonElement, Object defaultValue) {
-            return new ColorTokenConfig((ColorMap)COLOR_MAP.fromJson(jsonElement, defaultValue));
+            ColorMap colorMap = (ColorMap) COLOR_MAP.fromJson(jsonElement, defaultValue);
+            return colorMap.filterColorToken();
         }
 
         @Override
         public JsonElement toJson(Object value) {
-            return COLOR_MAP.toJson( ((ColorTokenConfig)value).getMap() );
+            return COLOR_MAP.toJson(value);
         }
     },
     SERVER_HISTORY {

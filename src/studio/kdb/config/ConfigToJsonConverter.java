@@ -175,7 +175,7 @@ public class ConfigToJsonConverter {
             if (value == null) continue;
             map.put(token, toColor(value));
         }
-        config.set(Config.COLOR_TOKEN_CONFIG, new ColorTokenConfig(map));
+        config.set(Config.COLOR_TOKEN_CONFIG, map);
     }
 
     private void convertBgColor(StudioConfig config) {
