@@ -40,6 +40,10 @@ public class ColorMap {
         return colorMap;
     }
 
+    public boolean isUnmodifiable() {
+        return unmodifiable;
+    }
+
     @Override
     public boolean equals(Object o) {
         if (!(o instanceof ColorMap)) return false;
@@ -88,6 +92,19 @@ public class ColorMap {
 
     public ColorMap filterColorToken() {
         return filter(ColorToken.values(), DEFAULT_COLOR_TOKEN_MAP);
+    }
+
+    public <T extends Enum<T>> ColorMap enforce(T[] keys) {
+        Map<String,Color> map = new LinkedHashMap<>();
+        for (T key: keys) {
+            String name = key.name();
+            Color color = this.map.get(name);
+            if (color == null) throw new IllegalArgumentException("Expected color token: " + name);
+            map.put(name, color);
+        }
+        this.map = map;
+        freeze();
+        return this;
     }
 
     public <T extends Enum<T>> ColorMap filter(T[] keys, ColorMap defaults) {

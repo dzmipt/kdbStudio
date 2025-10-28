@@ -85,6 +85,29 @@ public class ConfigTypeTest {
     }
 
     @Test
+    public void testGridColorToken() {
+        check(ConfigType.GRID_COLOR_CONFIG, GridColorConfig.DEFAULT);
+        check(ConfigType.GRID_COLOR_CONFIG, new GridColorConfig());
+
+        GridColorConfig config = new GridColorConfig(GridColorConfig.DEFAULT);
+        config.getForeground().put(GridColorToken.KEY, new Color(22, 33, 44));
+        check(ConfigType.GRID_COLOR_CONFIG, config);
+
+        config.getBackground().put(GridColorToken.KEY, new Color(55, 66, 77));
+        check(ConfigType.GRID_COLOR_CONFIG, config);
+
+        config.getForeground().put(GridColorToken.NULL, new Color(12, 13, 14));
+        check(ConfigType.GRID_COLOR_CONFIG, config);
+
+        GridColorConfig wrongConfig = new GridColorConfig(config);
+        assertEquals(config, ConfigType.GRID_COLOR_CONFIG.fromJson(ConfigType.GRID_COLOR_CONFIG.toJson(wrongConfig), null) );
+
+        wrongConfig.getBackground().put(GridColorToken.NULL, new Color(112, 113, 114));
+        assertEquals(config, ConfigType.GRID_COLOR_CONFIG.fromJson(ConfigType.GRID_COLOR_CONFIG.toJson(wrongConfig), null) );
+
+    }
+
+    @Test
     public void testColorTokenConfig() {
         check(ConfigType.COLOR_TOKEN_CONFIG, ColorMap.DEFAULT_COLOR_TOKEN_MAP);
 

@@ -282,6 +282,40 @@ public enum ConfigType {
         public JsonElement toJson(Object value) {
             return COLOR_MAP.toJson(value);
         }
+
+        @Override
+        public Object clone(Object value) {
+            return ((ColorMap)value).cloneMap();
+        }
+    },
+    GRID_COLOR_CONFIG {
+        @Override
+        public Object fromJson(JsonElement jsonElement, Object defaultValue) {
+            JsonObject json = jsonElement.getAsJsonObject();
+            if (json.isEmpty()) return GridColorConfig.DEFAULT;
+
+            ColorMap fg = (ColorMap) COLOR_MAP.fromJson(json.get("foreground"), defaultValue);
+            fg = fg.enforce(GridColorToken.FG);
+            ColorMap bg = (ColorMap) COLOR_MAP.fromJson(json.get("background"), defaultValue);
+            bg = bg.enforce(GridColorToken.BG);
+            return new GridColorConfig(fg, bg);
+        }
+
+        @Override
+        public JsonElement toJson(Object value) {
+            GridColorConfig config = (GridColorConfig) value;
+            JsonObject json = new JsonObject();
+            if (!config.isDefaultConfig()) {
+                json.add("foreground", COLOR_MAP.toJson(config.getForeground()));
+                json.add("background", COLOR_MAP.toJson(config.getBackground()));
+            }
+            return json;
+        }
+
+        @Override
+        public Object clone(Object value) {
+            return ((GridColorConfig)value).cloneConfig();
+        }
     },
     SERVER_HISTORY {
         @Override
