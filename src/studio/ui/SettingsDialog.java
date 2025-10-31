@@ -36,6 +36,8 @@ public class SettingsDialog extends EscapeDialog {
             tabs.addTab(title, new JScrollPane(pages.get(title)));
         }
 
+        tabs.setPreferredSize(new Dimension(705, 705));
+
         btnOk = new JButton("OK");
         btnCancel = new JButton("Cancel");
 

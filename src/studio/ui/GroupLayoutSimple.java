@@ -12,6 +12,7 @@ public class GroupLayoutSimple extends GroupLayout {
     private final Set<Component> maxWidthComponents = new HashSet<>();
     private int padding = -1;
     private boolean baseline = true;
+    private Dimension preferredSize = null;
 
     public GroupLayoutSimple(Container container, Component ... maxWidthComponents) {
         super(container);
@@ -23,6 +24,16 @@ public class GroupLayoutSimple extends GroupLayout {
 
     public GroupLayoutSimple(Container container) {
         this(container, new Component[0]);
+    }
+
+    public void setPreferredSize(Dimension preferredSize) {
+        this.preferredSize = preferredSize;
+    }
+
+    @Override
+    public Dimension preferredLayoutSize(Container parent) {
+        if (preferredSize != null) return preferredSize;
+        return super.preferredLayoutSize(parent);
     }
 
     public void addMaxWidthComponents(Component ... maxWidthComponents) {
