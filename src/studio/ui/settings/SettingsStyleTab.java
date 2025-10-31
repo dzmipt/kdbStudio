@@ -22,6 +22,7 @@ public class SettingsStyleTab extends SettingsTab {
     private final ColorTokenEditor colorTokenEditor;
     private final StudioRSyntaxTextArea preview;
     private final RTextScrollPane scrollPane;
+    private final GridColorsEditor gridColorsEditor;
 
     private static final Config CONFIG = Config.getInstance();
 
@@ -70,6 +71,8 @@ public class SettingsStyleTab extends SettingsTab {
             preview.setSyntaxScheme(editorFontSelection.getSelectedFont(), colorTokenEditor.getColorTokenConfig());
         });
 
+        gridColorsEditor = new GridColorsEditor(CONFIG.getGridColorConfig());
+
         GroupLayoutSimple layout = new GroupLayoutSimple(this);
         layout.setStacks(
                 new GroupLayoutSimple.Stack()
@@ -82,6 +85,8 @@ public class SettingsStyleTab extends SettingsTab {
                         .addLine(scrollPane)
                         .addLine(Util.getLineInViewPort())
                         .addLineAndGlue(resultFontSelection)
+                        .addLineAndGlue(new JLabel("<html><b><i>Colors for result grid:</i></b></html>"))
+                        .addLineAndGlue(gridColorsEditor)
 
         );
 
@@ -103,6 +108,9 @@ public class SettingsStyleTab extends SettingsTab {
 
         changed = CONFIG.setColor(Config.COLOR_BACKGROUND, colorTokenEditor.getBgColor());
         result.setRefreshEditorsSettings(changed);
+        result.setRefreshResultSettings(changed);
+
+        changed = CONFIG.setGridColorConfig(gridColorsEditor.getConfig());
         result.setRefreshResultSettings(changed);
 
         String lfClassName = ((CustomiszedLookAndFeelInfo)comboBoxLookAndFeel.getSelectedItem()).getClassName();

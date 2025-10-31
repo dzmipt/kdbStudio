@@ -4,6 +4,8 @@ import studio.kdb.Config;
 import studio.kdb.K;
 import studio.kdb.KFormatContext;
 import studio.kdb.KTableModel;
+import studio.kdb.config.GridColorConfig;
+import studio.kdb.config.GridColorToken;
 import studio.ui.Util;
 import studio.ui.search.TableMarkers;
 
@@ -13,52 +15,24 @@ import java.awt.*;
 
 public class CellRenderer extends DefaultTableCellRenderer {
 
-    private static Color keyColor, altColor, nullColor;
-    private static Color bgColor;
-    private static Color selColor, selFgColor, fgColor;
-    private static Color markKeyColor;
-    private static Color markBgColor;
-    private static Color markAltColor;
-    private static Color markSelColor;
-    static {
-        installUI();
-    }
+    private GridColorConfig config;
 
-    public static void installUI() {
-        bgColor = UIManager.getColor("Table.background");
-        bgColor = bgColor == null ? Color.WHITE : bgColor;
-
-        keyColor = Util.blendColors(new Color(215,255,215), bgColor);
-        altColor = Util.blendColors(new Color(215,215,255), bgColor);
-        nullColor = Util.blendColors(new Color(255,45,45), bgColor);
-
-
-        Color selBgColor = UIManager.getColor("Table.selectionBackground");
-        Color defaultBgColor = new Color(145, 79, 206);
-        selColor = selBgColor == null ? defaultBgColor : selBgColor;
-
-        selFgColor = UIManager.getColor("Table.selectionForeground");
-
-        fgColor = UIManager.getColor("Table.foreground");
-
-        Color markColor = Util.blendColors(new Color(255, 145, 0), bgColor);
-
-        markKeyColor = Util.blendColors(markColor, keyColor);
-        markBgColor = Util.blendColors(markColor, bgColor);
-        markAltColor = Util.blendColors(markColor, altColor);
-        markSelColor = Util.blendColors(markColor, selColor);
-    }
 
     private KFormatContext formatContextWithType, formatContextNoType;
     private final JTable table;
     private final TableMarkers markers;
 
-    public CellRenderer(JTable table, TableMarkers markers) {
+    public CellRenderer(JTable table, TableMarkers markers, GridColorConfig config) {
         this.table = table;
         this.markers = markers;
+        this.config = config;
         setFormatContext(KFormatContext.DEFAULT);
         setHorizontalAlignment(SwingConstants.LEFT);
         setOpaque(true);
+    }
+
+    public void setGridColorConfig(GridColorConfig config) {
+        this.config = config;
     }
 
     @Override
@@ -89,23 +63,29 @@ public class CellRenderer extends DefaultTableCellRenderer {
                 kb instanceof K.KBaseVector ? formatContextWithType : formatContextNoType);
             text = Util.limitString(text, Config.getInstance().getInt(Config.MAX_CHARS_IN_TABLE_CELL));
             setText(text);
-            setForeground(kb.isNull() ? nullColor : fgColor);
 
             boolean isMarked = markers.isMarked(table.convertRowIndexToModel(row), table.convertColumnIndexToModel(column));
+            GridColorToken fgToken, bgToken;
 
-            if (!isSelected) {
+            if (!isSelected && !isMarked) {
                 KTableModel ktm = (KTableModel) table.getModel();
                 column = table.convertColumnIndexToModel(column);
-                if (ktm.isKey(column))
-                    setBackground(isMarked ? markKeyColor : keyColor);
-                else if (row % 2 == 0)
-                    setBackground(isMarked ? markAltColor : altColor);
-                else
-                    setBackground(isMarked ? markBgColor : bgColor);
+                if (ktm.isKey(column)) {
+                    fgToken = bgToken = GridColorToken.KEY;
+                } else {
+                    bgToken = row % 2 == 0 ? GridColorToken.EVEN : GridColorToken.ODD;
+                    fgToken = kb.isNull() ? GridColorToken.NULL : bgToken;
+                }
             } else {
-                setForeground(selFgColor);
-                setBackground(isMarked ? markSelColor : selColor);
+                if (isSelected && isMarked) {
+                    fgToken = bgToken = GridColorToken.MARK_SELECTED;
+                } else {
+                    fgToken = bgToken = isMarked ? GridColorToken.MARK : GridColorToken.SELECTED;
+                }
             }
+
+            setForeground(config.getColor(fgToken, true));
+            setBackground(config.getColor(bgToken, false));
         }
         return this;
     }

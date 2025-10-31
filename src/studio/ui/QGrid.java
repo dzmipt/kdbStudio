@@ -4,6 +4,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.fife.ui.rtextarea.SearchContext;
 import studio.kdb.*;
+import studio.kdb.config.GridColorConfig;
 import studio.ui.action.CopyTableSelectionAction;
 import studio.ui.action.TableUserAction;
 import studio.ui.grid.CellRenderer;
@@ -119,7 +120,7 @@ public class QGrid extends JPanel implements MouseWheelListener, SearchPanelList
         ToolTipManager.sharedInstance().unregisterComponent(table.getTableHeader());
 
         markers = new TableMarkers(model.getColumnCount());
-        cellRenderer = new CellRenderer(table, markers);
+        cellRenderer = new CellRenderer(table, markers, Config.getInstance().getGridColorConfig());
 
         for (int i = 0; i < model.getColumnCount(); i++) {
             TableColumn col = table.getColumnModel().getColumn(i);
@@ -270,9 +271,12 @@ public class QGrid extends JPanel implements MouseWheelListener, SearchPanelList
         updateUI();
     }
 
+    public void setGridColorConfig(GridColorConfig config) {
+        cellRenderer.setGridColorConfig(config);
+    }
+
     @Override
     public void updateUI() {
-        CellRenderer.installUI();
         super.updateUI();
 
         if (scrollPane == null) return ; //called from super constructor. not yet initialized

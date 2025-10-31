@@ -34,6 +34,16 @@ public class GridColorConfig {
         return defaultConfig;
     }
 
+    public Color getColor(GridColorToken token, boolean isForeground) {
+        ColorMap map = isForeground ? getForeground() : getBackground();
+        return map.get(token);
+    }
+
+    public void setColor(Color color, GridColorToken token, boolean isForeground) {
+        ColorMap map = isForeground ? getForeground() : getBackground();
+        map.put(token, color);
+    }
+
     public void updateUI() {
         if (! defaultConfig) return;
 

@@ -121,11 +121,15 @@ public class SettingsDialog extends EscapeDialog {
 
             resultTab.forEachResultPane(resultPane -> {
                 EditorPane editorPane = resultPane.getEditor();
-                if (editorPane == null) return;
-
-                StudioRSyntaxTextArea editor = editorPane.getTextArea();
-                editor.setBackground(CONFIG.getColor(Config.COLOR_BACKGROUND));
-                editor.setSyntaxScheme(CONFIG.getFont(Config.FONT_EDITOR), CONFIG.getColorTokenConfig());
+                if (editorPane != null) {
+                    StudioRSyntaxTextArea editor = editorPane.getTextArea();
+                    editor.setBackground(CONFIG.getColor(Config.COLOR_BACKGROUND));
+                    editor.setSyntaxScheme(CONFIG.getFont(Config.FONT_EDITOR), CONFIG.getColorTokenConfig());
+                }
+                QGrid grid = resultPane.getGrid();
+                if (grid != null) {
+                    grid.setGridColorConfig(CONFIG.getGridColorConfig());
+                }
             });
             return true;
         });
