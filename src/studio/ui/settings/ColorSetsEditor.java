@@ -4,6 +4,7 @@ import studio.kdb.config.ColorSchema;
 import studio.kdb.config.ColorSets;
 import studio.ui.ColorLabel;
 import studio.ui.GroupLayoutSimple;
+import studio.ui.Util;
 
 import javax.swing.*;
 import javax.swing.event.ChangeEvent;
@@ -52,6 +53,7 @@ public class ColorSetsEditor extends JPanel {
         pnlBgGrid.add(colorGrid);
 
         FocusDecorator.add(colorList);
+        Util.sizeToViewPort(colorList);
 
         GroupLayoutSimple layout = new GroupLayoutSimple(this);
         layout.setStacks(
@@ -62,14 +64,6 @@ public class ColorSetsEditor extends JPanel {
         );
 
         refreshColorSet();
-    }
-
-    public void setExternalViewport(JViewport viewport) {
-        colorList.setPrefWidthComponent(viewport, 22);
-        viewport.addChangeListener( e -> {
-            colorList.revalidate();
-            colorList.repaint();
-        });
     }
 
     public ColorSets getColorSets() {

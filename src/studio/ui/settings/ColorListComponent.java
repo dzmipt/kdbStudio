@@ -27,9 +27,6 @@ public class ColorListComponent extends JComponent implements DropTargetListener
     private ColorLabel selectedLabel = null;
     private final List<ActionListener> listeners = new ArrayList<>();
 
-    private JComponent prefWidthComponent = null;
-    private int prefWidthInsets;
-
     private final Action actionEdit;
     private final Action actionDelete;
     private final Action actionInsert;
@@ -122,17 +119,12 @@ public class ColorListComponent extends JComponent implements DropTargetListener
         return labels.stream().map(ColorLabel::getColor).collect(Collectors.toList());
     }
 
-    public void setPrefWidthComponent(JComponent component, int gap) {
-        prefWidthComponent = component;
-        prefWidthInsets = gap;
-    }
-
     @Override
     public Dimension getPreferredSize() {
-        if (prefWidthComponent == null) return super.getPreferredSize();
+        Dimension prefSize = super.getPreferredSize();
+        if (prefSize == null) return null;
 
-        int width = prefWidthComponent.getWidth() - prefWidthInsets;
-        if (width <= 0) return super.getPreferredSize();
+        int width = prefSize.width;
 
         int cols = (width - GAP) / (GAP + SIZE);
         if (cols<=0) cols = 1;

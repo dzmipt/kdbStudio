@@ -9,7 +9,9 @@ import studio.ui.rstextarea.StudioRSyntaxTextArea;
 
 import javax.swing.*;
 import java.awt.*;
-import java.awt.event.*;
+import java.awt.event.MouseEvent;
+import java.awt.event.MouseListener;
+import java.awt.event.MouseMotionListener;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
@@ -72,31 +74,18 @@ public class SettingsStyleTab extends SettingsTab {
         layout.setStacks(
                 new GroupLayoutSimple.Stack()
                         .addLineAndGlue(lblLookAndFeel, comboBoxLookAndFeel)
+                        .addLine(Util.getLineInViewPort())
                         .addLineAndGlue(editorFontSelection)
-                        .addLineAndGlue(resultFontSelection)
                         .addLineAndGlue(new JLabel("<html><b><i>Colors for tokens:</i></b></html>"))
                         .addLineAndGlue(colorTokenEditor)
                         .addLineAndGlue(new JLabel("<html><b><i>Preview</i></b></html>"))
                         .addLine(scrollPane)
+                        .addLine(Util.getLineInViewPort())
+                        .addLineAndGlue(resultFontSelection)
+
         );
 
-        addHierarchyListener(new HierarchyListener() {
-            @Override
-            public void hierarchyChanged(HierarchyEvent e) {
-                JScrollPane scrollChart = Util.findParent(SettingsStyleTab.this, JScrollPane.class);
-                if (scrollChart == null) return;
-                setExternalViewport(scrollChart.getViewport());
-            }
-        });
-
-    }
-
-    private void setExternalViewport(JViewport viewport) {
-        viewport.addChangeListener(e -> {
-            Dimension prefSize = scrollPane.getPreferredSize();
-            prefSize.width = viewport.getWidth() - 22;
-            scrollPane.setPreferredSize(prefSize);
-        });
+        Util.sizeToViewPort(scrollPane);
     }
 
     @Override

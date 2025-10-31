@@ -2,12 +2,9 @@ package studio.ui.settings;
 
 import studio.kdb.Config;
 import studio.ui.GroupLayoutSimple;
-import studio.ui.Util;
 
 import javax.swing.*;
 import java.awt.*;
-import java.awt.event.HierarchyEvent;
-import java.awt.event.HierarchyListener;
 
 public class SettingsChartTab extends SettingsTab {
 
@@ -35,15 +32,6 @@ public class SettingsChartTab extends SettingsTab {
         layout.setStacks(new GroupLayoutSimple.Stack()
                 .addLine(boxChart)
         );
-
-        addHierarchyListener(new HierarchyListener() {
-            @Override
-            public void hierarchyChanged(HierarchyEvent e) {
-                JScrollPane scrollChart = Util.findParent(SettingsChartTab.this, JScrollPane.class);
-                if (scrollChart == null) return;
-                colorSetsEditor.setExternalViewport(scrollChart.getViewport());
-            }
-        });
     }
 
     @Override

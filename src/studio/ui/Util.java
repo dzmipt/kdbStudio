@@ -7,6 +7,8 @@ import studio.utils.Transferables;
 import javax.swing.*;
 import java.awt.*;
 import java.awt.datatransfer.StringSelection;
+import java.awt.event.HierarchyEvent;
+import java.awt.event.HierarchyListener;
 import java.awt.event.InputEvent;
 import java.awt.event.KeyEvent;
 import java.net.URI;
@@ -209,10 +211,63 @@ public class Util {
         return fitToScreen;
     }
 
+    public static void sizeToViewPort(JComponent component) {
+        new ViewPortHierarchyListener(component);
+    }
+
+    private static class ViewPortHierarchyListener implements HierarchyListener {
+        final JComponent component;
+        Component topComponent;
+        ViewPortHierarchyListener(JComponent component) {
+            this.component = component;
+            this.topComponent = component;
+            hierarchyChanged(null);
+        }
+
+        @Override
+        public void hierarchyChanged(HierarchyEvent e) {
+            JScrollPane scroll = Util.findParent(topComponent, JScrollPane.class);
+            if (scroll == null) {
+                topComponent.removeHierarchyListener(this);
+                topComponent = findParent(topComponent);
+                topComponent.addHierarchyListener(this);
+            } else {
+                addViewPortListener(scroll, component);
+                topComponent.removeHierarchyListener(this);
+            }
+        }
+
+        private void addViewPortListener(JScrollPane scrollPane, JComponent component) {
+            JViewport viewport = scrollPane.getViewport();
+
+            viewport.addChangeListener(e -> {
+                Dimension prefSize = component.getPreferredSize();
+                prefSize.width = viewport.getWidth() - 22;
+                component.setPreferredSize(prefSize);
+                component.revalidate();
+                component.repaint();
+            });
+        }
+    }
+
+
+    public static JPanel getLineInViewPort() {
+        JPanel pnlLine = new JPanel();
+        pnlLine.setBorder(BorderFactory.createMatteBorder(0,0,1,0, Color.GRAY));
+        Util.sizeToViewPort(pnlLine);
+        return pnlLine;
+    }
+
+    public static Component findParent(Component component) {
+        while (component.getParent()!=null) component = component.getParent();
+        return component;
+    }
+
     public static <T extends Component> T findParent(Component component, Class<T> clazz) {
         while (component != null) {
-            if (clazz.isInstance(component)) return clazz.cast(component);
             component = component.getParent();
+            if (component == null) break;
+            if (clazz.isInstance(component)) return clazz.cast(component);
         }
         return null;
     }
