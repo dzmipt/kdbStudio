@@ -2,6 +2,8 @@ package studio.ui.settings;
 
 import org.fife.ui.rtextarea.RTextScrollPane;
 import studio.kdb.Config;
+import studio.kdb.config.ColorMap;
+import studio.kdb.config.GridColorConfig;
 import studio.ui.GroupLayoutSimple;
 import studio.ui.Util;
 import studio.ui.rstextarea.RSTextAreaFactory;
@@ -33,7 +35,7 @@ public class SettingsStyleTab extends SettingsTab {
             "     vals:  (-100; 23i; 17h; 2.9979e8; 3.14e; 0xFF; 1b; 101b);\n" +
             "     str:  (\"c\"; \"string and\"; `symbol);\n" +
             "     temp: (2025.10.18; 2025.10.18D20:08:35.189; 0D01:15:00; 205.10.18T20:08;\n" +
-            "                    20:09; 20:10:45; 2025.10m);\n" +
+            "                    20:09; 20:10:45; 20:15:31.963; 2025.10m);\n" +
             "     : count each (vals; str; temp);\n" +
             " };\n" +
             "\"\\error\"\n";
@@ -73,19 +75,34 @@ public class SettingsStyleTab extends SettingsTab {
 
         gridColorsEditor = new GridColorsEditor(CONFIG.getGridColorConfig());
 
+
+        JButton btnColorTokenReset = new JButton("Reset to default");
+        btnColorTokenReset.addActionListener(e -> {
+            Color bgColor = (Color) CONFIG.getDefault(Config.COLOR_BACKGROUND);
+            ColorMap tokensColor = (ColorMap) CONFIG.getDefault(Config.COLOR_TOKEN_CONFIG);
+            tokensColor = tokensColor.filterColorToken(); // May be this should be reworked?
+            colorTokenEditor.set(bgColor, tokensColor);
+        });
+
+        JButton btnGridColorReset = new JButton("Reset to default");
+        btnGridColorReset.addActionListener(e -> {
+            GridColorConfig config = (GridColorConfig) CONFIG.getDefault(Config.GRID_COLOR_CONFIG);
+            gridColorsEditor.set(config);
+        });
+
         GroupLayoutSimple layout = new GroupLayoutSimple(this);
         layout.setStacks(
                 new GroupLayoutSimple.Stack()
                         .addLineAndGlue(lblLookAndFeel, comboBoxLookAndFeel)
                         .addLine(Util.getLineInViewPort())
                         .addLineAndGlue(editorFontSelection)
-                        .addLineAndGlue(new JLabel("<html><b><i>Colors for tokens:</i></b></html>"))
+                        .addLineAndGlue(new JLabel("<html><b><i>Colors for tokens:</i></b></html>"), btnColorTokenReset)
                         .addLineAndGlue(colorTokenEditor)
                         .addLineAndGlue(new JLabel("<html><b><i>Preview</i></b></html>"))
                         .addLine(scrollPane)
                         .addLine(Util.getLineInViewPort())
                         .addLineAndGlue(resultFontSelection)
-                        .addLineAndGlue(new JLabel("<html><b><i>Colors for result grid:</i></b></html>"))
+                        .addLineAndGlue(new JLabel("<html><b><i>Colors for result grid:</i></b></html>"), btnGridColorReset)
                         .addLineAndGlue(gridColorsEditor)
 
         );

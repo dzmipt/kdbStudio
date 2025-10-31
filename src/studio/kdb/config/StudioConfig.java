@@ -198,21 +198,26 @@ public class StudioConfig {
     }
 
     public Object getDefault(String key) {
-        return registry.getDefault(key);
+        ConfigType type = getType(key);
+        return type.clone(registry.getDefault(key));
     }
 
     public int size() {
         return config.size();
     }
 
-    public Object get(String key) {
+    private ConfigType getType(String key) {
         ConfigType type = registry.getConfigType(key);
         if (type == null) throw new IllegalArgumentException("Unknown key: " + key);
+        return type;
+    }
 
+    public Object get(String key) {
+        ConfigType type = getType(key);
         Object value = config.get(key);
         if (value != null) return type.clone(value);
 
-        return type.clone(getDefault(key));
+        return getDefault(key);
     }
 
     public boolean set(String key, Object value) {

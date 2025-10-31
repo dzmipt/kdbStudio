@@ -10,23 +10,27 @@ import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 import java.awt.*;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 public class ColorTokenEditor extends JPanel {
 
     private final ColorLabel bgColorLabel;
-    private final ColorMap colorMap = new ColorMap();
+    private final Map<ColorToken, ColorLabel> colorLabels = new HashMap<>();
+    private ColorMap colorMap;
+    private boolean muteEvents = true;
 
     private final List<ChangeListener> listeners = new ArrayList<>();
 
     public ColorTokenEditor(Color bgColor, ColorMap colorTokenConfig) {
-        bgColorLabel = new ColorLabel(bgColor);
+        bgColorLabel = new ColorLabel();
         bgColorLabel.setSingleClick(true);
         bgColorLabel.addChangeListener(e -> {
             fireEvent();
         });
 
-        int count = ColorToken.values().length;
+        int count = ColorToken.values().length + 1; // +1 as we need to include bg color
         int colsCount = 6;
         int lines = count / colsCount;
         if (lines * colsCount < count) lines++;
@@ -40,12 +44,10 @@ public class ColorTokenEditor extends JPanel {
 
         for (int i = 0; i<count -1; i++) {
             final ColorToken token = ColorToken.values()[i];
-            Color color = colorTokenConfig.get(token);
-            colorMap.put(token, color);
-
             JLabel lblToken = new JLabel(token.getDescription());
-            ColorLabel colorLabel = new ColorLabel(color);
+            ColorLabel colorLabel = new ColorLabel();
             colorLabel.setSingleClick(true);
+            colorLabels.put(token, colorLabel);
 
             colorLabel.addChangeListener(e -> {
                 Color newColor = ((ColorLabel)e.getSource()).getColor();
@@ -64,6 +66,22 @@ public class ColorTokenEditor extends JPanel {
         GroupLayoutSimple layout = new GroupLayoutSimple(this);
         layout.setBaseline(false);
         layout.setStacks(stacks);
+
+        colorMap = new ColorMap(colorTokenConfig);
+        set(bgColor, colorTokenConfig);
+    }
+
+    public void set(Color bgColor, ColorMap colorTokenConfig) {
+        muteEvents = true;
+
+        bgColorLabel.setColor(bgColor);
+        colorMap = new ColorMap(colorTokenConfig);
+        for (ColorToken token: ColorToken.values()) {
+            colorLabels.get(token).setColor(colorTokenConfig.get(token));
+        }
+
+        muteEvents = false;
+        fireEvent();
     }
 
     public ColorMap getColorTokenConfig() {
@@ -83,6 +101,7 @@ public class ColorTokenEditor extends JPanel {
     }
 
     private void fireEvent() {
+        if (muteEvents) return;
         ChangeEvent event = new ChangeEvent(this);
         listeners.forEach(l -> l.stateChanged(event));
     }

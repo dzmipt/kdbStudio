@@ -330,6 +330,10 @@ public class Config  {
         return serverConfig.getServer(conn, authMethod);
     }
 
+    public Object getDefault(String key) {
+        return studioConfig.getDefault(key);
+    }
+
     public DefaultAuthConfig getDefaultAuthConfig() {
         return (DefaultAuthConfig) studioConfig.get(Config.DEFAULT_AUTH_CONFIG);
     }
