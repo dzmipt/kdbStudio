@@ -57,10 +57,10 @@ public class GridColorConfig {
 
         Color selBgColor = UIManager.getColor("Table.selectionBackground");
         Color defaultBgColor = new Color(145, 79, 206);
-        Color selColor = selBgColor == null ? defaultBgColor : selBgColor;
+        selBgColor = selBgColor == null ? defaultBgColor : selBgColor;
 
         Color selFgColor = UIManager.getColor("Table.selectionForeground");
-        selFgColor = selFgColor == null ? Color.BLACK : selColor;
+        selFgColor = selFgColor == null ? Color.BLACK : selFgColor;
 
         Color fgColor = UIManager.getColor("Table.foreground");
 
@@ -69,7 +69,7 @@ public class GridColorConfig {
 //        Color markKeyColor = Util.blendColors(markColor, keyColor);
 //        Color markBgColor = Util.blendColors(markColor, bgColor);
         Color markAltColor = Util.blendColors(markColor, altColor);
-        Color markSelColor = Util.blendColors(markColor, selColor);
+        Color markSelColor = Util.blendColors(markColor, selBgColor);
 
         fgMap = new ColorMap();
         fgMap.put(GridColorToken.NULL, nullColor);
@@ -86,7 +86,7 @@ public class GridColorConfig {
         bgMap.put(GridColorToken.ODD, bgColor);
         bgMap.put(GridColorToken.EVEN, altColor);
         bgMap.put(GridColorToken.MARK, markAltColor);
-        bgMap.put(GridColorToken.SELECTED, selColor);
+        bgMap.put(GridColorToken.SELECTED, selBgColor);
         bgMap.put(GridColorToken.MARK_SELECTED, markSelColor);
         bgMap.freeze();
     }
