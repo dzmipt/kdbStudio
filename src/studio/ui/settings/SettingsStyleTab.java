@@ -11,9 +11,6 @@ import studio.ui.rstextarea.StudioRSyntaxTextArea;
 
 import javax.swing.*;
 import java.awt.*;
-import java.awt.event.MouseEvent;
-import java.awt.event.MouseListener;
-import java.awt.event.MouseMotionListener;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
@@ -25,6 +22,7 @@ public class SettingsStyleTab extends SettingsTab {
     private final StudioRSyntaxTextArea preview;
     private final RTextScrollPane scrollPane;
     private final GridColorsEditor gridColorsEditor;
+//    private final QGridPanel grid;
 
     private static final Config CONFIG = Config.getInstance();
 
@@ -63,7 +61,7 @@ public class SettingsStyleTab extends SettingsTab {
 
         scrollPane.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_ALWAYS);
         scrollPane.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_ALWAYS);
-        scrollPane.setCorner(JScrollPane.LOWER_RIGHT_CORNER, new ResizeGrip());
+        scrollPane.setCorner(JScrollPane.LOWER_RIGHT_CORNER, new ResizeGrip(scrollPane));
 
         editorFontSelection.addChangeListener(e -> {
             preview.setFont(editorFontSelection.getSelectedFont());
@@ -135,67 +133,6 @@ public class SettingsStyleTab extends SettingsTab {
         result.setChangedLF(changed);
     }
 
-
-    class ResizeGrip extends JComponent implements MouseListener, MouseMotionListener {
-        private static final int SIZE = 16;
-
-        private Point dragStart;
-        private int prefHeight;
-
-        ResizeGrip() {
-            setPreferredSize(new Dimension(SIZE, SIZE));
-            setMinimumSize(new Dimension(SIZE, SIZE));
-            setCursor(Cursor.getPredefinedCursor(Cursor.SE_RESIZE_CURSOR));
-            addMouseListener(this);
-            addMouseMotionListener(this);
-        }
-
-
-        @Override
-        public void mousePressed(MouseEvent e) {
-            dragStart = e.getLocationOnScreen();
-            prefHeight = scrollPane.getPreferredSize().height;
-        }
-
-        @Override
-        public void mouseReleased(MouseEvent e) {
-        }
-
-        @Override
-        public void mouseDragged(MouseEvent e) {
-            int dy = e.getLocationOnScreen().y - dragStart.y;
-            Dimension prefSize = scrollPane.getPreferredSize();
-            prefSize.height = prefHeight + dy;
-            scrollPane.setPreferredSize(prefSize);
-            SettingsStyleTab.this.revalidate();
-            SettingsStyleTab.this.repaint();
-        }
-
-
-        @Override
-        public void mouseEntered(MouseEvent e) {}
-        @Override
-        public void mouseExited(MouseEvent e) {}
-        @Override
-        public void mouseMoved(MouseEvent e) {}
-        @Override
-        public void mouseClicked(MouseEvent e) {}
-
-
-        @Override
-        protected void paintComponent(Graphics g) {
-            super.paintComponent(g);
-            Graphics2D g2 = (Graphics2D) g.create();
-            g2.setColor(UIManager.getColor("ScrollBar.thumbShadow"));
-            int w = getWidth();
-            int h = getHeight();
-            for (int i = 0; i < 3; i++) {
-                int offset = i * 4;
-                g2.drawLine(w - 10 + offset, h - 1, w - 1, h - 10 + offset);
-            }
-            g2.dispose();
-        }
-    }
 
     private static class LookAndFeels {
         private Map<String, CustomiszedLookAndFeelInfo> mapLookAndFeels;
