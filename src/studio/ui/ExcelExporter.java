@@ -29,7 +29,7 @@ class ExcelExporter {
                                     final boolean openIt) {
         if (tab == null) return;
 
-        QGrid grid = tab.getGrid();
+        ResultGrid grid = tab.getGrid();
         if (grid == null) return;
 
 

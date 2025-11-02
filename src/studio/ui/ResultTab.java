@@ -117,7 +117,7 @@ public class ResultTab extends JPanel {
     public void setStudioWindow(StudioWindow studioWindow) {
         this.studioWindow = studioWindow;
         forEachResultPane(pane -> {
-            QGrid grid = pane.getGrid();
+            ResultGrid grid = pane.getGrid();
             if (grid != null) {
                 grid.setStudioWindow(studioWindow);
             }
@@ -179,7 +179,7 @@ public class ResultTab extends JPanel {
 
     public void refreshFont() {
         forEachResultPane(resultPane -> {
-            QGrid grid = resultPane.getGrid();
+            ResultGrid grid = resultPane.getGrid();
             if (grid != null) {
                 grid.setFont(Config.getInstance().getFont(Config.FONT_TABLE));
             }
@@ -218,9 +218,9 @@ public class ResultTab extends JPanel {
         StringBuilder title = new StringBuilder();
         if (isPinned()) title.append("↑ ");
         title.append(getType().getTitle()).append(' ');
-        QGrid grid = getGrid();
+        ResultGrid grid = getGrid();
         if (grid != null) {
-            title.append('[').append(grid.getRowCount()).append(" rows]");
+            title.append('[').append(grid.getTable().getRowCount()).append(" rows]");
         }
         int index = cardLayout.getSelected();
         if (index > 0) {
@@ -255,7 +255,7 @@ public class ResultTab extends JPanel {
     private void updateFormatting(ActionEvent evt) {
         formatContext.setShowThousandsComma(formatAction.isSelected());
         forEachResultPane(resultPane -> {
-            QGrid grid = resultPane.getGrid();
+            ResultGrid grid = resultPane.getGrid();
             if (grid != null) {
                 grid.setFormatContext(formatContext);
                 grid.resizeColumns();
@@ -283,13 +283,13 @@ public class ResultTab extends JPanel {
 
     public void setDoubleClickTimeout(long doubleClickTimeout) {
         forEachResultPane(resultPane -> {
-            QGrid grid = resultPane.getGrid();
+            ResultGrid grid = resultPane.getGrid();
             if (grid == null) return;
             grid.setDoubleClickTimeout(doubleClickTimeout);
         });
     }
 
-    public QGrid getGrid() {
+    public ResultGrid getGrid() {
         return getResultPane().getGrid();
     }
 

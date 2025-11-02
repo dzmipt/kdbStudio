@@ -128,9 +128,9 @@ public class SettingsDialog extends EscapeDialog {
                     editor.setBackground(CONFIG.getColor(Config.COLOR_BACKGROUND));
                     editor.setSyntaxScheme(CONFIG.getFont(Config.FONT_EDITOR), CONFIG.getColorTokenConfig());
                 }
-                QGrid grid = resultPane.getGrid();
+                ResultGrid grid = resultPane.getGrid();
                 if (grid != null) {
-                    grid.setGridColorConfig(CONFIG.getGridColorConfig());
+                    grid.getTable().setGridColorConfig(CONFIG.getGridColorConfig());
                 }
             });
             return true;

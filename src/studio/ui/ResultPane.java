@@ -16,7 +16,7 @@ public class ResultPane extends JPanel {
 
     private final QueryResult queryResult;
     private EditorPane editor = null;
-    private QGrid grid = null;
+    private ResultGrid grid = null;
     private final ResultType type;
 
     public ResultPane(StudioWindow studioWindow, ResultTab resultTab, QueryResult queryResult) {
@@ -28,7 +28,7 @@ public class ResultPane extends JPanel {
         if (result != null) {
             KTableModel model = KTableModel.getModel(result);
             if (model != null) {
-                grid = new QGrid(studioWindow, resultTab, model);
+                grid = new ResultGrid(studioWindow, resultTab, model);
                 component = grid;
                 if (model instanceof ListModel) {
                     type = ResultType.LIST;
@@ -82,7 +82,7 @@ public class ResultPane extends JPanel {
         return editor;
     }
 
-    public QGrid getGrid() {
+    public ResultGrid getGrid() {
         return grid;
     }
 

@@ -1745,7 +1745,7 @@ public class StudioWindow extends JFrame implements WindowListener {
         ResultTab tab = (ResultTab) resultsPane.getSelectedComponent();
         if (tab == null) return null;
 
-        QGrid grid = tab.getGrid();
+        ResultGrid grid = tab.getGrid();
         if (grid == null) return null;
 
         return (KTableModel) grid.getTable().getModel();

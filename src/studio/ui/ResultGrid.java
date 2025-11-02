@@ -1,52 +1,35 @@
 package studio.ui;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import org.fife.ui.rtextarea.SearchContext;
 import studio.kdb.*;
-import studio.kdb.config.GridColorConfig;
 import studio.ui.action.CopyTableSelectionAction;
 import studio.ui.action.TableUserAction;
-import studio.ui.grid.CellRenderer;
-import studio.ui.grid.TableHeaderRenderer;
-import studio.ui.grid.TableRowHeader;
-import studio.ui.grid.WidthAdjuster;
+import studio.ui.grid.QGrid;
+import studio.ui.grid.QGridPanel;
 import studio.ui.search.*;
 
 import javax.swing.*;
-import javax.swing.event.*;
-import javax.swing.table.TableColumn;
+import javax.swing.event.ChangeEvent;
+import javax.swing.event.ListSelectionEvent;
+import javax.swing.event.TableColumnModelEvent;
+import javax.swing.event.TableColumnModelListener;
 import java.awt.*;
 import java.awt.event.*;
 import java.util.Objects;
 import java.util.regex.PatternSyntaxException;
 
-//@TODO: Should it be really a JPanel? It looks it should be just a JTabel. And anyway any additional components could be added to TabPanel
-public class QGrid extends JPanel implements MouseWheelListener, SearchPanelListener {
-    private final JScrollPane scrollPane;
+public class ResultGrid extends JPanel implements MouseWheelListener, SearchPanelListener {
     private StudioWindow studioWindow;
-    private final KTableModel model;
-    private final JTable table;
-    private final WidthAdjuster widthAdjuster;
-    private final TableRowHeader tableRowHeader;
-    private final TableHeaderRenderer tableHeaderRenderer;
-    private final CellRenderer cellRenderer;
 
-    private final TableMarkers markers;
     private SearchContext lastSearchContext;
     private Position lastSearchPos;
 
-    private KFormatContext formatContext = KFormatContext.DEFAULT;
+    private final QGridPanel panel;
+    private final QGrid table;
+    private final TableMarkers markers;
 
-    private static final Logger log = LogManager.getLogger();
-    private JLabel rowCountLabel;
-
-    public JTable getTable() {
+    public QGrid getTable() {
         return table;
-    }
-
-    public int getRowCount() {
-        return model.getRowCount();
     }
 
     private final JPopupMenu popupMenu = new JPopupMenu();
@@ -54,17 +37,17 @@ public class QGrid extends JPanel implements MouseWheelListener, SearchPanelList
 
     private long doubleClickTimeout;
 
-    private GraphicsConfiguration graphicsConfiguration = null;
-
     public void setFormatContext(KFormatContext formatContext) {
-        this.formatContext = formatContext;
-        cellRenderer.setFormatContext(formatContext);
-        table.repaint();
+        table.setFormatContext(formatContext);
     }
 
-    public QGrid(StudioWindow studioWindow, ResultTab resultTab, KTableModel model) {
+    public ResultGrid(StudioWindow studioWindow, ResultTab resultTab, KTableModel model) {
         this.studioWindow = studioWindow;
-        this.model = model;
+        panel = new QGridPanel(model);
+        table = panel.getTable();
+        markers = table.getMarkers();
+        panel.addMouseWheelListener(this);
+        panel.setWheelScrollingEnabled(true);
 
         InputMap inputMap = getInputMap(JComponent.WHEN_ANCESTOR_OF_FOCUSED_COMPONENT);
         ActionMap actionMap = getActionMap();
@@ -96,89 +79,6 @@ public class QGrid extends JPanel implements MouseWheelListener, SearchPanelList
 
         setDoubleClickTimeout(Config.getInstance().getInt(Config.EMULATED_DOUBLE_CLICK_TIMEOUT));
 
-        table = new JTable(model) {
-            @Override
-            public int convertRowIndexToView(int modelRowIndex) {
-                throw new IllegalStateException("Not yet implemented");
-            }
-
-            @Override
-            public int convertRowIndexToModel(int viewRowIndex) {
-                return model.getIndex()[viewRowIndex];
-            }
-        };
-
-        tableHeaderRenderer = new TableHeaderRenderer(table);
-        table.getTableHeader().setDefaultRenderer(tableHeaderRenderer);
-        table.setShowHorizontalLines(true);
-
-        table.setDragEnabled(true);
-        table.setSelectionMode(ListSelectionModel.SINGLE_INTERVAL_SELECTION);
-        table.setCellSelectionEnabled(true);
-
-        ToolTipManager.sharedInstance().unregisterComponent(table);
-        ToolTipManager.sharedInstance().unregisterComponent(table.getTableHeader());
-
-        markers = new TableMarkers(model.getColumnCount());
-        cellRenderer = new CellRenderer(table, markers, Config.getInstance().getGridColorConfig());
-
-        for (int i = 0; i < model.getColumnCount(); i++) {
-            TableColumn col = table.getColumnModel().getColumn(i);
-            col.setCellRenderer(cellRenderer);
-        }
-
-        table.setAutoResizeMode(JTable.AUTO_RESIZE_OFF);
-        table.setShowVerticalLines(true);
-        table.getTableHeader().setReorderingAllowed(true);
-        scrollPane = new JScrollPane(table);
-        scrollPane.addMouseWheelListener(this);
-
-        tableRowHeader = new TableRowHeader(table);
-        scrollPane.setRowHeaderView(tableRowHeader);
-
-        scrollPane.getRowHeader().addChangeListener(new ChangeListener() {
-            public void stateChanged(ChangeEvent ev) {
-                Point header_pt = ((JViewport) ev.getSource()).getViewPosition();
-                Point main_pt = main.getViewPosition();
-                if (header_pt.y != main_pt.y) {
-                    main_pt.y = header_pt.y;
-                    main.setViewPosition(main_pt);
-                }
-            }
-
-            final JViewport main = scrollPane.getViewport();
-        });
-
-        widthAdjuster = new WidthAdjuster(table, scrollPane);
-
-        table.addHierarchyListener(new HierarchyListener() {
-            @Override
-            public void hierarchyChanged(HierarchyEvent e) {
-                GraphicsConfiguration gc = table.getGraphicsConfiguration();
-                if (graphicsConfiguration != gc) {
-                    graphicsConfiguration = gc;
-                    widthAdjuster.revalidate();
-                }
-            }
-        });
-
-
-        scrollPane.setWheelScrollingEnabled(true);
-
-        rowCountLabel = new IndexHeader(model, scrollPane);
-        rowCountLabel.setHorizontalAlignment(SwingConstants.CENTER);
-        rowCountLabel.setVerticalAlignment(SwingConstants.BOTTOM);
-        rowCountLabel.setOpaque(false);
-        scrollPane.setCorner(JScrollPane.UPPER_LEFT_CORNER, rowCountLabel);
-
-        rowCountLabel = new JLabel("");
-        rowCountLabel.setHorizontalAlignment(SwingConstants.RIGHT);
-        rowCountLabel.setVerticalAlignment(SwingConstants.CENTER);
-        rowCountLabel.setOpaque(true);
-        scrollPane.setCorner(JScrollPane.UPPER_RIGHT_CORNER, rowCountLabel);
-
-        setLayout(new BorderLayout());
-        add(scrollPane, BorderLayout.CENTER);
 
         UserAction copyExcelFormatAction = UserAction.create("Copy selection (Excel format)",
                 Util.COPY_ICON, "Copy the selected cells to the clipboard using Excel format",
@@ -256,7 +156,7 @@ public class QGrid extends JPanel implements MouseWheelListener, SearchPanelList
                         type == 10 || type == 4) {
 
                     //@TODO: we shouldn't duplicate the logic here.
-                    KFormatContext formatContextForCell = new KFormatContext(formatContext);
+                    KFormatContext formatContextForCell = new KFormatContext(table.getFormatContext());
                     formatContextForCell.setShowType(b instanceof K.KBaseVector);
                     Util.copyTextToClipboard(b.toString(formatContextForCell));
                 } else {
@@ -266,31 +166,20 @@ public class QGrid extends JPanel implements MouseWheelListener, SearchPanelList
             }
         });
 
+        setLayout(new BorderLayout());
+        add(panel, BorderLayout.CENTER);
+
         studioWindow.getMainStatusBar().bindTable(table);
         initSearch();
-        updateUI();
-    }
 
-    public void setGridColorConfig(GridColorConfig config) {
-        cellRenderer.setGridColorConfig(config);
     }
 
     @Override
-    public void updateUI() {
-        super.updateUI();
+    public void setFont(Font font) {
+        super.setFont(font);
+        if (panel == null) return;
 
-        if (scrollPane == null) return ; //called from super constructor. not yet initialized
-        scrollPane.getViewport().setBackground(UIManager.getColor("Table.background"));
-
-        rowCountLabel.setBorder(UIManager.getBorder("TableHeader.cellBorder"));
-        rowCountLabel.setFont(UIManager.getFont("TableHeader.font"));
-        rowCountLabel.setBackground(UIManager.getColor("TableHeader.background"));
-        rowCountLabel.setForeground(UIManager.getColor("TableHeader.foreground"));
-
-        rowCountLabel.setBorder(UIManager.getBorder("TableHeader.cellBorder"));
-        rowCountLabel.setFont(UIManager.getFont("Table.font"));
-        rowCountLabel.setBackground(UIManager.getColor("TableHeader.background"));
-        rowCountLabel.setForeground(UIManager.getColor("TableHeader.foreground"));
+        panel.setFont(font);
     }
 
     private void resetSearch() {
@@ -336,28 +225,7 @@ public class QGrid extends JPanel implements MouseWheelListener, SearchPanelList
     }
 
     public void resizeColumns() {
-        widthAdjuster.revalidate();
-        revalidate();
-    }
-
-    public void setFont(Font font) {
-        super.setFont(font);
-        if (table == null) return;
-
-        table.setFont(font);
-        tableHeaderRenderer.setFont(font);
-        cellRenderer.setFont(font);
-        int rowHeight = getFontMetrics(font).getHeight();
-        table.setRowHeight(rowHeight);
-
-        tableRowHeader.setFont(font);
-        ((JComponent)tableRowHeader.getCellRenderer()).setFont(font);
-        tableRowHeader.setFixedCellHeight(rowHeight);
-        tableRowHeader.recalcWidth();
-        widthAdjuster.revalidate();
-
-        revalidate();
-        repaint();
+        panel.resizeColumns();
     }
 
     public void setDoubleClickTimeout(long doubleClickTimeout) {
@@ -457,6 +325,7 @@ public class QGrid extends JPanel implements MouseWheelListener, SearchPanelList
             return;
         }
 
+        KTableModel model = (KTableModel) table.getModel();
         Position startPos = lastSearchPos;
         while (true) {
             lastSearchPos = tableIterator.next();
