@@ -6,8 +6,12 @@ import studio.ui.ColorLabel;
 import studio.ui.GroupLayoutSimple;
 
 import javax.swing.*;
+import javax.swing.event.ChangeEvent;
+import javax.swing.event.ChangeListener;
 import java.awt.*;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 public class GridColorsEditor extends JPanel {
@@ -17,6 +21,9 @@ public class GridColorsEditor extends JPanel {
     private final Map<GridColorToken, ColorLabel> bgLabels = new HashMap<>();
 
     private GridColorConfig config;
+
+    private boolean muteEvents = true;
+    private final List<ChangeListener> listeners = new ArrayList<>();
 
     public GridColorsEditor(GridColorConfig config) {
         this.config = config;
@@ -54,6 +61,7 @@ public class GridColorsEditor extends JPanel {
 
     public void set(GridColorConfig config) {
         this.config = config;
+        muteEvents = true;
         nullLabel.setColor(config.getColor(GridColorToken.NULL, true));
         for (GridColorToken token: GridColorToken.BG) {
             ColorLabel label = fgLabels.get(token);
@@ -62,6 +70,9 @@ public class GridColorsEditor extends JPanel {
             label = bgLabels.get(token);
             label.setColor(config.getColor(token, false));
         }
+
+        muteEvents = false;
+        fireEvent();
     }
 
     private ColorLabel getLabel(GridColorToken token, boolean isForeground) {
@@ -74,6 +85,7 @@ public class GridColorsEditor extends JPanel {
             }
             Color newColor = ((ColorLabel)e.getSource()).getColor();
             config.setColor(newColor, token, isForeground);
+            fireEvent();
         });
 
         return label;
@@ -82,4 +94,19 @@ public class GridColorsEditor extends JPanel {
     public GridColorConfig getConfig() {
         return config;
     }
+
+    public void addChangeListener(ChangeListener listener) {
+        listeners.add(listener);
+    }
+
+    public void removeChangeListener(ChangeListener listener) {
+        listeners.remove(listener);
+    }
+
+    private void fireEvent() {
+        if (muteEvents) return;
+        ChangeEvent event = new ChangeEvent(this);
+        listeners.forEach(l -> l.stateChanged(event));
+    }
+
 }
