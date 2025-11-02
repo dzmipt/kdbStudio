@@ -57,6 +57,8 @@ public class GridColorsEditor extends JPanel {
                         .addLine(bgComponents)
 
         );
+
+        muteEvents = false;
     }
 
     public void set(GridColorConfig config) {
