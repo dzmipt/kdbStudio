@@ -18,6 +18,7 @@ public class ColorLabel extends JLabel {
 
     public ColorLabel(Color color, int size) {
         super(new SquareIcon(color, size));
+        ((SquareIcon)getIcon()).setBorder(true);
         setOpaque(true);
         setPreferredSize(new Dimension(size, size));
         addMouseListener(new MouseAdapter() {
@@ -63,7 +64,9 @@ public class ColorLabel extends JLabel {
 
     public void setColor(Color newColor) {
         if (getColor().equals(newColor)) return;
-        setIcon(new SquareIcon(newColor, getIconSize()));
+        SquareIcon icon = new SquareIcon(newColor, getIconSize());
+        icon.setBorder(true);
+        setIcon(icon);
         fireEvent();
     }
 
