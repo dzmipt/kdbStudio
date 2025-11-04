@@ -23,6 +23,8 @@ public class ColorTokenEditor extends JPanel {
 
     private final List<ChangeListener> listeners = new ArrayList<>();
 
+    private final static int COLS_COUNT = 6;
+
     public ColorTokenEditor(Color bgColor, ColorMap colorTokenConfig) {
         bgColorLabel = new ColorLabel();
         bgColorLabel.setSingleClick(true);
@@ -30,37 +32,48 @@ public class ColorTokenEditor extends JPanel {
             fireEvent();
         });
 
-        int count = ColorToken.values().length + 1; // +1 as we need to include bg color
-        int colsCount = 6;
-        int lines = count / colsCount;
-        if (lines * colsCount < count) lines++;
-
-        GroupLayoutSimple.Stack[] stacks = new GroupLayoutSimple.Stack[colsCount];
-        for (int cols = 0; cols<colsCount; cols++) {
+        GroupLayoutSimple.Stack[] stacks = new GroupLayoutSimple.Stack[COLS_COUNT];
+        for (int cols = 0; cols<COLS_COUNT; cols++) {
             stacks[cols] = new GroupLayoutSimple.Stack();
         }
 
         stacks[0].addLineAndGlue(bgColorLabel, new JLabel("Background"));
 
-        for (int i = 0; i<count -1; i++) {
-            final ColorToken token = ColorToken.values()[i];
-            JLabel lblToken = new JLabel(token.getDescription());
-            ColorLabel colorLabel = new ColorLabel();
-            colorLabel.setSingleClick(true);
-            colorLabels.put(token, colorLabel);
+        int count = ColorToken.values().length ;
+        int index = 0;
 
-            colorLabel.addChangeListener(e -> {
-                Color newColor = ((ColorLabel)e.getSource()).getColor();
-                colorMap.put(token, newColor);
-                fireEvent();
-            });
+        for (int col = 0; col< COLS_COUNT; col++) {
+            int remainCols = COLS_COUNT - col;
+            int lines = count / remainCols;
+            if (lines * remainCols < count) lines++;
 
-            stacks[(i+1) / lines].addLineAndGlue(colorLabel, lblToken);
+            if (col > 0) {
+                stacks[col].addLineAndGlue();
+            }
+            for (int row = 0; row<lines; row++) {
+                final ColorToken token = ColorToken.values()[index++];
+                JLabel lblToken = new JLabel(token.getDescription());
+                ColorLabel colorLabel = new ColorLabel();
+                colorLabel.setSingleClick(true);
+                colorLabels.put(token, colorLabel);
+
+                colorLabel.addChangeListener(e -> {
+                    Color newColor = ((ColorLabel)e.getSource()).getColor();
+                    colorMap.put(token, newColor);
+                    fireEvent();
+                });
+
+                stacks[col].addLineAndGlue(colorLabel, lblToken);
+
+            }
+            count -= lines;
         }
 
-        int emptyLines = lines*colsCount - count;
-        for (int i=0; i<emptyLines; i++) {
-            stacks[colsCount-1].addLineAndGlue();
+        int size = stacks[0].size();
+        for (int col=1; col<COLS_COUNT; col++) {
+            for (int row = stacks[col].size(); row<size; row++) {
+                stacks[col].addLineAndGlue();
+            }
         }
 
         GroupLayoutSimple layout = new GroupLayoutSimple(this);

@@ -119,6 +119,9 @@ public class GroupLayoutSimple extends GroupLayout {
             lines.add(new Line(line, true));
             return this;
         }
+        public int size() {
+            return lines.size();
+        }
     }
 
     private static class Line {
