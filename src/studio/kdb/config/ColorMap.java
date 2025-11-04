@@ -75,19 +75,19 @@ public class ColorMap {
     }
 
     public Color put(ColorToken token, Color color) {
-        return put(token.name(), color);
+        return put(token.name().toLowerCase(), color);
     }
 
     public Color get(ColorToken token) {
-        return get(token.name());
+        return get(token.name().toLowerCase());
     }
 
     public Color put(GridColorToken token, Color color) {
-        return put(token.name(), color);
+        return put(token.name().toLowerCase(), color);
     }
 
     public Color get(GridColorToken token) {
-        return get(token.name());
+        return get(token.name().toLowerCase());
     }
 
     public ColorMap filterColorToken() {
@@ -97,7 +97,7 @@ public class ColorMap {
     public <T extends Enum<T>> ColorMap enforce(T[] keys) {
         Map<String,Color> map = new LinkedHashMap<>();
         for (T key: keys) {
-            String name = key.name();
+            String name = key.name().toLowerCase();
             Color color = this.map.get(name);
             if (color == null) throw new IllegalArgumentException("Expected color token: " + name);
             map.put(name, color);
@@ -110,7 +110,7 @@ public class ColorMap {
     public <T extends Enum<T>> ColorMap filter(T[] keys, ColorMap defaults) {
         Map<String,Color> map = new LinkedHashMap<>();
         for (T key: keys) {
-            String name = key.name();
+            String name = key.name().toLowerCase();
             Color color = this.map.get(name);
             if (color == null) color = defaults.get(name);
             map.put(name, color);

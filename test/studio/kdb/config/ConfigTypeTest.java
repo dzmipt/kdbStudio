@@ -162,7 +162,7 @@ public class ConfigTypeTest {
         Color newDefault = new Color(0x112233);
         assertNotEquals(newDefault, ColorToken.DEFAULT.getColor());
 
-        String jsonText = "{\"DEFAULT\":\"112233\",\"SYSTEM\":\"F0B400\"}";
+        String jsonText = "{\"default\":\"112233\",\"system\":\"F0B400\"}";
         JsonElement json = JsonParser.parseString(jsonText);
         ColorMap config = (ColorMap)ConfigType.COLOR_TOKEN_CONFIG.fromJson(json, null);
 
