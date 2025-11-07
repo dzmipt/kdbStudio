@@ -35,11 +35,7 @@ sourceSets {
             srcDirs 'test'
         }
         resources {
-            srcDirs 'test'
-            include 'syntax.csv'
-            include 'studio13.properties'
-            include 'studio14.properties'
-            include 'servers.json'
+            srcDir 'test-resources'
         }
     }
     intTest {

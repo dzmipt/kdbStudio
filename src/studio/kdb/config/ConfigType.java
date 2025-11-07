@@ -291,14 +291,20 @@ public enum ConfigType {
     GRID_COLOR_CONFIG {
         @Override
         public Object fromJson(JsonElement jsonElement, Object defaultValue) {
-            JsonObject json = jsonElement.getAsJsonObject();
-            if (json.isEmpty()) return GridColorConfig.DEFAULT;
+            try {
+                JsonObject json = jsonElement.getAsJsonObject();
 
-            ColorMap fg = (ColorMap) COLOR_MAP.fromJson(json.get("foreground"), defaultValue);
-            fg = fg.enforce(GridColorToken.FG);
-            ColorMap bg = (ColorMap) COLOR_MAP.fromJson(json.get("background"), defaultValue);
-            bg = bg.enforce(GridColorToken.BG);
-            return new GridColorConfig(fg, bg);
+                JsonElement fgJson = json.get("foreground");
+                JsonElement bgJson = json.get("background");
+                if (fgJson != null && bgJson != null ) {
+                    ColorMap fg = (ColorMap) COLOR_MAP.fromJson(fgJson, defaultValue);
+                    fg = fg.enforce(GridColorToken.FG);
+                    ColorMap bg = (ColorMap) COLOR_MAP.fromJson(bgJson, defaultValue);
+                    bg = bg.enforce(GridColorToken.BG);
+                    return new GridColorConfig(fg, bg);
+                }
+            } catch (IllegalArgumentException ignore) {}
+            return GridColorConfig.DEFAULT;
         }
 
         @Override

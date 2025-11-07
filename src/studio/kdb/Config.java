@@ -77,7 +77,7 @@ public class Config  {
     public static final String SERVER_FROM_RESULT_IN_CURRENT = configDefault("gridOpenServersInCurrentTab", ConfigType.BOOLEAN, true);
     public static final String INSPECT_RESULT_IN_CURRENT = configDefault("inspectResultInCurrentTab", ConfigType.BOOLEAN, true);
     public static final String COLOR_TOKEN_CONFIG = configDefault("tokenColors", ConfigType.COLOR_TOKEN_CONFIG, ColorMap.EMPTY);
-    public static final String GRID_COLOR_CONFIG = configDefault("gridColors", ConfigType.GRID_COLOR_CONFIG, new GridColorConfig());
+    public static final String GRID_COLOR_CONFIG = configDefault("gridColors", ConfigType.GRID_COLOR_CONFIG, GridColorConfig.DEFAULT);
     public static final String SERVER_HISTORY = configDefault("serverHistory", ConfigType.SERVER_HISTORY, new ServerHistoryConfig(20, List.of()));
     public static final String CHART_COLORSETS = configDefault("chartColorSets", ConfigType.CHART_COLOR_SETS, ColorSets.DEFAULT);
     public static final String CHART_STROKE_STYLES = configDefault("chartStrokeStyles", ConfigType.STRING_ARRAY,

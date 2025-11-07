@@ -35,9 +35,7 @@ public class ColorMap {
 
     public ColorMap cloneMap() {
         if (unmodifiable) return this;
-        ColorMap colorMap = new ColorMap();
-        colorMap.map.putAll(this.map);
-        return colorMap;
+        return new ColorMap(this);
     }
 
     public boolean isUnmodifiable() {
