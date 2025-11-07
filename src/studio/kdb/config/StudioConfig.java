@@ -15,7 +15,7 @@ import java.util.List;
 
 public class StudioConfig {
 
-    private final static String COMMENT = "comment";
+    public final static String COMMENT = "comment";
     private final ConfigTypeRegistry registry;
     private final FileConfig fileConfig;
     private final FileConfig defaultFileConfig;

@@ -1,5 +1,7 @@
 package studio.kdb;
 
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
@@ -13,26 +15,41 @@ import studio.utils.MockConfig;
 import java.awt.*;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.Reader;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.stream.IntStream;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.*;
 
 public class ConfigAllTest {
 
-    private static Path configPath;
-    private static Config config;
+    private static Config configConverted;
+
+    private static InstrumentedMockConfig lastConfig;
+    private static Path lastStudioConfigPath;
 
     @BeforeAll
     public static void prepare() throws IOException {
         Util.setMockFitToScreen(true);
-        configPath = MockConfig.createTempDir();
+
+        Path configPath = MockConfig.createTempDir();
         Path path = configPath.resolve(Config.OLD_CONFIG_FILENAME);
         try (InputStream inputStream = ConfigAllTest.class.getClassLoader().getResourceAsStream("studio14.properties") ) {
             Files.copy(inputStream, path);
         }
-        config = new Config(configPath);
+        configConverted = new Config(configPath);
+
+        configPath = MockConfig.createTempDir();
+        lastStudioConfigPath = configPath.resolve(Config.CONFIG_FILENAME);
+        try (InputStream inputStream = ConfigAllTest.class.getClassLoader().getResourceAsStream("studio_last.json") ) {
+            Files.copy(inputStream, lastStudioConfigPath);
+        }
+        lastConfig = new InstrumentedMockConfig(configPath);
     }
 
     @AfterAll
@@ -41,7 +58,126 @@ public class ConfigAllTest {
     }
 
     @Test
-    public void test() {
+    public void testConverted() {
+        testAll_1_4(configConverted);
+    }
+
+    @Test
+    public void testAllKeysDefined() throws IOException {
+        try (Reader reader = Files.newBufferedReader(lastStudioConfigPath)) {
+            JsonObject json = JsonParser.parseReader(reader).getAsJsonObject();
+            Set<String> keysInTest = json.keySet();
+            Set<String> definedTypes = new HashSet<>(lastConfig.getConfigTypeRegistry().keySet());
+            definedTypes.add(StudioConfig.COMMENT);
+
+            Set<String> set = new HashSet<>(definedTypes);
+            set.removeAll(keysInTest);
+            System.out.println("Keys missed in the test: " + set);
+
+            set = new HashSet<>(keysInTest);
+            set.removeAll(definedTypes);
+            System.out.println("Extra keys the test: " + set);
+
+            assertEquals(definedTypes, keysInTest);
+        }
+    }
+
+    @Test
+    public void testLastConfig() {
+        lastConfig.resetAccessedKeys();
+
+        testLast(lastConfig);
+
+        Set<String> accessedKeys = lastConfig.getAccessedKeys();
+        Set<String> definedTypes = new HashSet<>(lastConfig.getConfigTypeRegistry().keySet());
+
+        Set<String> set = new HashSet<>(definedTypes);
+        set.removeAll(accessedKeys);
+        System.out.println("Not accessed keys: " + set);
+
+        set = new HashSet<>(accessedKeys);
+        set.removeAll(definedTypes);
+        System.out.println("Access not defined keys (how?): " + set);
+
+        assertEquals(definedTypes, accessedKeys);
+    }
+
+    private void testLast(Config config) {
+        testAll_1_4(config);
+        testAlL_2_1(config);
+    }
+
+    private BasicStroke getStroke(float... dashArray) {
+        return new BasicStroke(1f, BasicStroke.CAP_BUTT,
+                BasicStroke.JOIN_BEVEL, 1f, dashArray, 0f);
+    }
+
+    private Color[] getColors(int... rgbs) {
+        return IntStream.of(rgbs).mapToObj(Color::new).toArray(Color[]::new);
+    }
+
+    private ColorMap getColorMap(GridColorToken[] keys, Color[] colors) {
+        if (keys.length != colors.length) throw new IllegalArgumentException("Length is different");
+
+        ColorMap colorMap = new ColorMap();
+        for (int i=0; i<keys.length; i++) {
+            colorMap.put(keys[i], colors[i]);
+        }
+        return colorMap;
+    }
+
+    private void testAlL_2_1(Config config) {
+        assertTrue(config.getBoolean(Config.LOG_DEBUG));
+        assertFalse(config.getBoolean(Config.SERVER_FROM_RESULT_IN_CURRENT));
+        assertFalse(config.getBoolean(Config.INSPECT_RESULT_IN_CURRENT));
+        assertEquals(List.of(1.0, 0.5, 1.5, 2.0),
+                                config.getDoubleArray(Config.CHART_STROKE_WIDTHS));
+
+        assertEquals(List.of(
+                            getStroke(0.5f, 1.5f, 1),
+                            new BasicStroke(1),
+                            getStroke(1),
+                            getStroke(2,2)
+                        ), config.getStyleStrokes());
+
+
+        GridColorConfig gridColorConfig = new GridColorConfig(
+                getColorMap(new GridColorToken[] {
+                            GridColorToken.NULL, GridColorToken.KEY, GridColorToken.ODD, GridColorToken.EVEN, GridColorToken.MARK,
+                            GridColorToken.SELECTED, GridColorToken.MARK_SELECTED
+                        },
+                        getColors(0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07)),
+                getColorMap(new GridColorToken[] {
+                                GridColorToken.KEY, GridColorToken.ODD, GridColorToken.EVEN, GridColorToken.MARK,
+                                GridColorToken.SELECTED, GridColorToken.MARK_SELECTED
+                        },
+                        getColors(0x08, 0x09, 0x10, 0x11, 0x12, 0x13))
+        );
+
+        assertEquals(gridColorConfig, config.getGridColorConfig());
+
+
+        ColorSchema dzSchema = new ColorSchema(
+                new Color(0x333333), new Color(0xffff00),
+                List.of(getColors(0xff0000, 0x0000ff, 0x00ff00)) );
+
+        String name = "DZ Custom";
+
+        ColorSets colorSets = new ColorSets(name,
+                Map.of(name, dzSchema, ColorSets.DEFAULT_NAME, ColorSchema.DEFAULT)
+        );
+
+        assertEquals(colorSets, config.getChartColorSets());
+
+    }
+
+    private void testAll_1_4(Config config) {
+        test(config);
+        testTokenColors(config);
+        testCustom(config);
+    }
+
+    private void test(Config config) {
         assertEquals(ActionOnExit.NOTHING, config.getEnum(Config.ACTION_ON_EXIT));
 
         assertEquals("Plain", DefaultAuthenticationMechanism.NAME);
@@ -70,8 +206,8 @@ public class ConfigAllTest {
         assertEquals(new Font("Times New Roman", Font.PLAIN, 16), config.getFont(Config.FONT_EDITOR) );
         assertEquals(new Font("Andale Mono", Font.PLAIN, 17), config.getFont(Config.FONT_TABLE) );
 
-        assertEquals(false,config.getBoolean(Config.AUTO_SAVE));
-        assertEquals(KdbMessageLimitAction.ASK,config.getEnum(Config.KDB_MESSAGE_SIZE_LIMIT_ACTION));
+        assertEquals(true,config.getBoolean(Config.AUTO_SAVE));
+        assertEquals(KdbMessageLimitAction.BLOCK,config.getEnum(Config.KDB_MESSAGE_SIZE_LIMIT_ACTION));
         assertEquals(1,config.getInt(Config.KDB_MESSAGE_SIZE_LIMIT_MB));
         assertEquals(9, config.getInt(Config.MAX_FRACTION_DIGITS));
 
@@ -85,13 +221,12 @@ public class ConfigAllTest {
 
         assertEquals(true, config.getBoolean(Config.SESSION_INVALIDATION_ENABLED));
         assertEquals(11, config.getInt(Config.SESSION_INVALIDATION_TIMEOUT_IN_HOURS));
-        assertEquals(true, config.getBoolean(Config.SESSION_REUSE));
+        assertEquals(false, config.getBoolean(Config.SESSION_REUSE));
         assertEquals(false, config.getBoolean(Config.SHOW_SERVER_COMBOBOX));
 
     }
 
-    @Test
-    public void testCustom() {
+    private void testCustom(Config config) {
         assertEquals(ExecAllOption.Ignore, config.getEnum(Config.EXEC_ALL));
         assertEquals("javax.swing.plaf.nimbus.NimbusLookAndFeel", config.getString(Config.LOOK_AND_FEEL));
         assertEquals(500000, config.getInt(Config.MAX_CHARS_IN_RESULT));
@@ -133,8 +268,7 @@ public class ConfigAllTest {
 
     }
 
-    @Test
-    public void testTokenColors() {
+    private void testTokenColors(Config config) {
         assertEquals(new Color(0xfefefe), config.getColor(Config.COLOR_BACKGROUND));
 
         ColorMap colorTokenConfig = config.getColorTokenConfig();;

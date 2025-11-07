@@ -188,12 +188,19 @@ public class Config  {
 
         FileConfig defaultFileConfig = new FileConfig(EnvConfig.getPluginFolder().resolve(CONFIG_FILENAME));
         FileConfig fileConfig = new FileConfig(basePath.resolve(CONFIG_FILENAME));
-        studioConfig = new StudioConfig(configTypeRegistry, fileConfig, defaultFileConfig, new ConfigConverter());
+        studioConfig = createStudioConfig(configTypeRegistry, fileConfig, defaultFileConfig, new ConfigConverter());
 
         workspaceConfig = new PropertiesConfig(getWorkspacePath());
         initServerHistory();
     }
 
+    protected StudioConfig createStudioConfig(ConfigTypeRegistry configTypeRegistry,
+                                              FileConfig fileConfig,
+                                              FileConfig defaultFileConfig,
+                                              ConfigConverter configConverter
+                                              ) {
+        return new StudioConfig(configTypeRegistry, fileConfig, defaultFileConfig, configConverter);
+    }
     private void upgradeTo14(Properties config) {
         final String OLD_DEF_AUTHMETHOD = "Username and password";
 

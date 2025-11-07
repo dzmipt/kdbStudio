@@ -6,7 +6,7 @@ public class ColorSets {
     private final String selected;
     private final Map<String, ColorSchema> map;
 
-    private final static String DEFAULT_NAME = "Default";
+    public final static String DEFAULT_NAME = "Default";
     public final static ColorSets DEFAULT = new ColorSets(DEFAULT_NAME, defaultMap());
 
     private static Map<String, ColorSchema> defaultMap() {
