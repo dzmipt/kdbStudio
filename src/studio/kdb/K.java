@@ -818,11 +818,11 @@ public class K {
 
     public static class KCharacter extends KBase {
 
-        public char c;
+        private char c;
 
         public KCharacter(byte b) {
             super(KType.Char);
-            this.c = c;
+            this.c = (char)b;
         }
 
         public KCharacter(char c) {
@@ -832,6 +832,10 @@ public class K {
 
         public boolean isNull() {
             return c == ' ';
+        }
+
+        public char getChar() {
+            return c;
         }
 
         @Override

@@ -145,6 +145,18 @@ public class KTest {
     }
 
     @Test
+    public void testKStringByteArrayConstructor() {
+        K.KString str = new K.KString(new byte[] {97, 98, 99, 100});
+        assertEquals("abcd", str.getString() );
+        assertEquals(new K.KCharacter('b'), str.at(1));
+
+        assertEquals("\"c\"", new K.KCharacter((byte)99).toString());
+
+        byte b = -47;
+        assertEquals(b, (byte) new K.KCharacter(b).getChar());
+    }
+
+    @Test
     public void testSymbolToString() throws Exception {
         check(new K.KSymbol(""), "", "`");
         check(new K.KSymbol("a"), "a", "`a");
