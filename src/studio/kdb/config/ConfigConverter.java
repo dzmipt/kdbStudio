@@ -18,8 +18,11 @@ public class ConfigConverter implements JsonConverter{
         ConfigVersion version = getVersion(json);
         if (version == ConfigVersion.LAST) return false;
 
+        log.info("Detected old version: {}", version);
         try {
             convertTo21(json);
+            convertTo22(json);
+            log.info("Successfully converted to version: {}", ConfigVersion.LAST);
         } catch (Exception e) {
             log.error("Error during conversion", e);
         }
@@ -44,6 +47,8 @@ public class ConfigConverter implements JsonConverter{
     }
 
     void convertTo21(JsonObject json) {
+        if (ConfigVersion.V2_1.compareTo(getVersion(json))<=0 ) return;
+
         json = json.getAsJsonObject("chartColorSets");
         if (json == null) return;
 
@@ -60,6 +65,20 @@ public class ConfigConverter implements JsonConverter{
                     ConfigType.COLOR.toJson(ColorSchema.DEFAULT.getGrid()));
             newValue.add("colors", colors);
             json.add(key, newValue);
+        }
+    }
+
+    void convertTo22(JsonObject json) {
+        if (ConfigVersion.V2_2.compareTo(getVersion(json))<=0 ) return;
+
+        JsonElement bgColor = json.get("backgroundColor");
+
+        if (bgColor != null) {
+            JsonObject editorColors = new JsonObject();
+            editorColors.add(EditorColorToken.BACKGROUND.toString().toLowerCase(), bgColor);
+            json.add("editorColors", editorColors);
+
+            json.remove("backgroundColor");
         }
     }
 

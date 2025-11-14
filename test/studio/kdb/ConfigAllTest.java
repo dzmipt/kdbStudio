@@ -79,6 +79,10 @@ public class ConfigAllTest {
             System.out.println("Extra keys the test: " + set);
 
             assertEquals(definedTypes, keysInTest);
+
+            String strVersion = json.get(Config.CONFIG_VERSION).getAsString();
+            ConfigVersion version = ConfigVersion.valueOf(strVersion);
+            assertEquals(ConfigVersion.LAST, version);
         }
     }
 
@@ -105,6 +109,14 @@ public class ConfigAllTest {
     private void testLast(Config config) {
         testAll_1_4(config);
         testAlL_2_1(config);
+        testAlL_2_2(config);
+    }
+
+    private void testAlL_2_2(Config config) {
+        ColorMap colors = config.getEditorColors();
+        assertEquals(new Color(0xfefefe), colors.get(EditorColorToken.BACKGROUND));
+        assertEquals(new Color(0xabcdef), colors.get(EditorColorToken.SELECTED));
+        assertEquals(new Color(0x987654), colors.get(EditorColorToken.CURRENT_LINE_HIGHLIGHT));
     }
 
     private BasicStroke getStroke(float... dashArray) {
@@ -269,7 +281,7 @@ public class ConfigAllTest {
     }
 
     private void testTokenColors(Config config) {
-        assertEquals(new Color(0xfefefe), config.getColor(Config.COLOR_BACKGROUND));
+        assertEquals(new Color(0xfefefe), config.getEditorColors().get(EditorColorToken.BACKGROUND));
 
         ColorMap colorTokenConfig = config.getColorTokenConfig();;
         assertEquals(new Color(0x00ff00), colorTokenConfig.get(ColorToken.CHARVECTOR));

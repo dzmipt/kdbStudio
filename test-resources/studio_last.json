@@ -2,7 +2,6 @@
   "comment": "Auto-generated at 2025-11-07T19:24:49.055848Z from a process with pid 26976",
   "actionOnExit": "NOTHING",
   "autoReplaceTabOnOpen": true,
-  "backgroundColor": "fefefe",
   "cellMaxWidth": 250,
   "cellRightPadding": 0.9,
   "chartBounds": {
@@ -186,5 +185,11 @@
     }
   },
 
-  "version": "V2_0"
+  "editorColors" : {
+      "background": "fefefe",
+      "selected": "abcdef",
+      "current_line_highlight": "987654"
+  },
+
+  "version": "V2_2"
 }

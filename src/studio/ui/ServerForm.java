@@ -7,6 +7,7 @@ import studio.kdb.Config;
 import studio.kdb.Server;
 import studio.kdb.ServerTreeNode;
 import studio.kdb.Workspace;
+import studio.kdb.config.ColorToken;
 
 import javax.swing.*;
 import java.awt.*;
@@ -66,6 +67,8 @@ public class ServerForm extends EscapeDialog {
         txtPassword.setToolTipText("The password used to connect to the server");
         authenticationMechanism.setToolTipText("The authentication mechanism to use");
 
+        Color fgColor = Config.getInstance().getColorTokenConfig().get(ColorToken.DEFAULT);
+        sampleTextOnBackgroundTextField.setForeground(fgColor);
         sampleTextOnBackgroundTextField.setBackground(this.server.getBackgroundColor());
         sampleTextOnBackgroundTextField.setEditable(false);
         addWindowListener(new WindowAdapter() {

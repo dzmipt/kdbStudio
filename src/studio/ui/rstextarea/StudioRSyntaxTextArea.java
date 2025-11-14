@@ -7,6 +7,7 @@ import org.fife.ui.rtextarea.Gutter;
 import org.fife.ui.rtextarea.RTextArea;
 import org.fife.ui.rtextarea.RUndoManager;
 import studio.kdb.config.ColorMap;
+import studio.kdb.config.EditorColorToken;
 import studio.qeditor.RSToken;
 
 import java.awt.*;
@@ -60,6 +61,12 @@ public class StudioRSyntaxTextArea extends RSyntaxTextArea {
         scheme.setStyles(styles);
 
         setSyntaxScheme(scheme);
+    }
+
+    public void setEditorColors(ColorMap editorColors) {
+        setBackground(editorColors.get(EditorColorToken.BACKGROUND));
+        setSelectionColor(editorColors.get(EditorColorToken.SELECTED));
+        setCurrentLineHighlightColor(editorColors.get(EditorColorToken.CURRENT_LINE_HIGHLIGHT));
     }
 
     public void setActionsUpdateListener(Runnable actionUpdateListener) {

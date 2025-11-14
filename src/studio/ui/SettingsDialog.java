@@ -4,6 +4,7 @@ import com.formdev.flatlaf.FlatLaf;
 import studio.core.Studio;
 import studio.kdb.Config;
 import studio.kdb.Server;
+import studio.kdb.config.EditorColorToken;
 import studio.kdb.config.ServerConfig;
 import studio.ui.rstextarea.StudioRSyntaxTextArea;
 import studio.ui.settings.*;
@@ -67,14 +68,14 @@ public class SettingsDialog extends EscapeDialog {
     }
 
     public void saveSettings() {
-        Color oldBgColor = CONFIG.getColor(Config.COLOR_BACKGROUND);
+        Color oldBgColor = CONFIG.getEditorColors().get(EditorColorToken.BACKGROUND);
 
         SettingsSaveResult result = new SettingsSaveResult();
         for(SettingsTab tab: pages.values() ) {
             tab.saveSettings(result);
         }
 
-        Color newBgColor = CONFIG.getColor(Config.COLOR_BACKGROUND);
+        Color newBgColor = CONFIG.getEditorColors().get(EditorColorToken.BACKGROUND);
         if (! newBgColor.equals(oldBgColor) ) {
             int res = StudioOptionPane.showYesNoDialog(this, "Background color is changed.\n" +
                     "Do you want to update background for all servers with old background color?", "Background color changed");
@@ -130,7 +131,7 @@ public class SettingsDialog extends EscapeDialog {
                 EditorPane editorPane = resultPane.getEditor();
                 if (editorPane != null) {
                     StudioRSyntaxTextArea editor = editorPane.getTextArea();
-                    editor.setBackground(CONFIG.getColor(Config.COLOR_BACKGROUND));
+                    editor.setEditorColors(CONFIG.getEditorColors());
                     editor.setSyntaxScheme(CONFIG.getFont(Config.FONT_EDITOR), CONFIG.getColorTokenConfig());
                 }
                 ResultGrid grid = resultPane.getGrid();

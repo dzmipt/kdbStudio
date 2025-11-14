@@ -2,6 +2,7 @@ package studio.ui.settings;
 
 import studio.kdb.config.ColorMap;
 import studio.kdb.config.ColorToken;
+import studio.kdb.config.EditorColorToken;
 import studio.ui.ColorLabel;
 import studio.ui.GroupLayoutSimple;
 
@@ -14,30 +15,41 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-public class ColorTokenEditor extends JPanel {
+public class EditorColorEditor extends JPanel {
 
-    private final ColorLabel bgColorLabel;
-    private final Map<ColorToken, ColorLabel> colorLabels = new HashMap<>();
-    private ColorMap colorMap;
+    private final Map<ColorToken, ColorLabel> tokenColorLabels = new HashMap<>();
+    private final Map<EditorColorToken, ColorLabel> editorColorLabels = new HashMap<>();
+    private ColorMap editorColors, tokenColors;
     private boolean muteEvents = true;
 
     private final List<ChangeListener> listeners = new ArrayList<>();
 
     private final static int COLS_COUNT = 6;
 
-    public ColorTokenEditor(Color bgColor, ColorMap colorTokenConfig) {
-        bgColorLabel = new ColorLabel();
-        bgColorLabel.setSingleClick(true);
-        bgColorLabel.addChangeListener(e -> {
-            fireEvent();
-        });
+    public EditorColorEditor(ColorMap editorColorConfig, ColorMap colorTokenConfig) {
+        editorColors = new ColorMap(editorColorConfig);
+        tokenColors = new ColorMap(colorTokenConfig);
 
         GroupLayoutSimple.Stack[] stacks = new GroupLayoutSimple.Stack[COLS_COUNT];
         for (int cols = 0; cols<COLS_COUNT; cols++) {
             stacks[cols] = new GroupLayoutSimple.Stack();
         }
 
-        stacks[0].addLineAndGlue(bgColorLabel, new JLabel("Background"));
+        for (int index=0; index< EditorColorToken.values().length; index++) {
+            EditorColorToken token = EditorColorToken.values()[index];
+            JLabel label = new JLabel(token.getDescription());
+            ColorLabel colorLabel = new ColorLabel();
+            colorLabel.setSingleClick(true);
+            editorColorLabels.put(token, colorLabel);
+            colorLabel.addChangeListener(e -> {
+                Color newColor = ((ColorLabel)e.getSource()).getColor();
+                editorColors.put(token, newColor);
+                fireEvent();
+            });
+
+            stacks[index].addLineAndGlue(colorLabel, label);
+        }
+
 
         int count = ColorToken.values().length ;
         int index = 0;
@@ -47,7 +59,7 @@ public class ColorTokenEditor extends JPanel {
             int lines = count / remainCols;
             if (lines * remainCols < count) lines++;
 
-            if (col > 0) {
+            if (stacks[col].size() == 0) {
                 stacks[col].addLineAndGlue();
             }
             for (int row = 0; row<lines; row++) {
@@ -55,11 +67,11 @@ public class ColorTokenEditor extends JPanel {
                 JLabel lblToken = new JLabel(token.getDescription());
                 ColorLabel colorLabel = new ColorLabel();
                 colorLabel.setSingleClick(true);
-                colorLabels.put(token, colorLabel);
+                tokenColorLabels.put(token, colorLabel);
 
                 colorLabel.addChangeListener(e -> {
                     Color newColor = ((ColorLabel)e.getSource()).getColor();
-                    colorMap.put(token, newColor);
+                    tokenColors.put(token, newColor);
                     fireEvent();
                 });
 
@@ -80,17 +92,20 @@ public class ColorTokenEditor extends JPanel {
         layout.setBaseline(false);
         layout.setStacks(stacks);
 
-        colorMap = new ColorMap(colorTokenConfig);
-        set(bgColor, colorTokenConfig);
+        set(editorColorConfig, colorTokenConfig);
     }
 
-    public void set(Color bgColor, ColorMap colorTokenConfig) {
+    public void set(ColorMap editorColorConfig, ColorMap colorTokenConfig) {
         muteEvents = true;
 
-        bgColorLabel.setColor(bgColor);
-        colorMap = new ColorMap(colorTokenConfig);
+        editorColors = new ColorMap(editorColorConfig);
+        for (EditorColorToken token: EditorColorToken.values() ) {
+            editorColorLabels.get(token).setColor(editorColorConfig.get(token));
+        }
+
+        tokenColors = new ColorMap(colorTokenConfig);
         for (ColorToken token: ColorToken.values()) {
-            colorLabels.get(token).setColor(colorTokenConfig.get(token));
+            tokenColorLabels.get(token).setColor(colorTokenConfig.get(token));
         }
 
         muteEvents = false;
@@ -98,11 +113,11 @@ public class ColorTokenEditor extends JPanel {
     }
 
     public ColorMap getColorTokenConfig() {
-        return colorMap;
+        return tokenColors;
     }
 
-    public Color getBgColor() {
-        return bgColorLabel.getColor();
+    public ColorMap getEditorColorConfig() {
+        return editorColors;
     }
 
     public void addChangeListener(ChangeListener listener) {

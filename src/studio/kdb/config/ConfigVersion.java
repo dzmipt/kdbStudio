@@ -9,7 +9,8 @@ public enum ConfigVersion {
     V1_3(1.3, "2021-01-09"),
     V1_4(1.4, "2024-02-22"),
     V2_0(2.0, "2025-03-20"),
-    V2_1(2.1, "2025-05-29");
+    V2_1(2.1, "2025-05-29"),
+    V2_2(2.2, "2025-11-09");
 
     public final static ConfigVersion LAST = values()[values().length-1];
 

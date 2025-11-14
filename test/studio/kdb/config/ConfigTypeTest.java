@@ -21,7 +21,8 @@ public class ConfigTypeTest {
     }
 
     private void check(ConfigType type, Object value, Object defaultValue) {
-        Object parsedValue = type.fromJson(type.toJson(value),defaultValue);
+        JsonElement json = type.toJson(value);
+        Object parsedValue = type.fromJson(json, defaultValue);
         assertEquals(value, parsedValue);
     }
 
@@ -109,19 +110,19 @@ public class ConfigTypeTest {
 
     @Test
     public void testColorTokenConfig() {
-        check(ConfigType.COLOR_TOKEN_CONFIG, ColorMap.DEFAULT_COLOR_TOKEN_MAP);
+        check(ConfigType.COLOR_MAP, ColorMap.DEFAULT_COLOR_TOKEN_MAP);
 
         ColorMap map = new ColorMap(ColorMap.DEFAULT_COLOR_TOKEN_MAP);
         map.put(ColorToken.DATE, new Color(11,22,33));
-        check(ConfigType.COLOR_TOKEN_CONFIG, map);
+        check(ConfigType.COLOR_MAP, map);
 
         map.put(ColorToken.ERROR, Color.RED);
-        check(ConfigType.COLOR_TOKEN_CONFIG, map);
+        check(ConfigType.COLOR_MAP, map);
 
         map.put(ColorToken.ERROR, new Color(10, 20, 30));
-        check(ConfigType.COLOR_TOKEN_CONFIG, map);
+        check(ConfigType.COLOR_MAP, map);
 
-        check(ConfigType.COLOR_TOKEN_CONFIG, map);
+        check(ConfigType.COLOR_MAP, map);
     }
 
     @Test
@@ -164,7 +165,7 @@ public class ConfigTypeTest {
 
         String jsonText = "{\"default\":\"112233\",\"system\":\"F0B400\"}";
         JsonElement json = JsonParser.parseString(jsonText);
-        ColorMap config = (ColorMap)ConfigType.COLOR_TOKEN_CONFIG.fromJson(json, null);
+        ColorMap config = (ColorMap)ConfigType.COLOR_MAP.fromJson(json, ColorMap.DEFAULT_COLOR_TOKEN_MAP);
 
         assertEquals(newDefault, config.get(ColorToken.DEFAULT));
         assertEquals(ColorToken.SYMBOL.getColor(), config.get(ColorToken.SYMBOL));

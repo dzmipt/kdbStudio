@@ -22,7 +22,7 @@ public class SettingsStyleTab extends SettingsTab {
 
     private final JComboBox<CustomiszedLookAndFeelInfo> comboBoxLookAndFeel;
     private final FontSelectionPanel editorFontSelection, gridFontSelection;
-    private final ColorTokenEditor colorTokenEditor;
+    private final EditorColorEditor colorTokenEditor;
     private final StudioRSyntaxTextArea preview;
     private final GridColorsEditor gridColorsEditor;
     private final QGridPanel grid;
@@ -52,15 +52,16 @@ public class SettingsStyleTab extends SettingsTab {
 
         editorFontSelection = new FontSelectionPanel(parentDialog, "Editor font: ", CONFIG.getFont(Config.FONT_EDITOR));
         gridFontSelection = new FontSelectionPanel(parentDialog, "Result table font: ", CONFIG.getFont(Config.FONT_TABLE));
-        colorTokenEditor = new ColorTokenEditor(CONFIG.getColor(Config.COLOR_BACKGROUND), CONFIG.getColorTokenConfig());
+        colorTokenEditor = new EditorColorEditor(CONFIG.getEditorColors(), CONFIG.getColorTokenConfig());
         preview = RSTextAreaFactory.newTextArea(true);
+        preview.setHighlightCurrentLine(true);
         preview.setSyntaxScheme(editorFontSelection.getSelectedFont(), colorTokenEditor.getColorTokenConfig());
-        preview.setBackground(colorTokenEditor.getBgColor());
+        preview.setEditorColors(colorTokenEditor.getEditorColorConfig());
         preview.setText(SAMPLE);
 
         RTextScrollPane scrollPreview = new RTextScrollPane(preview);
         preview.setGutter(scrollPreview.getGutter());
-        preview.setRows(10);
+        preview.setRows(12);
 
         scrollPreview.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_ALWAYS);
         scrollPreview.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_ALWAYS);
@@ -70,7 +71,7 @@ public class SettingsStyleTab extends SettingsTab {
             preview.setFont(editorFontSelection.getSelectedFont());
         });
         colorTokenEditor.addChangeListener(e -> {
-            preview.setBackground(colorTokenEditor.getBgColor());
+            preview.setEditorColors(colorTokenEditor.getEditorColorConfig());
             preview.setSyntaxScheme(editorFontSelection.getSelectedFont(), colorTokenEditor.getColorTokenConfig());
         });
 
@@ -91,10 +92,7 @@ public class SettingsStyleTab extends SettingsTab {
 
         JButton btnColorTokenReset = new JButton("Reset to default");
         btnColorTokenReset.addActionListener(e -> {
-            Color bgColor = (Color) CONFIG.getDefault(Config.COLOR_BACKGROUND);
-            ColorMap tokensColor = (ColorMap) CONFIG.getDefault(Config.COLOR_TOKEN_CONFIG);
-            tokensColor = tokensColor.filterColorToken(); // May be this should be reworked?
-            colorTokenEditor.set(bgColor, tokensColor);
+            colorTokenEditor.set(ColorMap.DEFAULT_EDITOR_COLORS, ColorMap.DEFAULT_COLOR_TOKEN_MAP);
         });
 
         JButton btnGridColorReset = new JButton("Reset to default");
@@ -173,7 +171,7 @@ public class SettingsStyleTab extends SettingsTab {
         result.setRefreshEditorsSettings(changed);
         result.setRefreshResultSettings(changed);
 
-        changed = CONFIG.setColor(Config.COLOR_BACKGROUND, colorTokenEditor.getBgColor());
+        changed = CONFIG.setEditorColors(colorTokenEditor.getEditorColorConfig());
         result.setRefreshEditorsSettings(changed);
         result.setRefreshResultSettings(changed);
 

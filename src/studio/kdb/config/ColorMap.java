@@ -1,5 +1,7 @@
 package studio.kdb.config;
 
+import org.fife.ui.rsyntaxtextarea.RSyntaxTextArea;
+
 import java.awt.*;
 import java.util.*;
 
@@ -22,6 +24,15 @@ public class ColorMap {
             DEFAULT_COLOR_TOKEN_MAP.put(token, token.getColor());
         }
         DEFAULT_COLOR_TOKEN_MAP.freeze();
+    }
+
+    public final static ColorMap DEFAULT_EDITOR_COLORS;
+    static {
+        DEFAULT_EDITOR_COLORS = new ColorMap();
+        DEFAULT_EDITOR_COLORS.put(EditorColorToken.BACKGROUND, Color.WHITE);
+        DEFAULT_EDITOR_COLORS.put(EditorColorToken.SELECTED, RSyntaxTextArea.getDefaultSelectionColor());
+        DEFAULT_EDITOR_COLORS.put(EditorColorToken.CURRENT_LINE_HIGHLIGHT, RSyntaxTextArea.getDefaultCurrentLineHighlightColor());
+        DEFAULT_EDITOR_COLORS.freeze();
     }
 
     public ColorMap() {
@@ -61,35 +72,23 @@ public class ColorMap {
     }
 
     public Color put(String name, Color color) {
-        return map.put(name, color);
+        return map.put(name.toLowerCase(), color);
     }
 
     public Color get(String name) {
-        return map.get(name);
+        return map.get(name.toLowerCase());
     }
 
     public Set<String> keySet() {
         return map.keySet();
     }
 
-    public Color put(ColorToken token, Color color) {
-        return put(token.name().toLowerCase(), color);
-    }
-
-    public Color get(ColorToken token) {
+    public <T extends Enum<T>> Color get(T token) {
         return get(token.name().toLowerCase());
     }
 
-    public Color put(GridColorToken token, Color color) {
-        return put(token.name().toLowerCase(), color);
-    }
-
-    public Color get(GridColorToken token) {
-        return get(token.name().toLowerCase());
-    }
-
-    public ColorMap filterColorToken() {
-        return filter(ColorToken.values(), DEFAULT_COLOR_TOKEN_MAP);
+    public <T extends Enum<T>> Color put(T token, Color color) {
+        return put(token.name(), color);
     }
 
     public <T extends Enum<T>> ColorMap enforce(T[] keys) {
@@ -105,10 +104,9 @@ public class ColorMap {
         return this;
     }
 
-    public <T extends Enum<T>> ColorMap filter(T[] keys, ColorMap defaults) {
+    public <T extends Enum<T>> ColorMap filter(ColorMap defaults) {
         Map<String,Color> map = new LinkedHashMap<>();
-        for (T key: keys) {
-            String name = key.name().toLowerCase();
+        for (String name: defaults.keySet()) {
             Color color = this.map.get(name);
             if (color == null) color = defaults.get(name);
             map.put(name, color);

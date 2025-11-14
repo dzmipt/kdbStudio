@@ -4,6 +4,7 @@ import com.google.gson.*;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import studio.kdb.FileChooserConfig;
+import studio.ui.Util;
 import studio.utils.FileConfig;
 
 import java.awt.*;
@@ -50,51 +51,6 @@ public class StudioConfig {
         return fileConfig;
     }
 
-
-    private JsonObject deepMerge(JsonObject jBase, JsonObject jAdd) {
-        JsonObject json = new JsonObject();
-        for (String key: jBase.keySet()) {
-            if (jAdd.has(key)) {
-                JsonElement elBase = jBase.get(key);
-                JsonElement elAdd = jAdd.get(key);
-                if (elBase.isJsonObject() && elAdd.isJsonObject()) {
-                    json.add(key, deepMerge(elBase.getAsJsonObject(), elAdd.getAsJsonObject()));
-                } else {
-                    json.add(key, elAdd);
-                }
-            } else {
-                json.add(key, jBase.get(key));
-            }
-        }
-
-        for (String key: jAdd.keySet()) {
-            if (! jBase.has(key)) {
-                json.add(key, jAdd.get(key));
-            }
-        }
-        return json;
-    }
-
-    private JsonObject deepExclude(JsonObject jBase, JsonObject jMinus) {
-        JsonObject json = new JsonObject();
-        for (String key: jBase.keySet()) {
-            if (jMinus.has(key)) {
-                JsonElement elBase = jBase.get(key);
-                JsonElement elMinus = jMinus.get(key);
-                if (elBase.isJsonObject() && elMinus.isJsonObject()) {
-                    json.add(key, deepExclude(elBase.getAsJsonObject(), elMinus.getAsJsonObject()));
-                } else {
-                    if (! elBase.equals(elMinus)) {
-                        json.add(key, elBase);
-                    } // we exclude, if elBase equals to elMinus
-                }
-            } else {
-                json.add(key, jBase.get(key));
-            }
-        }
-        return json;
-    }
-
     private JsonObject getJson(FileConfig fileConfig) {
         if (fileConfig == null || ! fileConfig.fileExists()) return new JsonObject();
 
@@ -116,7 +72,7 @@ public class StudioConfig {
         return jRegistry;
     }
 
-    private JsonObject getJsonFromConfig() {
+    public JsonObject getJsonFromConfig() {
         JsonObject json = new JsonObject();
         for (String key: config.keySet()) {
             ConfigType type = registry.getConfigType(key);
@@ -164,33 +120,39 @@ public class StudioConfig {
                 }
             }
 
-            JsonObject jConfig = deepMerge(getJsonFromRegistry(), getJson(defaultFileConfig));
+            JsonObject jConfig = Util.deepMerge(getJsonFromRegistry(), getJson(defaultFileConfig));
 
-            json = deepMerge(jConfig, json);
+            json = Util.deepMerge(jConfig, json);
             map = parseConfig(json);
         } catch (Exception e) {
-            log.error("Error on parsing json {}", fileConfig.getPath(), e);
+            log.error("Error on parsing json {}", fileConfig == null ? "<null>" : fileConfig.getPath(), e);
         }
 
-        log.info("Loaded config {} with {} settings", fileConfig.getPath(), map.size());
+        log.info("Loaded config {} with {} settings", fileConfig == null ? "<null>" : fileConfig.getPath(), map.size());
         return map;
     }
 
     private void save() {
-        JsonObject jConfig = getJsonFromConfig();
-        JsonObject jDefault = deepMerge(getJsonFromRegistry(), getJson(defaultFileConfig));
-        jConfig = deepExclude(jConfig, jDefault);
+        if (fileConfig == null) return;
+        JsonObject jConfig = toJson();
         save(jConfig);
     }
 
+    private JsonObject toJson() {
+        JsonObject jConfig = getJsonFromConfig();
+        JsonObject jDefault = Util.deepMerge(getJsonFromRegistry(), getJson(defaultFileConfig));
+        return Util.deepExclude(jConfig, jDefault);
+    }
+
     private void save(JsonObject jsonConfig) {
+        if (fileConfig == null) return;
         try (Writer writer = fileConfig.getWriter()) {
 
             JsonObject json = new JsonObject();
             String comment = String.format("Auto-generated at %s from a process with pid %d", Instant.now(), ProcessHandle.current().pid());
-            json.add(COMMENT, new JsonPrimitive(comment));
+            json.addProperty(COMMENT, comment);
 
-            json = deepMerge(json, jsonConfig);
+            json = Util.deepMerge(json, jsonConfig);
             gson.toJson(json, writer);
         } catch (IOException e) {
             log.error("Error on saving json {}", fileConfig.getPath(), e);

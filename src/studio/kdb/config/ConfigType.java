@@ -253,6 +253,9 @@ public enum ConfigType {
                 Color color = (Color) COLOR.fromJson(json.get(key), null);
                 map.put(key, color);
             }
+            if (defaultValue != null) {
+                map = map.filter((ColorMap) defaultValue);
+            }
             return map;
         }
 
@@ -271,23 +274,6 @@ public enum ConfigType {
             return ((ColorMap)value).cloneMap();
         }
     },
-    COLOR_TOKEN_CONFIG {
-        @Override
-        public Object fromJson(JsonElement jsonElement, Object defaultValue) {
-            ColorMap colorMap = (ColorMap) COLOR_MAP.fromJson(jsonElement, defaultValue);
-            return colorMap.filterColorToken();
-        }
-
-        @Override
-        public JsonElement toJson(Object value) {
-            return COLOR_MAP.toJson(value);
-        }
-
-        @Override
-        public Object clone(Object value) {
-            return ((ColorMap)value).cloneMap();
-        }
-    },
     GRID_COLOR_CONFIG {
         @Override
         public Object fromJson(JsonElement jsonElement, Object defaultValue) {
@@ -297,9 +283,9 @@ public enum ConfigType {
                 JsonElement fgJson = json.get("foreground");
                 JsonElement bgJson = json.get("background");
                 if (fgJson != null && bgJson != null ) {
-                    ColorMap fg = (ColorMap) COLOR_MAP.fromJson(fgJson, defaultValue);
+                    ColorMap fg = (ColorMap) COLOR_MAP.fromJson(fgJson, null);
                     fg = fg.enforce(GridColorToken.FG);
-                    ColorMap bg = (ColorMap) COLOR_MAP.fromJson(bgJson, defaultValue);
+                    ColorMap bg = (ColorMap) COLOR_MAP.fromJson(bgJson, null);
                     bg = bg.enforce(GridColorToken.BG);
                     return new GridColorConfig(fg, bg);
                 }

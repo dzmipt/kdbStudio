@@ -2,7 +2,9 @@ package studio.ui;
 
 import kx.K4Exception;
 import org.fife.ui.rsyntaxtextarea.RSyntaxDocument;
-import studio.kdb.*;
+import studio.kdb.K;
+import studio.kdb.KTableModel;
+import studio.kdb.KType;
 import studio.kdb.ListModel;
 import studio.kdb.config.ColorToken;
 import studio.qeditor.QTokenMakerFactory;
@@ -38,7 +40,6 @@ public class ResultPane extends JPanel {
             } else {
                 editor = new EditorPane(false, studioWindow.getResultSearchPanel(), studioWindow.getMainStatusBar());
                 StudioRSyntaxTextArea textArea = editor.getTextArea();
-                textArea.setBackground(Config.getInstance().getColor(Config.COLOR_BACKGROUND));
 
                 KType kType = result.getType();
                 boolean enlist = kType.isVector() && result.count() == 1;

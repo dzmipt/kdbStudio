@@ -50,8 +50,6 @@ public class Config  {
 
     public static final String DEFAULT_LINE_ENDING = configDefault("defaultLineEnding", ConfigType.ENUM, LineEnding.Unix);
 
-    public static final String COLOR_BACKGROUND = configDefault("backgroundColor", ConfigType.COLOR, Color.WHITE);
-
     public static final String FONT_EDITOR = configDefault("font", ConfigType.FONT, new Font("Monospaced", Font.PLAIN, 14));
     public static final String FONT_TABLE = configDefault("fontTable", ConfigType.FONT, new Font("SansSerif", Font.PLAIN, 12));
 
@@ -76,7 +74,8 @@ public class Config  {
     public static final String TABLE_CONN_EXTRACTOR = configDefault("tableExtractorConfig", ConfigType.TABLE_CONN_EXTRACTOR, TableConnExtractor.DEFAULT);
     public static final String SERVER_FROM_RESULT_IN_CURRENT = configDefault("gridOpenServersInCurrentTab", ConfigType.BOOLEAN, true);
     public static final String INSPECT_RESULT_IN_CURRENT = configDefault("inspectResultInCurrentTab", ConfigType.BOOLEAN, true);
-    public static final String COLOR_TOKEN_CONFIG = configDefault("tokenColors", ConfigType.COLOR_TOKEN_CONFIG, ColorMap.EMPTY);
+    public static final String EDITOR_COLOR_CONFIG = configDefault("editorColors", ConfigType.COLOR_MAP, ColorMap.DEFAULT_EDITOR_COLORS);
+    public static final String COLOR_TOKEN_CONFIG = configDefault("tokenColors", ConfigType.COLOR_MAP, ColorMap.DEFAULT_COLOR_TOKEN_MAP);
     public static final String GRID_COLOR_CONFIG = configDefault("gridColors", ConfigType.GRID_COLOR_CONFIG, GridColorConfig.DEFAULT);
     public static final String SERVER_HISTORY = configDefault("serverHistory", ConfigType.SERVER_HISTORY, new ServerHistoryConfig(20, List.of()));
     public static final String CHART_COLORSETS = configDefault("chartColorSets", ConfigType.CHART_COLOR_SETS, ColorSets.DEFAULT);
@@ -375,6 +374,14 @@ public class Config  {
 
     public boolean setColorTokenConfig(ColorMap colorTokenConfig) {
         return studioConfig.set(Config.COLOR_TOKEN_CONFIG, colorTokenConfig);
+    }
+
+    public ColorMap getEditorColors() {
+        return (ColorMap) studioConfig.get(Config.EDITOR_COLOR_CONFIG);
+    }
+
+    public boolean setEditorColors(ColorMap editorColors) {
+        return studioConfig.set(Config.EDITOR_COLOR_CONFIG, editorColors);
     }
 
     public GridColorConfig getGridColorConfig() {

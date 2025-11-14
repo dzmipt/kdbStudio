@@ -45,6 +45,7 @@ public class EditorPane extends JPanel implements MouseWheelListener, SearchPane
 
         Font font = Config.getInstance().getFont(Config.FONT_EDITOR);
         textArea.setSyntaxScheme(font, Config.getInstance().getColorTokenConfig());
+        textArea.setEditorColors(Config.getInstance().getEditorColors());
 
         hideSearchPanel();
 
