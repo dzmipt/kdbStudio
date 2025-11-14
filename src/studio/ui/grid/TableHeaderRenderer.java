@@ -20,6 +20,8 @@ public class TableHeaderRenderer extends DefaultTableCellRenderer {
         setOpaque(true);
 
         setFont(Config.getInstance().getFont(Config.FONT_TABLE));
+        updateUI();
+
     }
 
     @Override
