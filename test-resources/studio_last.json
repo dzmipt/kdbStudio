@@ -40,11 +40,13 @@
   },
   "font": {
     "name": "Times New Roman",
-    "size": 16
+    "size": 16,
+    "style": "ItalicAndBold"
   },
   "fontTable": {
     "name": "Andale Mono",
-    "size": 17
+    "size": 17,
+    "style": "Bold"
   },
   "kdbMessageSizeLimitMB": 1,
   "lookandfeel": "javax.swing.plaf.nimbus.NimbusLookAndFeel",

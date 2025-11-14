@@ -121,8 +121,8 @@ public class ConfigToJsonConverter {
                         String name = get(key+".name");
                         if (name == null) break;
                         int size = Integer.parseInt(get(key+".size"));
-                        int style = FontStyle.valueOf(get(key+".style")).getStyle();
-                        value = new Font(name, style, size);
+                        FontStyle style = FontStyle.valueOf(get(key+".style"));
+                        value = style.getFont(name, size);
                         break;
                     case SIZE:
                         str = get(key+".width");

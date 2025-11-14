@@ -215,8 +215,8 @@ public class ConfigAllTest {
         assertEquals(1500, config.getInt(Config.EMULATED_DOUBLE_CLICK_TIMEOUT));
         assertEquals(new FileChooserConfig("/tmp/excelExport.xls", new Dimension(505, 306)), config.getFileChooserConfig(Config.EXPORT_FILE_CHOOSER));
 
-        assertEquals(new Font("Times New Roman", Font.PLAIN, 16), config.getFont(Config.FONT_EDITOR) );
-        assertEquals(new Font("Andale Mono", Font.PLAIN, 17), config.getFont(Config.FONT_TABLE) );
+        assertEquals(new Font("Times New Roman", Font.ITALIC | Font.BOLD, 16), config.getFont(Config.FONT_EDITOR) );
+        assertEquals(new Font("Andale Mono", Font.BOLD, 17), config.getFont(Config.FONT_TABLE) );
 
         assertEquals(true,config.getBoolean(Config.AUTO_SAVE));
         assertEquals(KdbMessageLimitAction.BLOCK,config.getEnum(Config.KDB_MESSAGE_SIZE_LIMIT_ACTION));

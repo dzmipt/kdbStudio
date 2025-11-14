@@ -1,16 +1,87 @@
 package studio.kdb.config;
 
 import java.awt.*;
+import java.awt.font.TextAttribute;
+import java.util.HashMap;
+import java.util.Map;
 
 public enum FontStyle {
-    Plain(Font.PLAIN), Bold(Font.BOLD), Italic(Font.ITALIC), ItalicAndBold(Font.BOLD | Font.ITALIC);
-    private int style;
+    Plain(false, false, false),
+    Bold(true, false, false),
+    Italic(false, true, false),
+    ItalicAndBold(true, true, false),
+    Underline(false, false, true),
+    UnderlineAndBold(true, false, true),
+    UnderlineAndItalic(false, true, true),
+    UnderlineAndBoldAndItalic(true, true, true);
 
-    FontStyle(int style) {
-        this.style = style;
+    private final boolean bold;
+    private final boolean italic;
+    private final boolean underline;
+
+    FontStyle(boolean bold, boolean italic, boolean underline) {
+        this.bold = bold;
+        this.italic = italic;
+        this.underline = underline;
     }
 
-    public int getStyle() {
-        return style;
+    public boolean isBold() {
+        return bold;
+    }
+
+    public boolean isItalic() {
+        return italic;
+    }
+
+    public boolean isUnderline() {
+        return underline;
+    }
+
+    public boolean isPlain() {
+        return !bold && !italic && !underline;
+    }
+
+    public Font getFont(String name, int size) {
+        Font font = new Font(name, Font.PLAIN, size);
+        if (! isPlain()) font = applyStyle(font);
+        return font;
+    }
+
+    public Font applyStyle(Font font) {
+        Map<TextAttribute, Object> attrs = new HashMap<>();
+        if (isBold()) {
+            attrs.put(TextAttribute.WEIGHT, TextAttribute.WEIGHT_BOLD);
+        }
+        if (isItalic()) {
+            attrs.put(TextAttribute.POSTURE, TextAttribute.POSTURE_OBLIQUE);
+        }
+        if (isUnderline()) {
+            attrs.put(TextAttribute.UNDERLINE, TextAttribute.UNDERLINE_ON);
+        }
+
+        return font.deriveFont(attrs);
+    }
+
+    public static FontStyle fromFont(Font font) {
+        Map<TextAttribute, ?> attrs = font.getAttributes();
+        boolean b = false;
+        boolean i = false;
+        boolean u = false;
+        Object value = attrs.get(TextAttribute.WEIGHT);
+        if (value instanceof Float && ((Float)value)>0f) b = true;
+
+        value = attrs.get(TextAttribute.POSTURE);
+        if (value instanceof Float && ((Float)value)>0f) i = true;
+
+        value = attrs.get(TextAttribute.UNDERLINE);
+        if (value instanceof Integer && ((Integer)value)>=0) u = true;
+
+        for (FontStyle style:values()) {
+            if (style.isBold() == b &&
+                    style.isItalic() == i &&
+                    style.isUnderline() == u) return style;
+        }
+
+        return FontStyle.Plain;
     }
 }

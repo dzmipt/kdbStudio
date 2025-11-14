@@ -65,8 +65,8 @@ public enum ConfigType {
             JsonObject json = jsonElement.getAsJsonObject();
             String name = json.get("name").getAsString();
             int size = json.get("size").getAsInt();
-            int style = FontStyle.valueOf(json.get("style").getAsString()).getStyle();
-            return new Font(name, style, size);
+            FontStyle style = FontStyle.valueOf(json.get("style").getAsString());
+            return style.getFont(name, size);
         }
 
         @Override
