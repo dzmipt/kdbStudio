@@ -32,7 +32,7 @@ public class ResultGrid extends JPanel implements MouseWheelListener, SearchPane
         return table;
     }
 
-    private final JPopupMenu popupMenu = new JPopupMenu();
+    private final JPopupMenu popupMenu;
     private final TableUserAction inspectCellAction;
 
     private long doubleClickTimeout;
@@ -93,6 +93,8 @@ public class ResultGrid extends JPanel implements MouseWheelListener, SearchPane
         inspectCellAction = new TableUserAction.InspectCellAction(resultTab, table);
         TableUserAction inspectLineAction = new TableUserAction.InspectLineAction(resultTab, table);
 
+        popupMenu = new JPopupMenu();
+        setComponentPopupMenu(popupMenu);
         popupMenu.add(inspectCellAction);
         popupMenu.add(inspectLineAction);
         popupMenu.add(new JMenuItem(copyExcelFormatAction));
