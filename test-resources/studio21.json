@@ -1,0 +1,192 @@
+{
+  "comment": "Auto-generated at 2025-11-07T19:24:49.055848Z from a process with pid 26976",
+  "actionOnExit": "NOTHING",
+  "autoReplaceTabOnOpen": true,
+  "backgroundColor": "fefefe",
+  "cellMaxWidth": 250,
+  "cellRightPadding": 0.9,
+  "chartBounds": {
+    "x": 261,
+    "y": 95,
+    "width": 1332,
+    "height": 803
+  },
+  "chartColorSets": {
+    "set": {
+      "Default": {}
+    }
+  },
+  "defaultAuthConfig": {
+    "default": "testplugin",
+    "Plain": {
+      "user": "testuser",
+      "password": "testpassword"
+    },
+    "testplugin": {
+      "user": "uu",
+      "password": "pwd"
+    }
+  },
+  "defaultLineEnding": "Windows",
+  "editorTabEmulated": true,
+  "editorTabSize": 8,
+  "emulatedDoubleClickTimeout": 1500,
+  "execAllOption": "Ignore",
+  "exportFileChooser": {
+    "filename": "/tmp/excelExport.xls",
+    "size": {
+      "width": 505,
+      "height": 306
+    }
+  },
+  "font": {
+    "name": "Times New Roman",
+    "size": 16,
+    "style": "ItalicAndBold"
+  },
+  "fontTable": {
+    "name": "Andale Mono",
+    "size": 17,
+    "style": "Bold"
+  },
+  "kdbMessageSizeLimitMB": 1,
+  "lookandfeel": "javax.swing.plaf.nimbus.NimbusLookAndFeel",
+  "maxCharsInResult": 500000,
+  "maxCharsInTableCell": 1024,
+  "maxFractionDigits": 9,
+  "mrufiles": [
+    "file1",
+    "/tmp/file2"
+  ],
+  "notesHash": "94a43c9badd0e2e1c2bdf3e40ded8366",
+  "openFileChooser": {
+    "filename": "/tmp/file1.q",
+    "size": {
+      "width": 505,
+      "height": 306
+    }
+  },
+  "resultTabsCount": 25,
+  "rstaAnimateBracketMatching": false,
+  "rstaHighlightCurrentLine": false,
+  "rstaInsertPairedChar": false,
+  "rstaWordWrap": true,
+  "saveFileChooser": {
+    "filename": "/tmp/file9.q",
+    "size": {
+      "width": 505,
+      "height": 306
+    }
+  },
+  "serverHistory": {
+    "depth": 30,
+    "names": [
+      "",
+      "The.Last.Server",
+      "server1",
+      "Root2/innerServer2",
+      "Folder/Sub-Folder/innerServer",
+      "server1",
+      "qqq/dd5",
+      "dd2",
+      "Root2/innerServer2",
+      "Root2/innerServer2",
+      "Folder/Sub-Folder/innerServer",
+      "Folder/Sub-Folder/innerServer",
+      "Root2/innerServer2",
+      "Folder/Sub-Folder/innerServer"
+    ]
+  },
+  "sessionInvalidationEnabled": true,
+  "sessionInvalidationTimeoutInHours": 11,
+  "showServerComboBox": false,
+  "tableExtractorConfig": {
+    "maxConnections": 10,
+    "connectionWords": [
+      "server",
+      " host"
+    ],
+    "hostWords": [
+      "s",
+      "server"
+    ],
+    "portWords": [
+      "p",
+      "port"
+    ]
+  },
+  "tokenColors": {
+    "default": "030303",
+    "error": "fe0101",
+    "bracket": "040404",
+    "command": "0000ee",
+    "eolcomment": "ffff00",
+    "keyword": "0000ef",
+    "identifier": "eeee00",
+    "symbol": "0000f0",
+    "charvector": "00ff00",
+    "boolean": "0000ff",
+    "byte": "0000fe",
+    "short": "0000fd",
+    "long": "0000fc",
+    "real": "0000fb",
+    "integer": "0000fa",
+    "float": "0000f9",
+    "timestamp": "0000f8",
+    "timespan": "0000f7",
+    "datetime": "0000f6",
+    "date": "0000f5",
+    "month": "0000f4",
+    "minute": "0000f3",
+    "second": "0000f2",
+    "time": "0000f1"
+  },
+
+  "kdbMessageSizeLimitAction": "BLOCK",
+  "sessionsReuse": false,
+  "isAutoSave": true,
+
+  "logDebug": true,
+  "chartStrokeWidths": [1.0, 0.5, 1.5, 2],
+  "chartStrokeStyles": ["0.5,1.5,1","","1","2,2"],
+  "gridOpenServersInCurrentTab": false,
+  "inspectResultInCurrentTab": false,
+
+  "chartColorSets": {
+    "default": "DZ Custom",
+    "set": {
+      "DZ Custom": {
+        "background": "333333",
+        "grid": "ffff00",
+        "colors": [
+          "ff0000",
+          "0000ff",
+          "00ff00"
+        ]
+      },
+      "Default": {}
+    }
+  },
+
+  "gridColors": {
+    "foreground": {
+      "null": "000001",
+      "key": "000002",
+      "odd": "000003",
+      "even": "000004",
+      "mark": "000005",
+      "selected": "000006",
+      "mark_selected": "000007"
+    },
+    "background": {
+      "key": "000008",
+      "odd": "000009",
+      "even": "000010",
+      "mark": "000011",
+      "selected": "000012",
+      "mark_selected": "000013"
+    }
+  },
+
+  "version": "V2_1"
+}

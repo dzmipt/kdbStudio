@@ -28,8 +28,6 @@ import static org.junit.jupiter.api.Assertions.*;
 
 public class ConfigAllTest {
 
-    private static Config configConverted;
-
     private static InstrumentedMockConfig lastConfig;
     private static Path lastStudioConfigPath;
 
@@ -38,13 +36,6 @@ public class ConfigAllTest {
         Util.setMockFitToScreen(true);
 
         Path configPath = MockConfig.createTempDir();
-        Path path = configPath.resolve(Config.OLD_CONFIG_FILENAME);
-        try (InputStream inputStream = ConfigAllTest.class.getClassLoader().getResourceAsStream("studio14.properties") ) {
-            Files.copy(inputStream, path);
-        }
-        configConverted = new Config(configPath);
-
-        configPath = MockConfig.createTempDir();
         lastStudioConfigPath = configPath.resolve(Config.CONFIG_FILENAME);
         try (InputStream inputStream = ConfigAllTest.class.getClassLoader().getResourceAsStream("studio_last.json") ) {
             Files.copy(inputStream, lastStudioConfigPath);
@@ -57,9 +48,30 @@ public class ConfigAllTest {
         Util.setMockFitToScreen(false);
     }
 
+    private Config getConfig(String name, boolean oldProperties) throws IOException {
+        Path configPath = MockConfig.createTempDir();
+        Path path = configPath.resolve(oldProperties ? Config.OLD_CONFIG_FILENAME : Config.CONFIG_FILENAME);
+        try (InputStream inputStream = ConfigAllTest.class.getClassLoader().getResourceAsStream(name) ) {
+            Files.copy(inputStream, path);
+        }
+        return new Config(configPath);
+    }
+
+    private Config getConfig(String name) throws IOException {
+        return getConfig(name, false);
+    }
+
     @Test
-    public void testConverted() {
-        testAll_1_4(configConverted);
+    public void testConverted() throws IOException {
+        Config config = getConfig("studio14.properties", true);
+        testAll_1_4(config);
+    }
+
+    @Test
+    public void test21() throws IOException {
+        Config config = getConfig("studio21.json");
+        testAll_1_4(config);
+        testAlL_2_1(config);
     }
 
     @Test
