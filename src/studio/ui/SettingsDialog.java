@@ -19,6 +19,7 @@ public class SettingsDialog extends EscapeDialog {
 
     private final JButton btnOk;
     private final JButton btnCancel;
+    private final JButton btnApply;
 
     private static final Config CONFIG = Config.getInstance();
 
@@ -40,13 +41,17 @@ public class SettingsDialog extends EscapeDialog {
 
         btnOk = new JButton("OK");
         btnCancel = new JButton("Cancel");
+        btnApply = new JButton("Apply");
 
         btnOk.addActionListener(e->accept());
         btnCancel.addActionListener(e->cancel());
+        btnApply.addActionListener(e->saveSettings());
+
 
         JPanel pnlButtons = new JPanel(new FlowLayout(FlowLayout.RIGHT));
         pnlButtons.add(btnOk);
         pnlButtons.add(btnCancel);
+        pnlButtons.add(btnApply);
 
         JPanel root = new JPanel(new BorderLayout());
         root.add(tabs, BorderLayout.CENTER);
