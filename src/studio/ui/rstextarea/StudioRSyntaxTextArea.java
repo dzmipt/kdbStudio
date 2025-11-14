@@ -51,9 +51,9 @@ public class StudioRSyntaxTextArea extends RSyntaxTextArea {
         Style[] styles = new Style[RSToken.NUM_TOKEN_TYPES];
         System.arraycopy(defaultStyles, 0, styles, 0, defaultStyles.length);
         for (RSToken token: RSToken.values()) {
-            if (token.getFontStyle() != Font.PLAIN) font = font.deriveFont(token.getFontStyle());
+            Font tokenFont = token.getFontStyle() == Font.PLAIN ? font : font.deriveFont(token.getFontStyle());
             Color color = tokenConfig.get(token.getColorToken());
-            Style style = new Style(color, null, font);
+            Style style = new Style(color, null, tokenFont);
 
             styles[token.getTokenType()] = style;
         }
