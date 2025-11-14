@@ -112,6 +112,7 @@ public class SettingsDialog extends EscapeDialog {
             editor.setAnimateBracketMatching(CONFIG.getBoolean(Config.RSTA_ANIMATE_BRACKET_MATCHING));
             editor.setLineWrap(CONFIG.getBoolean(Config.RSTA_WORD_WRAP));
             editor.setSyntaxScheme(CONFIG.getFont(Config.FONT_EDITOR), CONFIG.getColorTokenConfig());
+            editor.setEditorColors(CONFIG.getEditorColors());
 
             editor.setTabSize(CONFIG.getInt(Config.EDITOR_TAB_SIZE));
             editor.setTabsEmulated(CONFIG.getBoolean(Config.EDITOR_TAB_EMULATED));
