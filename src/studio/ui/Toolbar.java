@@ -15,6 +15,14 @@ public class Toolbar extends JToolBar {
     private int gap = -1;
     private Border buttonBorder = null;
 
+    public Toolbar() {
+        super();
+    }
+
+    public Toolbar(int orientation) {
+        super(orientation);
+    }
+
     public void setGap(int gap) {
         this.gap = gap;
     }

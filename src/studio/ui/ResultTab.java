@@ -168,7 +168,7 @@ public class ResultTab extends JPanel {
                 e -> navigateCard(true)
         );
 
-        toolbar = new Toolbar();
+        toolbar = new Toolbar(JToolBar.VERTICAL);
         toolbar.setFloatable(false);
         toolbar.setButtonBorder(BorderFactory.createEtchedBorder(EtchedBorder.LOWERED));
         toolbar.setGap(16);
