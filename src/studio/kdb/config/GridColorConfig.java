@@ -6,7 +6,7 @@ import javax.swing.*;
 import java.awt.*;
 import java.util.Objects;
 
-public class GridColorConfig {
+public class GridColorConfig implements Freezable{
 
     private final boolean defaultConfig;
     private ColorMap fgMap = null;
@@ -113,6 +113,7 @@ public class GridColorConfig {
         return config;
     }
 
+    @Override
     public void freeze() {
         if (isUnmodifiable()) return;
         fgMap = fgMap.cloneMap();

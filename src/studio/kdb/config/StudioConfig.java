@@ -188,7 +188,9 @@ public class StudioConfig {
         if (Objects.equals(currentValue, value)) return false;
 
         ConfigType type = registry.getConfigType(key);
-        config.put(key, type.clone(value));
+        value = type.clone(value);
+        if (value instanceof Freezable) ((Freezable) value).freeze();
+        config.put(key, value);
 
         save();
         return true;

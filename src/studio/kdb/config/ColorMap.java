@@ -6,7 +6,7 @@ import java.awt.*;
 import java.util.*;
 
 
-public class ColorMap {
+public class ColorMap implements Freezable {
 
     private Map<String, Color> map;
     private transient boolean unmodifiable = false;
@@ -56,6 +56,7 @@ public class ColorMap {
         return map.hashCode();
     }
 
+    @Override
     public void freeze() {
         if (unmodifiable) return;
         map = Collections.unmodifiableMap(map);

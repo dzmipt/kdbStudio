@@ -6,7 +6,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
 
-public class TokenStyleMap {
+public class TokenStyleMap implements Freezable{
 
     private Map<ColorToken, TokenStyle> map;
     private transient boolean unmodifiable = false;
@@ -47,6 +47,7 @@ public class TokenStyleMap {
         map.put(key, get(key).derive(style));
     }
 
+    @Override
     public void freeze() {
         if (unmodifiable) return;
         map = Collections.unmodifiableMap(map);
