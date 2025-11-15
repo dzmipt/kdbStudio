@@ -17,15 +17,6 @@ public class ColorMap {
         EMPTY.unmodifiable = true;
     }
 
-    public final static ColorMap DEFAULT_COLOR_TOKEN_MAP;
-    static {
-        DEFAULT_COLOR_TOKEN_MAP = new ColorMap();
-        for (ColorToken token: ColorToken.values()) {
-            DEFAULT_COLOR_TOKEN_MAP.put(token, token.getColor());
-        }
-        DEFAULT_COLOR_TOKEN_MAP.freeze();
-    }
-
     public final static ColorMap DEFAULT_EDITOR_COLORS;
     static {
         DEFAULT_EDITOR_COLORS = new ColorMap();

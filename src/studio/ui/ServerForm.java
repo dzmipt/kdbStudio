@@ -67,7 +67,7 @@ public class ServerForm extends EscapeDialog {
         txtPassword.setToolTipText("The password used to connect to the server");
         authenticationMechanism.setToolTipText("The authentication mechanism to use");
 
-        Color fgColor = Config.getInstance().getColorTokenConfig().get(ColorToken.DEFAULT);
+        Color fgColor = Config.getInstance().getTokenStyleConfig().get(ColorToken.DEFAULT).getColor();
         sampleTextOnBackgroundTextField.setForeground(fgColor);
         sampleTextOnBackgroundTextField.setBackground(this.server.getBackgroundColor());
         sampleTextOnBackgroundTextField.setEditable(false);

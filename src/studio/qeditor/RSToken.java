@@ -3,7 +3,6 @@ package studio.qeditor;
 import org.fife.ui.rsyntaxtextarea.TokenTypes;
 import studio.kdb.config.ColorToken;
 
-import java.awt.*;
 import java.util.Arrays;
 
 public enum RSToken {
@@ -12,15 +11,15 @@ public enum RSToken {
     SYMBOL(TokenTypes.DEFAULT_NUM_TOKEN_TYPES, ColorToken.SYMBOL),
     STRING(TokenTypes.LITERAL_CHAR, ColorToken.CHARVECTOR),
     ML_STRING(TokenTypes.DEFAULT_NUM_TOKEN_TYPES + 1, ColorToken.CHARVECTOR),
-    ERROR_STRING(TokenTypes.DEFAULT_NUM_TOKEN_TYPES + 2, Font.BOLD, ColorToken.ERROR),
+    ERROR_STRING(TokenTypes.DEFAULT_NUM_TOKEN_TYPES + 2, ColorToken.ERROR),
     IDENTIFIER(TokenTypes.IDENTIFIER, ColorToken.IDENTIFIER),
     OPERATOR(TokenTypes.OPERATOR, ColorToken.DEFAULT),
     BRACKET(TokenTypes.SEPARATOR, ColorToken.BRACKET),
-    EOL_COMMENT(TokenTypes.COMMENT_EOL, Font.ITALIC, ColorToken.EOLCOMMENT),
-    ML_COMMENT(TokenTypes.COMMENT_MULTILINE, Font.ITALIC, ColorToken.EOLCOMMENT),
-    KEYWORD(TokenTypes.RESERVED_WORD, Font.BOLD, ColorToken.KEYWORD),
+    EOL_COMMENT(TokenTypes.COMMENT_EOL, ColorToken.EOLCOMMENT),
+    ML_COMMENT(TokenTypes.COMMENT_MULTILINE, ColorToken.EOLCOMMENT),
+    KEYWORD(TokenTypes.RESERVED_WORD, ColorToken.KEYWORD),
     WHITESPACE(TokenTypes.WHITESPACE, ColorToken.DEFAULT),
-    UNKNOWN(TokenTypes.ERROR_NUMBER_FORMAT, Font.BOLD, ColorToken.ERROR),
+    UNKNOWN(TokenTypes.ERROR_NUMBER_FORMAT, ColorToken.ERROR),
     INTEGER(TokenTypes.DEFAULT_NUM_TOKEN_TYPES + 3, ColorToken.INTEGER),
     MINUTE(TokenTypes.DEFAULT_NUM_TOKEN_TYPES + 4, ColorToken.MINUTE),
     SECOND(TokenTypes.DEFAULT_NUM_TOKEN_TYPES + 5, ColorToken.SECOND),
@@ -61,25 +60,15 @@ public enum RSToken {
 
     private final int tokenType;
 
-    private final int fontStyle;
     private final ColorToken colorToken;
-
-    public int getFontStyle() {
-        return fontStyle;
-    }
 
     public ColorToken getColorToken() {
         return colorToken;
     }
     private
-    RSToken(int tokenType, int fontStyle, ColorToken colorToken) {
-        this.tokenType = tokenType;
-        this.fontStyle = fontStyle;
-        this.colorToken = colorToken;
-    }
-
     RSToken(int tokenType, ColorToken colorToken) {
-        this(tokenType, Font.PLAIN, colorToken);
+        this.tokenType = tokenType;
+        this.colorToken = colorToken;
     }
 
 }

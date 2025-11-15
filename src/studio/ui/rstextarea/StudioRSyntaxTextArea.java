@@ -8,6 +8,8 @@ import org.fife.ui.rtextarea.RTextArea;
 import org.fife.ui.rtextarea.RUndoManager;
 import studio.kdb.config.ColorMap;
 import studio.kdb.config.EditorColorToken;
+import studio.kdb.config.TokenStyle;
+import studio.kdb.config.TokenStyleMap;
 import studio.qeditor.RSToken;
 
 import java.awt.*;
@@ -45,16 +47,15 @@ public class StudioRSyntaxTextArea extends RSyntaxTextArea {
         if (gutter != null) gutter.setBackground(bg);
     }
 
-    public void setSyntaxScheme(Font font, ColorMap tokenConfig) {
+    public void setSyntaxScheme(Font font, TokenStyleMap tokenStyleMap) {
         setFont(font);
         SyntaxScheme scheme = new SyntaxScheme(false);
         Style[] defaultStyles = scheme.getStyles();
         Style[] styles = new Style[RSToken.NUM_TOKEN_TYPES];
         System.arraycopy(defaultStyles, 0, styles, 0, defaultStyles.length);
         for (RSToken token: RSToken.values()) {
-            Font tokenFont = token.getFontStyle() == Font.PLAIN ? font : font.deriveFont(token.getFontStyle());
-            Color color = tokenConfig.get(token.getColorToken());
-            Style style = new Style(color, null, tokenFont);
+            TokenStyle tokenStyle = tokenStyleMap.get(token.getColorToken());
+            Style style = new Style(tokenStyle.getColor(), null, tokenStyle.getStyle().applyStyle(font));
 
             styles[token.getTokenType()] = style;
         }

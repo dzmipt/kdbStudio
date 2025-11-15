@@ -111,8 +111,9 @@ public class SettingsDialog extends EscapeDialog {
             editor.setHighlightCurrentLine(CONFIG.getBoolean(Config.RSTA_HIGHLIGHT_CURRENT_LINE));
             editor.setAnimateBracketMatching(CONFIG.getBoolean(Config.RSTA_ANIMATE_BRACKET_MATCHING));
             editor.setLineWrap(CONFIG.getBoolean(Config.RSTA_WORD_WRAP));
-            editor.setSyntaxScheme(CONFIG.getFont(Config.FONT_EDITOR), CONFIG.getColorTokenConfig());
+            editor.setSyntaxScheme(CONFIG.getFont(Config.FONT_EDITOR), CONFIG.getTokenStyleConfig());
             editor.setEditorColors(CONFIG.getEditorColors());
+            editor.setBackground(editorTab.getServer().getBackgroundColor());
 
             editor.setTabSize(CONFIG.getInt(Config.EDITOR_TAB_SIZE));
             editor.setTabsEmulated(CONFIG.getBoolean(Config.EDITOR_TAB_EMULATED));
@@ -132,8 +133,8 @@ public class SettingsDialog extends EscapeDialog {
                 EditorPane editorPane = resultPane.getEditor();
                 if (editorPane != null) {
                     StudioRSyntaxTextArea editor = editorPane.getTextArea();
+                    editor.setSyntaxScheme(CONFIG.getFont(Config.FONT_EDITOR), CONFIG.getTokenStyleConfig());
                     editor.setEditorColors(CONFIG.getEditorColors());
-                    editor.setSyntaxScheme(CONFIG.getFont(Config.FONT_EDITOR), CONFIG.getColorTokenConfig());
                 }
                 ResultGrid grid = resultPane.getGrid();
                 if (grid != null) {

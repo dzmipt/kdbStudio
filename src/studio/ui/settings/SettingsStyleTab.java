@@ -7,6 +7,7 @@ import studio.kdb.K;
 import studio.kdb.KTableModel;
 import studio.kdb.config.ColorMap;
 import studio.kdb.config.GridColorConfig;
+import studio.kdb.config.TokenStyleMap;
 import studio.ui.GroupLayoutSimple;
 import studio.ui.Util;
 import studio.ui.grid.QGridPanel;
@@ -22,7 +23,7 @@ public class SettingsStyleTab extends SettingsTab {
 
     private final JComboBox<CustomiszedLookAndFeelInfo> comboBoxLookAndFeel;
     private final FontSelectionPanel editorFontSelection, gridFontSelection;
-    private final EditorColorEditor colorTokenEditor;
+    private final TokenStyleEditor colorTokenEditor;
     private final StudioRSyntaxTextArea preview;
     private final GridColorsEditor gridColorsEditor;
     private final QGridPanel grid;
@@ -52,10 +53,10 @@ public class SettingsStyleTab extends SettingsTab {
 
         editorFontSelection = new FontSelectionPanel(parentDialog, "Editor font: ", CONFIG.getFont(Config.FONT_EDITOR));
         gridFontSelection = new FontSelectionPanel(parentDialog, "Result table font: ", CONFIG.getFont(Config.FONT_TABLE));
-        colorTokenEditor = new EditorColorEditor(CONFIG.getEditorColors(), CONFIG.getColorTokenConfig());
+        colorTokenEditor = new TokenStyleEditor(CONFIG.getEditorColors(), CONFIG.getTokenStyleConfig());
         preview = RSTextAreaFactory.newTextArea(true);
         preview.setHighlightCurrentLine(true);
-        preview.setSyntaxScheme(editorFontSelection.getSelectedFont(), colorTokenEditor.getColorTokenConfig());
+        preview.setSyntaxScheme(editorFontSelection.getSelectedFont(), colorTokenEditor.getTokenStyleMap());
         preview.setEditorColors(colorTokenEditor.getEditorColorConfig());
         preview.setText(SAMPLE);
 
@@ -72,7 +73,7 @@ public class SettingsStyleTab extends SettingsTab {
         });
         colorTokenEditor.addChangeListener(e -> {
             preview.setEditorColors(colorTokenEditor.getEditorColorConfig());
-            preview.setSyntaxScheme(editorFontSelection.getSelectedFont(), colorTokenEditor.getColorTokenConfig());
+            preview.setSyntaxScheme(editorFontSelection.getSelectedFont(), colorTokenEditor.getTokenStyleMap());
         });
 
         gridColorsEditor = new GridColorsEditor(CONFIG.getGridColorConfig());
@@ -92,7 +93,7 @@ public class SettingsStyleTab extends SettingsTab {
 
         JButton btnColorTokenReset = new JButton("Reset to default");
         btnColorTokenReset.addActionListener(e -> {
-            colorTokenEditor.set(ColorMap.DEFAULT_EDITOR_COLORS, ColorMap.DEFAULT_COLOR_TOKEN_MAP);
+            colorTokenEditor.set(ColorMap.DEFAULT_EDITOR_COLORS, TokenStyleMap.DEFAULT);
         });
 
         JButton btnGridColorReset = new JButton("Reset to default");
@@ -167,7 +168,7 @@ public class SettingsStyleTab extends SettingsTab {
         changed = CONFIG.setFont(Config.FONT_TABLE, gridFontSelection.getSelectedFont());
         result.setRefreshResultSettings(changed);
 
-        changed = CONFIG.setColorTokenConfig(colorTokenEditor.getColorTokenConfig());
+        changed = CONFIG.setTokenStyleConfig(colorTokenEditor.getTokenStyleMap());
         result.setRefreshEditorsSettings(changed);
         result.setRefreshResultSettings(changed);
 

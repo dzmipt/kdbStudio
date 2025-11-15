@@ -110,19 +110,20 @@ public class ConfigTypeTest {
 
     @Test
     public void testColorTokenConfig() {
-        check(ConfigType.COLOR_MAP, ColorMap.DEFAULT_COLOR_TOKEN_MAP);
+        check(ConfigType.TOKEN_STYLE_MAP, TokenStyleMap.DEFAULT);
+        check(ConfigType.TOKEN_STYLE_MAP, new TokenStyleMap());
 
-        ColorMap map = new ColorMap(ColorMap.DEFAULT_COLOR_TOKEN_MAP);
-        map.put(ColorToken.DATE, new Color(11,22,33));
-        check(ConfigType.COLOR_MAP, map);
+        TokenStyleMap map = new TokenStyleMap(TokenStyleMap.DEFAULT);
+        map.set(ColorToken.DATE, new TokenStyle(new Color(11,22,33), FontStyle.UnderlineAndBoldAndItalic));
+        check(ConfigType.TOKEN_STYLE_MAP, map);
 
-        map.put(ColorToken.ERROR, Color.RED);
-        check(ConfigType.COLOR_MAP, map);
+        map.set(ColorToken.ERROR, new TokenStyle(Color.RED, FontStyle.Bold));
+        check(ConfigType.TOKEN_STYLE_MAP, map);
 
-        map.put(ColorToken.ERROR, new Color(10, 20, 30));
-        check(ConfigType.COLOR_MAP, map);
+        map.set(ColorToken.ERROR, new TokenStyle(new Color(10,20,30), FontStyle.Bold));
+        check(ConfigType.TOKEN_STYLE_MAP, map);
 
-        check(ConfigType.COLOR_MAP, map);
+        check(ConfigType.TOKEN_STYLE_MAP, map);
     }
 
     @Test
@@ -141,7 +142,7 @@ public class ConfigTypeTest {
 
         check(ConfigType.COLOR_MAP, map);
 
-        map = ColorMap.DEFAULT_COLOR_TOKEN_MAP;
+        map = ColorMap.DEFAULT_EDITOR_COLORS;
         check(ConfigType.COLOR_MAP, map);
 
         map = map.cloneMap();
@@ -164,8 +165,13 @@ public class ConfigTypeTest {
         assertNotEquals(newDefault, ColorToken.DEFAULT.getColor());
 
         String jsonText = "{\"default\":\"112233\",\"system\":\"F0B400\"}";
+
+        ColorMap defaultMap = new ColorMap();
+        defaultMap.put(ColorToken.DEFAULT, new Color(0x333333));
+        defaultMap.put(ColorToken.SYMBOL, ColorToken.SYMBOL.getColor());
+
         JsonElement json = JsonParser.parseString(jsonText);
-        ColorMap config = (ColorMap)ConfigType.COLOR_MAP.fromJson(json, ColorMap.DEFAULT_COLOR_TOKEN_MAP);
+        ColorMap config = (ColorMap)ConfigType.COLOR_MAP.fromJson(json, defaultMap);
 
         assertEquals(newDefault, config.get(ColorToken.DEFAULT));
         assertEquals(ColorToken.SYMBOL.getColor(), config.get(ColorToken.SYMBOL));

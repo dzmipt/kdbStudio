@@ -75,7 +75,7 @@ public class Config  {
     public static final String SERVER_FROM_RESULT_IN_CURRENT = configDefault("gridOpenServersInCurrentTab", ConfigType.BOOLEAN, true);
     public static final String INSPECT_RESULT_IN_CURRENT = configDefault("inspectResultInCurrentTab", ConfigType.BOOLEAN, true);
     public static final String EDITOR_COLOR_CONFIG = configDefault("editorColors", ConfigType.COLOR_MAP, ColorMap.DEFAULT_EDITOR_COLORS);
-    public static final String COLOR_TOKEN_CONFIG = configDefault("tokenColors", ConfigType.COLOR_MAP, ColorMap.DEFAULT_COLOR_TOKEN_MAP);
+    public static final String TOKEN_STYLE_CONFIG = configDefault("tokens", ConfigType.TOKEN_STYLE_MAP, TokenStyleMap.DEFAULT);
     public static final String GRID_COLOR_CONFIG = configDefault("gridColors", ConfigType.GRID_COLOR_CONFIG, GridColorConfig.DEFAULT);
     public static final String SERVER_HISTORY = configDefault("serverHistory", ConfigType.SERVER_HISTORY, new ServerHistoryConfig(20, List.of()));
     public static final String CHART_COLORSETS = configDefault("chartColorSets", ConfigType.CHART_COLOR_SETS, ColorSets.DEFAULT);
@@ -368,12 +368,12 @@ public class Config  {
         setDefaultAuthConfig(newConfig);
     }
 
-    public ColorMap getColorTokenConfig() {
-        return (ColorMap) studioConfig.get(Config.COLOR_TOKEN_CONFIG);
+    public TokenStyleMap getTokenStyleConfig() {
+        return (TokenStyleMap) studioConfig.get(Config.TOKEN_STYLE_CONFIG);
     }
 
-    public boolean setColorTokenConfig(ColorMap colorTokenConfig) {
-        return studioConfig.set(Config.COLOR_TOKEN_CONFIG, colorTokenConfig);
+    public boolean setTokenStyleConfig(TokenStyleMap tokenStyleMap) {
+        return studioConfig.set(Config.TOKEN_STYLE_CONFIG, tokenStyleMap);
     }
 
     public ColorMap getEditorColors() {

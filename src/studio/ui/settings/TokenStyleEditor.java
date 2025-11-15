@@ -1,8 +1,6 @@
 package studio.ui.settings;
 
-import studio.kdb.config.ColorMap;
-import studio.kdb.config.ColorToken;
-import studio.kdb.config.EditorColorToken;
+import studio.kdb.config.*;
 import studio.ui.ColorLabel;
 import studio.ui.GroupLayoutSimple;
 
@@ -10,25 +8,30 @@ import javax.swing.*;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 import java.awt.*;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-public class EditorColorEditor extends JPanel {
+public class TokenStyleEditor extends JPanel {
 
     private final Map<ColorToken, ColorLabel> tokenColorLabels = new HashMap<>();
+    private final Map<ColorToken, JLabel> mapTokenTitle = new HashMap<>();
     private final Map<EditorColorToken, ColorLabel> editorColorLabels = new HashMap<>();
-    private ColorMap editorColors, tokenColors;
+    private ColorMap editorColors;
+    private TokenStyleMap tokenStyleMap;
     private boolean muteEvents = true;
 
     private final List<ChangeListener> listeners = new ArrayList<>();
 
     private final static int COLS_COUNT = 6;
+    private final Cursor handCursor = Cursor.getPredefinedCursor(Cursor.HAND_CURSOR);
 
-    public EditorColorEditor(ColorMap editorColorConfig, ColorMap colorTokenConfig) {
+    public TokenStyleEditor(ColorMap editorColorConfig, TokenStyleMap tokenStyleMap) {
         editorColors = new ColorMap(editorColorConfig);
-        tokenColors = new ColorMap(colorTokenConfig);
+        this.tokenStyleMap = new TokenStyleMap(tokenStyleMap);
 
         GroupLayoutSimple.Stack[] stacks = new GroupLayoutSimple.Stack[COLS_COUNT];
         for (int cols = 0; cols<COLS_COUNT; cols++) {
@@ -65,13 +68,26 @@ public class EditorColorEditor extends JPanel {
             for (int row = 0; row<lines; row++) {
                 final ColorToken token = ColorToken.values()[index++];
                 JLabel lblToken = new JLabel(token.getDescription());
+                lblToken.setCursor(handCursor);
+                lblToken.addMouseListener(new MouseAdapter() {
+                    @Override
+                    public void mousePressed(MouseEvent e) {
+                        JPopupMenu popupMenu = new JPopupMenu();
+                        popupMenu.add(getStylePopupMenuItem(token, FontStyle.Bold));
+                        popupMenu.add(getStylePopupMenuItem(token, FontStyle.Italic));
+                        popupMenu.add(getStylePopupMenuItem(token, FontStyle.Underline));
+
+                        popupMenu.show(e.getComponent(), e.getX(), e.getY());
+                    }
+                });
+                mapTokenTitle.put(token, lblToken);
                 ColorLabel colorLabel = new ColorLabel();
                 colorLabel.setSingleClick(true);
                 tokenColorLabels.put(token, colorLabel);
 
                 colorLabel.addChangeListener(e -> {
                     Color newColor = ((ColorLabel)e.getSource()).getColor();
-                    tokenColors.put(token, newColor);
+                    this.tokenStyleMap.set(token, newColor);
                     fireEvent();
                 });
 
@@ -92,10 +108,37 @@ public class EditorColorEditor extends JPanel {
         layout.setBaseline(false);
         layout.setStacks(stacks);
 
-        set(editorColorConfig, colorTokenConfig);
+        set(editorColorConfig, tokenStyleMap);
     }
 
-    public void set(ColorMap editorColorConfig, ColorMap colorTokenConfig) {
+    private JCheckBoxMenuItem getStylePopupMenuItem(ColorToken token, final FontStyle style) {
+        FontStyle tokenStyle = tokenStyleMap.get(token).getStyle();
+        JCheckBoxMenuItem menuItem = new JCheckBoxMenuItem(style.name());
+
+        boolean selected = false;
+        if (style == FontStyle.Bold && tokenStyle.isBold()) selected = true;
+        if (style == FontStyle.Italic && tokenStyle.isItalic()) selected = true;
+        if (style == FontStyle.Underline && tokenStyle.isUnderline()) selected = true;
+        menuItem.setState(selected);
+
+        menuItem.addChangeListener(e -> {
+            boolean newState = menuItem.isSelected();
+
+            FontStyle newTokenStyle = tokenStyleMap.get(token).getStyle();
+            if (style == FontStyle.Bold) newTokenStyle = newTokenStyle.setBold(newState);
+            else if (style == FontStyle.Italic) newTokenStyle = newTokenStyle.setItalic(newState);
+            else if (style == FontStyle.Underline) newTokenStyle = newTokenStyle.setUnderline(newState);
+
+            tokenStyleMap.set(token, newTokenStyle);
+            refreshTokenStyle(token);
+
+            fireEvent();
+        });
+
+        return menuItem;
+    }
+
+    public void set(ColorMap editorColorConfig, TokenStyleMap tokenStyleMap) {
         muteEvents = true;
 
         editorColors = new ColorMap(editorColorConfig);
@@ -103,17 +146,24 @@ public class EditorColorEditor extends JPanel {
             editorColorLabels.get(token).setColor(editorColorConfig.get(token));
         }
 
-        tokenColors = new ColorMap(colorTokenConfig);
+        this.tokenStyleMap = new TokenStyleMap(tokenStyleMap);
         for (ColorToken token: ColorToken.values()) {
-            tokenColorLabels.get(token).setColor(colorTokenConfig.get(token));
+            refreshTokenStyle(token);
         }
 
         muteEvents = false;
         fireEvent();
     }
 
-    public ColorMap getColorTokenConfig() {
-        return tokenColors;
+    private void refreshTokenStyle(ColorToken token) {
+        TokenStyle tokenStyle = tokenStyleMap.get(token);
+        Font defaultFont = new JLabel().getFont();
+        tokenColorLabels.get(token).setColor(tokenStyle.getColor());
+        mapTokenTitle.get(token).setFont(tokenStyle.getStyle().applyStyle(defaultFont));
+    }
+
+    public TokenStyleMap getTokenStyleMap() {
+        return tokenStyleMap;
     }
 
     public ColorMap getEditorColorConfig() {

@@ -37,14 +37,22 @@ public enum FontStyle {
         return underline;
     }
 
-    public boolean isPlain() {
-        return !bold && !italic && !underline;
+    public FontStyle setBold(boolean bold) {
+        return get(bold, this.italic, this.underline);
+    }
+
+    public FontStyle setItalic(boolean italic) {
+        return get(this.bold, italic, this.underline);
+    }
+
+    public FontStyle setUnderline(boolean underline) {
+        return get(this.bold, this.italic, underline);
     }
 
     public Font getFont(String name, int size) {
         Font font = new Font(name, Font.PLAIN, size);
-        if (! isPlain()) font = applyStyle(font);
-        return font;
+        if (this == FontStyle.Plain) return font;
+        return applyStyle(font);
     }
 
     public Font applyStyle(Font font) {
@@ -76,10 +84,14 @@ public enum FontStyle {
         value = attrs.get(TextAttribute.UNDERLINE);
         if (value instanceof Integer && ((Integer)value)>=0) u = true;
 
+        return get(b, i, u);
+    }
+
+    public static FontStyle get(boolean bold, boolean italic, boolean underline) {
         for (FontStyle style:values()) {
-            if (style.isBold() == b &&
-                    style.isItalic() == i &&
-                    style.isUnderline() == u) return style;
+            if (style.isBold() == bold &&
+                    style.isItalic() == italic &&
+                    style.isUnderline() == underline) return style;
         }
 
         return FontStyle.Plain;

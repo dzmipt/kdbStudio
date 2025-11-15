@@ -334,5 +334,12 @@ public class Util {
         return json;
     }
 
+    public static Color stringToColor(String value) {
+        return new Color(Integer.parseInt(value.trim(), 16));
+    }
+
+    public static String colorToString(Color color) {
+        return Integer.toHexString(color.getRGB()).substring(2);
+    }
 
 }

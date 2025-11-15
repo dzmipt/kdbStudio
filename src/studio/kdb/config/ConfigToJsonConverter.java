@@ -10,6 +10,7 @@ import studio.core.Credentials;
 import studio.core.DefaultAuthenticationMechanism;
 import studio.kdb.Config;
 import studio.kdb.FileChooserConfig;
+import studio.ui.Util;
 
 import java.awt.*;
 import java.io.IOException;
@@ -197,13 +198,17 @@ public class ConfigToJsonConverter {
     }
 
     private void convertColorTokenConfig() {
-        ColorMap map = new ColorMap();
+        JsonObject jsonTokens = new JsonObject();
         for(ColorToken token: ColorToken.values()) {
             String value = get("token." + token.name());
             if (value == null) continue;
-            map.put(token, toColor(value));
+
+            Color color = Util.stringToColor(value);
+            TokenStyle tokenStyle = token.getDefaultStyle().derive(color);
+
+            jsonTokens.addProperty(token.name().toLowerCase(), tokenStyle.toString());
         }
-        set(Config.COLOR_TOKEN_CONFIG, map);
+        json.add(Config.TOKEN_STYLE_CONFIG, jsonTokens);
     }
 
     private void convertBgColor() {

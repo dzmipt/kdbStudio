@@ -7,6 +7,7 @@ import com.google.gson.JsonPrimitive;
 import org.apache.commons.collections4.list.UnmodifiableList;
 import studio.core.Credentials;
 import studio.kdb.FileChooserConfig;
+import studio.ui.Util;
 
 import java.awt.*;
 import java.util.ArrayList;
@@ -111,13 +112,13 @@ public enum ConfigType {
         @Override
         public Object fromJson(JsonElement jsonElement, Object defaultValue) {
             String value = jsonElement.getAsString();
-            return new Color(Integer.parseInt(value, 16));
+            return Util.stringToColor(value);
         }
 
         @Override
         public JsonElement toJson(Object value) {
             Color color = (Color) value;
-            return new JsonPrimitive(Integer.toHexString(color.getRGB()).substring(2));
+            return new JsonPrimitive(Util.colorToString(color));
         }
     },
     ENUM {
@@ -243,6 +244,39 @@ public enum ConfigType {
             json.add("portWords", STRING_ARRAY.toJson(extractor.getPortWords()));
             return json;
         }
+    },
+    TOKEN_STYLE_MAP {
+        @Override
+        public Object fromJson(JsonElement jsonElement, Object defaultValue) {
+            JsonObject json = jsonElement.getAsJsonObject();
+            TokenStyleMap map = new TokenStyleMap();
+
+            for (ColorToken key: ColorToken.values()) {
+                String name = key.name().toLowerCase();
+                if (! json.has(name)) continue;
+                String value = json.get(name).getAsString();
+                map.set(key, TokenStyle.fromString(value));
+            }
+
+            return map;
+        }
+
+        @Override
+        public JsonElement toJson(Object value) {
+            JsonObject json = new JsonObject();
+            TokenStyleMap map = (TokenStyleMap) value;
+            for (ColorToken key: ColorToken.values()) {
+                TokenStyle tokenStyle = map.get(key);
+                json.addProperty(key.name().toLowerCase(), tokenStyle.toString());
+            }
+            return json;
+        }
+
+        @Override
+        public Object clone(Object value) {
+            return ((TokenStyleMap)value).cloneMap();
+        }
+
     },
     COLOR_MAP {
         @Override

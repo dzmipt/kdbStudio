@@ -114,14 +114,13 @@
       "port"
     ]
   },
-
-  "tokens": {
+  "tokenColors": {
     "default": "030303",
-    "error": "fe0101:Bold",
+    "error": "fe0101",
     "bracket": "040404",
     "command": "0000ee",
-    "eolcomment": "ffff00:Italic",
-    "keyword": "0000ef:Bold",
+    "eolcomment": "ffff00",
+    "keyword": "0000ef",
     "identifier": "eeee00",
     "symbol": "0000f0",
     "charvector": "00ff00",
@@ -194,5 +193,5 @@
       "current_line_highlight": "987654"
   },
 
-  "version": "V2_3"
+  "version": "V2_2"
 }
