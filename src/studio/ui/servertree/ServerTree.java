@@ -84,11 +84,6 @@ public class ServerTree extends JTree implements TreeExpansionListener {
     public void updateUI() {
         super.updateUI();
         DefaultTreeCellRenderer renderer = (DefaultTreeCellRenderer) getCellRenderer();
-
-//        renderer.setOpenIcon(UIManager.getIcon("Tree.openIcon"));
-//        renderer.setClosedIcon(UIManager.getIcon("Tree.closedIcon"));
-//        renderer.setLeafIcon(UIManager.getIcon("Tree.leafIcon"));
-
         renderer.setOpenIcon(renderer.getDefaultOpenIcon());
         renderer.setClosedIcon(renderer.getDefaultClosedIcon());
         renderer.setLeafIcon(renderer.getDefaultLeafIcon());
