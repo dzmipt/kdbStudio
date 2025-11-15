@@ -42,7 +42,7 @@ public class Chart implements ComponentListener {
     private Timer configUpdateTimer;
 
     private ChartPanel chartPanel = null;
-    private JFrame frame;
+    private StudioFrame frame;
     private JPanel contentPane;
     private ChartConfigPanel pnlConfig;
 
@@ -118,7 +118,7 @@ public class Chart implements ComponentListener {
         WindowsAppUserMode.setChartId();
         try {
             charts.add(this);
-            frame = new JFrame();
+            frame = new StudioFrame();
             updateTitle();
             frame.setContentPane(contentPane);
             frame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
@@ -255,7 +255,7 @@ public class Chart implements ComponentListener {
             return;
         }
         String title = getChartTitle();
-        if (! title.equals(frame.getTitle())) {
+        if (! title.equals(frame.getRealTitle())) {
             frame.setTitle(title);
             StudioWindow.refreshAllMenus();
         }

@@ -2,6 +2,7 @@ package studio.ui.chart;
 
 import studio.kdb.KType;
 import studio.ui.GroupLayoutSimple;
+import studio.ui.StudioFrame;
 import studio.utils.WindowsAppUserMode;
 
 import javax.swing.*;
@@ -12,7 +13,7 @@ import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.util.function.DoubleConsumer;
 
-public class LineInfoFrame extends JFrame {
+public class LineInfoFrame extends StudioFrame {
 
     private final Chart chart;
     private final Line line;
@@ -36,6 +37,7 @@ public class LineInfoFrame extends JFrame {
     public LineInfoFrame(Chart chart, Line line, KType xType, KType yType) {
         this.chart = chart;
         this.line = line;
+        refreshTitle();
         txtDX = Editor.createDurationEditor(xType);
         txtDY = Editor.createDurationEditor(yType);
 
@@ -137,9 +139,8 @@ public class LineInfoFrame extends JFrame {
         setLocation((int) x, chartBounds.y);
     }
 
-    @Override
-    public String getTitle() {
-        return line.getTitle() + " info";
+    private void refreshTitle() {
+        setTitle(line.getTitle() + " info");
     }
 
     private String fmtLabel(String text, boolean locked) {
@@ -167,9 +168,7 @@ public class LineInfoFrame extends JFrame {
     }
 
     private void refresh() {
-        if (! super.getTitle().equals(getTitle())) {
-            setTitle(getTitle());
-        }
+        refreshTitle();
         if (lockDX) dy = line.getDY(dx);
         else dx = line.getDX(dy);
 

@@ -1,8 +1,8 @@
 package studio.ui.settings;
 
-import org.drjekyll.fontchooser.FontDialog;
+import org.drjekyll.fontchooser.FontChooser;
 import studio.kdb.Config;
-import studio.ui.Util;
+import studio.ui.EscapeDialog;
 
 import javax.swing.*;
 import javax.swing.event.ChangeEvent;
@@ -62,17 +62,28 @@ public class FontSelectionPanel extends JPanel implements ActionListener {
     }
 
     @Override
-    public void actionPerformed(ActionEvent e) {
-        FontDialog dialog = new FontDialog(ownerDialog, "Select Font", true);
-        dialog.setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);
-        dialog.setSelectedFont(font);
+    public void actionPerformed(ActionEvent actionEvent) {
+        FontChooser fontChooser = new FontChooser(font);
+        EscapeDialog dialog = new EscapeDialog(ownerDialog, "Select Font");
 
-        Util.centerChildOnParent(dialog, ownerDialog);
-        dialog.setVisible(true);
+        JButton btnOK = new JButton("OK");
+        JButton btnCancel = new JButton("Cancel");
+        btnOK.addActionListener(e-> dialog.accept());
+        btnCancel.addActionListener(e-> dialog.cancel());
+        JPanel btnPanel = new JPanel(new FlowLayout(FlowLayout.TRAILING));
+        btnPanel.add(btnOK);
+        btnPanel.add(btnCancel);
 
-        if (dialog.isCancelSelected()) return;
+        JPanel contentPane = new JPanel(new BorderLayout());
+        contentPane.add(fontChooser, BorderLayout.CENTER);
+        contentPane.add(btnPanel, BorderLayout.SOUTH);
 
-        if ( updateFont(dialog.getSelectedFont()) ) {
+        dialog.setContentPane(contentPane);
+
+        boolean accepted = dialog.alignAndShow();
+        if (! accepted) return;
+
+        if ( updateFont(fontChooser.getSelectedFont()) ) {
             fireEvent();
         }
     }

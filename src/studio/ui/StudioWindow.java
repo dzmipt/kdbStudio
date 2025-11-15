@@ -45,7 +45,7 @@ import static javax.swing.JSplitPane.VERTICAL_SPLIT;
 import static studio.ui.EscapeDialog.DialogResult.ACCEPTED;
 import static studio.ui.EscapeDialog.DialogResult.CANCELLED;
 
-public class StudioWindow extends JFrame implements WindowListener {
+public class StudioWindow extends StudioFrame implements WindowListener {
 
     private static final Logger log = LogManager.getLogger();
     private static final Action editorUndoAction;
@@ -1574,16 +1574,6 @@ public class StudioWindow extends JFrame implements WindowListener {
         contentPane.add(toolbar, BorderLayout.NORTH);
         contentPane.add(central, BorderLayout.CENTER);
         contentPane.add(statusBar, BorderLayout.SOUTH);
-
-        if (Util.MAC_OS_X) {
-            getRootPane().putClientProperty( "apple.awt.fullWindowContent", true );
-            getRootPane().putClientProperty( "apple.awt.transparentTitleBar", true );
-
-            JPanel macOSContentPane = new JPanel(new BorderLayout());
-            macOSContentPane.add(Box.createVerticalStrut(30), BorderLayout.NORTH);
-            macOSContentPane.add(contentPane, BorderLayout.CENTER);
-            contentPane = macOSContentPane;
-        }
 
         setContentPane(contentPane);
         setDefaultCloseOperation(WindowConstants.DO_NOTHING_ON_CLOSE);

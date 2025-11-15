@@ -27,7 +27,6 @@ public class ColorChooser {
         return chooseColor(parent, title, initColor, null, null);
     }
 
-    private static boolean ok;
     public static synchronized Color chooseColor(Component parent, String title, Color initColor,
                                     JComponent previewPanel, ColorChangeListener listener) {
 
@@ -45,13 +44,30 @@ public class ColorChooser {
             colorChooser.getSelectionModel().addChangeListener(listenerWrapper);
         }
 
-        ok = false;
-        JDialog dialog = JColorChooser.createDialog(parent, title, true, colorChooser, e -> ok = true, null);
-        dialog.setVisible(true);
+        Color initialColor = colorChooser.getColor();
+        EscapeDialog dialog = new EscapeDialog(parent, title);
 
+        JButton btnOK = new JButton("OK");
+        JButton btnCancel = new JButton("Cancel");
+        JButton btnReset = new JButton("Reset");
+        btnOK.addActionListener(e-> dialog.accept());
+        btnCancel.addActionListener(e-> dialog.cancel());
+        btnReset.addActionListener(e-> colorChooser.setColor(initialColor));
+
+        JPanel panelButtons = new JPanel(new FlowLayout(FlowLayout.CENTER));
+        panelButtons.add(btnOK);
+        panelButtons.add(btnCancel);
+        panelButtons.add(btnReset);
+
+        JPanel contentPane = new JPanel(new BorderLayout());
+        contentPane.add(colorChooser, BorderLayout.CENTER);
+        contentPane.add(panelButtons, BorderLayout.SOUTH);
+        dialog.setContentPane(contentPane);
+
+        boolean accepted = dialog.alignAndShow();
         if (listenerWrapper != null) colorChooser.getSelectionModel().removeChangeListener(listenerWrapper);
 
-        return ok ? colorChooser.getColor() : null;
+        return accepted ? colorChooser.getColor() : null;
     }
 
     public interface ColorChangeListener {
