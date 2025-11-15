@@ -7,8 +7,6 @@ import studio.ui.servertree.NodeSelectedListener;
 import studio.ui.servertree.ServerTree;
 
 import javax.swing.*;
-import javax.swing.event.DocumentEvent;
-import javax.swing.event.DocumentListener;
 import java.awt.*;
 import java.awt.event.KeyEvent;
 import java.awt.event.MouseAdapter;
@@ -127,36 +125,24 @@ public class ServerList extends EscapeDialog implements NodeSelectedListener {
     private void initComponents() {
         tree = new ServerTree(this);
         filter = new JTextField();
-        filter.getDocument().addDocumentListener(new DocumentListener() {
-            @Override
-            public void insertUpdate(DocumentEvent e) {
-                update();
-            }
-            @Override
-            public void removeUpdate(DocumentEvent e) {
-                update();
-            }
-            @Override
-            public void changedUpdate(DocumentEvent e) {
-                update();
-            }
-
-            private void update() {
-                tree.setFilter(filter.getText());
-            }
-        });
+        filter.getDocument().addDocumentListener((DocumentChangeListener) e -> tree.setFilter(filter.getText()));
         tglBtnBoxTree = new JToggleButton(Util.TEXT_TREE_ICON);
         tglBtnBoxTree.setToolTipText(Util.getTooltipWithAccelerator("Toggle tree/list", TREE_VIEW_KEYSTROKE));
         tglBtnBoxTree.setSelectedIcon(Util.TEXT_ICON);
         tglBtnBoxTree.setFocusable(false);
         tglBtnBoxTree.addActionListener(e->actionToggleButton());
+        JPanel toolbarPanel = new JPanel(new BorderLayout());
+
         JToolBar toolbar = new JToolBar();
-        toolbar.setLayout(new BoxLayout(toolbar, BoxLayout.X_AXIS));
         toolbar.setFloatable(false);
+        toolbar.setLayout(new BoxLayout(toolbar, BoxLayout.X_AXIS));
         toolbar.add(tglBtnBoxTree);
         toolbar.addSeparator();
         toolbar.add(new JLabel("Filter: "));
-        toolbar.add(filter);
+
+        toolbarPanel.add(toolbar, BorderLayout.WEST);
+        toolbarPanel.add(filter, BorderLayout.CENTER);
+
         filter.requestFocus();
 
         serverHistoryList = new JList<>();
@@ -181,7 +167,7 @@ public class ServerList extends EscapeDialog implements NodeSelectedListener {
         tabbedPane.setFocusable(false);
 
         contentPane = new JPanel(new BorderLayout());
-        contentPane.add(toolbar, BorderLayout.NORTH);
+        contentPane.add(toolbarPanel, BorderLayout.NORTH);
         contentPane.add(tabbedPane, BorderLayout.CENTER);
         setContentPane(contentPane);
 
