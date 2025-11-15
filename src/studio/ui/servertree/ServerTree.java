@@ -16,10 +16,7 @@ import javax.accessibility.AccessibleRole;
 import javax.swing.*;
 import javax.swing.event.TreeExpansionEvent;
 import javax.swing.event.TreeExpansionListener;
-import javax.swing.tree.DefaultTreeModel;
-import javax.swing.tree.TreeNode;
-import javax.swing.tree.TreePath;
-import javax.swing.tree.TreeSelectionModel;
+import javax.swing.tree.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.KeyEvent;
 import java.awt.event.MouseAdapter;
@@ -79,6 +76,23 @@ public class ServerTree extends JTree implements TreeExpansionListener {
                 if (e.isPopupTrigger()) handlePopup(e);
             }
         });
+
+        updateUI();
+    }
+
+    @Override
+    public void updateUI() {
+        super.updateUI();
+        DefaultTreeCellRenderer renderer = (DefaultTreeCellRenderer) getCellRenderer();
+
+//        renderer.setOpenIcon(UIManager.getIcon("Tree.openIcon"));
+//        renderer.setClosedIcon(UIManager.getIcon("Tree.closedIcon"));
+//        renderer.setLeafIcon(UIManager.getIcon("Tree.leafIcon"));
+
+        renderer.setOpenIcon(renderer.getDefaultOpenIcon());
+        renderer.setClosedIcon(renderer.getDefaultClosedIcon());
+        renderer.setLeafIcon(renderer.getDefaultLeafIcon());
+
     }
 
     private void initActions() {
