@@ -76,6 +76,12 @@ public class EscapeDialog extends JDialog {
         dispose();
     }
 
+    @Override
+    public void dispose() {
+        super.dispose();
+        getContentPane().removeAll();
+    }
+
     public DialogResult getResult() {
         return result;
     }

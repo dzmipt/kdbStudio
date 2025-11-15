@@ -7,6 +7,8 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.KeyEvent;
+import java.beans.PropertyChangeEvent;
+import java.beans.PropertyChangeListener;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -135,7 +137,7 @@ public class StudioOptionPane {
         return showOptionDialog(parentComponent, content, title, JOptionPane.QUESTION_MESSAGE, Util.QUESTION_ICON, OK_CANCEL_OPTIONS, OK_OPTION);
     }
 
-    public static int showOptionDialog(Component parentComponent, Object message, String title, int messageType, Icon icon, Option[] options, Option initialValue) {
+    private static int showOptionDialog(Component parentComponent, Object message, String title, int messageType, Icon icon, Option[] options, Option initialValue) {
         if (mocked) return mockedResult;
 
         JOptionPane pane = new JOptionPane(message, messageType, JOptionPane.DEFAULT_OPTION, icon, options, initialValue);
@@ -163,10 +165,34 @@ public class StudioOptionPane {
             pane.getInputMap(WHEN_ANCESTOR_OF_FOCUSED_COMPONENT).put(KeyStroke.getKeyStroke(Character.toLowerCase(option.getKey())), actionName);
             pane.getActionMap().put(actionName, action);
         }
-        JDialog dialog = pane.createDialog(parentComponent, title);
+
         pane.selectInitialValue();
-        dialog.setVisible(true);
-        dialog.dispose();
+
+        EscapeDialog dialog = new EscapeDialog(parentComponent, title);
+        JPanel contentPane = new JPanel(new BorderLayout());
+        contentPane.add(pane, BorderLayout.CENTER);
+
+        dialog.setContentPane(contentPane);
+        dialog.setResizable(false);
+
+        final PropertyChangeListener listener = new PropertyChangeListener() {
+            public void propertyChange(PropertyChangeEvent event) {
+                // Let the defaultCloseOperation handle the closing
+                // if the user closed the window without selecting a button
+                // (newValue = null in that case).  Otherwise, close the dialog.
+                if (dialog.isVisible() && event.getSource() == pane &&
+                        (event.getPropertyName().equals(JOptionPane.VALUE_PROPERTY)) &&
+                        event.getNewValue() != null &&
+                        event.getNewValue() != JOptionPane.UNINITIALIZED_VALUE) {
+                    dialog.accept();
+                }
+            }
+        };
+        pane.addPropertyChangeListener(listener);
+
+        dialog.alignAndShow();
+        pane.removePropertyChangeListener(listener);
+
         Object result = pane.getValue();
 
         if (result == null) return JOptionPane.CLOSED_OPTION;
@@ -179,6 +205,81 @@ public class StudioOptionPane {
         }
 
         return JOptionPane.CLOSED_OPTION;
+    }
+
+
+    public static void main(String... args) {
+
+        JTextField txtTitle = new JTextField(50);
+        JTextField txtMessage = new JTextField(50);
+        JTextField txtResult = new JTextField(50);
+
+        JButton btnErr = new JButton("showError");
+        btnErr.addActionListener(e->{
+            showError(null, txtMessage.getText(), txtTitle.getText());
+        });
+
+        JButton btnMsg = new JButton("showMessage");
+        btnMsg.addActionListener(e->{
+            showMessage(null, txtMessage.getText(), txtTitle.getText());
+        });
+
+        JButton btnWarn = new JButton("showWarning");
+        btnWarn.addActionListener(e->{
+            showWarning(null, txtMessage.getText(), txtTitle.getText());
+        });
+
+        JButton btnYesNo = new JButton("showYesNoDialog");
+        btnYesNo.addActionListener(e->{
+            txtResult.setText(""+showYesNoDialog(null, txtMessage.getText(), txtTitle.getText()) );
+        });
+
+        JButton btnYesNoCancel = new JButton("showYesNoCancelDialog");
+        btnYesNoCancel.addActionListener(e->{
+            txtResult.setText(""+showYesNoCancelDialog(null, txtMessage.getText(), txtTitle.getText()) );
+        });
+
+        JButton btnReloadFileDialog = new JButton("reloadFileDialog");
+        btnReloadFileDialog.addActionListener(e->{
+            txtResult.setText(""+reloadFileDialog(null, txtMessage.getText(), txtTitle.getText()) );
+        });
+
+        JButton btnInput = new JButton("showInputDialog");
+        btnInput.addActionListener(e->{
+            txtResult.setText(showInputDialog(null, txtMessage.getText(), txtTitle.getText()) );
+        });
+
+        StringComboBox comboBox = new StringComboBox(List.of("OptionA", "OptionB", "OptionC"));
+        JPanel testPanel = new JPanel();
+        GroupLayoutSimple layout = new GroupLayoutSimple(testPanel);
+        layout.setStacks(new GroupLayoutSimple.Stack()
+                .addLineAndGlue(new JLabel("Combo:"), comboBox)
+                .addLineAndGlue(new JCheckBox("Test checkbox"))
+        );
+
+        JButton btnComplex = new JButton("showComplexDialog");
+        btnComplex.addActionListener(e->{
+            txtResult.setText(""+showComplexDialog(null, testPanel, txtTitle.getText()) );
+        });
+
+        JPanel contentPane = new JPanel();
+        layout = new GroupLayoutSimple(contentPane);
+        layout.setStacks(new GroupLayoutSimple.Stack()
+                .addLineAndGlue(new JLabel("Title: "), txtTitle)
+                .addLineAndGlue(new JLabel("Message: "), txtMessage)
+                .addLineAndGlue(btnErr, btnMsg, btnWarn)
+                .addLineAndGlue(btnInput, btnReloadFileDialog)
+                .addLineAndGlue(btnYesNo, btnYesNoCancel)
+                .addLineAndGlue(btnComplex)
+                .addLineAndGlue(new JLabel("Result: "), txtResult)
+        );
+
+        StudioFrame f = new StudioFrame("Test");
+        f.setDefaultCloseOperation(StudioWindow.EXIT_ON_CLOSE);
+        f.setContentPane(contentPane);
+        f.setSize(400, 600);
+        f.setVisible(true);
+
     }
 
 }
