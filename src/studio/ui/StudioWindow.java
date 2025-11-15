@@ -1605,7 +1605,8 @@ public class StudioWindow extends StudioFrame implements WindowListener {
 
     public static void loadWorkspace(Workspace workspace) {
         for (Workspace.TopWindow window: workspace.getWindows()) {
-            new StudioWindow(window);
+            StudioWindow w = new StudioWindow(window);
+            SwingUtilities.updateComponentTreeUI(w);
         }
 
         int index = workspace.getSelectedWindow();

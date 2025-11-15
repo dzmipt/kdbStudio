@@ -67,7 +67,6 @@ public class Studio {
             System.setProperty("com.apple.mrj.application.live-resize","true");
             System.setProperty("com.apple.macos.smallTabs","true");
             System.setProperty("com.apple.mrj.application.growbox.intrudes","false");
-            System.setProperty( "apple.awt.application.appearance", "system" );
             System.setProperty("flatlaf.useWindowDecorations", "true");
         }
 
@@ -78,7 +77,7 @@ public class Studio {
         FlatDarkLaf.installLafInfo();
         FlatDarculaLaf.installLafInfo();
         FlatMacDarkLaf.installLafInfo();
-
+        System.setProperty("apple.awt.application.appearance", "system");
         System.setProperty("awt.useSystemAAFontSettings","on");
         System.setProperty("swing.aatext", "true");
 
