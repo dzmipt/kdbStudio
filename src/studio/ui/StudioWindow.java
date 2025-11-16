@@ -1579,6 +1579,7 @@ public class StudioWindow extends StudioFrame implements WindowListener {
         setDefaultCloseOperation(WindowConstants.DO_NOTHING_ON_CLOSE);
         addWindowListener(this);
 
+        pack();
         if (Util.fitToScreen(location)) {
             setBounds(location);
         } else {
@@ -1605,8 +1606,7 @@ public class StudioWindow extends StudioFrame implements WindowListener {
 
     public static void loadWorkspace(Workspace workspace) {
         for (Workspace.TopWindow window: workspace.getWindows()) {
-            StudioWindow w = new StudioWindow(window);
-            SwingUtilities.updateComponentTreeUI(w);
+            new StudioWindow(window);
         }
 
         int index = workspace.getSelectedWindow();
