@@ -9,6 +9,8 @@ import javax.swing.*;
 import javax.swing.filechooser.FileFilter;
 import javax.swing.filechooser.FileNameExtensionFilter;
 import java.awt.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.io.File;
 import java.util.HashMap;
 import java.util.Map;
@@ -78,6 +80,8 @@ public class FileChooser {
                 defaultFile = new File(config.getFilename());
             }
 
+        } else {
+            SwingUtilities.updateComponentTreeUI(fileChooser);
         }
 
         if (defaultFile != null) {
@@ -91,9 +95,32 @@ public class FileChooser {
             fileChooser.setPreferredSize(preferredSize);
         }
 
-        int option;
-        if (dialogType == JFileChooser.OPEN_DIALOG) option = fileChooser.showOpenDialog(parent);
-        else option = fileChooser.showSaveDialog(parent);
+        if (dialogType == JFileChooser.OPEN_DIALOG) fileChooser.setDialogType(JFileChooser.OPEN_DIALOG);
+        else fileChooser.setDialogType(JFileChooser.SAVE_DIALOG);
+        fileChooser.rescanCurrentDirectory();
+
+        if (title == null) {
+            title = fileChooser.getUI().getDialogTitle(fileChooser);
+        }
+
+        EscapeDialog dialog = new EscapeDialog(parent, title);
+
+        ActionListener listener = new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                String command = e.getActionCommand();
+                if (JFileChooser.APPROVE_SELECTION.equals(command)) dialog.accept();
+                if (JFileChooser.CANCEL_SELECTION.equals(command)) dialog.cancel();
+            }
+        };
+        fileChooser.addActionListener(listener);
+
+        JPanel contentPane = new JPanel(new BorderLayout());
+        contentPane.add(fileChooser, BorderLayout.CENTER);
+
+        dialog.setContentPane(contentPane);
+        boolean accepted = dialog.alignAndShow();
+        fileChooser.removeActionListener(listener);
 
         File selectedFile = fileChooser.getSelectedFile();
         String filename = "";
@@ -101,7 +128,7 @@ public class FileChooser {
             filename = selectedFile.getAbsolutePath();
         }
 
-        if (dialogType == JFileChooser.SAVE_DIALOG && option == JFileChooser.APPROVE_OPTION) {
+        if (accepted && dialogType == JFileChooser.SAVE_DIALOG) {
             FileFilter ff = fileChooser.getFileFilter();
             if (ff instanceof FileNameExtensionFilter) {
                 String ext = "." + ((FileNameExtensionFilter) ff).getExtensions()[0];
@@ -115,7 +142,7 @@ public class FileChooser {
         config = new FileChooserConfig(filename, fileChooser.getSize());
         Config.getInstance().setFileChooserConfig(fileChooserType, config);
 
-        return option == JFileChooser.APPROVE_OPTION ? selectedFile : null;
+        return accepted ? selectedFile : null;
     }
 
 }
