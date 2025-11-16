@@ -33,6 +33,7 @@ public class ColorChooser {
         if (mockColor != null) return mockColor;
 
         if (colorChooser == null) colorChooser = new JColorChooser();
+        else SwingUtilities.updateComponentTreeUI(colorChooser);
 
         if (initColor != null) colorChooser.setColor(initColor);
         if (previewPanel != null) colorChooser.setPreviewPanel(previewPanel);
