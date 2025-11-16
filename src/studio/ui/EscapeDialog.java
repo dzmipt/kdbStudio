@@ -2,6 +2,7 @@ package studio.ui;
 
 import javax.swing.*;
 import java.awt.*;
+import java.awt.event.ActionEvent;
 import java.awt.event.KeyEvent;
 
 public class EscapeDialog extends JDialog {
@@ -73,7 +74,17 @@ public class EscapeDialog extends JDialog {
     private void initComponents() {
         setDefaultCloseOperation(JDialog.DISPOSE_ON_CLOSE);
         KeyStroke stroke = KeyStroke.getKeyStroke(KeyEvent.VK_ESCAPE,0);
-        this.getRootPane().registerKeyboardAction(e->cancel(), stroke, JComponent.WHEN_IN_FOCUSED_WINDOW);
+        this.getRootPane().registerKeyboardAction(this::escapeAction, stroke, JComponent.WHEN_IN_FOCUSED_WINDOW);
+    }
+
+    private void escapeAction(ActionEvent e) {
+        MenuElement[] path = MenuSelectionManager.defaultManager().getSelectedPath();
+
+        if (path.length > 0) {
+            MenuSelectionManager.defaultManager().clearSelectedPath();
+        } else {
+            cancel();
+        }
     }
 
     public void cancel() {
