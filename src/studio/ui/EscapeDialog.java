@@ -10,6 +10,7 @@ public class EscapeDialog extends JDialog {
 
     private DialogResult result = DialogResult.CANCELLED;
 
+    private boolean removeContentOnDispose = true;
     private StudioFrame.Helper helper = null;
 
     private static Window getWindow(Component component) {
@@ -76,10 +77,16 @@ public class EscapeDialog extends JDialog {
         dispose();
     }
 
+    public void setRemoveContentOnDispose(boolean removeContentOnDispose) {
+        this.removeContentOnDispose = removeContentOnDispose;
+    }
+
     @Override
     public void dispose() {
         super.dispose();
-        getContentPane().removeAll();
+        if (removeContentOnDispose) {
+            getContentPane().removeAll();
+        }
     }
 
     public DialogResult getResult() {

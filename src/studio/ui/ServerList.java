@@ -35,6 +35,7 @@ public class ServerList extends EscapeDialog implements NodeSelectedListener {
 
     public ServerList(Window parent, Rectangle bounds) {
         super(parent, "Server List");
+        setRemoveContentOnDispose(false);
         initComponents();
 
         if (bounds != null && Util.fitToScreen(bounds)) {
