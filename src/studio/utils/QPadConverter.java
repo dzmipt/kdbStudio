@@ -2,11 +2,12 @@ package studio.utils;
 
 import studio.core.Credentials;
 import studio.core.DefaultAuthenticationMechanism;
+import studio.kdb.Config;
 import studio.kdb.Server;
 import studio.kdb.ServerTreeNode;
+import studio.kdb.config.EditorColorToken;
 
 import javax.swing.tree.TreeNode;
-import java.awt.*;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -52,7 +53,7 @@ public class QPadConverter {
                 }
             }
 
-            return new Server("", conn, auth, Color.WHITE, (ServerTreeNode) null);
+            return new Server("", conn, auth, Config.getInstance().getEditorColors().get(EditorColorToken.BACKGROUND), (ServerTreeNode) null);
         } catch (IllegalArgumentException e) {
             return Server.NO_SERVER;
         }
