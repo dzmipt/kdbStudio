@@ -88,6 +88,8 @@ public class ServerTree extends JTree implements TreeExpansionListener {
         renderer.setClosedIcon(renderer.getDefaultClosedIcon());
         renderer.setLeafIcon(renderer.getDefaultLeafIcon());
 
+        if (popupMenu != null) SwingUtilities.updateComponentTreeUI(popupMenu);
+        if (popupRootMenu != null) SwingUtilities.updateComponentTreeUI(popupRootMenu);
     }
 
     private void initActions() {
