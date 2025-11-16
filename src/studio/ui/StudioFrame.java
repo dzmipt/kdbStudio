@@ -10,9 +10,11 @@ import java.util.Objects;
 public class StudioFrame extends JFrame {
 
     private Helper helper = null;
+    private boolean removeContentOnDispose = true;
 
     public StudioFrame() {
         helper = new Helper(this);
+        setContentPane(getContentPane());
     }
 
     public StudioFrame(String title) {
@@ -44,14 +46,36 @@ public class StudioFrame extends JFrame {
     }
 
     @Override
+    public Container getContentPane() {
+        if (helper == null) return super.getContentPane();
+        Container contentPane = helper.getContentPane();
+        if (contentPane != null) return contentPane;
+        return super.getContentPane();
+    }
+
+    @Override
     public void setContentPane(Container contentPane) {
         super.setContentPane(helper.decorateContentPane(contentPane));
     }
 
+    public void setRemoveContentOnDispose(boolean removeContentOnDispose) {
+        this.removeContentOnDispose = removeContentOnDispose;
+    }
+
+    @Override
+    public void dispose() {
+        super.dispose();
+        if (removeContentOnDispose) {
+            helper.dispose();
+            getContentPane().removeAll();
+        }
+    }
+
     public static class Helper {
 
-        private JPanel macOSTitlePanel = new JPanel(new BorderLayout());
-        private final JLabel macOSTitle = new JLabel();
+        private Container origContentPane = null;
+        private JPanel macOSTitlePanel = null;
+        private JLabel macOSTitle = null;
         private JDialog dialog = null;
         private JFrame frame = null;
 
@@ -63,8 +87,7 @@ public class StudioFrame extends JFrame {
         }
 
         public void invalidate() {
-            if (!Util.MAC_OS_X) return;
-
+            if (macOSTitlePanel == null) return;
             macOSTitlePanel.setBorder(BorderFactory.createCompoundBorder(
                     BorderFactory.createEmptyBorder(0,0,2,0),
                     BorderFactory.createMatteBorder(0,0,1,0,UIManager.getColor("windowBorder"))
@@ -79,6 +102,9 @@ public class StudioFrame extends JFrame {
                     return frame.getTitle();
                 }
             }
+
+            if (macOSTitle == null) return "";
+
             return macOSTitle.getText();
         }
 
@@ -90,31 +116,47 @@ public class StudioFrame extends JFrame {
                     return Objects.equals(title, frame.getTitle());
                 }
             }
-
+            if (macOSTitle == null) {
+                macOSTitle = new JLabel();
+            }
             macOSTitle.setText(title);
             return true;
         }
 
+        public Container getContentPane() {
+            return origContentPane;
+        }
+
         public Container decorateContentPane(Container contentPane) {
             if (!Util.MAC_OS_X) return contentPane;
+            origContentPane = contentPane;
 
             JRootPane rootPane = dialog == null ? frame.getRootPane() : dialog.getRootPane();
             rootPane.putClientProperty( "apple.awt.fullWindowContent", true );
             rootPane.putClientProperty( "apple.awt.transparentTitleBar", true );
 
+            if (macOSTitle == null) macOSTitle = new JLabel();
             macOSTitle.setHorizontalAlignment(SwingConstants.CENTER);
             macOSTitle.setVerticalAlignment(SwingConstants.CENTER);
             Map<TextAttribute, Object> map = new HashMap<>();
             map.put(TextAttribute.WEIGHT, TextAttribute.WEIGHT_BOLD);
             macOSTitle.setFont(macOSTitle.getFont().deriveFont(map));
+
+            macOSTitlePanel = new JPanel(new BorderLayout());
             macOSTitlePanel.add(macOSTitle, BorderLayout.CENTER);
             macOSTitlePanel.add(Box.createVerticalStrut(25), BorderLayout.WEST);
 
-            JPanel macOSContentPane = new JPanel(new BorderLayout());
-            macOSContentPane.add(macOSTitlePanel, BorderLayout.NORTH);
-            macOSContentPane.add(contentPane, BorderLayout.CENTER);
+            JPanel decoratedContentPane = new JPanel(new BorderLayout());
+            decoratedContentPane.add(macOSTitlePanel, BorderLayout.NORTH);
+            decoratedContentPane.add(contentPane, BorderLayout.CENTER);
 
-            return macOSContentPane;
+            return decoratedContentPane;
+        }
+
+        public void dispose() {
+            macOSTitle = null;
+            macOSTitlePanel = null;
+            origContentPane = null;
         }
     }
 }

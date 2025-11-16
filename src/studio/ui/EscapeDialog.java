@@ -22,6 +22,7 @@ public class EscapeDialog extends JDialog {
     public EscapeDialog(Component windowOwner, String title) {
         super(getWindow(windowOwner), "", ModalityType.APPLICATION_MODAL);
         helper = new StudioFrame.Helper(this);
+        setContentPane(getContentPane());
         setTitle(title);
         initComponents();
     }
@@ -48,6 +49,14 @@ public class EscapeDialog extends JDialog {
     @Override
     public void setContentPane(Container contentPane) {
         super.setContentPane(helper.decorateContentPane(contentPane));
+    }
+
+    @Override
+    public Container getContentPane() {
+        if (helper == null) return super.getContentPane();
+        Container contentPane = helper.getContentPane();
+        if (contentPane != null) return contentPane;
+        return super.getContentPane();
     }
 
     public void align() {
@@ -85,6 +94,7 @@ public class EscapeDialog extends JDialog {
     public void dispose() {
         super.dispose();
         if (removeContentOnDispose) {
+            helper.dispose();
             getContentPane().removeAll();
         }
     }
