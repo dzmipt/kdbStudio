@@ -166,7 +166,6 @@ public class StudioOptionPane {
             pane.getActionMap().put(actionName, action);
         }
 
-        pane.selectInitialValue();
 
         EscapeDialog dialog = new EscapeDialog(parentComponent, title);
         JPanel contentPane = new JPanel(new BorderLayout());
@@ -188,6 +187,9 @@ public class StudioOptionPane {
                 }
             }
         };
+
+        pane.selectInitialValue();
+
         pane.addPropertyChangeListener(listener);
 
         dialog.alignAndShow();
