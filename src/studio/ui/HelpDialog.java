@@ -7,10 +7,8 @@ import javax.swing.*;
 import javax.swing.event.HyperlinkEvent;
 import javax.swing.event.HyperlinkListener;
 import java.awt.*;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 
-public class HelpDialog extends JDialog {
+public class HelpDialog extends EscapeDialog {
     public HelpDialog(JFrame parent) {
         super(parent, "Studio for kdb+");
         String env = EnvConfig.getEnvironment();
@@ -44,36 +42,10 @@ public class HelpDialog extends JDialog {
         JPanel buttonPane = new JPanel();
         JButton button = new JButton("Close");
         buttonPane.add(button);
-        button.addActionListener(new CloseActionListener());
+        button.addActionListener(e->accept());
         getContentPane().add(buttonPane, BorderLayout.PAGE_END);
         setDefaultCloseOperation(DISPOSE_ON_CLOSE);
         setPreferredSize(new Dimension(800,450));
-        pack();
-        setVisible(true);
     }
 
-    @Override
-    public JRootPane createRootPane() {
-        JRootPane rootPane = new JRootPane();
-        KeyStroke stroke = KeyStroke.getKeyStroke("ESCAPE");
-        Action action = new AbstractAction() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                setVisible(false);
-                dispose();
-            }
-        };
-        InputMap inputMap = rootPane.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW);
-        inputMap.put(stroke, "ESCAPE");
-        rootPane.getActionMap().put("ESCAPE", action);
-        return rootPane;
-    }
-
-    class CloseActionListener implements ActionListener {
-        @Override
-        public void actionPerformed(ActionEvent e) {
-            setVisible(false);
-            dispose();
-        }
-    }
 }

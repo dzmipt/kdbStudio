@@ -828,11 +828,10 @@ public class StudioWindow extends StudioFrame implements WindowListener {
 
     public static void about() {
         HelpDialog help = new HelpDialog(activeWindow);
-        Util.centerChildOnParent(help, activeWindow);
         help.pack();
-        help.setVisible(true);
         help.toFront();
         help.requestFocus();
+        help.alignAndShow();
     }
 
     private static volatile boolean quitting = false;
