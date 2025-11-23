@@ -11,6 +11,7 @@ import org.jfree.chart.plot.DatasetRenderingOrder;
 import org.jfree.chart.plot.XYPlot;
 import org.jfree.chart.renderer.AbstractRenderer;
 import org.jfree.chart.renderer.xy.StandardXYBarPainter;
+import org.jfree.chart.renderer.xy.XYBarRenderer;
 import org.jfree.chart.renderer.xy.XYItemRenderer;
 import org.jfree.chart.renderer.xy.XYLineAndShapeRenderer;
 import org.jfree.chart.title.TextTitle;
@@ -55,6 +56,7 @@ public class Chart implements ComponentListener {
 
     private static final StandardChartTheme currentTheme = new StandardChartTheme("JFree");
     static {
+        XYBarRenderer.setDefaultBarPainter(new StandardXYBarPainter());
         currentTheme.setXYBarPainter(new StandardXYBarPainter());
     }
 
@@ -370,7 +372,10 @@ public class Chart implements ComponentListener {
                 LegendIcon icon = plotConfig.getIcon(index);
                 ChartType chartType = icon.getChartType();
                 if (chartType == ChartType.BAR) {
-                    renderer = new BarRenderer();
+                    renderer = new XYBarRenderer();
+                    ((XYBarRenderer)renderer).setGradientPaintTransformer(null);
+                    ((XYBarRenderer)renderer).setShadowVisible(false);
+
                 } else {
                     renderer = new XYLineAndShapeRenderer(chartType.hasLine(), chartType.hasShape());
                 }
