@@ -7,6 +7,8 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.KeyEvent;
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.util.ArrayList;
@@ -188,9 +190,27 @@ public class StudioOptionPane {
             }
         };
 
-        pane.selectInitialValue();
+        WindowAdapter adapter = new WindowAdapter() {
+            private boolean gotFocus = false;
+            public void windowClosing(WindowEvent we) {
+                dialog.cancel();
+            }
+
+            public void windowGainedFocus(WindowEvent we) {
+                // Once window gets focus, set initial focus
+                if (!gotFocus) {
+                    pane.selectInitialValue();
+                    gotFocus = true;
+                }
+            }
+        };
+        dialog.addWindowListener(adapter);
+        dialog.addWindowFocusListener(adapter);
 
         pane.addPropertyChangeListener(listener);
+
+        dialog.pack();
+        pane.selectInitialValue();
 
         dialog.alignAndShow();
         pane.removePropertyChangeListener(listener);
