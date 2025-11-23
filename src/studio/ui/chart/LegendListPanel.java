@@ -1,6 +1,8 @@
 package studio.ui.chart;
 
 import studio.ui.GroupLayoutSimple;
+import studio.ui.UserAction;
+import studio.ui.Util;
 import studio.ui.chart.event.LegendChangeEvent;
 import studio.ui.chart.event.LegendChangeListener;
 
@@ -14,9 +16,11 @@ import java.util.List;
 
 public class LegendListPanel extends JPanel implements LegendChangeListener {
 
+    private final ChartConfigPanel chartConfigPanel;
     private final boolean isLines;
     private final List<JCheckBox> checkBoxes = new ArrayList<>();
     private final List<LegendButton> buttons = new ArrayList<>();
+    private final List<UserAction> extraAxisActions = new ArrayList<>();
     private final JLabel lblTitle = new JLabel();
     private final JComboBox<String> comboX = new JComboBox<>();
     private final JPanel panel = new JPanel();
@@ -26,7 +30,8 @@ public class LegendListPanel extends JPanel implements LegendChangeListener {
 
     private final EventListenerList listenerList = new EventListenerList();
 
-    public LegendListPanel(PlotConfig plotConfig, boolean visibleTitle) {
+    public LegendListPanel(ChartConfigPanel chartConfigPanel, PlotConfig plotConfig, boolean visibleTitle) {
+        this.chartConfigPanel = chartConfigPanel;
         this.plotConfig = plotConfig;
         isLines = false;
         lblTitle.setVisible(visibleTitle);
@@ -38,16 +43,24 @@ public class LegendListPanel extends JPanel implements LegendChangeListener {
         comboX.addActionListener(e -> validateState() );
 
         for (int index = 0; index < plotConfig.size(); index++) {
-            add(plotConfig.getColumn(index).getName(), plotConfig.getIcon(index));
+            final int theIndex = index;
+            UserAction extraAxis = UserAction.create("", ()-> extraAxisActionClick(theIndex));
+            extraAxisActions.add(extraAxis);
+
+            add(plotConfig.getColumn(index).getName(), plotConfig.getIcon(index), extraAxis);
             JCheckBox checkBox = checkBoxes.get(index);
             checkBox.setSelected(plotConfig.getEnabled(index));
             checkBox.setEnabled(index != plotConfig.getDomainIndex());
         }
 
+        for (int index=0; index<plotConfig.size(); index++) {
+            refreshExtraAxisAction(index);
+        }
         initComponents();
     }
 
-    public LegendListPanel() {
+    public LegendListPanel(ChartConfigPanel chartConfigPanel) {
+        this.chartConfigPanel = chartConfigPanel;
         isLines = true;
         initComponents();
     }
@@ -84,12 +97,20 @@ public class LegendListPanel extends JPanel implements LegendChangeListener {
         updateLayout();
     }
 
-    public PlotConfig getPlotConfig() {
+    public int getAxes(boolean extra) {
+        return plotConfig.getAxes(extra);
+    }
+
+    private void refreshPlotConfig() {
         plotConfig.setDomainIndex(getDomainIndex());
         for (int index = 0; index < plotConfig.size(); index++) {
             plotConfig.setEnabled(index, isSelected(index));
             plotConfig.setIcon(index, getIcon(index));
         }
+    }
+
+    public PlotConfig getPlotConfig() {
+        refreshPlotConfig();
         return new PlotConfig(plotConfig);
     }
 
@@ -126,6 +147,30 @@ public class LegendListPanel extends JPanel implements LegendChangeListener {
         buttons.add(button);
         updateLayout();
         return checkBoxes.size()-1;
+    }
+
+    public void extraAxisActionClick(int index) {
+        plotConfig.setExtraAxis(index, !plotConfig.getExtraAxis(index));
+        if (chartConfigPanel.getAxes(false) == 0) {
+            plotConfig.setExtraAxis(index, false);
+        }
+        refreshExtraAxisAction(index);
+        notifyListeners();
+    }
+
+    private void refreshExtraAxisAction(int index) {
+        UserAction action = extraAxisActions.get(index);
+        boolean extra = plotConfig.getExtraAxis(index);
+        if (extra) {
+            action.putValue(Action.NAME,"Return to left axis");
+            action.putValue(Action.SMALL_ICON, Util.LEFT_ICON);
+        } else {
+            action.putValue(Action.NAME,"To extra axis");
+            action.putValue(Action.SMALL_ICON, Util.RIGHT_ICON);
+        }
+
+        buttons.get(index).setText(extra ? " >>": "");
+
     }
 
     public void updateTitle(int index, String title) {
@@ -201,6 +246,7 @@ public class LegendListPanel extends JPanel implements LegendChangeListener {
     }
 
     private void notifyListeners() {
+        refreshPlotConfig();
         this.repaint();
         ChangeEvent event = new ChangeEvent(this);
         Object[] listeners = listenerList.getListenerList();

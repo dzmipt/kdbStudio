@@ -16,6 +16,7 @@ public class PlotConfig {
     private String title;
     private final KColumn[] columns;
     private final boolean[] enabled;
+    private final boolean[] extraAxis;
     private final LegendIcon[] icons;
     private int domainIndex;
     private final KXYSeries[] series;
@@ -31,6 +32,7 @@ public class PlotConfig {
         this.title = plotConfig.title;
         this.columns = plotConfig.columns;
         this.enabled = Arrays.copyOf(plotConfig.enabled, plotConfig.enabled.length);
+        this.extraAxis = Arrays.copyOf(plotConfig.extraAxis, plotConfig.extraAxis.length);
         this.icons = new LegendIcon[plotConfig.icons.length];
         for (int i=0; i<icons.length; i++) {
             this.icons[i] = new LegendIcon(plotConfig.icons[i]);
@@ -51,6 +53,7 @@ public class PlotConfig {
         int count = indexes.size();
         columns = new KColumn[count];
         enabled = new boolean[count];
+        extraAxis = new boolean[count];
         icons = new LegendIcon[count];
         series = new KXYSeries[count];
 
@@ -60,6 +63,7 @@ public class PlotConfig {
             int index = indexes.get(i);
             columns[i] = table.getColumn(index);
             enabled[i] = true;
+            extraAxis[i] = false;
             icons[i] = new LegendIcon(baseColors.get(i % baseColors.size()),
                     LegendButton.SHAPES[i % LegendButton.SHAPES.length],
                     LegendButton.getDefaultStroke());
@@ -99,6 +103,14 @@ public class PlotConfig {
         enabled[index] = value;
     }
 
+    public boolean getExtraAxis(int index) {
+        return extraAxis[index];
+    }
+
+    public void setExtraAxis(int index, boolean value) {
+        extraAxis[index] = value;
+    }
+
     public LegendIcon getIcon(int index) {
         return icons[index];
     }
@@ -116,6 +128,18 @@ public class PlotConfig {
 
         this.domainIndex = domainIndex;
         resetSeriesCache();
+    }
+
+    public int getAxes(boolean extra) {
+        int res = 0;
+        int count = extraAxis.length;
+        for (int index=0; index<count; index++) {
+            if (!enabled[index]) continue;
+            if (index ==  domainIndex) continue;
+
+            if (extraAxis[index] == extra) res++;
+        }
+        return res;
     }
 
     private void resetSeriesCache() {

@@ -312,9 +312,13 @@ public class Chart implements ComponentListener {
             plot.setDataset(i, null);
             plot.setRenderer(i, null);
         }
+        plot.clearRangeAxes();
 
         domainType = null;
         rangeType = null;
+        String rangeLabel = "";
+        int extraAxisIndex = 0;
+
         plot.setDomainPannable(true);
         plot.setRangePannable(true);
         plot.setDatasetRenderingOrder(DatasetRenderingOrder.FORWARD);
@@ -336,12 +340,23 @@ public class Chart implements ComponentListener {
                 if (!plotConfig.getEnabled(index)) continue;
                 if (index == plotConfig.getDomainIndex() ) continue;
 
-                if (rangeType == null) {
-                    rangeType = plotConfig.getColumn(index).getElementType();
-                    NumberAxis yAxis = new NumberAxis("");
-                    yAxis.setNumberFormatOverride(new KFormat(rangeType));
+                KType currentRangeType = plotConfig.getColumn(index).getElementType();
+                if (plotConfig.getExtraAxis(index)) {
+                    extraAxisIndex++;
+                    NumberAxis yAxis = new NumberAxis(plotConfig.getColumn(index).getName());
+                    yAxis.setNumberFormatOverride(new KFormat(currentRangeType));
                     yAxis.setAutoRangeIncludesZero(false);
-                    plot.setRangeAxis(yAxis);
+                    plot.setRangeAxis(extraAxisIndex, yAxis);
+                } else {
+                    if (rangeType == null) {
+                        rangeType = currentRangeType;
+                        rangeLabel = plotConfig.getColumn(index).getName();
+                        NumberAxis yAxis = new NumberAxis("");
+                        yAxis.setNumberFormatOverride(new KFormat(rangeType));
+                        yAxis.setAutoRangeIncludesZero(false);
+                        plot.setRangeAxis(yAxis);
+                    }
+                    currentRangeType = rangeType;
                 }
 
                 XYSeriesCollection dataset = new XYSeriesCollection();
@@ -349,7 +364,7 @@ public class Chart implements ComponentListener {
                 dataset.addSeries(plotConfig.getSeries(index));
 
                 XYToolTipGenerator toolTipGenerator = new StandardXYToolTipGenerator(StandardXYToolTipGenerator.DEFAULT_TOOL_TIP_FORMAT,
-                        new KFormat(domainType), new KFormat(rangeType));
+                        new KFormat(domainType), new KFormat(currentRangeType));
                 XYItemRenderer renderer;
 
                 LegendIcon icon = plotConfig.getIcon(index);
@@ -369,10 +384,17 @@ public class Chart implements ComponentListener {
 
                 plot.setRenderer(datasetIndex, renderer);
                 plot.setDataset(datasetIndex, dataset);
+
+                int axisIndex = plotConfig.getExtraAxis(index) ? extraAxisIndex : 0;
+                plot.mapDatasetToRangeAxis(datasetIndex, axisIndex);
+
                 datasetIndex++;
             }
         }
 
+        if (rangeType!=null && extraAxisIndex>0) {
+            plot.getRangeAxis().setLabel(rangeLabel);
+        }
         chartPanel.setVisible(rangeType!=null);
         contentPane.revalidate();
         contentPane.repaint();

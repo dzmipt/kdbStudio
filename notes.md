@@ -1,3 +1,6 @@
+* Charts:
+    * Extra range axes
+    * Axes scaling with mouse wheel, mouse drag and panning with Ctrl (Option on MacOS)
 * Fix error colors in the certain Strings in results  
 * Fix unexpected focus change and incorrect server drop down selection
 * Pop-up menu in toolbar buttons for navigation history for previous/next server

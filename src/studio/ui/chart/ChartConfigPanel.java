@@ -35,7 +35,7 @@ public class ChartConfigPanel extends JPanel {
         comboCharType.setMaximumSize(new Dimension(Integer.MAX_VALUE, comboCharType.getPreferredSize().height));
         comboCharType.addActionListener(this::charTypeSelected);
 
-        listLines = new LegendListPanel();
+        listLines = new LegendListPanel(this);
         listLines.addChangeListener(e -> refresh() );
 
         addPlotConfigs(plotConfig);
@@ -43,7 +43,7 @@ public class ChartConfigPanel extends JPanel {
 
     public void addPlotConfigs(PlotConfig... plotConfigs) {
         for (PlotConfig plotConfig: plotConfigs) {
-            LegendListPanel panel = new LegendListPanel(plotConfig, series.size()>0);
+            LegendListPanel panel = new LegendListPanel(this, plotConfig, !series.isEmpty());
             panel.addChangeListener(e -> refresh());
             series.add(panel);
         }
@@ -51,8 +51,16 @@ public class ChartConfigPanel extends JPanel {
         revalidate();
     }
 
+    public int getAxes(boolean extra) {
+        int res = 0;
+        for (LegendListPanel panel: series) {
+            res += panel.getAxes(extra);
+        }
+        return res;
+    }
+
     public void setPlotTitle(String title) {
-        if (series.size() == 0) return;
+        if (series.isEmpty()) return;
         series.get(0).setPlotTitle(title);
     }
 

@@ -47,6 +47,11 @@ public class ChartPanel extends studio.ui.chart.patched.ChartPanel {
 
     public ChartPanel(JFreeChart chart) {
         super(chart);
+        ChartAxesDragHandler dragHandler = new ChartAxesDragHandler(this, chart.getXYPlot());
+        addMouseListener(dragHandler);
+        addMouseMotionListener(dragHandler);
+        addMouseWheelListener(dragHandler);
+
         CrosshairOverlay crosshairOverlay = new CrosshairOverlay();
         xCrosshair = new Crosshair(Double.NaN, Color.GRAY, new BasicStroke(0.5f));
         xCrosshair.setLabelVisible(true);
@@ -195,7 +200,7 @@ public class ChartPanel extends studio.ui.chart.patched.ChartPanel {
     @SuppressWarnings("deprecation")
     private final static int ALT_MASK = InputEvent.ALT_MASK;
 
-    private int getPanMask() {
+    public int getPanMask() {
         if (this.panMask == CTRL_MASK) return InputEvent.CTRL_DOWN_MASK;
         if (this.panMask == ALT_MASK) return InputEvent.ALT_DOWN_MASK;
         return this.panMask;
@@ -237,8 +242,12 @@ public class ChartPanel extends studio.ui.chart.patched.ChartPanel {
         else if (this.zoomRectangle == null) {
             Rectangle2D screenDataArea = getScreenDataArea(e.getX(), e.getY());
             if (screenDataArea != null) {
-                this.zoomPoint = getPointInRectangle(e.getX(), e.getY(),
-                        screenDataArea);
+                if (screenDataArea.contains(e.getX(), e.getY())) {
+                    this.zoomPoint = getPointInRectangle(e.getX(), e.getY(),
+                            screenDataArea);
+                } else {
+                    this.zoomPoint = null;
+                }
             }
             else {
                 this.zoomPoint = null;
