@@ -64,12 +64,12 @@ public class Util {
     public final static Icon ASC_ICON = new AlteringIcon("asc.png");
     public final static Icon DESC_ICON = new AlteringIcon("desc.png");
 
-    public final static ImageIcon SEARCH_WHOLE_WORD_ICON = getImage("/searchWholeWord.png");
-    public final static ImageIcon SEARCH_WHOLE_WORD_SHADED_ICON = getImage("/searchWholeWord_shaded.png");
-    public final static ImageIcon SEARCH_REGEX_ICON = getImage("/searchRegex.png");
-    public final static ImageIcon SEARCH_REGEX_SHADED_ICON = getImage("/searchRegex_shaded.png");
-    public final static ImageIcon SEARCH_CASE_SENSITIVE_ICON = getImage("/searchCaseSensitive.png");
-    public final static ImageIcon SEARCH_CASE_SENSITIVE_SHADED_ICON = getImage("/searchCaseSensitive_shaded.png");
+    public final static Icon SEARCH_WHOLE_WORD_ICON = new AlteringIcon("searchWholeWord.png");
+    public final static Icon SEARCH_WHOLE_WORD_SHADED_ICON = new AlteringIcon("searchWholeWord_shaded.png");
+    public final static Icon SEARCH_REGEX_ICON = new AlteringIcon("searchRegex.png");
+    public final static Icon SEARCH_REGEX_SHADED_ICON = new AlteringIcon("searchRegex_shaded.png");
+    public final static Icon SEARCH_CASE_SENSITIVE_ICON = new AlteringIcon("searchCaseSensitive.png");
+    public final static Icon SEARCH_CASE_SENSITIVE_SHADED_ICON = new AlteringIcon("searchCaseSensitive_shaded.png");
 
     public final static Icon LINE_ICON = new AlteringIcon("line.png");
 //    public final static ImageIcon PLUS_ICON = getImage("/plus.png");
