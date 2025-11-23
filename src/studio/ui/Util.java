@@ -56,13 +56,13 @@ public class Util {
     public final static ImageIcon DATA_COPY_ICON = getImage("/data_copy.png");
     public final static ImageIcon CHART_BIG_ICON = getImage("/chart.png");
 
-    public final static ImageIcon COMMA_ICON = getImage("/comma.png");
-    public final static ImageIcon COMMA_CROSSED_ICON = getImage("/comma_crossed.png");
+    public final static Icon COMMA_ICON = new AlteringIcon("comma.png");
+    public final static Icon COMMA_CROSSED_ICON = getImage("/comma_crossed.png");
 
-    public final static ImageIcon UPLOAD_ICON = getImage("/upload.png");
+    public final static ImageIcon UPLOAD_ICON = new AlteringIcon("upload.png");
 
-    public final static ImageIcon ASC_ICON = getImage("/asc.png");
-    public final static ImageIcon DESC_ICON = getImage("/desc.png");
+    public final static Icon ASC_ICON = new AlteringIcon("asc.png");
+    public final static Icon DESC_ICON = new AlteringIcon("desc.png");
 
     public final static ImageIcon SEARCH_WHOLE_WORD_ICON = getImage("/searchWholeWord.png");
     public final static ImageIcon SEARCH_WHOLE_WORD_SHADED_ICON = getImage("/searchWholeWord_shaded.png");
@@ -71,11 +71,11 @@ public class Util {
     public final static ImageIcon SEARCH_CASE_SENSITIVE_ICON = getImage("/searchCaseSensitive.png");
     public final static ImageIcon SEARCH_CASE_SENSITIVE_SHADED_ICON = getImage("/searchCaseSensitive_shaded.png");
 
-    public final static ImageIcon LINE_ICON = getImage("/line.png");
-    public final static ImageIcon PLUS_ICON = getImage("/plus.png");
-    public final static ImageIcon PLUS2_ICON = getImage("/plus2.png");
-    public final static ImageIcon LEFT_ICON = getImage("/left.png");
-    public final static ImageIcon RIGHT_ICON = getImage("/right.png");
+    public final static Icon LINE_ICON = new AlteringIcon("line.png");
+//    public final static ImageIcon PLUS_ICON = getImage("/plus.png");
+    public final static Icon PLUS2_ICON = new AlteringIcon("plus2.png");
+    public final static Icon LEFT_ICON = new AlteringIcon("left.png");
+    public final static Icon RIGHT_ICON = new AlteringIcon("right.png");
     public final static ImageIcon LOCK_ICON = getImage("/lock.png");
     public final static ImageIcon LOCK_CROSSED_ICON = getImage("/lock_crossed.png");
     public final static ImageIcon UNLOCK_ICON = getImage("/unlock.png");
