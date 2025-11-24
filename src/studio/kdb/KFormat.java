@@ -61,7 +61,6 @@ public class KFormat extends NumberFormat {
                 } else {
                     kValue = new K.KTime(intValue);
                 }
-                System.out.printf("KFormat KTime: value: %f, hasFraction: %b; kValue: %s\n", value, hasFraction, kValue);
             } else if (type == KType.Second) {
                 fmtContext = KFormatContext.SECOND;
                 if (hasFraction) {
