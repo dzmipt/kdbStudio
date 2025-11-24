@@ -28,7 +28,7 @@ import java.util.List;
 public class ChartPanel extends studio.ui.chart.patched.ChartPanel {
 
     private final Crosshair xCrosshair;
-    private final Crosshair yCrosshair;
+    private final MultipleValueCrosshair yCrosshair;
 
     private final Action lineAction;
     private final Action copyAction;
@@ -52,11 +52,11 @@ public class ChartPanel extends studio.ui.chart.patched.ChartPanel {
         addMouseMotionListener(dragHandler);
         addMouseWheelListener(dragHandler);
 
-        CrosshairOverlay crosshairOverlay = new CrosshairOverlay();
+        CrosshairOverlay crosshairOverlay = new MultiLineCrosshairOverlay();
         xCrosshair = new Crosshair(Double.NaN, Color.GRAY, new BasicStroke(0.5f));
         xCrosshair.setLabelVisible(true);
         xCrosshair.setLabelGenerator(new KCrosshairLabelGenerator(chart, true));
-        yCrosshair = new Crosshair(Double.NaN, Color.GRAY, new BasicStroke(0.5f));
+        yCrosshair = new MultipleValueCrosshair(Double.NaN, Color.GRAY, new BasicStroke(0.5f));
         yCrosshair.setLabelVisible(true);
         yCrosshair.setLabelGenerator(new KCrosshairLabelGenerator(chart, false));
 
@@ -178,6 +178,17 @@ public class ChartPanel extends studio.ui.chart.patched.ChartPanel {
         double y = plot.getRangeAxis().java2DToValue(e.getY(), dataArea, RectangleEdge.LEFT);
         xCrosshair.setValue(x);
         yCrosshair.setValue(y);
+
+        int count = plot.getRangeAxisCount();
+        if (count > 1) {
+            double[] values = new double[count];
+            for (int index=0; index<count; index++) {
+                values[index] = plot.getRangeAxis(index).java2DToValue(e.getY(), dataArea, RectangleEdge.LEFT);
+            }
+            yCrosshair.setValues(values);
+        } else {
+            yCrosshair.setValues(null);
+        }
 
     }
 

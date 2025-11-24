@@ -382,7 +382,7 @@ public class CrosshairOverlay extends AbstractOverlay implements Overlay,
      *
      * @return The anchor point.
      */
-    private Point2D calculateLabelPoint(Line2D line, RectangleAnchor anchor,
+    protected Point2D calculateLabelPoint(Line2D line, RectangleAnchor anchor,
                                         double deltaX, double deltaY) {
         double x, y;
         boolean left = (anchor == RectangleAnchor.BOTTOM_LEFT
@@ -443,7 +443,7 @@ public class CrosshairOverlay extends AbstractOverlay implements Overlay,
      *
      * @return The text alignment point.
      */
-    private TextAnchor textAlignPtForLabelAnchorV(RectangleAnchor anchor) {
+    protected TextAnchor textAlignPtForLabelAnchorV(RectangleAnchor anchor) {
         TextAnchor result = TextAnchor.CENTER;
         if (anchor.equals(RectangleAnchor.TOP_LEFT)) {
             result = TextAnchor.TOP_RIGHT;
@@ -480,7 +480,7 @@ public class CrosshairOverlay extends AbstractOverlay implements Overlay,
      *
      * @return The text alignment point.
      */
-    private TextAnchor textAlignPtForLabelAnchorH(RectangleAnchor anchor) {
+    protected TextAnchor textAlignPtForLabelAnchorH(RectangleAnchor anchor) {
         TextAnchor result = TextAnchor.CENTER;
         if (anchor.equals(RectangleAnchor.TOP_LEFT)) {
             result = TextAnchor.BOTTOM_LEFT;
@@ -509,7 +509,7 @@ public class CrosshairOverlay extends AbstractOverlay implements Overlay,
         return result;
     }
 
-    private RectangleAnchor flipAnchorH(RectangleAnchor anchor) {
+    protected RectangleAnchor flipAnchorH(RectangleAnchor anchor) {
         RectangleAnchor result = anchor;
         if (anchor.equals(RectangleAnchor.TOP_LEFT)) {
             result = RectangleAnchor.TOP_RIGHT;
@@ -532,7 +532,7 @@ public class CrosshairOverlay extends AbstractOverlay implements Overlay,
         return result;
     }
 
-    private RectangleAnchor flipAnchorV(RectangleAnchor anchor) {
+    protected RectangleAnchor flipAnchorV(RectangleAnchor anchor) {
         RectangleAnchor result = anchor;
         if (anchor.equals(RectangleAnchor.TOP_LEFT)) {
             result = RectangleAnchor.BOTTOM_LEFT;
