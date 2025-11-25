@@ -146,7 +146,7 @@ public class Chart implements ComponentListener {
 
     public void merge(ActionEvent event) {
         if (charts.size() < 2) {
-            StudioOptionPane.showWarning(getFrame(), "There is on other charts", "Nothing to select");
+            StudioOptionPane.showWarning(getFrame(), "There are no other charts", "Nothing to select");
             return;
         }
 
