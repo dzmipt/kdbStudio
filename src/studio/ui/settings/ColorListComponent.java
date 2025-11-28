@@ -75,6 +75,7 @@ public class ColorListComponent extends JComponent implements DropTargetListener
         labels = new ArrayList<>(colors.size());
         for (int index = 0; index < colors.size(); index++) {
             ColorLabel label = new ColorLabel(colors.get(index));
+            label.setSingleClick(false);
             labels.add(label);
             add(label);
             new DraggableLabel(label);

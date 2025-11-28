@@ -80,7 +80,6 @@ public class GridColorsEditor extends JPanel {
     private ColorLabel getLabel(GridColorToken token, boolean isForeground) {
         Color color = config.getColor(token, isForeground);
         ColorLabel label = new ColorLabel(color);
-        label.setSingleClick(true);
         label.addChangeListener(e -> {
             if (config.isUnmodifiable()) {
                 config = new GridColorConfig(config);

@@ -14,7 +14,7 @@ public class ColorLabel extends JLabel {
 
     private final List<ChangeListener> listeners = new ArrayList<>();
 
-    private boolean singleClick = false;
+    private boolean singleClick = true;
 
     public ColorLabel(Color color, int size) {
         super(new SquareIcon(color, size));

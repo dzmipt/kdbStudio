@@ -42,7 +42,6 @@ public class TokenStyleEditor extends JPanel {
             EditorColorToken token = EditorColorToken.values()[index];
             JLabel label = new JLabel(token.getDescription());
             ColorLabel colorLabel = new ColorLabel();
-            colorLabel.setSingleClick(true);
             editorColorLabels.put(token, colorLabel);
             colorLabel.addChangeListener(e -> {
                 Color newColor = ((ColorLabel)e.getSource()).getColor();
@@ -82,7 +81,6 @@ public class TokenStyleEditor extends JPanel {
                 });
                 mapTokenTitle.put(token, lblToken);
                 ColorLabel colorLabel = new ColorLabel();
-                colorLabel.setSingleClick(true);
                 tokenColorLabels.put(token, colorLabel);
 
                 colorLabel.addChangeListener(e -> {
