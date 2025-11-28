@@ -42,12 +42,12 @@ public class ChartPanel extends studio.ui.chart.patched.ChartPanel {
     private boolean addingLine = false;
     private Line newLine = null;
     private Line selectedLine = null;
-
+    private ChartAxesDragHandler dragHandler;
     private static final int LINE_SELECTION_SENSITIVITY = 100;
 
     public ChartPanel(JFreeChart chart) {
         super(chart);
-        ChartAxesDragHandler dragHandler = new ChartAxesDragHandler(this, chart.getXYPlot());
+        dragHandler = new ChartAxesDragHandler(this, chart.getXYPlot());
         addMouseListener(dragHandler);
         addMouseMotionListener(dragHandler);
         addMouseWheelListener(dragHandler);
@@ -243,7 +243,7 @@ public class ChartPanel extends studio.ui.chart.patched.ChartPanel {
                         this.panH = screenDataArea.getHeight();
                         this.panLast = e.getPoint();
                         setCursor(Cursor.getPredefinedCursor(
-                                Cursor.MOVE_CURSOR));
+                                Cursor.HAND_CURSOR));
                     }
                 }
                 // the actual panning occurs later in the mouseDragged()

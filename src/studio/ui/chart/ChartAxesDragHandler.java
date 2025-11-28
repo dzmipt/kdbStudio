@@ -8,7 +8,9 @@ import org.jfree.chart.entity.ChartEntity;
 import org.jfree.chart.plot.XYPlot;
 import org.jfree.chart.ui.RectangleEdge;
 import org.jfree.data.Range;
+import studio.ui.Util;
 
+import javax.swing.FocusManager;
 import java.awt.*;
 import java.awt.event.*;
 import java.awt.geom.Rectangle2D;
@@ -30,9 +32,20 @@ public class ChartAxesDragHandler implements MouseWheelListener, MouseListener, 
 
     private final static Logger log = LogManager.getLogger();
 
+    private static ZoomKeyHandler keyEventPostProcessor = null;
+
+    private static boolean isZoomModifiers(InputEvent e) {
+        return (e.getModifiersEx() & Util.menuShortcutKeyMask) != 0;
+    }
+
     public ChartAxesDragHandler(ChartPanel panel, XYPlot plot) {
         this.panel = panel;
         this.plot = plot;
+
+        if (keyEventPostProcessor == null) {
+            keyEventPostProcessor = new ZoomKeyHandler();
+            FocusManager.getCurrentKeyboardFocusManager().addKeyEventPostProcessor(keyEventPostProcessor);
+        }
     }
 
     @Override
@@ -42,22 +55,46 @@ public class ChartAxesDragHandler implements MouseWheelListener, MouseListener, 
     @Override
     public void mouseExited(MouseEvent e) {}
 
+    private void updateCursor(InputEvent e) {
+        if (dragRange != null) {
+            log.debug("do not change cursor while dragging");
+            return;
+        }
+
+        if (dragAxis != null) {
+            int cursor = isZoomModifiers(e) ? (
+                    RectangleEdge.isTopOrBottom(dragEdge) ? Cursor.E_RESIZE_CURSOR : Cursor.S_RESIZE_CURSOR
+            ) : Cursor.HAND_CURSOR;
+
+            panel.setCursor(Cursor.getPredefinedCursor(cursor));
+            log.debug("update cursor to {}", cursor);
+        } else {
+            panel.setCursor(Cursor.getDefaultCursor());
+            log.debug("reset cursor to default");
+        }
+
+    }
+
     @Override
     public void mousePressed(MouseEvent e) {
         if (dragAxis == null) {
             dragRange = null;
+            updateCursor(e);
             return;
         }
 
         dragX = e.getX();
         dragY = e.getY();
         dragRange = dragAxis.getRange();
-        zoomDrag = (e.getModifiersEx() & panel.getPanMask()) == 0;
+        zoomDrag = isZoomModifiers(e);
     }
+
 
     @Override
     public void mouseReleased(MouseEvent e) {
         dragRange = null;
+        zoomDrag = false;
+        updateCursor(e);
     }
 
     @Override
@@ -164,13 +201,15 @@ public class ChartAxesDragHandler implements MouseWheelListener, MouseListener, 
         dragAxis = axis;
         dragAxisArea = area;
 
+        if (dragAxis == null) keyEventPostProcessor.setHandler(null);
+        else keyEventPostProcessor.setHandler(this);
+
+
         if (axis != null) {
             Font font = axis.getTickLabelFont();
             axis.setTickLabelFont(font.deriveFont(Font.BOLD));
-            panel.setCursor(Cursor.getPredefinedCursor(Cursor.MOVE_CURSOR));
-        } else {
-            panel.setCursor(Cursor.getDefaultCursor());
         }
+        updateCursor(e);
 
         panel.repaint();
     }
@@ -181,5 +220,25 @@ public class ChartAxesDragHandler implements MouseWheelListener, MouseListener, 
 
         double factor = e.getWheelRotation()<0 ? 0.9 : 1.1;
         dragAxis.resizeRange(factor);
+    }
+
+    private static class ZoomKeyHandler implements KeyEventPostProcessor {
+        private ChartAxesDragHandler handler = null;
+
+        public ChartAxesDragHandler getHandler() {
+            return handler;
+        }
+
+        public void setHandler(ChartAxesDragHandler handler) {
+            this.handler = handler;
+        }
+
+        @Override
+        public boolean postProcessKeyEvent(KeyEvent e) {
+            if (handler == null) return false;
+            handler.updateCursor(e);
+            return true;
+        }
+
     }
 }
