@@ -1,5 +1,8 @@
 package studio.ui;
 
+import com.formdev.flatlaf.FlatLaf;
+import com.formdev.flatlaf.util.GrayFilter;
+
 import javax.swing.*;
 import java.awt.*;
 import java.awt.font.TextAttribute;
@@ -88,9 +91,15 @@ public class StudioFrame extends JFrame {
 
         public void invalidate() {
             if (macOSTitlePanel == null) return;
-            macOSTitlePanel.setBorder(BorderFactory.createCompoundBorder(
-                    BorderFactory.createEmptyBorder(0,0,2,0),
-                    BorderFactory.createMatteBorder(0,0,1,0,UIManager.getColor("windowBorder"))
+
+            Color panelBgColor = UIManager.getColor("Panel.background");
+            if (panelBgColor == null) return;
+            boolean dark = FlatLaf.isLafDark();
+            Color borderColor = new Color(GrayFilter.createDisabledIconFilter(dark).filterRGB(0,0, panelBgColor.getRGB()));
+
+           macOSTitlePanel.setBorder(BorderFactory.createCompoundBorder(
+                    BorderFactory.createEmptyBorder(0, 0, 2, 0),
+                    BorderFactory.createMatteBorder(0, 0, 1, 0, borderColor)
             ));
         }
 
