@@ -9,11 +9,9 @@ import org.jfree.chart.labels.StandardXYToolTipGenerator;
 import org.jfree.chart.labels.XYToolTipGenerator;
 import org.jfree.chart.plot.DatasetRenderingOrder;
 import org.jfree.chart.plot.XYPlot;
-import org.jfree.chart.renderer.AbstractRenderer;
 import org.jfree.chart.renderer.xy.StandardXYBarPainter;
 import org.jfree.chart.renderer.xy.XYBarRenderer;
 import org.jfree.chart.renderer.xy.XYItemRenderer;
-import org.jfree.chart.renderer.xy.XYLineAndShapeRenderer;
 import org.jfree.chart.title.TextTitle;
 import org.jfree.data.xy.XYSeriesCollection;
 import studio.kdb.Config;
@@ -367,25 +365,10 @@ public class Chart implements ComponentListener {
 
                 XYToolTipGenerator toolTipGenerator = new StandardXYToolTipGenerator(StandardXYToolTipGenerator.DEFAULT_TOOL_TIP_FORMAT,
                         new KFormat(domainType), new KFormat(currentRangeType));
-                XYItemRenderer renderer;
 
                 LegendIcon icon = plotConfig.getIcon(index);
-                ChartType chartType = icon.getChartType();
-                if (chartType == ChartType.BAR) {
-                    renderer = new XYBarRenderer();
-                    ((XYBarRenderer)renderer).setGradientPaintTransformer(null);
-                    ((XYBarRenderer)renderer).setShadowVisible(false);
-
-                } else {
-                    renderer = new XYLineAndShapeRenderer(chartType.hasLine(), chartType.hasShape());
-                }
+                XYItemRenderer renderer = icon.getChartRenderer();
                 renderer.setDefaultToolTipGenerator(toolTipGenerator);
-                renderer.setSeriesPaint(0, icon.getColor());
-                renderer.setSeriesShape(0, icon.getShape());
-                renderer.setSeriesStroke(0, icon.getStroke());
-                ((AbstractRenderer) renderer).setAutoPopulateSeriesPaint(false);
-                ((AbstractRenderer) renderer).setAutoPopulateSeriesShape(false);
-                ((AbstractRenderer) renderer).setAutoPopulateSeriesStroke(false);
 
                 plot.setRenderer(datasetIndex, renderer);
                 plot.setDataset(datasetIndex, dataset);

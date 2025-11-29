@@ -1,6 +1,11 @@
 package studio.ui.chart;
 
 
+import org.jfree.chart.renderer.AbstractRenderer;
+import org.jfree.chart.renderer.xy.XYBarRenderer;
+import org.jfree.chart.renderer.xy.XYItemRenderer;
+import org.jfree.chart.renderer.xy.XYLineAndShapeRenderer;
+
 import javax.swing.*;
 import java.awt.*;
 import java.awt.geom.AffineTransform;
@@ -50,6 +55,7 @@ public class LegendIcon implements Icon {
     }
 
     public LegendIcon(Paint color, Shape shape, BasicStroke stroke) {
+        if (color == null) throw new IllegalArgumentException("Color is null");
         this.color = color;
         this.shape = shape;
         this.stroke = stroke;
@@ -60,6 +66,13 @@ public class LegendIcon implements Icon {
     }
 
     public void setChartType(ChartType chartType) {
+        if (chartType.hasLine() && stroke == null)
+            throw new IllegalArgumentException("Stroke is null. Can't set chartType type is " + chartType);
+
+        if (chartType.hasShape() && shape == null)
+            throw new IllegalArgumentException("Shape is null. Can't set chartType type is " + chartType);
+
+
         this.chartType = chartType;
     }
 
@@ -72,6 +85,7 @@ public class LegendIcon implements Icon {
     }
 
     public void setColor(Paint color) {
+        if (color == null) throw new IllegalArgumentException("Color is null");
         this.color = color;
     }
 
@@ -80,6 +94,8 @@ public class LegendIcon implements Icon {
     }
 
     public void setShape(Shape shape) {
+        if (chartType.hasShape() && shape == null)
+            throw new IllegalArgumentException("Shape is null. chartType type is " + chartType);
         this.shape = shape;
     }
 
@@ -88,7 +104,28 @@ public class LegendIcon implements Icon {
     }
 
     public void setStroke(BasicStroke stroke) {
+        if (chartType.hasLine() && stroke == null)
+            throw new IllegalArgumentException("Stroke is null. chartType type is " + chartType);
         this.stroke = stroke;
+    }
+
+    public XYItemRenderer getChartRenderer() {
+        XYItemRenderer renderer;
+        if (chartType == ChartType.BAR) {
+            renderer = new XYBarRenderer();
+            ((XYBarRenderer)renderer).setGradientPaintTransformer(null);
+            ((XYBarRenderer)renderer).setShadowVisible(false);
+
+        } else {
+            renderer = new XYLineAndShapeRenderer(chartType.hasLine(), chartType.hasShape());
+        }
+        renderer.setSeriesPaint(0, color);
+        renderer.setSeriesShape(0, shape);
+        renderer.setSeriesStroke(0, stroke);
+        ((AbstractRenderer) renderer).setAutoPopulateSeriesPaint(false);
+        ((AbstractRenderer) renderer).setAutoPopulateSeriesShape(false);
+        ((AbstractRenderer) renderer).setAutoPopulateSeriesStroke(false);
+        return renderer;
     }
 
     @Override

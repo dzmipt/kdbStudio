@@ -169,6 +169,10 @@ public class Line extends AbstractAnnotation implements XYAnnotation {
         return selected;
     }
 
+    public boolean isVisible() {
+        return visible;
+    }
+
     public void setVisible(boolean visible) {
         this.visible = visible;
     }

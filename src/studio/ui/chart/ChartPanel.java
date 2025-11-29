@@ -1,11 +1,16 @@
 package studio.ui.chart;
 
-import org.jfree.chart.ChartRenderingInfo;
-import org.jfree.chart.JFreeChart;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+import org.jfree.chart.*;
 import org.jfree.chart.axis.ValueAxis;
+import org.jfree.chart.block.BlockBorder;
 import org.jfree.chart.event.AnnotationChangeEvent;
 import org.jfree.chart.plot.*;
+import org.jfree.chart.renderer.xy.XYLineAndShapeRenderer;
+import org.jfree.chart.title.LegendTitle;
 import org.jfree.chart.ui.RectangleEdge;
+import org.jfree.chart.ui.RectangleInsets;
 import studio.ui.UserAction;
 import studio.ui.Util;
 import studio.ui.chart.event.LineSelectionEvent;
@@ -17,6 +22,7 @@ import studio.ui.chart.patched.CrosshairOverlay;
 import javax.swing.*;
 import javax.swing.event.EventListenerList;
 import java.awt.*;
+import java.awt.datatransfer.Clipboard;
 import java.awt.event.ActionEvent;
 import java.awt.event.InputEvent;
 import java.awt.event.KeyEvent;
@@ -27,6 +33,7 @@ import java.util.List;
 
 public class ChartPanel extends studio.ui.chart.patched.ChartPanel {
 
+    private static final Logger log = LogManager.getLogger(ChartPanel.class);
     private final Crosshair xCrosshair;
     private final MultipleValueCrosshair yCrosshair;
 
@@ -111,6 +118,51 @@ public class ChartPanel extends studio.ui.chart.patched.ChartPanel {
 
     public Action getSaveAction() {
         return saveAction;
+    }
+
+    @Override
+    public void doCopy() {
+        JFreeChart chart = getChart();
+        try {
+            chart = (JFreeChart) chart.clone();
+
+            LegendItemCollection legends = new LegendItemCollection();
+            legends.addAll(chart.getPlot().getLegendItems());
+
+            XYLineAndShapeRenderer defaultRenderer = null;
+            for(Object item: chart.getXYPlot().getAnnotations()) {
+                if (! (item instanceof Line)) continue;
+                Line line = (Line) item;
+                if (! line.isVisible()) continue;
+
+                if (defaultRenderer == null) defaultRenderer = new XYLineAndShapeRenderer(true, false);
+
+                LegendIcon icon = line.getIcon();
+                ChartType type = icon.getChartType();
+                Shape shape = icon.getShape();
+                if (shape == null) shape = defaultRenderer.getDefaultShape();
+                LegendItem legendItem = new LegendItem(line.getTitle(), null, null, null,
+                        type.hasShape(), shape, true, icon.getColor(),
+                        true, icon.getColor(), defaultRenderer.getDefaultOutlineStroke(), type.hasLine(),
+                        defaultRenderer.getLegendLine(), icon.getStroke(), icon.getColor() );
+
+                legends.add(legendItem);
+            }
+
+            LegendTitle legend = new LegendTitle(()->legends);
+            legend.setMargin(new RectangleInsets(1.0, 1.0, 1.0, 1.0));
+            legend.setBackgroundPaint(chart.getBackgroundPaint());
+            legend.setFrame(new BlockBorder(chart.getBorderPaint()));
+            legend.setPosition(RectangleEdge.BOTTOM);
+            chart.addLegend(legend);
+
+
+        } catch (CloneNotSupportedException ignore) {}
+
+        Clipboard systemClipboard
+                = Toolkit.getDefaultToolkit().getSystemClipboard();
+        ChartTransferable selection = new ChartTransferable(chart, getWidth(), getHeight());
+        systemClipboard.setContents(selection, null);
     }
 
     public void addNewLineListener(NewLineListener listener) {

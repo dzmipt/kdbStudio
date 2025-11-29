@@ -102,6 +102,7 @@ public class LegendListPanel extends JPanel implements LegendChangeListener {
     }
 
     private void refreshPlotConfig() {
+        if (plotConfig == null) return;
         plotConfig.setDomainIndex(getDomainIndex());
         for (int index = 0; index < plotConfig.size(); index++) {
             plotConfig.setEnabled(index, isSelected(index));
@@ -137,7 +138,7 @@ public class LegendListPanel extends JPanel implements LegendChangeListener {
     public int add(String title, LegendIcon icon, Action ... additionalActions) {
         JCheckBox checkBox = new JCheckBox(title, true);
         checkBox.addActionListener(e -> notifyListeners() );
-        LegendButton button = new LegendButton(icon, true, true, !isLines);
+        LegendButton button = new LegendButton(icon, true, !isLines, !isLines);
         button.addChangeListener(this);
         if (additionalActions != null) {
             button.setAdditionalActions(additionalActions);
