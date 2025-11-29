@@ -7,6 +7,8 @@ import org.jfree.chart.plot.PlotRenderingInfo;
 import org.jfree.chart.plot.XYPlot;
 
 import java.awt.*;
+import java.awt.event.ComponentAdapter;
+import java.awt.event.ComponentEvent;
 import java.awt.geom.Ellipse2D;
 import java.awt.geom.Line2D;
 import java.awt.geom.Point2D;
@@ -33,8 +35,13 @@ public class Line extends AbstractAnnotation implements XYAnnotation {
         this.p0 = p0;
         icon = new LegendIcon(Color.BLACK, null, LegendButton.strokeWithWidth(LegendButton.getDefaultStroke(), 1.0f));
         XYPlot plot = chartPanel.getChart().getXYPlot();
-        plot.getDomainAxis().addChangeListener(e -> refresh());
-        plot.getRangeAxis().addChangeListener(e -> refresh());
+        plot.addChangeListener(e -> refresh());
+        chartPanel.addComponentListener(new ComponentAdapter() {
+            @Override
+            public void componentResized(ComponentEvent e) {
+                refresh();
+            }
+        });
     }
 
     public boolean addPoint(Point2D.Double p1) {
