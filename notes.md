@@ -1,6 +1,7 @@
 * Charts:
     * Extra range axes
     * Axes dragging and scaling with mouse wheel (or Ctrl/Command key)
+    * Adding legends into the chart copied to the system clipboard
 * Fix error colors in the certain Strings in results  
 * Fix unexpected focus change and incorrect server drop down selection
 * Pop-up menu in toolbar buttons for navigation history for previous/next server
