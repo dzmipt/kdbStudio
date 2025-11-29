@@ -46,6 +46,8 @@ public class Chart implements ComponentListener {
     private ChartConfigPanel pnlConfig;
 
     private KType domainType, rangeType;
+    private String domainLabel = "";
+    private String rangeLabel = "";
 
     private final String defaultTitle;
 
@@ -225,7 +227,7 @@ public class Chart implements ComponentListener {
         plot.setBackgroundPaint(colorSchema.getBackground());
         plot.setDomainGridlinePaint(colorSchema.getGrid());
         plot.setRangeGridlinePaint(colorSchema.getGrid());
-        return new ChartPanel(chart);
+        return new ChartPanel(this, chart);
     }
 
     public String getChartTitle() {
@@ -304,6 +306,14 @@ public class Chart implements ComponentListener {
         return rangeType;
     }
 
+    public String getDomainLabel() {
+        return domainLabel;
+    }
+
+    public String getRangeLabel() {
+        return rangeLabel;
+    }
+
     public void refreshPlot() {
         JFreeChart chart = chartPanel.getChart();
         XYPlot plot = chart.getXYPlot();
@@ -316,7 +326,8 @@ public class Chart implements ComponentListener {
 
         domainType = null;
         rangeType = null;
-        String rangeLabel = "";
+        domainLabel = "";
+        rangeLabel = "";
         int extraAxisIndex = 0;
 
         plot.setDomainPannable(true);
@@ -331,6 +342,7 @@ public class Chart implements ComponentListener {
                 domainType = plotConfig.getColumn(domainIndex).getElementType();
 
                 NumberAxis xAxis = new NumberAxis("");
+                domainLabel = plotConfig.getColumn(domainIndex).getName();
                 xAxis.setNumberFormatOverride(new KFormat(domainType));
                 xAxis.setAutoRangeIncludesZero(false);
                 plot.setDomainAxis(xAxis);

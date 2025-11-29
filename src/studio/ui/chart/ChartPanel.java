@@ -33,7 +33,7 @@ import java.util.List;
 
 public class ChartPanel extends studio.ui.chart.patched.ChartPanel {
 
-    private static final Logger log = LogManager.getLogger(ChartPanel.class);
+    private final Chart studioChart;
     private final Crosshair xCrosshair;
     private final MultipleValueCrosshair yCrosshair;
 
@@ -50,10 +50,13 @@ public class ChartPanel extends studio.ui.chart.patched.ChartPanel {
     private Line newLine = null;
     private Line selectedLine = null;
     private ChartAxesDragHandler dragHandler;
-    private static final int LINE_SELECTION_SENSITIVITY = 100;
 
-    public ChartPanel(JFreeChart chart) {
+    private static final int LINE_SELECTION_SENSITIVITY = 100;
+    private static final Logger log = LogManager.getLogger(ChartPanel.class);
+
+    public ChartPanel(Chart studioChart, JFreeChart chart) {
         super(chart);
+        this.studioChart = studioChart;
         dragHandler = new ChartAxesDragHandler(this, chart.getXYPlot());
         addMouseListener(dragHandler);
         addMouseMotionListener(dragHandler);
@@ -156,7 +159,11 @@ public class ChartPanel extends studio.ui.chart.patched.ChartPanel {
             legend.setPosition(RectangleEdge.BOTTOM);
             chart.addLegend(legend);
 
+            ValueAxis domain = chart.getXYPlot().getDomainAxis();
+            if (domain.getLabel().isEmpty()) domain.setLabel(studioChart.getDomainLabel());
 
+            ValueAxis rangeAxis = chart.getXYPlot().getRangeAxis();
+            if (rangeAxis.getLabel().isEmpty()) rangeAxis.setLabel(studioChart.getRangeLabel());
         } catch (CloneNotSupportedException ignore) {}
 
         Clipboard systemClipboard
