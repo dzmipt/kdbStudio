@@ -828,9 +828,6 @@ public class StudioWindow extends StudioFrame implements WindowListener {
 
     public static void about() {
         HelpDialog help = new HelpDialog(activeWindow);
-        help.pack();
-        help.toFront();
-        help.requestFocus();
         help.alignAndShow();
     }
 
