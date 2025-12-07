@@ -4,6 +4,7 @@ import org.assertj.swing.annotation.GUITest;
 import org.assertj.swing.core.EmergencyAbortListener;
 import org.assertj.swing.core.MouseButton;
 import org.assertj.swing.fixture.FrameFixture;
+import org.assertj.swing.fixture.JMenuItemFixture;
 import org.assertj.swing.fixture.JTabbedPaneFixture;
 import org.assertj.swing.fixture.JTextComponentFixture;
 import org.assertj.swing.junit.runner.GUITestRunner;
@@ -221,6 +222,14 @@ abstract public class StudioTest extends AssertJSwingJUnitTestCase {
 
     protected void waitForQueryExecution(Runnable runQuery) {
         waitForQueryExecution(runQuery,1);
+    }
+
+    protected void clickMenu(FrameFixture frameFixture, String menu) {
+        JMenuItemFixture menuItemFixture = frameFixture.menuItem(menu);
+        execute(() -> {
+            JMenuItem menuItem = menuItemFixture.target();
+            menuItem.doClick();
+        });
     }
 
 }
