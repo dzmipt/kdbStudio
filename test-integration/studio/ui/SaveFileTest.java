@@ -19,13 +19,13 @@ public class SaveFileTest extends StudioTest {
         FileChooser.mock(file);
 
         frameFixture.textBox("editor1").enterText("s");
-        frameFixture.menuItem("Save").click();
+        clickMenu("Save");
 
         String content = Files.lines(file.toPath()).collect(Collectors.joining("\n"));
         assertEquals("s", content);
 
         frameFixture.textBox("editor1").enterText("q");
-        frameFixture.menuItem("Save").click();
+        clickMenu("Save");
 
         content = Files.lines(file.toPath()).collect(Collectors.joining("\n"));
         assertEquals("sq", content);

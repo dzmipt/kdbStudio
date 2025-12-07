@@ -113,7 +113,7 @@ public class EditorTest extends StudioTest {
     @Test
     public void testCancelOnFrameClosure() {
         StudioOptionPane.setMocked(true);
-        frameFixture.menuItem("New Window").click();
+        clickMenu( "New Window");
         FrameFixture newFrameFixture = WindowFinder.findFrame(
                 new GenericTypeMatcher<StudioWindow>(StudioWindow.class, true) {
                         @Override
@@ -124,12 +124,12 @@ public class EditorTest extends StudioTest {
         newFrameFixture.textBox("editor1").enterText("x");
 
         StudioOptionPane.setMockedResult(JOptionPane.CANCEL_OPTION);
-        newFrameFixture.menuItem("Close Window").click();
+        clickMenu(newFrameFixture, "Close Window");
         pause(50, TimeUnit.MILLISECONDS); // wait as closure happens asynchronously
         newFrameFixture.requireVisible();
 
         StudioOptionPane.setMockedResult(JOptionPane.CLOSED_OPTION);
-        newFrameFixture.menuItem("Close Window").click();
+        clickMenu(newFrameFixture, "Close Window");
         pause(50, TimeUnit.MILLISECONDS); // wait as closure happens asynchronously
         newFrameFixture.requireVisible();
 

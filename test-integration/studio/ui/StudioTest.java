@@ -186,7 +186,7 @@ abstract public class StudioTest extends AssertJSwingJUnitTestCase {
         int count = getEditors().size();
         frameFixture.textBox(editorName).focus();
         String menuName = verticallySplit ? "Split down" : "Split right";
-        frameFixture.menuItem(menuName).click();
+        clickMenu(menuName);
 
         int newCount = getEditors().size();
         assertEquals("Number of editor should increase after split", count + 1, newCount);
@@ -194,7 +194,7 @@ abstract public class StudioTest extends AssertJSwingJUnitTestCase {
 
     protected void openFile(File file) {
         FileChooser.mock(file);
-        frameFixture.menuItem("Open...").click();
+        clickMenu("Open...");
     }
 
     protected void setServerConnectionText(String serverConnection) {
@@ -222,6 +222,10 @@ abstract public class StudioTest extends AssertJSwingJUnitTestCase {
 
     protected void waitForQueryExecution(Runnable runQuery) {
         waitForQueryExecution(runQuery,1);
+    }
+
+    protected void clickMenu(String menu) {
+        clickMenu(frameFixture, menu);
     }
 
     protected void clickMenu(FrameFixture frameFixture, String menu) {

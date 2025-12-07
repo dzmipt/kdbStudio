@@ -71,7 +71,7 @@ public class TabsTest extends StudioTest {
         String[] titles = tabbedPaneFixture.tabTitles();
 
         LogErrors.pause();
-        frameFixture.menuItem("Open...").click();
+        clickMenu("Open...");
         LogErrors.enable();
 
         Dialog dialog = robot().finder().find(DialogMatcher.withTitle("Error in file load"));

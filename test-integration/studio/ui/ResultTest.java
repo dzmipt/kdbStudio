@@ -38,8 +38,7 @@ public class ResultTest extends StudioTest {
         waitForQueryExecution(() -> {
             JTextComponentFixture tb = frameFixture.textBox("editor1");
             tb.enterText("x");
-            clickMenu(frameFixture, "Execute Current Line");
-//            frameFixture.menuItem("Execute Current Line").click();
+            clickMenu("Execute Current Line");
         });
     }
 
@@ -70,8 +69,7 @@ public class ResultTest extends StudioTest {
     @Test
     public void testMarkersAfterSorting() {
         execute();
-//        frameFixture.menuItem("Find in Result").click();
-        clickMenu(frameFixture, "Find in Result");
+        clickMenu("Find in Result");
 
         JTableFixture table = frameFixture.panel("resultPanel0").table();
 

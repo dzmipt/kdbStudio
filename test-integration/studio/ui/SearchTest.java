@@ -65,7 +65,7 @@ public class SearchTest  extends StudioTest {
 
         openFile(textFile);
         editor = frameFixture.textBox("editor2");
-        frameFixture.menuItem("Replace...").click();
+        clickMenu("Replace...");
         searchPanel = frameFixture.panel("SearchPanel");
     }
 
@@ -144,7 +144,7 @@ public class SearchTest  extends StudioTest {
 
     @Test(timeout = 3000)
     public void testSequentialReplaceAllRecursive() throws InterruptedException {
-        frameFixture.menuItem("Replace...").click();
+        clickMenu("Replace...");
 
         searchPanel.textBox("FindField").setText("select");
         searchPanel.textBox("ReplaceField").setText("select i,");
