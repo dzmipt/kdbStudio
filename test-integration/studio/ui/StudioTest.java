@@ -1,5 +1,7 @@
 package studio.ui;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.assertj.swing.annotation.GUITest;
 import org.assertj.swing.core.EmergencyAbortListener;
 import org.assertj.swing.core.MouseButton;
@@ -25,7 +27,6 @@ import javax.swing.*;
 import java.awt.*;
 import java.io.File;
 import java.io.IOException;
-import java.time.Instant;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
@@ -47,6 +48,7 @@ abstract public class StudioTest extends AssertJSwingJUnitTestCase {
     protected StudioWindow studioWindow;
 
     private int expectedNumberOfErrors;
+    private final static Logger log = LogManager.getLogger();
 
     @BeforeClass
     public static void initLogErrors() {
@@ -230,13 +232,13 @@ abstract public class StudioTest extends AssertJSwingJUnitTestCase {
     }
 
     protected void clickMenu(FrameFixture frameFixture, String menu) {
-        System.out.println(Instant.now() + " start click menu: " + menu);
+        log.info("start click menu: {}", menu);
         JMenuItemFixture menuItemFixture = frameFixture.menuItem(menu);
         execute(() -> {
             JMenuItem menuItem = menuItemFixture.target();
             menuItem.doClick();
         });
-        System.out.println(Instant.now() + " finish click menu: " + menu);
+        log.info("finish click menu: {}", menu);
     }
 
 }

@@ -1,16 +1,12 @@
 package studio.ui;
 
-import org.assertj.swing.core.matcher.DialogMatcher;
-import org.assertj.swing.core.matcher.JButtonMatcher;
 import org.assertj.swing.data.Index;
 import org.assertj.swing.fixture.FrameFixture;
-import org.assertj.swing.fixture.JButtonFixture;
 import org.assertj.swing.fixture.JTabbedPaneFixture;
 import org.junit.Test;
 import studio.utils.LogErrors;
 
 import javax.swing.*;
-import java.awt.*;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -70,13 +66,10 @@ public class TabsTest extends StudioTest {
         JTabbedPaneFixture tabbedPaneFixture  = frameFixture.tabbedPane("editorTabbedPane0");
         String[] titles = tabbedPaneFixture.tabTitles();
 
+        StudioOptionPane.setMockedResult(JOptionPane.CLOSED_OPTION);
         LogErrors.pause();
         clickMenu("Open...");
         LogErrors.enable();
-
-        Dialog dialog = robot().finder().find(DialogMatcher.withTitle("Error in file load"));
-        JButtonFixture okButton = new JButtonFixture(robot(), robot().finder().find(dialog, JButtonMatcher.withText("OK")));
-        okButton.click();
 
         assertEquals("New tab shouldn't be opened", 1, tabbedPaneFixture.tabTitles().length);
         assertArrayEquals("JTabbenPane titles shouldn't changed", titles, tabbedPaneFixture.tabTitles());
