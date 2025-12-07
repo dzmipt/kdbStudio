@@ -1,3 +1,5 @@
+`dz7.0` 2025.12.07
+-----
 * Charts:
     * Extra range axes
     * Axes dragging and scaling with mouse wheel (or Ctrl/Command key)
