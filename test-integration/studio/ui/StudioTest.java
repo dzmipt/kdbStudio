@@ -229,11 +229,13 @@ abstract public class StudioTest extends AssertJSwingJUnitTestCase {
     }
 
     protected void clickMenu(FrameFixture frameFixture, String menu) {
+        System.out.println("start click menu: " + menu);
         JMenuItemFixture menuItemFixture = frameFixture.menuItem(menu);
         execute(() -> {
             JMenuItem menuItem = menuItemFixture.target();
             menuItem.doClick();
         });
+        System.out.println("finish click menu: " + menu);
     }
 
 }
