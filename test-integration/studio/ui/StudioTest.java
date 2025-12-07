@@ -25,6 +25,7 @@ import javax.swing.*;
 import java.awt.*;
 import java.io.File;
 import java.io.IOException;
+import java.time.Instant;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
@@ -229,13 +230,13 @@ abstract public class StudioTest extends AssertJSwingJUnitTestCase {
     }
 
     protected void clickMenu(FrameFixture frameFixture, String menu) {
-        System.out.println("start click menu: " + menu);
+        System.out.println(Instant.now() + " start click menu: " + menu);
         JMenuItemFixture menuItemFixture = frameFixture.menuItem(menu);
         execute(() -> {
             JMenuItem menuItem = menuItemFixture.target();
             menuItem.doClick();
         });
-        System.out.println("finish click menu: " + menu);
+        System.out.println(Instant.now() + " finish click menu: " + menu);
     }
 
 }
