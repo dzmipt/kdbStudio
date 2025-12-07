@@ -125,20 +125,20 @@ public class TabsTest extends StudioTest {
     public void frameTitleTest() {
         JTabbedPaneFixture tabbedPaneFixture  = frameFixture.tabbedPane("editorTabbedPane0");
         String title1 = tabbedPaneFixture.tabTitles()[0];
-        assertTrue(title1.startsWith("Script"));
-        assertTrue(getWindowTitle().contains(title1));
+        assertTrue("Tab title: " + title1, title1.startsWith("Script"));
+        assertTrue("Window titles: " + getWindowTitle(), getWindowTitle().contains(title1));
 
         addTab("editor1");
 
         String title2 = tabbedPaneFixture.tabTitles()[1];
 
-        assertTrue(getWindowTitle().contains(title2));
+        assertTrue("Window titles: " + getWindowTitle(), getWindowTitle().contains(title2));
         JMenuItem[] menuItems = getLastWindowMenuItems(frameFixture, 1);
         assertMenuItemContainsText(menuItems[0], title2);
 
         clickTab("editor1");
 
-        assertTrue(getWindowTitle().contains(title1));
+        assertTrue("Window titles: " + getWindowTitle(), getWindowTitle().contains(title1));
         menuItems = getLastWindowMenuItems(frameFixture, 1);
         assertMenuItemContainsText(menuItems[0], title1);
 
