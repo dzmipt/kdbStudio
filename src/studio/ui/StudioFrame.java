@@ -5,6 +5,8 @@ import com.formdev.flatlaf.util.GrayFilter;
 
 import javax.swing.*;
 import java.awt.*;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
 import java.awt.font.TextAttribute;
 import java.util.HashMap;
 import java.util.Map;
@@ -152,6 +154,12 @@ public class StudioFrame extends JFrame {
             macOSTitle.setFont(macOSTitle.getFont().deriveFont(map));
 
             macOSTitlePanel = new JPanel(new BorderLayout());
+            macOSTitlePanel.addMouseListener(new MouseAdapter() {
+                @Override
+                public void mouseClicked(MouseEvent e) {
+                    if (e.getClickCount() == 2) maximizeAction();
+                }
+            });
             macOSTitlePanel.add(macOSTitle, BorderLayout.CENTER);
             macOSTitlePanel.add(Box.createVerticalStrut(25), BorderLayout.WEST);
 
@@ -160,6 +168,17 @@ public class StudioFrame extends JFrame {
             decoratedContentPane.add(contentPane, BorderLayout.CENTER);
 
             return decoratedContentPane;
+        }
+
+        private void maximizeAction() {
+            if (frame == null) return;
+            int state = frame.getExtendedState();
+
+            if ((state & JFrame.MAXIMIZED_BOTH) == JFrame.MAXIMIZED_BOTH) {
+                frame.setExtendedState(JFrame.NORMAL);
+            } else {
+                frame.setExtendedState(JFrame.MAXIMIZED_BOTH);
+            }
         }
 
         public void dispose() {
