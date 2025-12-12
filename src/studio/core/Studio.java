@@ -17,7 +17,7 @@ import studio.kdb.Config;
 import studio.kdb.Lm;
 import studio.kdb.Server;
 import studio.kdb.Workspace;
-import studio.ui.AlteringIcon;
+import studio.ui.StudioIcon;
 import studio.ui.StudioWindow;
 import studio.ui.Util;
 import studio.ui.WindowFactory;
@@ -134,7 +134,7 @@ public class Studio {
         String lookAndFeelClassName = Config.getInstance().getString(Config.LOOK_AND_FEEL);
         try {
             UIManager.setLookAndFeel(lookAndFeelClassName);
-            AlteringIcon.updateUI();
+            StudioIcon.updateUI();
         } catch (Exception e) {
             // go on with default one
             log.warn("Can't set LookAndFeel from Config {}", lookAndFeelClassName, e);
