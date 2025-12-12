@@ -1501,7 +1501,9 @@ public class StudioWindow extends StudioFrame {
 
             @Override
             public void windowLostFocus(WindowEvent e) {
-                editor.getEditorsPanel().setInFocusTabbedEditors(false);
+                EditorsPanel editorsPanel = editor.getEditorsPanel();
+                if (editorsPanel == null) return;
+                editorsPanel.setInFocusTabbedEditors(false);
             }
         });
 
