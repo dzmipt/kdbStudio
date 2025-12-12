@@ -163,10 +163,6 @@ public class EditorsPanel extends JPanel {
     private void addTab(EditorTab editorTab) {
         tabbedEditors.add(editorTab.getTabTitle(), editorTab.getPane());
         tabbedEditors.setSelectedIndex(tabbedEditors.getTabCount()-1);
-
-        if (studioWindow.getActiveEditor() == editorTab && studioWindow == StudioWindow.getActiveStudioWindow()) {
-            tabbedEditors.setSelectedTabDecoration(SelectedTabDecoration.UNDERLINE);
-        }
     }
 
     public void split(boolean vertically) {
@@ -245,13 +241,13 @@ public class EditorsPanel extends JPanel {
         try {
             content = FileReaderWriter.read(filename);
             if (content.hasMixedLineEnding()) {
-                StudioOptionPane.showMessage(StudioWindow.getActiveStudioWindow(), "The file " + filename + " has mixed line endings. Mixed line endings are not supported.\n\n" +
+                StudioOptionPane.showMessage(WindowFactory.getActiveWindow(), "The file " + filename + " has mixed line endings. Mixed line endings are not supported.\n\n" +
                                 "All line endings are set to " + content.getLineEnding() + " style.",
                         "Mixed Line Ending");
             }
         } catch (IOException e) {
             log.error("Failed to load file {}", filename, e);
-            StudioOptionPane.showError(StudioWindow.getActiveStudioWindow(), "Failed to load file "+filename + ".\n" + e.getMessage(),
+            StudioOptionPane.showError(WindowFactory.getActiveWindow(), "Failed to load file "+filename + ".\n" + e.getMessage(),
                     "Error in file load");
         }
         return content;

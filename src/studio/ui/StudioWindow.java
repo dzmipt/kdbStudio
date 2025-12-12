@@ -37,15 +37,13 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Iterator;
 import java.util.List;
-import java.util.function.Function;
 
 import static javax.swing.JSplitPane.VERTICAL_SPLIT;
 import static studio.ui.EscapeDialog.DialogResult.ACCEPTED;
 import static studio.ui.EscapeDialog.DialogResult.CANCELLED;
 
-public class StudioWindow extends StudioFrame implements WindowListener {
+public class StudioWindow extends StudioFrame {
 
     private static final Logger log = LogManager.getLogger();
     private static final Action editorUndoAction;
@@ -78,15 +76,15 @@ public class StudioWindow extends StudioFrame implements WindowListener {
     private StringComboBox comboServer;
     private JTextField txtServer;
     private String lastQuery = null;
-    private final Toolbar toolbar;
-    private final EditorsPanel rootEditorsPanel;
+    private Toolbar toolbar;
+    private EditorsPanel rootEditorsPanel;
     private EditorTab editor; // should be NotNull
-    private final JSplitPane splitpane;
-    private final MainStatusBar mainStatusBar;
-    private final DraggableTabbedPane resultsPane;
-    private final SearchPanel editorSearchPanel;
-    private final SearchPanel resultSearchPanel;
-    private final ServerList serverList;
+    private JSplitPane splitpane;
+    private MainStatusBar mainStatusBar;
+    private DraggableTabbedPane resultsPane;
+    private SearchPanel editorSearchPanel;
+    private SearchPanel resultSearchPanel;
+    private ServerList serverList;
 
     private UserAction serverBackAction;
     private UserAction serverForwardAction;
@@ -150,16 +148,11 @@ public class StudioWindow extends StudioFrame implements WindowListener {
     private int editorNameIndex = 0;
     private int resultNameIndex = 0;
 
-
-    private final static List<StudioWindow> allWindows = new ArrayList<>();
-    private static StudioWindow activeWindow = null;
-
-    private final List<Server> serverHistory;
-
     private final static int MAX_SERVERS_TO_CLONE = 20;
 
     public static final Config CONFIG = Config.getInstance();
-    
+    private final List<Server> serverHistory = CONFIG.getServerHistory();
+
     public int nextEditorNameIndex() {
         return editorNameIndex++;
     }
@@ -453,61 +446,39 @@ public class StudioWindow extends StudioFrame implements WindowListener {
         refreshAllMenus();
     }
 
-    public static boolean executeForAllEditors(Function<EditorTab, Boolean> action) {
-        for (StudioWindow studioWindow: allWindows) {
-            for (EditorTab editor: studioWindow.rootEditorsPanel.getAllEditors(false) ) {
-                if (! action.apply(editor)) return false;
-            }
-        }
-        return true;
-    }
-
-    public static boolean executeForAllResultTabs(Function<ResultTab, Boolean> action) {
-        for (StudioWindow window: allWindows) {
-            int count = window.resultsPane.getTabCount();
-            for (int index=0; index<count; index++) {
-                if (! action.apply(window.getResultTab(index))) return false;
-            }
-        }
-        return true;
-    }
-
     public boolean execute(EditorsPanel.EditorTabAction action) {
         return rootEditorsPanel.execute(action);
     }
 
 
     private static void saveAll() {
-        executeForAllEditors(editorTab -> editorTab.saveFileOnDisk(false));
+        WindowFactory.forEachEditors(editorTab -> {
+            if ( !editorTab.saveFileOnDisk(false)) {
+                throw new WindowFactory.StopIteration();
+            }
+        });
     }
 
     private void arrangeAll() {
-        int noWins = allWindows.size();
-
-        Iterator<StudioWindow> windowIterator = allWindows.iterator();
-
-        Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
-
+        List<StudioWindow> windows = WindowFactory.allStudioWindows();
+        int noWins = windows.size();
         int noRows = Math.min(noWins, 3);
+        Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
         int height = screenSize.height / noRows;
 
-        for (int row = 0;row < noRows;row++) {
-            int noCols = (noWins / 3);
-
-            if ((row == 0) && ((noWins % 3) > 0))
-                noCols++;
-            else if ((row == 1) && ((noWins % 3) > 1))
-                noCols++;
-
-            int width = screenSize.width / noCols;
-
-            for (int col = 0;col < noCols;col++) {
-                StudioWindow window = windowIterator.next();
-
-                window.setSize(width,height);
-                window.setLocation(col * width,((noRows - 1) - row) * height);
-                ensureDeiconified(window);
+        int row = -1;
+        int col = 0, noCols = 0, width = 0;
+        for (StudioWindow window: windows) {
+            if (col == noCols) {
+                row++;
+                col = 0;
+                noCols = noWins / noRows + (row < noWins % noRows ? 1 : 0);
+                width = screenSize.width / noCols;
             }
+            window.setSize(width,height);
+            window.setLocation(col * width,((noRows - 1) - row) * height);
+            WindowFactory.activate(window);
+            col++;
         }
     }
 
@@ -557,7 +528,7 @@ public class StudioWindow extends StudioFrame implements WindowListener {
 
         newWindowAction = UserAction.create("New Window",  "Open a new window",
                 KeyEvent.VK_N, Util.getMenuShortcut(KeyEvent.VK_N, InputEvent.SHIFT_DOWN_MASK),
-                e -> new StudioWindow(editor.getServer(), null) );
+                e -> WindowFactory.newStudioWindow(editor.getServer(), null) );
 
         newTabAction = UserAction.create("New Tab",  "Open a new tab", KeyEvent.VK_T,
                 Util.getMenuShortcut(KeyEvent.VK_N),
@@ -808,7 +779,7 @@ public class StudioWindow extends StudioFrame implements WindowListener {
     }
 
     public static void settings() {
-        SettingsDialog dialog = new SettingsDialog(activeWindow);
+        SettingsDialog dialog = new SettingsDialog(WindowFactory.getActiveWindow());
         dialog.alignAndShow();
         if (dialog.getResult() == CANCELLED) return;
 
@@ -822,12 +793,8 @@ public class StudioWindow extends StudioFrame implements WindowListener {
         refreshActionState();
     }
 
-    public static StudioWindow[] getAllStudioWindows() {
-        return allWindows.toArray(new StudioWindow[0]);
-    }
-
     public static void about() {
-        HelpDialog help = new HelpDialog(activeWindow);
+        HelpDialog help = new HelpDialog(WindowFactory.getActiveWindow());
         help.alignAndShow();
     }
 
@@ -841,7 +808,7 @@ public class StudioWindow extends StudioFrame implements WindowListener {
         try {
             ActionOnExit action = CONFIG.getEnum(Config.ACTION_ON_EXIT);
             if (action != ActionOnExit.NOTHING) {
-                for (StudioWindow window : allWindows.toArray(new StudioWindow[0])) {
+                for (StudioWindow window : WindowFactory.allStudioWindows().toArray(new StudioWindow[0])) {
                     window.toFront();
                     boolean complete = window.execute(editorTab -> {
                         if (editorTab.isModified()) {
@@ -864,8 +831,9 @@ public class StudioWindow extends StudioFrame implements WindowListener {
                 }
             }
         } finally {
-            if (!allWindows.isEmpty()) {
-                activeWindow.toFront();
+            StudioWindow window = WindowFactory.getLastActiveWindow();
+            if (window != null) {
+                WindowFactory.activate(window);
             }
             WorkspaceSaver.setEnabled(true);
         }
@@ -875,26 +843,19 @@ public class StudioWindow extends StudioFrame implements WindowListener {
 
     public void close() {
         // If this is the last window, we need to properly persist workspace
-        if (allWindows.size() == 1) {
+        if (WindowFactory.allStudioWindows().size() == 1) {
             quit();
         } else {
             boolean result = execute(editorTab -> editorTab.getEditorsPanel().closeTab(editorTab));
             if (!result) return;
-            //  closing the last tab would trigger this code again
-            if (allWindows.contains(this)) {
-                allWindows.remove(this);
-                dispose();
-                refreshAllMenus();
-            }
+            dispose();
         }
 
     }
 
     public static void refreshAll() {
-        for (StudioWindow window: allWindows) {
-            window.refreshMenu();
-            window.refreshServerList();
-        }
+        refreshAllMenus();
+        WindowFactory.forEach(StudioWindow::refreshServerList);
     }
 
     private void addToMenu(JMenu menu, Action... actions) {
@@ -931,9 +892,7 @@ public class StudioWindow extends StudioFrame implements WindowListener {
     }
 
     public static void refreshAllMenus() {
-        for(StudioWindow window: allWindows) {
-            window.refreshMenu();
-        }
+        WindowFactory.forEach(StudioWindow::refreshMenu);
     }
 
     private JMenu openMRUMenu, cloneMenu, windowMenu;
@@ -985,22 +944,23 @@ public class StudioWindow extends StudioFrame implements WindowListener {
             windowMenu.remove(index);
         }
 
-        count = allWindows.size();
+        List<StudioWindow> windows = WindowFactory.allStudioWindows();
+        count = windows.size();
         UserAction[] windowMenuActions = new UserAction[count];
         if (count > 0) {
             windowMenu.addSeparator();
 
             for (int index = 0; index < count; index++) {
-                StudioWindow window = allWindows.get(index);
+                StudioWindow window = windows.get(index);
                 windowMenuActions[index] = UserAction.create((index + 1) + " " + window.getCaption(),
                         window == this ? Util.CHECK_ICON : Util.BLANK_ICON, "", 0 , null,
-                        e -> ensureDeiconified(window));
+                        e -> WindowFactory.activate(window));
             }
 
             addToMenu(windowMenu, windowMenuActions);
         }
 
-        List<Chart> charts = Chart.getCharts();
+        List<Chart> charts = WindowFactory.allCharts();
         if (!charts.isEmpty()) {
             windowMenu.addSeparator();
 
@@ -1008,7 +968,7 @@ public class StudioWindow extends StudioFrame implements WindowListener {
                 Chart chart = charts.get(index);
                 UserAction action = UserAction.create((index + 1) + " " + chart.getChartTitle(),
                         Util.BLANK_ICON, "", 0, null,
-                        e -> ensureDeiconified(chart.getFrame()) );
+                        e -> WindowFactory.activate(chart.getFrame()) );
 
                 addToMenu(windowMenu, action);
             }
@@ -1101,13 +1061,6 @@ public class StudioWindow extends StudioFrame implements WindowListener {
         setJMenuBar(menuBar);
     }
 
-    private void ensureDeiconified(JFrame f) {
-        int state = f.getExtendedState();
-        state = state & ~Frame.ICONIFIED;
-        f.setExtendedState(state);
-        f.setVisible(true);
-    }
-
     private void selectConnectionString() {
         String connection = txtServer.getText().trim();
         if (connection.isEmpty()) return;
@@ -1163,9 +1116,7 @@ public class StudioWindow extends StudioFrame implements WindowListener {
     }
 
     public static void refreshServerListAllWindows() {
-        for (StudioWindow window: allWindows) {
-            window.refreshServerList();
-        }
+        WindowFactory.forEach(StudioWindow::refreshServerList);
     }
 
     private void refreshServerList() {
@@ -1337,8 +1288,8 @@ public class StudioWindow extends StudioFrame implements WindowListener {
         return editor;
     }
 
-    public static StudioWindow getActiveStudioWindow() {
-        return activeWindow;
+    public EditorsPanel getRootEditorsPanel() {
+        return rootEditorsPanel;
     }
 
     public void updateEditor(EditorTab newEditor) {
@@ -1382,19 +1333,13 @@ public class StudioWindow extends StudioFrame implements WindowListener {
         ((ResultTab)targetPane.getComponentAt(event.getTargetIndex())).setStudioWindow(targetStudiowWindow);
     }
 
-    public StudioWindow(Server server, String filename) {
-        this(new Workspace.TopWindow(server, filename));
-    }
+    StudioWindow() {}
 
-    public StudioWindow(Workspace.TopWindow workspaceWindow) {
+    void init(Workspace.TopWindow workspaceWindow) {
         setName("studioWindow" + (++studioWindowNameIndex));
 
         loading = true;
 
-        allWindows.add(this);
-        if (activeWindow == null) activeWindow = this;
-
-        serverHistory = CONFIG.getServerHistory();
         initActions();
         createMenuBar();
 
@@ -1551,18 +1496,12 @@ public class StudioWindow extends StudioFrame implements WindowListener {
         addWindowFocusListener(new WindowFocusListener() {
             @Override
             public void windowGainedFocus(WindowEvent e) {
-                if (StudioWindow.activeWindow == StudioWindow.this) return;
-
-                log.info("Window focus is changed from {} to {} ", StudioWindow.activeWindow.getCaption(), StudioWindow.this.getCaption());
-                if (StudioWindow.allWindows.contains(StudioWindow.activeWindow)) {
-                    StudioWindow.activeWindow.editor.getEditorsPanel().setInFocusTabbedEditors(false);
-                }
                 editor.getEditorsPanel().setInFocusTabbedEditors(true);
-                StudioWindow.activeWindow = StudioWindow.this;
             }
 
             @Override
             public void windowLostFocus(WindowEvent e) {
+                editor.getEditorsPanel().setInFocusTabbedEditors(false);
             }
         });
 
@@ -1573,7 +1512,14 @@ public class StudioWindow extends StudioFrame implements WindowListener {
 
         setContentPane(contentPane);
         setDefaultCloseOperation(WindowConstants.DO_NOTHING_ON_CLOSE);
-        addWindowListener(this);
+        addWindowListener(new WindowAdapter() {
+            public void windowClosing(WindowEvent e) {
+                close();
+            }
+            public void windowClosed(WindowEvent e) {
+                refreshAllMenus();
+            }
+        });
 
         pack();
         if (Util.fitToScreen(location)) {
@@ -1602,21 +1548,20 @@ public class StudioWindow extends StudioFrame implements WindowListener {
 
     public static void loadWorkspace(Workspace workspace) {
         for (Workspace.TopWindow window: workspace.getWindows()) {
-            new StudioWindow(window);
+            WindowFactory.newStudioWindow(window);
         }
 
+        List<StudioWindow> windows = WindowFactory.allStudioWindows();
         int index = workspace.getSelectedWindow();
-        if (index >= 0 && index < allWindows.size()) {
-            allWindows.get(index).toFront();
+        if (index >= 0 && index < windows.size()) {
+            WindowFactory.activate(windows.get(index));
         }
 
-        if (allWindows.isEmpty()) {
-            new StudioWindow(Server.NO_SERVER, null);
+        if (windows.isEmpty()) {
+            WindowFactory.newStudioWindow(Server.NO_SERVER, null);
         }
 
-        for (StudioWindow window: allWindows) {
-            window.refreshFrameTitle();
-        }
+        WindowFactory.forEach(StudioWindow::refreshFrameTitle);
     }
 
     public void refreshQuery() {
@@ -1653,7 +1598,7 @@ public class StudioWindow extends StudioFrame implements WindowListener {
             return;
         }
 
-        new Chart(tableModel);
+        WindowFactory.newChart(tableModel);
     }
 
     public MainStatusBar getMainStatusBar() {
@@ -1738,7 +1683,11 @@ public class StudioWindow extends StudioFrame implements WindowListener {
         return (KTableModel) grid.getTable().getModel();
     }
 
-    private ResultTab getResultTab(int index) {
+    public int countResultTabs() {
+        return resultsPane.getTabCount();
+    }
+
+    public ResultTab getResultTab(int index) {
         return (ResultTab) resultsPane.getComponentAt(index);
     }
 
@@ -1778,42 +1727,14 @@ public class StudioWindow extends StudioFrame implements WindowListener {
         Workspace workspace = new Workspace();
         Window activeWindow = KeyboardFocusManager.getCurrentKeyboardFocusManager().getActiveWindow();
 
-        for (StudioWindow window : allWindows) {
+        WindowFactory.forEach(window -> {
             Workspace.TopWindow workspaceWindow = workspace.addWindow(window == activeWindow);
             workspaceWindow.setResultDividerLocation(Util.getDividerLocation(window.splitpane));
             workspaceWindow.setLocation(window.getBounds());
             workspaceWindow.setServerListBounds(window.getServerList().getBounds());
             window.rootEditorsPanel.getWorkspace(workspaceWindow);
-        }
+        });
         return workspace;
-    }
-
-    public void windowClosing(WindowEvent e) {
-        close();
-    }
-
-
-    public void windowClosed(WindowEvent e) {
-    }
-
-
-    public void windowOpened(WindowEvent e) {
-    }
-    // ctrl-alt spacebar to minimize window
-
-    public void windowIconified(WindowEvent e) {
-    }
-
-
-    public void windowDeiconified(WindowEvent e) {
-    }
-
-
-    public void windowActivated(WindowEvent e) {
-    }
-
-
-    public void windowDeactivated(WindowEvent e) {
     }
 
 }

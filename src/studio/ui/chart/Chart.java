@@ -25,9 +25,7 @@ import studio.utils.WindowsAppUserMode;
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.*;
-import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.List;
 
 
@@ -49,10 +47,9 @@ public class Chart implements ComponentListener {
     private String domainLabel = "";
     private String rangeLabel = "";
 
-    private final String defaultTitle;
+    private String defaultTitle;
 
     private static int chartIndex = 0;
-    private static final List<Chart> charts = new ArrayList<>();
 
     private static final StandardChartTheme currentTheme = new StandardChartTheme("JFree");
     static {
@@ -60,7 +57,9 @@ public class Chart implements ComponentListener {
         currentTheme.setXYBarPainter(new StandardXYBarPainter());
     }
 
-    public Chart(KTableModel table) {
+    public Chart() {}
+
+    public void init(KTableModel table) {
         chartIndex++;
         defaultTitle = "Studio for kdb+ [chart"+ chartIndex +"]";
         initComponents(table);
@@ -119,7 +118,6 @@ public class Chart implements ComponentListener {
 
         WindowsAppUserMode.setChartId();
         try {
-            charts.add(this);
             frame = new StudioFrame();
             updateTitle();
             frame.setContentPane(contentPane);
@@ -127,7 +125,6 @@ public class Chart implements ComponentListener {
             frame.addWindowListener(new WindowAdapter() {
                 @Override
                 public void windowClosed(WindowEvent e) {
-                    charts.remove(Chart.this);
                     pnlConfig.dispose();
                     StudioWindow.refreshAllMenus();
                 }
@@ -145,6 +142,7 @@ public class Chart implements ComponentListener {
     }
 
     public void merge(ActionEvent event) {
+        List<Chart> charts = WindowFactory.allCharts();
         if (charts.size() < 2) {
             StudioOptionPane.showWarning(getFrame(), "There are no other charts", "Nothing to select");
             return;
@@ -152,7 +150,7 @@ public class Chart implements ComponentListener {
 
         String[] captions = charts.stream()
                 .filter(c -> c!=this )
-                .map(c -> c.getChartTitle())
+                .map(Chart::getChartTitle)
                 .toArray(String[]::new);
 
         JComboBox<String> comboCaptions = new JComboBox<>(captions);
@@ -212,10 +210,6 @@ public class Chart implements ComponentListener {
 
     public JFrame getFrame() {
         return frame;
-    }
-
-    public static List<Chart> getCharts() {
-        return Collections.unmodifiableList(charts);
     }
 
     private ChartPanel createChartPanel() {

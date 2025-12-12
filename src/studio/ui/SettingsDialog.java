@@ -100,13 +100,13 @@ public class SettingsDialog extends EscapeDialog {
     }
 
     public static void refreshComboServerVisibility() {
-        for (StudioWindow window: StudioWindow.getAllStudioWindows()) {
-            window.getComboServer().setVisible(CONFIG.getBoolean(Config.SHOW_SERVER_COMBOBOX));
-        }
+        WindowFactory.forEach(window->
+                window.getComboServer().setVisible(CONFIG.getBoolean(Config.SHOW_SERVER_COMBOBOX))
+        );
     }
 
     public static void refreshEditorsSettings() {
-        StudioWindow.executeForAllEditors(editorTab -> {
+        WindowFactory.forEachEditors(editorTab -> {
             StudioRSyntaxTextArea editor = editorTab.getTextArea();
             editor.setHighlightCurrentLine(CONFIG.getBoolean(Config.RSTA_HIGHLIGHT_CURRENT_LINE));
             editor.setAnimateBracketMatching(CONFIG.getBoolean(Config.RSTA_ANIMATE_BRACKET_MATCHING));
@@ -119,13 +119,12 @@ public class SettingsDialog extends EscapeDialog {
             editor.setTabsEmulated(CONFIG.getBoolean(Config.EDITOR_TAB_EMULATED));
 
             editor.setInsertPairedCharacters(CONFIG.getBoolean(Config.RSTA_INSERT_PAIRED_CHAR));
-            return true;
         });
     }
 
     public static void refreshResultSettings() {
         long doubleClickTimeout = CONFIG.getInt(Config.EMULATED_DOUBLE_CLICK_TIMEOUT);
-        StudioWindow.executeForAllResultTabs(resultTab -> {
+        WindowFactory.forEachResultTabs(resultTab -> {
             resultTab.setDoubleClickTimeout(doubleClickTimeout);
             resultTab.refreshFont();
 
@@ -141,7 +140,6 @@ public class SettingsDialog extends EscapeDialog {
                     grid.getTable().setGridColorConfig(CONFIG.getGridColorConfig());
                 }
             });
-            return true;
         });
     }
 
@@ -149,7 +147,7 @@ public class SettingsDialog extends EscapeDialog {
     public static void updateBgColor(Color oldColor, Color newColor) {
         ServerConfig serverConfig = CONFIG.getServerConfig();
         serverConfig.updateBgColor(oldColor, newColor);
-        StudioWindow.executeForAllEditors(editor -> {
+        WindowFactory.forEachEditors(editor -> {
            Server server = editor.getServer();
            if (server.inServerTree()) {
                editor.setServer(serverConfig.getServer(server.getFullName()));
@@ -157,7 +155,6 @@ public class SettingsDialog extends EscapeDialog {
                Server newServer = new Server(server.getName(), server.getConnection(), server.getAuthenticationMechanism(), newColor);
                editor.setServer(newServer);
            }
-           return true;
         });
     }
 

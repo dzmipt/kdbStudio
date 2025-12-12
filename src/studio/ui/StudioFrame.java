@@ -40,7 +40,16 @@ public class StudioFrame extends JFrame {
     @Override
     public void setTitle(String title) {
         if (helper == null) return;
-        if (! helper.setTitle(title) ) super.setTitle(title);
+
+        if (Util.MAC_OS_X) {
+            String oldTitle = getRealTitle();
+            helper.setTitle(title);
+            if (! Objects.equals(oldTitle, title)) {
+                firePropertyChange("title", oldTitle, title);
+            }
+        } else {
+            if (! helper.setTitle(title) ) super.setTitle(title);
+        }
     }
 
     @Override

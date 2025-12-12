@@ -4,6 +4,7 @@ import kx.KConnectionStats;
 import studio.kdb.K;
 import studio.kdb.Session;
 import studio.ui.StudioWindow;
+import studio.ui.WindowFactory;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -17,9 +18,9 @@ public class ConnectionStats {
     private static K.Flip getTable() {
         Map<Session, Integer> sessionsCount = new HashMap<>();
 
-        StudioWindow.executeForAllEditors(editor -> {
+        WindowFactory.forEachEditors(editor -> {
             Session session = editor.getSession();
-            if (session == null) return true;
+            if (session == null) return;
 
             Integer count = sessionsCount.get(session);
             if (count == null) {
@@ -27,8 +28,6 @@ public class ConnectionStats {
             } else {
                 sessionsCount.put(session, count + 1);
             }
-
-            return true;
         });
 
         final int DELTA = 4;

@@ -20,6 +20,7 @@ import studio.kdb.Workspace;
 import studio.ui.AlteringIcon;
 import studio.ui.StudioWindow;
 import studio.ui.Util;
+import studio.ui.WindowFactory;
 import studio.ui.action.WorkspaceSaver;
 import studio.utils.Content;
 import studio.utils.FileReaderWriter;
@@ -221,6 +222,8 @@ public class Studio {
 
     //Executed on the Event Dispatcher Thread
     private static void init(String[] args) {
+        WindowFactory.init();
+
         FlatInspector.install( "ctrl shift alt X" );
         FlatUIDefaultsInspector.install( "ctrl shift alt Y" );
 
@@ -233,7 +236,7 @@ public class Studio {
         FileWatcher.start();
 
         if (args.length > 0) {
-            new StudioWindow(getInitServer(), args[0]);
+            WindowFactory.newStudioWindow(getInitServer(), args[0]);
         } else {
             Workspace workspace = Config.getInstance().loadWorkspace();
             // Reload files from disk if it was modified somewhere else
@@ -255,7 +258,7 @@ public class Studio {
             if (workspace.getWindows().length == 0) {
                 List<String> mruFiles = Config.getInstance().getStringArray(Config.MRU_FILES);
                 String filename = mruFiles.isEmpty() ? null : mruFiles.get(0);
-                new StudioWindow(getInitServer(), filename);
+                WindowFactory.newStudioWindow(getInitServer(), filename);
             } else {
                 StudioWindow.loadWorkspace(workspace);
             }

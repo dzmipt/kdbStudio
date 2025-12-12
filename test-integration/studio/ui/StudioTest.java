@@ -78,7 +78,7 @@ abstract public class StudioTest extends AssertJSwingJUnitTestCase {
         expectedNumberOfErrors = 0;
         LogErrors.reset();
 
-        studioWindow = execute( () -> new StudioWindow(Server.NO_SERVER, null) );
+        studioWindow = execute( () -> WindowFactory.newStudioWindow(Server.NO_SERVER, null) );
         frameFixture = new FrameFixture(robot(), studioWindow);
 
         Assert.assertEquals("expected to have one editor", 1, getEditors().size());

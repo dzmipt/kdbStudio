@@ -4,6 +4,7 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.KeyEvent;
+import java.util.Objects;
 
 public class EscapeDialog extends JDialog {
 
@@ -34,10 +35,23 @@ public class EscapeDialog extends JDialog {
         return "";
     }
 
+    public String getRealTitle() {
+        return helper.getTitle();
+    }
+
     @Override
     public void setTitle(String title) {
         if (helper == null) return;
-        if (! helper.setTitle(title) ) super.setTitle(title);
+
+        if (Util.MAC_OS_X) {
+            String oldTitle = getRealTitle();
+            helper.setTitle(title);
+            if (! Objects.equals(oldTitle, title)) {
+                firePropertyChange("title", oldTitle, title);
+            }
+        } else {
+            if (! helper.setTitle(title) ) super.setTitle(title);
+        }
     }
 
     @Override

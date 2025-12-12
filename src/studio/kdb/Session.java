@@ -10,6 +10,7 @@ import studio.kdb.config.KdbMessageLimitAction;
 import studio.ui.EditorTab;
 import studio.ui.StudioOptionPane;
 import studio.ui.StudioWindow;
+import studio.ui.WindowFactory;
 
 import javax.swing.*;
 import java.io.IOException;
@@ -79,7 +80,7 @@ public class Session implements ConnectionStateListener, KAuthentication {
         AtomicInteger choice = new AtomicInteger();
         try {
             SwingUtilities.invokeAndWait(() -> {
-                choice.set(StudioOptionPane.showYesNoDialog(StudioWindow.getActiveStudioWindow(),
+                choice.set(StudioOptionPane.showYesNoDialog(WindowFactory.getActiveWindow(),
                         msg + "\n\nDownloading large amount of data can result in OutOfMemoryError.\n" +
                                 "Note: you can change the limit as well as action in the Settings menu.\n\n" +
                                 "Download?",
