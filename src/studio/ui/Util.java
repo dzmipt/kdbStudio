@@ -1,5 +1,7 @@
 package studio.ui;
 
+import com.formdev.flatlaf.FlatLaf;
+import com.formdev.flatlaf.util.GrayFilter;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import org.apache.logging.log4j.LogManager;
@@ -340,6 +342,11 @@ public class Util {
 
     public static String colorToString(Color color) {
         return Integer.toHexString(color.getRGB()).substring(2);
+    }
+
+    public static Color gray(Color color) {
+        boolean dark = FlatLaf.isLafDark();
+        return new Color(GrayFilter.createDisabledIconFilter(dark).filterRGB(0,0, color.getRGB()));
     }
 
 }

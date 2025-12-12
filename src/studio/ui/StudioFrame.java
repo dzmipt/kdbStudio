@@ -1,8 +1,5 @@
 package studio.ui;
 
-import com.formdev.flatlaf.FlatLaf;
-import com.formdev.flatlaf.util.GrayFilter;
-
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.MouseAdapter;
@@ -105,8 +102,7 @@ public class StudioFrame extends JFrame {
 
             Color panelBgColor = UIManager.getColor("Panel.background");
             if (panelBgColor == null) return;
-            boolean dark = FlatLaf.isLafDark();
-            Color borderColor = new Color(GrayFilter.createDisabledIconFilter(dark).filterRGB(0,0, panelBgColor.getRGB()));
+            Color borderColor = Util.gray(panelBgColor);
 
            macOSTitlePanel.setBorder(BorderFactory.createCompoundBorder(
                     BorderFactory.createEmptyBorder(0, 0, 2, 0),

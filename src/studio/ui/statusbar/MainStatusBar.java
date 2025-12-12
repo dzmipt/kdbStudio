@@ -5,7 +5,10 @@ import studio.ui.MinSizeLabel;
 import studio.ui.search.Position;
 
 import javax.swing.*;
-import java.awt.event.*;
+import java.awt.event.FocusAdapter;
+import java.awt.event.FocusEvent;
+import java.awt.event.KeyAdapter;
+import java.awt.event.KeyEvent;
 
 public class MainStatusBar extends StatusBar {
 
@@ -22,6 +25,8 @@ public class MainStatusBar extends StatusBar {
         lblRowCol.setHorizontalAlignment(JLabel.CENTER);
         lblRowCol.setMinimumWidth("9999:9999");
         addComponent(lblRowCol);
+
+        addComponent(new JVMMemory());
     }
 
     public void bindTextArea(RSyntaxTextArea bindTextArea) {

@@ -1,3 +1,5 @@
+* Adding JVM Memory widget
+
 `dz7.0` 2025.12.07
 -----
 * Charts:
