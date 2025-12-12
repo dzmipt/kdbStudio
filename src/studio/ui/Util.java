@@ -16,71 +16,70 @@ import java.awt.event.HierarchyListener;
 import java.awt.event.InputEvent;
 import java.awt.event.KeyEvent;
 import java.net.URI;
-import java.net.URL;
 
 public class Util {
     public final static Icon BLANK_ICON = new BlankIcon(16,16);
-    public final static ImageIcon LOGO_ICON = getImage("/logo.png");
-    public final static ImageIcon QUESTION_ICON = getImage("/question.png");
-    public final static ImageIcon INFORMATION_ICON = getImage("/information.png");
-    public final static ImageIcon WARNING_ICON = getImage("/warning.png");
-    public final static ImageIcon ERROR_ICON = getImage("/error.png");
-    public final static ImageIcon ERROR_SMALL_ICON = getImage("/errorSmall.png");
-    public final static ImageIcon CHECK_ICON = getImage("/check.png");
+    public final static ImageIcon LOGO_ICON = StudioIcon.getIcon("logo");
+    public final static ImageIcon QUESTION_ICON = StudioIcon.getIcon("question");
+    public final static ImageIcon INFORMATION_ICON = StudioIcon.getIcon("information");
+    public final static ImageIcon WARNING_ICON = StudioIcon.getIcon("warning");
+    public final static ImageIcon ERROR_ICON = StudioIcon.getIcon("error");
+    public final static ImageIcon ERROR_SMALL_ICON = StudioIcon.getIcon("errorSmall");
+    public final static ImageIcon CHECK_ICON = StudioIcon.getIcon("check");
 
-    public final static ImageIcon UNDO_ICON = getImage("/undo.png");
-    public final static ImageIcon REDO_ICON =getImage("/redo.png");
-    public final static ImageIcon COPY_ICON = getImage("/copy.png");
-    public final static ImageIcon CUT_ICON = getImage("/cut.png");
-    public final static ImageIcon PASTE_ICON = getImage("/paste.png");
-    public final static ImageIcon NEW_DOCUMENT_ICON = getImage("/document_new.png");
-    public final static ImageIcon FIND_ICON = getImage("/find.png");
-    public final static ImageIcon REPLACE_ICON = getImage("/replace.png");
-    public final static ImageIcon FOLDER_ICON = getImage("/folder.png");
-    public final static ImageIcon TEXT_TREE_ICON = getImage("/text_tree.png");
-    public final static ImageIcon SERVER_INFORMATION_ICON = getImage("/server_information.png");
-    public final static ImageIcon ADD_SERVER_ICON = getImage("/server_add.png");
-    public final static ImageIcon DELETE_SERVER_ICON = getImage("/server_delete.png");
-    public final static ImageIcon DISKS_ICON = getImage("/disks.png");
-    public final static ImageIcon SAVE_AS_ICON = getImage("/save_as.png");
-    public final static ImageIcon EXPORT_ICON = getImage("/export.png");
-    public final static ImageIcon CHART_ICON = getImage("/chartSmall.png");
-    public final static ImageIcon STOP_ICON = getImage("/stop.png");
-    public final static ImageIcon EXCEL_ICON = getImage("/excel_icon.gif");
-    public final static ImageIcon TABLE_SQL_RUN_ICON = getImage("/table_sql_run.png");
-    public final static ImageIcon EXECUTE_AND_CHART = getImage("/executeAndChart.png");
-    public final static ImageIcon RUN_ICON = getImage("/element_run.png");
-    public final static ImageIcon REFRESH_ICON = getImage("/refresh.png");
-    public final static ImageIcon ABOUT_ICON = getImage("/about.png");
-    public final static ImageIcon TEXT_ICON = getImage("/text.png");
-    public final static ImageIcon TABLE_ICON = getImage("/table.png");
-    public final static ImageIcon CONSOLE_ICON = getImage("/console.png");
-    public final static ImageIcon DATA_COPY_ICON = getImage("/data_copy.png");
-    public final static ImageIcon CHART_BIG_ICON = getImage("/chart.png");
+    public final static ImageIcon UNDO_ICON = StudioIcon.getIcon("undo");
+    public final static ImageIcon REDO_ICON = StudioIcon.getIcon("redo");
+    public final static ImageIcon COPY_ICON = StudioIcon.getIcon("copy");
+    public final static ImageIcon CUT_ICON = StudioIcon.getIcon("cut");
+    public final static ImageIcon PASTE_ICON = StudioIcon.getIcon("paste");
+    public final static ImageIcon NEW_DOCUMENT_ICON = StudioIcon.getIcon("document_new");
+    public final static ImageIcon FIND_ICON = StudioIcon.getIcon("find");
+    public final static ImageIcon REPLACE_ICON = StudioIcon.getIcon("replace");
+    public final static ImageIcon FOLDER_ICON = StudioIcon.getIcon("folder");
+    public final static ImageIcon TEXT_TREE_ICON = StudioIcon.getIcon("text_tree");
+    public final static ImageIcon SERVER_INFORMATION_ICON = StudioIcon.getIcon("server_information");
+    public final static ImageIcon ADD_SERVER_ICON = StudioIcon.getIcon("server_add");
+    public final static ImageIcon DELETE_SERVER_ICON = StudioIcon.getIcon("server_delete");
+    public final static ImageIcon DISKS_ICON = StudioIcon.getIcon("disks");
+    public final static ImageIcon SAVE_AS_ICON = StudioIcon.getIcon("save_as");
+    public final static ImageIcon EXPORT_ICON = StudioIcon.getIcon("export");
+    public final static ImageIcon CHART_ICON = StudioIcon.getIcon("chartSmall");
+    public final static ImageIcon STOP_ICON = StudioIcon.getIcon("stop");
+    public final static ImageIcon EXCEL_ICON = StudioIcon.getIcon("excel_icon");
+    public final static ImageIcon TABLE_SQL_RUN_ICON = StudioIcon.getIcon("table_sql_run");
+    public final static ImageIcon EXECUTE_AND_CHART = StudioIcon.getIcon("executeAndChart");
+    public final static ImageIcon RUN_ICON = StudioIcon.getIcon("element_run");
+    public final static ImageIcon REFRESH_ICON = StudioIcon.getIcon("refresh");
+    public final static ImageIcon ABOUT_ICON = StudioIcon.getIcon("about");
+    public final static ImageIcon TEXT_ICON = StudioIcon.getIcon("text");
+    public final static ImageIcon TABLE_ICON = StudioIcon.getIcon("table");
+    public final static ImageIcon CONSOLE_ICON = StudioIcon.getIcon("console");
+    public final static ImageIcon DATA_COPY_ICON = StudioIcon.getIcon("data_copy");
+    public final static ImageIcon CHART_BIG_ICON = StudioIcon.getIcon("chart");
 
-    public final static Icon COMMA_ICON = new AlteringIcon("comma.png");
-    public final static Icon COMMA_CROSSED_ICON = getImage("/comma_crossed.png");
+    public final static Icon COMMA_ICON = StudioIcon.getIcon("comma");
+    public final static Icon COMMA_CROSSED_ICON = StudioIcon.getIcon("comma_crossed");
 
-    public final static ImageIcon UPLOAD_ICON = new AlteringIcon("upload.png");
+    public final static ImageIcon UPLOAD_ICON = StudioIcon.getIcon("upload");
 
-    public final static Icon ASC_ICON = new AlteringIcon("asc.png");
-    public final static Icon DESC_ICON = new AlteringIcon("desc.png");
+    public final static Icon ASC_ICON = StudioIcon.getIcon("asc");
+    public final static Icon DESC_ICON = StudioIcon.getIcon("desc");
 
-    public final static Icon SEARCH_WHOLE_WORD_ICON = new AlteringIcon("searchWholeWord.png");
-    public final static Icon SEARCH_WHOLE_WORD_SHADED_ICON = new AlteringIcon("searchWholeWord_shaded.png");
-    public final static Icon SEARCH_REGEX_ICON = new AlteringIcon("searchRegex.png");
-    public final static Icon SEARCH_REGEX_SHADED_ICON = new AlteringIcon("searchRegex_shaded.png");
-    public final static Icon SEARCH_CASE_SENSITIVE_ICON = new AlteringIcon("searchCaseSensitive.png");
-    public final static Icon SEARCH_CASE_SENSITIVE_SHADED_ICON = new AlteringIcon("searchCaseSensitive_shaded.png");
+    public final static Icon SEARCH_WHOLE_WORD_ICON = StudioIcon.getIcon("searchWholeWord");
+    public final static Icon SEARCH_WHOLE_WORD_SHADED_ICON = StudioIcon.getIcon("searchWholeWord_shaded");
+    public final static Icon SEARCH_REGEX_ICON = StudioIcon.getIcon("searchRegex");
+    public final static Icon SEARCH_REGEX_SHADED_ICON = StudioIcon.getIcon("searchRegex_shaded");
+    public final static Icon SEARCH_CASE_SENSITIVE_ICON = StudioIcon.getIcon("searchCaseSensitive");
+    public final static Icon SEARCH_CASE_SENSITIVE_SHADED_ICON = StudioIcon.getIcon("searchCaseSensitive_shaded");
 
-    public final static Icon LINE_ICON = new AlteringIcon("line.png");
-//    public final static ImageIcon PLUS_ICON = getImage("/plus.png");
-    public final static Icon PLUS2_ICON = new AlteringIcon("plus2.png");
-    public final static Icon LEFT_ICON = new AlteringIcon("left.png");
-    public final static Icon RIGHT_ICON = new AlteringIcon("right.png");
-    public final static ImageIcon LOCK_ICON = getImage("/lock.png");
-    public final static ImageIcon LOCK_CROSSED_ICON = getImage("/lock_crossed.png");
-    public final static ImageIcon UNLOCK_ICON = getImage("/unlock.png");
+    public final static Icon LINE_ICON = StudioIcon.getIcon("line");
+//    public final static ImageIcon PLUS_ICON = StudioIcon.getIcon("plus");
+    public final static Icon PLUS2_ICON = StudioIcon.getIcon("plus2");
+    public final static Icon LEFT_ICON = StudioIcon.getIcon("left");
+    public final static Icon RIGHT_ICON = StudioIcon.getIcon("right");
+    public final static ImageIcon LOCK_ICON = StudioIcon.getIcon("lock");
+    public final static ImageIcon LOCK_CROSSED_ICON = StudioIcon.getIcon("lock_crossed");
+    public final static ImageIcon UNLOCK_ICON = StudioIcon.getIcon("unlock");
 
     public final static int menuShortcutKeyMask = GraphicsEnvironment.isHeadless() ? KeyEvent.CTRL_DOWN_MASK :
                                                     java.awt.Toolkit.getDefaultToolkit().getMenuShortcutKeyMaskEx();
@@ -103,15 +102,6 @@ public class Util {
             a += color.getAlpha() * ratio;
         }
         return new Color((int)r, (int)g, (int)b, (int)a);
-    }
-
-    public static ImageIcon getImage(String strFilename) {
-        URL url = Util.class.getResource(strFilename);
-        if (url == null) throw new RuntimeException("Image " + strFilename + " not found");
-
-        Toolkit toolkit = Toolkit.getDefaultToolkit();
-        Image image = toolkit.getImage(url);
-        return new ImageIcon(image);
     }
 
     public static void centerChildOnParent(Component child,Component parent) {

@@ -5,31 +5,49 @@ import com.formdev.flatlaf.FlatLaf;
 import javax.swing.*;
 import java.awt.*;
 import java.awt.image.ImageObserver;
-import java.util.ArrayList;
-import java.util.List;
+import java.net.URL;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
-public class AlteringIcon extends ImageIcon {
+public class StudioIcon extends ImageIcon {
 
     private final ImageIcon lightIcon, darkIcon;
     private ImageIcon icon;
 
-    private final static List<AlteringIcon> icons = new ArrayList<>();
+    private final static Map<String, StudioIcon> icons = new ConcurrentHashMap<>();
 
     public static void updateUI() {
-        for(AlteringIcon icon: icons) {
+        for(StudioIcon icon: icons.values()) {
             icon.updateIcon();
         }
     }
 
-    public AlteringIcon(String filename) {
-        icons.add(this);
-        lightIcon = Util.getImage("/" + filename);
-        darkIcon = Util.getImage("/dark/" + filename);
+    public static StudioIcon getIcon(String name) {
+        return icons.computeIfAbsent(name, StudioIcon::new);
+    }
+
+    private StudioIcon(String name) {
+        String filename = "/" + name + ".png";
+
+        lightIcon = getImage(filename);
+        darkIcon = getImage("/dark" + filename);
+        if (lightIcon == null) throw new IllegalArgumentException("Icon " + name + " not found");
+
         updateIcon();
     }
 
+    private ImageIcon getImage(String strFilename) {
+        URL url = Util.class.getResource(strFilename);
+        if (url == null) return null;
+
+        Toolkit toolkit = Toolkit.getDefaultToolkit();
+        Image image = toolkit.getImage(url);
+        return new ImageIcon(image);
+    }
+
     private void updateIcon() {
-        icon = FlatLaf.isLafDark() ? darkIcon : lightIcon;
+        icon = darkIcon == null ? lightIcon :
+                                    FlatLaf.isLafDark() ? darkIcon : lightIcon;
     }
 
     @Override
