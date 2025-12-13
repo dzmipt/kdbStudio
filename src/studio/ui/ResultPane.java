@@ -2,22 +2,24 @@ package studio.ui;
 
 import kx.K4Exception;
 import org.fife.ui.rsyntaxtextarea.RSyntaxDocument;
-import studio.kdb.K;
-import studio.kdb.KTableModel;
-import studio.kdb.KType;
+import studio.kdb.*;
 import studio.kdb.ListModel;
 import studio.kdb.config.ColorToken;
+import studio.kdb.config.EditorColorToken;
+import studio.kdb.config.TokenStyle;
 import studio.qeditor.QTokenMakerFactory;
 import studio.ui.action.QueryResult;
 import studio.ui.rstextarea.StudioRSyntaxTextArea;
 
 import javax.swing.*;
+import javax.swing.text.JTextComponent;
 import java.awt.*;
 
 public class ResultPane extends JPanel {
 
     private final QueryResult queryResult;
     private EditorPane editor = null;
+    private JTextComponent errorPane = null;
     private ResultGrid grid = null;
     private final ResultType type;
 
@@ -54,7 +56,18 @@ public class ResultPane extends JPanel {
             }
 
         } else {
-            JTextPane textArea = new JTextPane();
+            Config config = Config.getInstance();
+            Font font = config.getFont(Config.FONT_EDITOR);
+
+            Color bgColor = config.getEditorColors().get(EditorColorToken.BACKGROUND);
+            TokenStyle style = config.getTokenStyleConfig().get(ColorToken.ERROR);
+            Color fgColor = style.getColor();
+
+            errorPane = new JTextPane();
+            errorPane.setBackground(bgColor);
+            errorPane.setForeground(fgColor);
+            errorPane.setFont(font);
+
             Throwable error = queryResult.getError();
             String msg;
             if (error instanceof K4Exception) {
@@ -65,10 +78,9 @@ public class ResultPane extends JPanel {
                     msg += "\nMessage: " + error.getMessage();
                 }
             }
-            textArea.setText(msg);
-            textArea.setForeground(Color.RED);
-            textArea.setEditable(false);
-            component = new JScrollPane(textArea);
+            errorPane.setText(msg);
+            errorPane.setEditable(false);
+            component = new JScrollPane(errorPane);
             type = ResultType.ERROR;
 
         }
@@ -81,6 +93,10 @@ public class ResultPane extends JPanel {
 
     public EditorPane getEditor() {
         return editor;
+    }
+
+    public JTextComponent getErrorPane() {
+        return errorPane;
     }
 
     public ResultGrid getGrid() {

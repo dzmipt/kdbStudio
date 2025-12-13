@@ -4,12 +4,15 @@ import com.formdev.flatlaf.FlatLaf;
 import studio.core.Studio;
 import studio.kdb.Config;
 import studio.kdb.Server;
+import studio.kdb.config.ColorToken;
 import studio.kdb.config.EditorColorToken;
 import studio.kdb.config.ServerConfig;
+import studio.kdb.config.TokenStyle;
 import studio.ui.rstextarea.StudioRSyntaxTextArea;
 import studio.ui.settings.*;
 
 import javax.swing.*;
+import javax.swing.text.JTextComponent;
 import java.awt.*;
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -134,6 +137,18 @@ public class SettingsDialog extends EscapeDialog {
                     StudioRSyntaxTextArea editor = editorPane.getTextArea();
                     editor.setSyntaxScheme(CONFIG.getFont(Config.FONT_EDITOR), CONFIG.getTokenStyleConfig());
                     editor.setEditorColors(CONFIG.getEditorColors());
+                }
+                JTextComponent errorPane = resultPane.getErrorPane();
+                if (errorPane != null) {
+                    Font font = CONFIG.getFont(Config.FONT_EDITOR);
+
+                    Color bgColor = CONFIG.getEditorColors().get(EditorColorToken.BACKGROUND);
+                    TokenStyle style = CONFIG.getTokenStyleConfig().get(ColorToken.ERROR);
+                    Color fgColor = style.getColor();
+
+                    errorPane.setBackground(bgColor);
+                    errorPane.setForeground(fgColor);
+                    errorPane.setFont(font);
                 }
                 ResultGrid grid = resultPane.getGrid();
                 if (grid != null) {
