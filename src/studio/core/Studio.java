@@ -158,6 +158,8 @@ public class Studio {
             im.put(KeyStroke.getKeyStroke(KeyEvent.VK_A, KeyEvent.META_DOWN_MASK), "selectAll");
 
         }
+
+        UIManager.getDefaults().put("TabbedPane.rotateTabRuns", false);
     }
 
     private static void debugFocusTransfer() {
