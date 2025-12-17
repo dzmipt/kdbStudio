@@ -120,7 +120,10 @@ public class WindowFactory {
         f.requestFocus();
         f.toFront();
         if (! GraphicsEnvironment.isHeadless() && Desktop.isDesktopSupported()) {
-            Desktop.getDesktop().requestForeground(true);
+            Desktop desktop = Desktop.getDesktop();
+            if (desktop.isSupported(Desktop.Action.APP_REQUEST_FOREGROUND)) {
+                desktop.requestForeground(true);
+            }
         }
     }
 
