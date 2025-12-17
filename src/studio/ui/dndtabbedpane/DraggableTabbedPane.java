@@ -1,5 +1,7 @@
 package studio.ui.dndtabbedpane;
 
+import studio.ui.Util;
+
 import javax.swing.*;
 import javax.swing.plaf.TabbedPaneUI;
 import java.awt.*;
@@ -116,7 +118,7 @@ public class DraggableTabbedPane extends JTabbedPane {
                 if (selectedTabDecoration == SelectedTabDecoration.DIM) {
                     g.setColor(sourceColor);
                     g.fillRect(rect.x, rect.y, rect.width, rect.height);
-                } else {
+                } else if (!Util.isFlatLaf()) {
                     g.setColor(targetColor);
                     g.fillRect(rect.x +5, rect.y + rect.height - 3, rect.width - 10, 2);
 

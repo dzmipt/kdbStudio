@@ -92,6 +92,10 @@ public class Util {
     private static boolean mockFitToScreen = false;
     private final static Logger log = LogManager.getLogger();
 
+    public static boolean isFlatLaf() {
+        return UIManager.getLookAndFeel() instanceof FlatLaf;
+    }
+
     public static Color blendColors(Color... colors) {
         float ratio = 1f / ((float) colors.length);
         float r = 0, g = 0, b = 0, a = 0;

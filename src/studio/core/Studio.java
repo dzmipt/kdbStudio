@@ -159,7 +159,9 @@ public class Studio {
 
         }
 
-        UIManager.getDefaults().put("TabbedPane.rotateTabRuns", false);
+        UIManager.put("TabbedPane.rotateTabRuns", false);
+        UIManager.put("TabbedPane.underlineHeight", 3);
+
     }
 
     private static void debugFocusTransfer() {
