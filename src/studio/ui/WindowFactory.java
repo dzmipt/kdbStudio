@@ -57,9 +57,9 @@ public class WindowFactory {
 
     public static StudioWindow newStudioWindow(Workspace.TopWindow workspaceWindow) {
         StudioWindow window = new StudioWindow();
+        newFrame(window);
         studioWindows.add(window);
         window.init(workspaceWindow);
-        newFrame(window);
         return window;
     }
 
