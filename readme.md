@@ -1,5 +1,7 @@
 Studio for kdb+
 =========
+[![Build](https://github.com/dzmipt/kdbStudio/actions/workflows/gradle.yml/badge.svg?branch=master)](https://github.com/dzmipt/kdbStudio/actions/workflows/gradle.yml)
+[![Maven Central](https://img.shields.io/maven-central/v/com.github.dzmipt/kdbStudio)](https://central.sonatype.com/artifact/com.github.dzmipt/kdbStudio)
 
 Studio for kdb+ is a rapid development environment for the **ultra-fast** database kdb+ from [Kx Systems]. In the style of commonly used SQL Clients, it allows you to
 
