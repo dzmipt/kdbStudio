@@ -86,5 +86,5 @@ jobs:
       if: ${{ runner.os == 'Windows' }}
       uses: actions/upload-artifact@v4
       with:
-        name: Windows distribution
+        name: Distribution
         path: ./build/install

@@ -49,9 +49,20 @@ Download the latest release from
 
 https://github.com/dzmipt/kdbStudio
 
-Gradle command is used to start
+Use Gradle Wrapper to build and start 
 
-    gradle run
+Windows:
+
+    gradlew.bat run
+
+MacOS/Linux:
+
+    ./gradlew run
+
+
+Another option is to download Distribution from one of the last successful Actions:
+
+https://github.com/dzmipt/kdbStudio/actions
 
 
 Background
