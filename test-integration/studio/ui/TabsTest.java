@@ -3,10 +3,12 @@ package studio.ui;
 import org.assertj.swing.data.Index;
 import org.assertj.swing.fixture.FrameFixture;
 import org.assertj.swing.fixture.JTabbedPaneFixture;
+import org.assertj.swing.util.Platform;
 import org.junit.Test;
 import studio.utils.LogErrors;
 
 import javax.swing.*;
+import java.awt.*;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -93,7 +95,13 @@ public class TabsTest extends StudioTest {
     }
 
     private String getWindowTitle() {
-        return execute(() -> frameFixture.target().getTitle());
+        return execute(() -> {
+            Frame f = frameFixture.target();
+            if (Platform.isMacintosh() && f instanceof StudioFrame) {
+                return ((StudioFrame)f).getRealTitle();
+            }
+            return f.getTitle();
+        });
     }
 
     private JMenuItem[] getLastWindowMenuItems(FrameFixture frameFixture, int n) {
