@@ -27,17 +27,17 @@ public class StudioIcon extends ImageIcon {
     }
 
     private StudioIcon(String name) {
-        String filename = "/" + name + ".png";
+        String filename = name + ".png";
 
         lightIcon = getImage(filename);
-        darkIcon = getImage("/dark" + filename);
+        darkIcon = getImage("dark/" + filename);
         if (lightIcon == null) throw new IllegalArgumentException("Icon " + name + " not found");
 
         updateIcon();
     }
 
     private ImageIcon getImage(String strFilename) {
-        URL url = Util.class.getResource(strFilename);
+        URL url = Util.class.getClassLoader().getResource(strFilename);
         if (url == null) return null;
 
         Toolkit toolkit = Toolkit.getDefaultToolkit();
