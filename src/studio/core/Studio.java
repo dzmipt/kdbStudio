@@ -160,8 +160,10 @@ public class Studio {
         }
 
         UIManager.put("TabbedPane.rotateTabRuns", false);
-        UIManager.put("TabbedPane.underlineHeight", 3);
+        UIManager.put("TabbedPane.showTabSeparators", true);
+        UIManager.put("TabbedPane.tabWidthMode", "compact");
 
+        UIManager.put("TabbedPane.tabInsets", new Insets(1, 6, 1, 6));
     }
 
     private static void debugFocusTransfer() {
