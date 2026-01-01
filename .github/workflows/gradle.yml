@@ -14,7 +14,7 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        os: [ubuntu-latest, windows-latest]  # Specify OS for the matrix
+        os: [ubuntu-latest, macos-latest, windows-latest]  # Specify OS for the matrix
 
     steps:
     - name: Checkout
@@ -46,6 +46,11 @@ jobs:
       run: ./intTests-Xvfb.sh
       timeout-minutes: 5
 
+    - name: Integration tests - MacOS
+      if: ${{ runner.os == 'MacOS' }}
+      run: ./gradlew integrationTest -x test
+      timeout-minutes: 5
+
 #    - name: Integration tests - Windows
 #      if: ${{ runner.os == 'Windows' }}
 #      run: ./gradlew integrationTest -x test
@@ -53,6 +58,10 @@ jobs:
 
     - name: Log files - Linux
       if: ${{ runner.os == 'Linux' }}
+      run: find . -type f -exec echo {} \;
+
+    - name: Log files - MacOS
+      if: ${{ runner.os == 'MacOS' }}
       run: find . -type f -exec echo {} \;
 
     - name: Log files - Windows
