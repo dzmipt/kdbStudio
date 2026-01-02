@@ -1,0 +1,382 @@
+{
+  "actions": {
+    "serverBack": {
+      "text": "Back",
+      "icon": "left",
+      "description": "Previous server",
+      "key": "B",
+      "stroke": "menu shift open bracket"
+    },
+    "serverForward": {
+      "text": "Forward",
+      "icon": "right",
+      "description": "Next server",
+      "key": "F",
+      "stroke": "menu shift close bracket"
+    },
+    "clean": {
+      "text": "Clean",
+      "icon": "document_new",
+      "description": "Clean editor script",
+      "key": "N"
+    },
+    "arrangeAll": {
+      "text": "Arrange All",
+      "description": "Arrange all windows on screen",
+      "key": "A"
+    },
+    "minMaxDivider": {
+      "text": "Maximize Editor Pane",
+      "description": "Maximize Editor Pane",
+      "key": "M",
+      "stroke": "menu m"
+    },
+    "toggleDividerOrientation": {
+      "text": "Toggle Divider Orientation",
+      "description": "Toggle the window divider's orientation",
+      "key": "C"
+    },
+    "closeTab": {
+      "text": "Close Tab",
+      "description": "Close current tab",
+      "key": "W",
+      "stroke": "menu w"
+    },
+    "closeFile": {
+      "text": "Close Window",
+      "description": "Close current window (close all tabs)",
+      "key": "C"
+    },
+    "openFile": {
+      "text": "Open...",
+      "icon": "folder",
+      "description": "Open a script",
+      "key": "O",
+      "stroke": "menu o"
+    },
+    "newWindow": {
+      "text": "New Window",
+      "description": "Open a new window",
+      "key": "N",
+      "stroke": "menu shift n"
+    },
+    "newTab": {
+      "text": "New Tab",
+      "description": "Open a new tab",
+      "key": "T",
+      "stroke": "menu n"
+    },
+    "serverList": {
+      "text": "Server List",
+      "icon": "text_tree",
+      "description": "Show server list",
+      "key": "L",
+      "stroke": "menu shift l"
+    },
+    "serverHistory": {
+      "text": "Server History",
+      "description": "Recent selected servers",
+      "key": "R",
+      "stroke": "menu shift r"
+    },
+    "loadServerTree": {
+      "text": "Load Servers...",
+      "icon": "folder",
+      "description": "Load Server Tree from json",
+      "key": "O"
+    },
+    "exportServerTree": {
+      "text": "Export Servers",
+      "icon": "save_as",
+      "description": "Export Server Tree into json",
+      "key": "E"
+    },
+    "importFromQPad": {
+      "text": "Import Servers from QPad...",
+      "description": "Import from Servers.cfg",
+      "key": "I"
+    },
+    "connectionStats": {
+      "text": "Get Connection Statistics",
+      "description": "Details about all connections for all opened tabs",
+      "key": "S"
+    },
+    "editServer": {
+      "text": "Edit",
+      "icon": "server_information",
+      "description": "Edit the server details",
+      "key": "E"
+    },
+    "addServer": {
+      "text": "Add...",
+      "icon": "server_add",
+      "description": "Configure a new server",
+      "key": "A"
+    },
+    "removeServer": {
+      "text": "Remove",
+      "icon": "server_delete",
+      "description": "Remove this server",
+      "key": "R"
+    },
+    "saveFile": {
+      "text": "Save",
+      "icon": "disks",
+      "description": "Save the script",
+      "key": "S",
+      "stroke": "menu s"
+    },
+    "saveAllFiles": {
+      "text": "Save All...",
+      "description": "Save all files",
+      "key": "L",
+      "stroke": "menu shift s"
+    },
+    "saveAsFile": {
+      "text": "Save As...",
+      "icon": "save_as",
+      "description": "Save script as",
+      "key": "A"
+    },
+    "export": {
+      "text": "Export...",
+      "icon": "export",
+      "description": "Export result set",
+      "key": "E"
+    },
+    "chart": {
+      "text": "Chart",
+      "icon": "chartSmall",
+      "description": "Chart current data set",
+      "key": "C",
+      "stroke": "menu g"
+    },
+    "executeAndChart": {
+      "text": "Execute and Chart",
+      "icon": "executeAndChart",
+      "description": "Execute and chart",
+      "key": "H",
+      "stroke": "menu shift e"
+    },
+    "executeCurrentLineAndChart": {
+      "text": "Execute Current Line and Chart",
+      "icon": "executeAndChart",
+      "description": "Execute current line and chart",
+      "key": "H",
+      "stroke": "menu shift enter"
+    },
+    "stop": {
+      "text": "Stop",
+      "icon": "stop",
+      "description": "Stop the query",
+      "key": "S"
+    },
+    "openInExcel": {
+      "text": "Open in Excel",
+      "icon": "excel_icon",
+      "description": "Open in Excel",
+      "key": "O"
+    },
+    "execute": {
+      "text": "Execute",
+      "icon": "table_sql_run",
+      "description": "Execute the full or highlighted text as a query",
+      "key": "E",
+      "stroke": "menu e"
+    },
+    "executeCurrentLine": {
+      "text": "Execute Current Line",
+      "icon": "element_run",
+      "description": "Execute the current line as a query",
+      "key": "ENTER",
+      "stroke": "menu enter"
+    },
+    "refresh": {
+      "text": "Refresh",
+      "icon": "refresh",
+      "description": "Refresh the result set",
+      "key": "R",
+      "stroke": "menu shift y"
+    },
+    "toggleCommaFormat": {
+      "text": "Toggle Comma Format",
+      "icon": "comma",
+      "description": "Add/remove thousands separator in selected result",
+      "key": "J",
+      "stroke": "menu j"
+    },
+    "upload": {
+      "text": "Upload to server",
+      "icon": "upload",
+      "description": "Upload grid to current server",
+      "key": "U",
+      "stroke": "menu u"
+    },
+    "findInResult": {
+      "text": "Find in Result",
+      "icon": "find",
+      "description": "Find in result tab",
+      "key": "F",
+      "stroke": "menu shift f"
+    },
+    "prevResult": {
+      "text": "Previous result",
+      "icon": "left",
+      "description": "Show previous result",
+      "key": "Q",
+      "stroke": "menu alt comma"
+    },
+    "nextResult": {
+      "text": "Next result",
+      "icon": "right",
+      "description": "Show next result",
+      "key": "W",
+      "stroke": "menu alt period"
+    },
+    "about": {
+      "text": "About",
+      "icon": "about",
+      "description": "About Studio for kdb+",
+      "key": "E"
+    },
+    "exit": {
+      "text": "Exit",
+      "description": "Close this window",
+      "key": "X"
+    },
+    "settings": {
+      "text": "Settings",
+      "description": "Settings",
+      "key": "S"
+    },
+    "codeKxCom": {
+      "text": "code.kx.com",
+      "icon": "text",
+      "description": "Open code.kx.com",
+      "key": "C"
+    },
+    "copy": {
+      "text": "Copy",
+      "icon": "copy",
+      "description": "Copy the selected text to the clipboard",
+      "key": "C",
+      "stroke": "menu c"
+    },
+    "cut": {
+      "text": "Cut",
+      "icon": "cut",
+      "description": "Cut the selected text",
+      "key": "T",
+      "stroke": "menu x"
+    },
+    "paste": {
+      "text": "Paste",
+      "icon": "paste",
+      "description": "Paste text from the clipboard",
+      "key": "P",
+      "stroke": "menu v"
+    },
+    "selectAll": {
+      "text": "Select All",
+      "description": "Select all text in the document",
+      "key": "A",
+      "stroke": "menu a"
+    },
+    "undo": {
+      "text": "Undo",
+      "icon": "undo",
+      "description": "Undo the last change to the document",
+      "key": "U",
+      "stroke": "menu z"
+    },
+    "redo": {
+      "text": "Redo",
+      "icon": "redo",
+      "description": "Redo the last change to the document",
+      "key": "R",
+      "stroke": "menu y"
+    },
+    "find": {
+      "text": "Find...",
+      "icon": "find",
+      "description": "Find text in the document",
+      "key": "F",
+      "stroke": "menu f"
+    },
+    "replace": {
+      "text": "Replace...",
+      "icon": "replace",
+      "description": "Replace text in the document",
+      "key": "R",
+      "stroke": "menu r"
+    },
+    "convertTabsToSpaces": {
+      "text": "Convert tabs to spaces"
+    },
+    "nextEditorTab": {
+      "text": "Next tab",
+      "description": "Select next editor tab",
+      "key": "N",
+      "stroke": "menu alt right"
+    },
+    "prevEditorTab": {
+      "text": "Previous tab",
+      "description": "Select previous editor tab",
+      "key": "P",
+      "stroke": "menu alt left"
+    },
+    "wordWrap": {
+      "text": "Word wrap",
+      "description": "Word wrap for all tabs",
+      "key": "W",
+      "stroke": "menu shift w"
+    },
+    "splitEditorRight": {
+      "text": "Split right",
+      "description": "Split vertically",
+      "key": "R"
+    },
+    "splitEditorDown": {
+      "text": "Split down",
+      "description": "Split horizontally",
+      "key": "D"
+    }
+  },
+
+
+
+
+
+  "allAutoCapturedActions": {
+  },
+  
+  "actionsAsActionListener" : {
+    "editorUndo": {
+      "text": "RTA.UndoAction"
+    },
+    "editorRedo": {
+      "text": "RTA.RedoAction"
+    },
+    "editorCut": {
+      "text": "kdbStudio.rstaCutAsStyledTextAction"
+    },
+    "editorCopy": {
+      "text": "kdbStudio.rstaCopyAsStyledTextAction"
+    },
+    "editorPaste": {
+      "text": "paste-from-clipboard"
+    },
+    "editorSelectAll": {
+      "text": "select-all"
+    },
+    "editorFind": {
+      "text": "kdbStudio.FindAction"
+    },
+    "editorReplace": {
+      "text": "kdbStudio.ReplaceAction"
+    },
+    "editorConvertTabsToSpaces": {
+      "text": "kdbStudio.ConvertTabsToSpacesAction"
+    }
+  }
+}

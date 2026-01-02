@@ -113,7 +113,6 @@ public class SettingsDialog extends EscapeDialog {
             StudioRSyntaxTextArea editor = editorTab.getTextArea();
             editor.setHighlightCurrentLine(CONFIG.getBoolean(Config.RSTA_HIGHLIGHT_CURRENT_LINE));
             editor.setAnimateBracketMatching(CONFIG.getBoolean(Config.RSTA_ANIMATE_BRACKET_MATCHING));
-            editor.setLineWrap(CONFIG.getBoolean(Config.RSTA_WORD_WRAP));
             editor.setSyntaxScheme(CONFIG.getFont(Config.FONT_EDITOR), CONFIG.getTokenStyleConfig());
             editor.setEditorColors(CONFIG.getEditorColors());
             editor.setBackground(editorTab.getServer().getBackgroundColor());

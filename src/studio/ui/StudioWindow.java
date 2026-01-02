@@ -4,19 +4,14 @@ import kx.KMessage;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.fife.ui.rsyntaxtextarea.RSyntaxTextArea;
-import org.fife.ui.rsyntaxtextarea.RSyntaxTextAreaEditorKit;
 import studio.core.Studio;
 import studio.kdb.*;
 import studio.kdb.config.ActionOnExit;
 import studio.kdb.config.ExecAllOption;
-import studio.kdb.config.ServerTreeNodeSerializer;
 import studio.ui.action.*;
 import studio.ui.chart.Chart;
 import studio.ui.dndtabbedpane.DragEvent;
 import studio.ui.dndtabbedpane.DraggableTabbedPane;
-import studio.ui.rstextarea.ConvertTabsToSpacesAction;
-import studio.ui.rstextarea.FindReplaceAction;
-import studio.ui.rstextarea.RSTextAreaFactory;
 import studio.ui.search.SearchPanel;
 import studio.ui.statusbar.MainStatusBar;
 import studio.utils.Content;
@@ -46,30 +41,6 @@ import static studio.ui.EscapeDialog.DialogResult.CANCELLED;
 public class StudioWindow extends StudioFrame {
 
     private static final Logger log = LogManager.getLogger();
-    private static final Action editorUndoAction;
-    private static final Action editorRedoAction;
-    private static final Action editorCutAction;
-    private static final Action editorCopyAction;
-    private static final Action editorPasteAction;
-    private static final Action editorSelectAllAction;
-    private static final Action editorFindAction;
-    private static final Action editorReplaceAction;
-    private static final Action editorConvertTabsToSpacesAction;
-
-    static {
-        // Action name will be used for text in menu items. Kit's actions have internal names.
-        // We will create new actions for menu/toolbar and use kit's actions as action itself.
-        editorCopyAction = RSTextAreaFactory.getAction(RSTextAreaFactory.rstaCopyAsStyledTextAction);
-        editorCutAction = RSTextAreaFactory.getAction(RSTextAreaFactory.rstaCutAsStyledTextAction);
-        editorPasteAction = RSTextAreaFactory.getAction(RSyntaxTextAreaEditorKit.pasteAction);
-        editorSelectAllAction = RSTextAreaFactory.getAction(RSyntaxTextAreaEditorKit.selectAllAction);
-        editorUndoAction = RSTextAreaFactory.getAction(RSyntaxTextAreaEditorKit.rtaUndoAction);
-        editorRedoAction = RSTextAreaFactory.getAction(RSyntaxTextAreaEditorKit.rtaRedoAction);
-        editorFindAction = RSTextAreaFactory.getAction(FindReplaceAction.findAction);
-        editorReplaceAction = RSTextAreaFactory.getAction(FindReplaceAction.replaceAction);
-        editorConvertTabsToSpacesAction = RSTextAreaFactory.getAction(ConvertTabsToSpacesAction.action);
-    }
-
 
     private boolean loading = true;
 
@@ -86,62 +57,62 @@ public class StudioWindow extends StudioFrame {
     private SearchPanel resultSearchPanel;
     private ServerList serverList;
 
-    private UserAction serverBackAction;
-    private UserAction serverForwardAction;
-    private UserAction arrangeAllAction;
-    private UserAction closeFileAction;
-    private UserAction closeTabAction;
-    private UserAction cleanAction;
-    private UserAction openFileAction;
-    private UserAction openInExcel;
-    private UserAction codeKxComAction;
-    private UserAction serverListAction;
-    private UserAction serverHistoryAction;
-    private UserAction newWindowAction;
-    private UserAction newTabAction;
-    private UserAction saveFileAction;
-    private UserAction saveAllFilesAction;
-    private UserAction saveAsFileAction;
-    private UserAction exportAction;
-    private UserAction chartAction;
-    private UserAction executeAndChartAction;
-    private UserAction executeCurrentLineAndChartAction;
-    private Action undoAction;
-    private Action redoAction;
-    private Action cutAction;
-    private Action copyAction;
-    private Action pasteAction;
-    private Action selectAllAction;
-    private Action findAction;
-    private Action replaceAction;
-    private Action convertTabsToSpacesAction;
-    private UserAction stopAction;
-    private UserAction executeAction;
-    private UserAction executeCurrentLineAction;
-    private UserAction refreshAction;
-    private UserAction aboutAction;
-    private UserAction exitAction;
-    private UserAction settingsAction;
-    private UserAction toggleDividerOrientationAction;
-    private UserAction minMaxDividerAction;
-    private UserAction loadServerTreeAction;
-    private UserAction exportServerTreeAction;
-    private UserAction importFromQPadAction;
-    private UserAction connectionStatsAction;
-    private UserAction editServerAction;
-    private UserAction addServerAction;
-    private UserAction removeServerAction;
-    private UserAction toggleCommaFormatAction;
-    private UserAction uploadAction;
-    private UserAction findInResultAction;
-    private UserAction prevResultAction;
-    private UserAction nextResultAction;
-    private UserAction nextEditorTabAction;
-    private UserAction prevEditorTabAction;
+    private StudioAction serverBackAction;
+    private StudioAction serverForwardAction;
+    private StudioAction arrangeAllAction;
+    private StudioAction closeFileAction;
+    private StudioAction closeTabAction;
+    private StudioAction cleanAction;
+    private StudioAction openFileAction;
+    private StudioAction openInExcel;
+    private StudioAction codeKxComAction;
+    private StudioAction serverListAction;
+    private StudioAction serverHistoryAction;
+    private StudioAction newWindowAction;
+    private StudioAction newTabAction;
+    private StudioAction saveFileAction;
+    private StudioAction saveAllFilesAction;
+    private StudioAction saveAsFileAction;
+    private StudioAction exportAction;
+    private StudioAction chartAction;
+    private StudioAction executeAndChartAction;
+    private StudioAction executeCurrentLineAndChartAction;
+    private StudioAction undoAction;
+    private StudioAction redoAction;
+    private StudioAction cutAction;
+    private StudioAction copyAction;
+    private StudioAction pasteAction;
+    private StudioAction selectAllAction;
+    private StudioAction findAction;
+    private StudioAction replaceAction;
+    private StudioAction convertTabsToSpacesAction;
+    private StudioAction stopAction;
+    private StudioAction executeAction;
+    private StudioAction executeCurrentLineAction;
+    private StudioAction refreshAction;
+    private StudioAction aboutAction;
+    private StudioAction exitAction;
+    private StudioAction settingsAction;
+    private StudioAction toggleDividerOrientationAction;
+    private StudioAction minMaxDividerAction;
+    private StudioAction loadServerTreeAction;
+    private StudioAction exportServerTreeAction;
+    private StudioAction importFromQPadAction;
+    private StudioAction connectionStatsAction;
+    private StudioAction editServerAction;
+    private StudioAction addServerAction;
+    private StudioAction removeServerAction;
+    private StudioAction toggleCommaFormatAction;
+    private StudioAction uploadAction;
+    private StudioAction findInResultAction;
+    private StudioAction prevResultAction;
+    private StudioAction nextResultAction;
+    private StudioAction nextEditorTabAction;
+    private StudioAction prevEditorTabAction;
     private UserAction[] lineEndingActions;
-    private UserAction wordWrapAction;
-    private UserAction splitEditorRight;
-    private UserAction splitEditorDown;
+    private StudioAction wordWrapAction;
+    private StudioAction splitEditorRight;
+    private StudioAction splitEditorDown;
 
     private static int studioWindowNameIndex = 0;
     private int editorTabbedPaneNameIndex = 0;
@@ -221,7 +192,7 @@ public class StudioWindow extends StudioFrame {
         undoAction.setEnabled(textArea.canUndo());
         redoAction.setEnabled(textArea.canRedo());
 
-        wordWrapAction.setSelected(CONFIG.getBoolean(Config.RSTA_WORD_WRAP));
+        wordWrapAction.setSelected(textArea.getLineWrap());
 
         for (LineEnding lineEnding: LineEnding.values() ) {
             lineEndingActions[lineEnding.ordinal()].setSelected(editor.getLineEnding() == lineEnding);
@@ -374,7 +345,7 @@ public class StudioWindow extends StudioFrame {
         exportAsDelimited(getSelectedTableModel(), filename, ',');
     }
 
-    private void export() {
+    public void export() {
         if (getSelectedTableModel() == null) return;
 
         File file = FileChooser.chooseFile(this, Config.EXPORT_FILE_CHOOSER, JFileChooser.SAVE_DIALOG, "Export result set as",
@@ -411,7 +382,7 @@ public class StudioWindow extends StudioFrame {
         editor.loadFile(null);
     }
 
-    private void openFile() {
+    public void openFile() {
         File file = FileChooser.openFile(this, FileChooser.Q_FF);
 
         if (file == null) return;
@@ -451,7 +422,7 @@ public class StudioWindow extends StudioFrame {
     }
 
 
-    private static void saveAll() {
+    public static void saveAll() {
         WindowFactory.forEachEditors(editorTab -> {
             if ( !editorTab.saveFileOnDisk(false)) {
                 throw new WindowFactory.StopIteration();
@@ -459,7 +430,7 @@ public class StudioWindow extends StudioFrame {
         });
     }
 
-    private void arrangeAll() {
+    public void arrangeAll() {
         List<StudioWindow> windows = WindowFactory.allStudioWindows();
         int noWins = windows.size();
         int noRows = Math.min(noWins, 3);
@@ -494,263 +465,120 @@ public class StudioWindow extends StudioFrame {
         }
     }
 
+    public void editServer() {
+        EditServerForm f = new EditServerForm(this, editor.getServer());
+        f.alignAndShow();
+        if (f.getResult() == ACCEPTED) {
+            if (stopAction.isEnabled())
+                stopAction.actionPerformed(new ActionEvent(this, ActionEvent.ACTION_PERFORMED, Actions.stop));
+
+            Server newServer = f.getServer();
+            if (newServer.inServerTree()) {
+                CONFIG.getServerConfig().replaceServer(editor.getServer(), newServer);
+            }
+            setServer(newServer);
+            refreshAll();
+        }
+    }
+
+    public void addServer() {
+        AddServerForm f = new AddServerForm(this, editor.getServer());
+        f.alignAndShow();
+        if (f.getResult() == ACCEPTED) {
+            Server server = f.getServer();
+            if (server.inServerTree()) {
+                CONFIG.getServerConfig().addServer(server);
+            }
+            setServer(server);
+            refreshAll();
+        }
+    }
+
+    public void removeServer() {
+        int choice = JOptionPane.showOptionDialog(this,
+                "Remove server " + editor.getServer().getFullName() + " from list?",
+                "Remove server?",
+                JOptionPane.YES_NO_CANCEL_OPTION,
+                JOptionPane.QUESTION_MESSAGE,
+                Util.QUESTION_ICON,
+                null, // use standard button titles
+                null);      // no default selection
+
+        if (choice == 0) {
+            CONFIG.getServerConfig().removeServer(editor.getServer());
+
+            Server[] servers = CONFIG.getServerConfig().getServers();
+
+            if (servers.length > 0)
+                setServer(servers[0]);
+
+            refreshAll();
+        }
+    }
+
+    public void openInExcel() {
+        try {
+            File file = File.createTempFile("studioExport", ".xlsx");
+            ExcelExporter.exportTableX(this, getSelectedResultTab(), file, true);
+        } catch (IOException ex) {
+            log.error("Failed to create temporary file", ex);
+            StudioOptionPane.showError(this, "Failed to Open in Excel " + ex.getMessage(),"Error");
+        }
+    }
+
     private void initActions() {
-        serverBackAction = UserAction.create("Back", Util.LEFT_ICON, "Previous server", KeyEvent.VK_B,
-                Util.getMenuShortcut(KeyEvent.VK_OPEN_BRACKET, InputEvent.SHIFT_DOWN_MASK),
-                e -> editor.navigateHistoryServer(false)
-                );
-        serverForwardAction = UserAction.create("Forward", Util.RIGHT_ICON, "Next server", KeyEvent.VK_F,
-                Util.getMenuShortcut(KeyEvent.VK_CLOSE_BRACKET, InputEvent.SHIFT_DOWN_MASK),
-                e -> editor.navigateHistoryServer(true)
-        );
-
-        cleanAction = UserAction.create("Clean", Util.NEW_DOCUMENT_ICON, "Clean editor script", KeyEvent.VK_N,
-                null, e -> newFile());
-
-        arrangeAllAction = UserAction.create("Arrange All",  "Arrange all windows on screen",
-                KeyEvent.VK_A, null, e -> arrangeAll());
-
-        minMaxDividerAction = UserAction.create("Maximize Editor Pane", "Maximize editor pane",
-                KeyEvent.VK_M, Util.getMenuShortcut(KeyEvent.VK_M),
-                e -> minMaxDivider());
-
-        toggleDividerOrientationAction = UserAction.create("Toggle Divider Orientation",
-                "Toggle the window divider's orientation", KeyEvent.VK_C, null, e -> toggleDividerOrientation());
-
-        closeTabAction = UserAction.create("Close Tab",  "Close current tab", KeyEvent.VK_W,
-                Util.getMenuShortcut(KeyEvent.VK_W), e -> editor.getEditorsPanel().closeTab(editor));
-
-        closeFileAction = UserAction.create("Close Window",  "Close current window (close all tabs)",
-                KeyEvent.VK_C, null, e -> close());
-
-        openFileAction = UserAction.create("Open...", Util.FOLDER_ICON, "Open a script", KeyEvent.VK_O,
-                Util.getMenuShortcut(KeyEvent.VK_O), e -> openFile());
-
-        newWindowAction = UserAction.create("New Window",  "Open a new window",
-                KeyEvent.VK_N, Util.getMenuShortcut(KeyEvent.VK_N, InputEvent.SHIFT_DOWN_MASK),
-                e -> WindowFactory.newStudioWindow(editor.getServer(), null) );
-
-        newTabAction = UserAction.create("New Tab",  "Open a new tab", KeyEvent.VK_T,
-                Util.getMenuShortcut(KeyEvent.VK_N),
-                e -> addTab(null));
-
-        serverListAction = UserAction.create("Server List", Util.TEXT_TREE_ICON, "Show server list",
-                KeyEvent.VK_L, Util.getMenuShortcut(KeyEvent.VK_L, InputEvent.SHIFT_DOWN_MASK),
-                e -> showServerList(false));
-
-        serverHistoryAction = UserAction.create("Server History", "Recent selected servers", KeyEvent.VK_R,
-                Util.getMenuShortcut(KeyEvent.VK_R, InputEvent.SHIFT_DOWN_MASK),
-                e -> showServerList(true));
-
-        loadServerTreeAction = UserAction.create("Load Servers...", Util.FOLDER_ICON, "Load Server Tree from json",
-                KeyEvent.VK_O, null, e -> {
-                    ServerTreeNode importTree = ServerTreeNodeSerializer.openImportDialog(this);
-                    if (importTree == null) return;
-
-                    Config.getInstance().getServerConfig().setRoot(importTree);
-                });
-
-        exportServerTreeAction = UserAction.create("Export Servers", Util.SAVE_AS_ICON, "Export Server Tree into json",
-                KeyEvent.VK_E, null, e -> ServerTreeNodeSerializer.openExportDialog(this, Config.getInstance().getServerTree()));
-
-
-        importFromQPadAction = UserAction.create("Import Servers from QPad...", "Import from Servers.cfg",
-                KeyEvent.VK_I, null, e -> QPadImport.doImport(this));
-
-        connectionStatsAction = UserAction.create("Get Connection Statistics", "Details about all connections for all opened tabs",
-                KeyEvent.VK_S, null, e -> ConnectionStats.getStats(this));
-
-
-        editServerAction = UserAction.create("Edit", Util.SERVER_INFORMATION_ICON, "Edit the server details",
-                KeyEvent.VK_E, null, e -> {
-                    EditServerForm f = new EditServerForm(this, editor.getServer());
-                    f.alignAndShow();
-                    if (f.getResult() == ACCEPTED) {
-                        if (stopAction.isEnabled())
-                            stopAction.actionPerformed(e);
-
-                        Server newServer = f.getServer();
-                        if (newServer.inServerTree()) {
-                            CONFIG.getServerConfig().replaceServer(editor.getServer(), newServer);
-                        }
-                        setServer(newServer);
-                        refreshAll();
-                    }
-                });
-
-
-        addServerAction = UserAction.create("Add...", Util.ADD_SERVER_ICON, "Configure a new server",
-                KeyEvent.VK_A, null, e -> {
-                    AddServerForm f = new AddServerForm(this, editor.getServer());
-                    f.alignAndShow();
-                    if (f.getResult() == ACCEPTED) {
-                        Server server = f.getServer();
-                        if (server.inServerTree()) {
-                            CONFIG.getServerConfig().addServer(server);
-                        }
-                        setServer(server);
-                        refreshAll();
-                    }
-                });
-
-        removeServerAction = UserAction.create("Remove", Util.DELETE_SERVER_ICON, "Remove this server",
-                KeyEvent.VK_R, null, e -> {
-                    int choice = JOptionPane.showOptionDialog(this,
-                            "Remove server " + editor.getServer().getFullName() + " from list?",
-                            "Remove server?",
-                            JOptionPane.YES_NO_CANCEL_OPTION,
-                            JOptionPane.QUESTION_MESSAGE,
-                            Util.QUESTION_ICON,
-                            null, // use standard button titles
-                            null);      // no default selection
-
-                    if (choice == 0) {
-                        CONFIG.getServerConfig().removeServer(editor.getServer());
-
-                        Server[] servers = CONFIG.getServerConfig().getServers();
-
-                        if (servers.length > 0)
-                            setServer(servers[0]);
-
-                        refreshAll();
-                    }
-                });
-
-
-        saveFileAction = UserAction.create("Save", Util.DISKS_ICON, "Save the script",
-                KeyEvent.VK_S, Util.getMenuShortcut(KeyEvent.VK_S),
-                e -> EditorsPanel.saveEditor(editor));
-
-        saveAllFilesAction = UserAction.create("Save All...",  "Save all files",
-                KeyEvent.VK_L, Util.getMenuShortcut(KeyEvent.VK_S, InputEvent.SHIFT_DOWN_MASK),
-                e -> saveAll());
-
-        saveAsFileAction = UserAction.create("Save As...", Util.SAVE_AS_ICON, "Save script as",
-                KeyEvent.VK_A, null, e -> EditorsPanel.saveAsFile(editor));
-
-        exportAction = UserAction.create("Export...", Util.EXPORT_ICON, "Export result set",
-                KeyEvent.VK_E, null, e -> export());
-
-        chartAction = UserAction.create("Chart", Util.CHART_ICON, "Chart current data set",
-                KeyEvent.VK_C, Util.getMenuShortcut(KeyEvent.VK_G), e -> chart() );
-
-        executeAndChartAction = UserAction.create("Execute and Chart", Util.EXECUTE_AND_CHART, "Execute and chart",
-                KeyEvent.VK_H, Util.getMenuShortcut(KeyEvent.VK_E, InputEvent.SHIFT_DOWN_MASK),
-                e -> executeQuery(true) );
-
-        executeCurrentLineAndChartAction = UserAction.create("Execute CurrentLine and Chart", Util.EXECUTE_AND_CHART, "Execute current line and chart",
-                KeyEvent.VK_H, Util.getMenuShortcut(KeyEvent.VK_ENTER, InputEvent.SHIFT_DOWN_MASK),
-                e -> executeQueryCurrentLine(true) );
-
-        stopAction = UserAction.create("Stop", Util.STOP_ICON, "Stop the query",
-                KeyEvent.VK_S, null, e -> editor.getQueryExecutor().cancel());
-
-        openInExcel = UserAction.create("Open in Excel", Util.EXCEL_ICON, "Open in Excel",
-                KeyEvent.VK_O, null, e -> {
-                    try {
-                        File file = File.createTempFile("studioExport", ".xlsx");
-                        ExcelExporter.exportTableX(this, getSelectedResultTab(), file, true);
-                    } catch (IOException ex) {
-                        log.error("Failed to create temporary file", ex);
-                        StudioOptionPane.showError(this, "Failed to Open in Excel " + ex.getMessage(),"Error");
-                    }
-                });
-
-        executeAction = UserAction.create("Execute", Util.TABLE_SQL_RUN_ICON, "Execute the full or highlighted text as a query",
-                KeyEvent.VK_E, Util.getMenuShortcut(KeyEvent.VK_E), e -> executeQuery(false));
-
-        executeCurrentLineAction = UserAction.create("Execute Current Line", Util.RUN_ICON, "Execute the current line as a query",
-                KeyEvent.VK_ENTER, Util.getMenuShortcut(KeyEvent.VK_ENTER), e -> executeQueryCurrentLine(false));
-
-        refreshAction = UserAction.create("Refresh", Util.REFRESH_ICON, "Refresh the result set",
-                KeyEvent.VK_R, Util.getMenuShortcut(KeyEvent.VK_Y, InputEvent.SHIFT_DOWN_MASK), e -> refreshQuery());
-
-        toggleCommaFormatAction = UserAction.create("Toggle Comma Format", Util.COMMA_ICON, "Add/remove thousands separator in selected result",
-                KeyEvent.VK_J, Util.getMenuShortcut(KeyEvent.VK_J),
-                e -> {
-                    ResultTab tab = getSelectedResultTab();
-                    if (tab != null) tab.toggleCommaFormatting();
-                });
-
-        uploadAction = UserAction.create("Upload to server", Util.UPLOAD_ICON, "Upload grid to current server",
-                KeyEvent.VK_U, Util.getMenuShortcut(KeyEvent.VK_U),
-                e -> {
-                    ResultTab tab = getSelectedResultTab();
-                    if (tab != null) tab.upload(e);
-                });
-
-        findInResultAction = UserAction.create("Find in Result", Util.FIND_ICON, "Find in result tab",
-                KeyEvent.VK_F, Util.getMenuShortcut(KeyEvent.VK_F, InputEvent.SHIFT_DOWN_MASK),
-                e -> resultSearchPanel.setVisible(true) );
-
-        prevResultAction = UserAction.create("Previous result", Util.LEFT_ICON, "Show previous result",
-                KeyEvent.VK_Q, Util.getMenuShortcut(KeyEvent.VK_COMMA, InputEvent.ALT_DOWN_MASK),
-                e -> {
-                    ResultTab tab = getSelectedResultTab();
-                    if (tab != null) tab.navigateCard(false);
-                });
-
-        nextResultAction = UserAction.create(
-                "Next result", Util.RIGHT_ICON, "Show next result",
-                KeyEvent.VK_W, Util.getMenuShortcut(KeyEvent.VK_PERIOD, InputEvent.ALT_DOWN_MASK),
-                e -> {
-                    ResultTab tab = getSelectedResultTab();
-                    if (tab != null) tab.navigateCard(true);
-                });
-
-        aboutAction = UserAction.create("About", Util.ABOUT_ICON, "About Studio for kdb+",
-                KeyEvent.VK_E, null, e -> about());
-
-        exitAction = UserAction.create("Exit", "Close this window",
-                KeyEvent.VK_X, e -> quit());
-
-        settingsAction = UserAction.create("Settings",  "Settings",
-                KeyEvent.VK_S, null, e -> settings());
-
-        codeKxComAction = UserAction.create("code.kx.com", Util.TEXT_ICON, "Open code.kx.com",
-                KeyEvent.VK_C, null, e -> {
-                    try {
-                        Util.openURL("https://code.kx.com/q/ref/");
-                    } catch (Exception ex) {
-                        StudioOptionPane.showError("Error attempting to launch web browser:\n" + ex.getLocalizedMessage(), "Error");
-                    }
-                });
-
-        copyAction = UserAction.create("Copy", Util.COPY_ICON, "Copy the selected text to the clipboard",
-                KeyEvent.VK_C, Util.getMenuShortcut(KeyEvent.VK_C), editorCopyAction);
-
-        cutAction = UserAction.create("Cut", Util.CUT_ICON, "Cut the selected text",
-                KeyEvent.VK_T, Util.getMenuShortcut(KeyEvent.VK_X), editorCutAction);
-
-        pasteAction = UserAction.create("Paste", Util.PASTE_ICON, "Paste text from the clipboard",
-                KeyEvent.VK_P, Util.getMenuShortcut(KeyEvent.VK_V), editorPasteAction);
-
-        findAction = UserAction.create("Find...", Util.FIND_ICON, "Find text in the document",
-                KeyEvent.VK_F, Util.getMenuShortcut(KeyEvent.VK_F), editorFindAction);
-
-        replaceAction = UserAction.create("Replace...", Util.REPLACE_ICON, "Replace text in the document",
-                KeyEvent.VK_R, Util.getMenuShortcut(KeyEvent.VK_R), editorReplaceAction);
-
-        convertTabsToSpacesAction = UserAction.create("Convert tabs to spaces", editorConvertTabsToSpacesAction);
-
-        selectAllAction = UserAction.create("Select All", "Select all text in the document",
-                KeyEvent.VK_A, Util.getMenuShortcut(KeyEvent.VK_A), editorSelectAllAction);
-
-        undoAction = UserAction.create("Undo", Util.UNDO_ICON, "Undo the last change to the document",
-                KeyEvent.VK_U, Util.getMenuShortcut(KeyEvent.VK_Z), editorUndoAction);
-
-        redoAction = UserAction.create("Redo", Util.REDO_ICON, "Redo the last change to the document",
-                KeyEvent.VK_R, Util.getMenuShortcut(KeyEvent.VK_Y), editorRedoAction);
-
-        nextEditorTabAction = UserAction.create("Next tab",
-                "Select next editor tab", KeyEvent.VK_N,
-                Util.getMenuShortcut(KeyEvent.VK_RIGHT, InputEvent.ALT_DOWN_MASK ),
-                e -> editor.getEditorsPanel().selectNextTab(true));
-
-        prevEditorTabAction = UserAction.create("Previous tab",
-                "Select previous editor tab", KeyEvent.VK_P,
-                Util.getMenuShortcut(KeyEvent.VK_LEFT, InputEvent.ALT_DOWN_MASK ),
-                e -> editor.getEditorsPanel().selectNextTab(false));
+        serverBackAction = ActionRegistry.getStudioAction(this, Actions.serverBack);
+        serverForwardAction = ActionRegistry.getStudioAction(this, Actions.serverForward);
+        cleanAction = ActionRegistry.getStudioAction(this, Actions.clean);
+        arrangeAllAction = ActionRegistry.getStudioAction(this, Actions.arrangeAll);
+        minMaxDividerAction = ActionRegistry.getStudioAction(this, Actions.minMaxDivider);
+        toggleDividerOrientationAction = ActionRegistry.getStudioAction(this, Actions.toggleDividerOrientation);
+        closeTabAction = ActionRegistry.getStudioAction(this, Actions.closeTab);
+        closeFileAction = ActionRegistry.getStudioAction(this, Actions.closeFile);
+        openFileAction = ActionRegistry.getStudioAction(this, Actions.openFile);
+        newWindowAction = ActionRegistry.getStudioAction(this, Actions.newWindow);
+        newTabAction = ActionRegistry.getStudioAction(this, Actions.newTab);
+        serverListAction = ActionRegistry.getStudioAction(this, Actions.serverList);
+        serverHistoryAction = ActionRegistry.getStudioAction(this, Actions.serverHistory);
+        loadServerTreeAction = ActionRegistry.getStudioAction(this, Actions.loadServerTree);
+        exportServerTreeAction = ActionRegistry.getStudioAction(this, Actions.exportServerTree);
+        importFromQPadAction = ActionRegistry.getStudioAction(this, Actions.importFromQPad);
+        connectionStatsAction = ActionRegistry.getStudioAction(this, Actions.connectionStats);
+        editServerAction = ActionRegistry.getStudioAction(this, Actions.editServer);
+        addServerAction = ActionRegistry.getStudioAction(this, Actions.addServer);
+        removeServerAction = ActionRegistry.getStudioAction(this, Actions.removeServer);
+        saveFileAction = ActionRegistry.getStudioAction(this, Actions.saveFile);
+        saveAllFilesAction = ActionRegistry.getStudioAction(this, Actions.saveAllFiles);
+        saveAsFileAction = ActionRegistry.getStudioAction(this, Actions.saveAsFile);
+        exportAction = ActionRegistry.getStudioAction(this, Actions.export);
+        chartAction = ActionRegistry.getStudioAction(this, Actions.chart);
+        executeAndChartAction = ActionRegistry.getStudioAction(this, Actions.executeAndChart);
+        executeCurrentLineAndChartAction = ActionRegistry.getStudioAction(this, Actions.executeCurrentLineAndChart);
+        stopAction = ActionRegistry.getStudioAction(this, Actions.stop);
+        openInExcel = ActionRegistry.getStudioAction(this, Actions.openInExcel);
+        executeAction = ActionRegistry.getStudioAction(this, Actions.execute);
+        executeCurrentLineAction = ActionRegistry.getStudioAction(this, Actions.executeCurrentLine);
+        refreshAction = ActionRegistry.getStudioAction(this, Actions.refresh);
+        toggleCommaFormatAction = ActionRegistry.getStudioAction(this, Actions.toggleCommaFormat);
+        uploadAction = ActionRegistry.getStudioAction(this, Actions.upload);
+        findInResultAction = ActionRegistry.getStudioAction(this, Actions.findInResult);
+        prevResultAction = ActionRegistry.getStudioAction(this, Actions.prevResult);
+        nextResultAction = ActionRegistry.getStudioAction(this, Actions.nextResult);
+        aboutAction = ActionRegistry.getStudioAction(this, Actions.about);
+        exitAction = ActionRegistry.getStudioAction(this, Actions.exit);
+        settingsAction = ActionRegistry.getStudioAction(this, Actions.settings);
+        codeKxComAction = ActionRegistry.getStudioAction(this, Actions.codeKxCom);
+        copyAction = ActionRegistry.getStudioAction(this, Actions.copy);
+        cutAction = ActionRegistry.getStudioAction(this, Actions.cut);
+        pasteAction = ActionRegistry.getStudioAction(this, Actions.paste);
+        selectAllAction = ActionRegistry.getStudioAction(this, Actions.selectAll);
+        undoAction = ActionRegistry.getStudioAction(this, Actions.undo);
+        redoAction = ActionRegistry.getStudioAction(this, Actions.redo);
+        findAction = ActionRegistry.getStudioAction(this, Actions.find);
+        replaceAction = ActionRegistry.getStudioAction(this, Actions.replace);
+        convertTabsToSpacesAction = ActionRegistry.getStudioAction(this, Actions.convertTabsToSpaces);
+        nextEditorTabAction = ActionRegistry.getStudioAction(this, Actions.nextEditorTab);
+        prevEditorTabAction = ActionRegistry.getStudioAction(this, Actions.prevEditorTab);
 
         lineEndingActions = new UserAction[LineEnding.values().length];
         for(LineEnding lineEnding: LineEnding.values()) {
@@ -762,19 +590,14 @@ public class StudioWindow extends StudioFrame {
              lineEndingActions[lineEnding.ordinal()] = action;
         }
 
-        wordWrapAction = UserAction.create("Word wrap",  "Word wrap for all tabs",
-                KeyEvent.VK_W, Util.getMenuShortcut(KeyEvent.VK_W, InputEvent.SHIFT_DOWN_MASK),
-                e -> toggleWordWrap());
+        wordWrapAction = ActionRegistry.getStudioAction(this, Actions.wordWrap);
+        wordWrapAction.setSelected(CONFIG.getBoolean(Config.RSTA_WORD_WRAP));
 
-        splitEditorRight = UserAction.create("Split right",  "Split vertically",
-                KeyEvent.VK_R, null,
-                e-> editor.getEditorsPanel().split(false));
-        splitEditorDown = UserAction.create("Split down",  "Split horizontally",
-                KeyEvent.VK_D, null,
-                e-> editor.getEditorsPanel().split(true));
+        splitEditorRight = ActionRegistry.getStudioAction(this, Actions.splitEditorRight);
+        splitEditorDown = ActionRegistry.getStudioAction(this, Actions.splitEditorDown);
     }
 
-    public UserAction getSplitAction(boolean vertically) {
+    public Action getSplitAction(boolean vertically) {
         return vertically ? splitEditorDown : splitEditorRight;
     }
 
@@ -786,11 +609,9 @@ public class StudioWindow extends StudioFrame {
         dialog.saveSettings();
     }
 
-    private void toggleWordWrap() {
-        boolean value = CONFIG.getBoolean(Config.RSTA_WORD_WRAP);
-        CONFIG.setBoolean(Config.RSTA_WORD_WRAP, !value);
-        SettingsDialog.refreshEditorsSettings();
-        refreshActionState();
+    public void toggleWordWrap() {
+        boolean newValue = wordWrapAction.isSelected();
+        getActiveEditor().getTextArea().setLineWrap(newValue);
     }
 
     public static void about() {
@@ -1079,7 +900,7 @@ public class StudioWindow extends StudioFrame {
         return serverList;
     }
 
-    private void showServerList(boolean selectHistory) {
+    public void showServerList(boolean selectHistory) {
         log.info("Show server list from {}", getTitle());
         Server selectedServer = serverList.showServerTree(editor.getServer(), serverHistory, selectHistory);
 
@@ -1227,7 +1048,7 @@ public class StudioWindow extends StudioFrame {
     }
 
     private int dividerLastPosition; // updated from property change listener
-    private void minMaxDivider(){
+    public void minMaxDivider(){
         //BasicSplitPaneDivider divider = ((BasicSplitPaneUI)splitpane.getUI()).getDivider();
         //((JButton)divider.getComponent(0)).doClick();
         //((JButton)divider.getComponent(1)).doClick();
@@ -1257,7 +1078,7 @@ public class StudioWindow extends StudioFrame {
         }
     }
 
-    private void toggleDividerOrientation() {
+    public void toggleDividerOrientation() {
         if (splitpane.getOrientation() == JSplitPane.VERTICAL_SPLIT) {
             splitpane.setOrientation(JSplitPane.HORIZONTAL_SPLIT);
             resultsPane.setTabPlacement(JTabbedPane.LEFT);
@@ -1496,7 +1317,9 @@ public class StudioWindow extends StudioFrame {
         addWindowFocusListener(new WindowFocusListener() {
             @Override
             public void windowGainedFocus(WindowEvent e) {
-                editor.getEditorsPanel().setInFocusTabbedEditors(true);
+                EditorsPanel editorsPanel = editor.getEditorsPanel();
+                if (editorsPanel == null) return;
+                editorsPanel.setInFocusTabbedEditors(true);
             }
 
             @Override
@@ -1693,7 +1516,7 @@ public class StudioWindow extends StudioFrame {
         return (ResultTab) resultsPane.getComponentAt(index);
     }
 
-    private ResultTab getSelectedResultTab() {
+    public ResultTab getSelectedResultTab() {
         return (ResultTab) resultsPane.getSelectedComponent();
     }
 

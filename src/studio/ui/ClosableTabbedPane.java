@@ -54,7 +54,7 @@ public class ClosableTabbedPane {
             }
         });
 
-        tabbedPane.getInputMap(WHEN_ANCESTOR_OF_FOCUSED_COMPONENT).put(Util.getMenuShortcut(KeyEvent.VK_W, KeyEvent.SHIFT_DOWN_MASK), "closeTab");
+        tabbedPane.getInputMap(WHEN_ANCESTOR_OF_FOCUSED_COMPONENT).put(Util.getMenuShortcut(KeyEvent.VK_W, KeyEvent.ALT_DOWN_MASK), "closeTab");
         tabbedPane.getActionMap().put("closeTab",
                 UserAction.create("Close tab", e -> {
                     int index = tabbedPane.getSelectedIndex();

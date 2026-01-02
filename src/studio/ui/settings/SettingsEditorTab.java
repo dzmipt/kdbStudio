@@ -91,7 +91,7 @@ public class SettingsEditorTab extends SettingsTab {
 
         boolean changedEditor = CONFIG.setBoolean(Config.RSTA_ANIMATE_BRACKET_MATCHING, isAnimateBracketMatching());
         changedEditor |= CONFIG.setBoolean(Config.RSTA_HIGHLIGHT_CURRENT_LINE, isHighlightCurrentLine());
-        changedEditor |= CONFIG.setBoolean(Config.RSTA_WORD_WRAP, isWordWrap());
+        CONFIG.setBoolean(Config.RSTA_WORD_WRAP, isWordWrap());
         changedEditor |= CONFIG.setBoolean(Config.RSTA_INSERT_PAIRED_CHAR, chBoxRTSAInsertPairedChar.isSelected());
         changedEditor |= CONFIG.setBoolean(Config.EDITOR_TAB_EMULATED, chBoxEmulateTab.isSelected());
         changedEditor |= CONFIG.setInt(Config.EDITOR_TAB_SIZE, (Integer)txtEmulatedTabSize.getValue());

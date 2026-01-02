@@ -75,7 +75,6 @@ public class Studio {
         FlatLightLaf.installLafInfo();
         FlatMacLightLaf.installLafInfo();
         FlatIntelliJLaf.installLafInfo();
-
         FlatDarkLaf.installLafInfo();
         FlatDarculaLaf.installLafInfo();
         FlatMacDarkLaf.installLafInfo();

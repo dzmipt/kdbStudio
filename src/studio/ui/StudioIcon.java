@@ -7,6 +7,7 @@ import java.awt.*;
 import java.awt.image.ImageObserver;
 import java.net.URL;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
 public class StudioIcon extends ImageIcon {
@@ -24,6 +25,10 @@ public class StudioIcon extends ImageIcon {
 
     public static StudioIcon getIcon(String name) {
         return icons.computeIfAbsent(name, StudioIcon::new);
+    }
+
+    public static Set<String> getAllNames() {
+        return icons.keySet();
     }
 
     private StudioIcon(String name) {

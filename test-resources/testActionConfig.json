@@ -1,0 +1,21 @@
+{
+  "actions": {
+    "serverBack": {
+      "text": "Back",
+      "icon": "left",
+      "description": "Previous server",
+      "key": "B",
+      "stroke": "menu shift open_bracket"
+    },
+    "osTestAction": {
+      "text": "test",
+      "icon": "copy",
+      "description": "Test Description",
+      "key": {"mac": "m", "other": "w"},
+      "stroke": {"mac": "meta tab", "other": "ctrl shift tab"}
+    },
+    "emptyAction": {
+      "text": ""
+    }
+  }
+}
