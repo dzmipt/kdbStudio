@@ -3,6 +3,7 @@ package studio.kdb;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import studio.core.DefaultAuthenticationMechanism;
+import studio.utils.LineEnding;
 
 import java.awt.*;
 import java.util.Properties;
@@ -59,12 +60,21 @@ public class WorkspaceTest {
 
         right1.addTab(true).addServer(server).addContent("right1");
         right2.addTab(true).addServer(server).addContent("right2");
+
+        Workspace.Window w4 = workspace.addWindow(false);
+        w4.addTab(false)
+                .setLineEnding(LineEnding.Unix);
+        w4.addTab(false)
+                .setLineEnding(LineEnding.Windows);
+        w4.addTab(true)
+                .setLineEnding(LineEnding.MacOS9);
+
     }
 
     private void checkWorkspace(Workspace workspace) {
         assertEquals(1, workspace.getSelectedWindow());
         Workspace.Window[] windows = workspace.getWindows();
-        assertEquals(3, windows.length);
+        assertEquals(4, windows.length);
 
         assertEquals(0, windows[0].getSelectedTab());
         assertEquals(1, windows[1].getSelectedTab());
@@ -112,6 +122,11 @@ public class WorkspaceTest {
 
         assertFalse(right1.isSplit());
         assertFalse(right2.isSplit());
+
+        tabs = windows[3].getAllTabs();
+        assertEquals(LineEnding.Unix, tabs[0].getLineEnding());
+        assertEquals(LineEnding.Windows, tabs[1].getLineEnding());
+        assertEquals(LineEnding.MacOS9, tabs[2].getLineEnding());
     }
 
     @Test

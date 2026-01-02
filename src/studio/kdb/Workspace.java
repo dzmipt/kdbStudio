@@ -405,7 +405,7 @@ public class Workspace {
             if (serverAuth != null) p.setProperty(prefix + SERVER_AUTH, serverAuth);
             if (content != null) p.setProperty(prefix + CONTENT, content);
             p.setProperty(prefix + MODIFIED, Boolean.toString(modified));
-            p.setProperty(prefix + LINE_ENDING, lineEnding.toString());
+            p.setProperty(prefix + LINE_ENDING, lineEnding.name());
             p.setProperty(prefix + CARET, Integer.toString(caret));
         }
 
