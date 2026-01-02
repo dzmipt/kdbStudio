@@ -16,6 +16,10 @@
     },
     "emptyAction": {
       "text": ""
+    },
+    "nullIconAction": {
+      "text": "",
+      "icon": "null"
     }
   }
 }

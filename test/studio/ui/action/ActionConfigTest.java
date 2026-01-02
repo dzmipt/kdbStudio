@@ -3,6 +3,7 @@ package studio.ui.action;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.junit.jupiter.api.Test;
+import studio.ui.Util;
 
 import javax.swing.*;
 import java.awt.event.KeyEvent;
@@ -53,7 +54,7 @@ public class ActionConfigTest {
     @Test
     public void parseActionTest() {
         List<ActionConfig> actions = new ActionConfigParser("testActionConfig.json").getActions();
-        assertEquals(3, actions.size());
+        assertEquals(4, actions.size());
 
         ActionConfig serverAction = actions.get(0);
         assertEquals("serverBack", serverAction.getId());
@@ -81,7 +82,10 @@ public class ActionConfigTest {
         assertNull(emptyAction.getDescription());
         assertEquals(-1, emptyAction.getMnemonic());
         assertNull(emptyAction.getKeyStroke());
+        assertEquals(Util.BLANK_ICON, emptyAction.getIcon());
 
+        ActionConfig nullIconAction = actions.get(3);
+        assertNull(nullIconAction.getIcon());
     }
 
     @Test
