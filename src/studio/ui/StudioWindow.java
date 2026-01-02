@@ -109,7 +109,7 @@ public class StudioWindow extends StudioFrame {
     private StudioAction nextResultAction;
     private StudioAction nextEditorTabAction;
     private StudioAction prevEditorTabAction;
-    private UserAction[] lineEndingActions;
+    private StudioAction[] lineEndingActions;
     private StudioAction wordWrapAction;
     private StudioAction splitEditorRight;
     private StudioAction splitEditorDown;
@@ -526,6 +526,11 @@ public class StudioWindow extends StudioFrame {
         }
     }
 
+    public void setLineEnding(LineEnding lineEnding) {
+        editor.setLineEnding(lineEnding);
+        refreshActionState();
+    }
+
     private void initActions() {
         serverBackAction = ActionRegistry.getStudioAction(this, Actions.serverBack);
         serverForwardAction = ActionRegistry.getStudioAction(this, Actions.serverForward);
@@ -580,18 +585,12 @@ public class StudioWindow extends StudioFrame {
         nextEditorTabAction = ActionRegistry.getStudioAction(this, Actions.nextEditorTab);
         prevEditorTabAction = ActionRegistry.getStudioAction(this, Actions.prevEditorTab);
 
-        lineEndingActions = new UserAction[LineEnding.values().length];
-        for(LineEnding lineEnding: LineEnding.values()) {
-             UserAction action = UserAction.create(lineEnding.getDescription(),
-                e -> {
-                    editor.setLineEnding(lineEnding);
-                    refreshActionState();
-                } );
-             lineEndingActions[lineEnding.ordinal()] = action;
-        }
+        lineEndingActions = new StudioAction[LineEnding.values().length];
+        lineEndingActions[LineEnding.Unix.ordinal()] = ActionRegistry.getStudioAction(this, Actions.lineEndingUnix);
+        lineEndingActions[LineEnding.Windows.ordinal()] = ActionRegistry.getStudioAction(this, Actions.lineEndingWindows);
+        lineEndingActions[LineEnding.MacOS9.ordinal()] = ActionRegistry.getStudioAction(this, Actions.lineEndingMacOS9);
 
         wordWrapAction = ActionRegistry.getStudioAction(this, Actions.wordWrap);
-        wordWrapAction.setSelected(CONFIG.getBoolean(Config.RSTA_WORD_WRAP));
 
         splitEditorRight = ActionRegistry.getStudioAction(this, Actions.splitEditorRight);
         splitEditorDown = ActionRegistry.getStudioAction(this, Actions.splitEditorDown);

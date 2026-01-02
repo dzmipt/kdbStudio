@@ -8,6 +8,7 @@ import studio.ui.*;
 import studio.ui.rstextarea.ConvertTabsToSpacesAction;
 import studio.ui.rstextarea.FindReplaceAction;
 import studio.ui.rstextarea.RSTextAreaFactory;
+import studio.utils.LineEnding;
 
 import java.awt.event.ActionEvent;
 import java.util.HashMap;
@@ -70,6 +71,9 @@ public class Actions {
     public final static String wordWrap = "wordWrap";
     public final static String splitEditorRight = "splitEditorRight";
     public final static String splitEditorDown = "splitEditorDown";
+    public final static String lineEndingUnix = "lineEndingUnix";
+    public final static String lineEndingWindows = "lineEndingWindows";
+    public final static String lineEndingMacOS9 = "lineEndingMacOS9";
 
     public final static Map<String, StudioWindowAction> studioWindowActions = new HashMap<>();
 
@@ -204,6 +208,12 @@ public class Actions {
         addEditorAction(splitEditorDown, editor ->
                 editor.getEditorsPanel().split(true) );
 
+        add(lineEndingUnix, studioWindow ->
+                studioWindow.setLineEnding(LineEnding.Unix) );
+        add(lineEndingWindows, studioWindow ->
+                studioWindow.setLineEnding(LineEnding.Windows) );
+        add(lineEndingMacOS9, studioWindow ->
+                studioWindow.setLineEnding(LineEnding.MacOS9) );
     }
 
 }

@@ -340,43 +340,24 @@
       "text": "Split down",
       "description": "Split horizontally",
       "key": "D"
-    }
-  },
-
-
-
-
-
-  "allAutoCapturedActions": {
-  },
-  
-  "actionsAsActionListener" : {
-    "editorUndo": {
-      "text": "RTA.UndoAction"
     },
-    "editorRedo": {
-      "text": "RTA.RedoAction"
+    "lineEndingUnix": {
+      "text": "Unix",
+      "icon": "null",
+      "description": "Set Unix line ending - LF",
+      "key": "U"
     },
-    "editorCut": {
-      "text": "kdbStudio.rstaCutAsStyledTextAction"
+    "lineEndingWindows": {
+      "text": "Windows",
+      "icon": "null",
+      "description": "Set Windows line ending - CRLF",
+      "key": "W"
     },
-    "editorCopy": {
-      "text": "kdbStudio.rstaCopyAsStyledTextAction"
-    },
-    "editorPaste": {
-      "text": "paste-from-clipboard"
-    },
-    "editorSelectAll": {
-      "text": "select-all"
-    },
-    "editorFind": {
-      "text": "kdbStudio.FindAction"
-    },
-    "editorReplace": {
-      "text": "kdbStudio.ReplaceAction"
-    },
-    "editorConvertTabsToSpaces": {
-      "text": "kdbStudio.ConvertTabsToSpacesAction"
+    "lineEndingMacOS9": {
+      "text": "MacOS 9",
+      "icon": "null",
+      "description": "Set Classic MacOS line ending - CR",
+      "key": "M"
     }
   }
 }

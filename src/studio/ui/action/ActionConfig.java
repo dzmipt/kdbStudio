@@ -134,7 +134,9 @@ public class ActionConfig {
     }
 
     public Icon getIcon() {
-        return iconName == null ? Util.BLANK_ICON : StudioIcon.getIcon(iconName);
+        if (iconName == null) return Util.BLANK_ICON;
+        if (iconName.equalsIgnoreCase("null")) return null;
+        return StudioIcon.getIcon(iconName);
     }
 
     public String getDescription() {
