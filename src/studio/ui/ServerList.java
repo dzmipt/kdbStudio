@@ -38,6 +38,7 @@ public class ServerList extends EscapeDialog implements NodeSelectedListener {
         setRemoveContentOnDispose(false);
         initComponents();
 
+        pack();
         if (bounds != null && Util.fitToScreen(bounds)) {
             setBounds(bounds);
         } else {
