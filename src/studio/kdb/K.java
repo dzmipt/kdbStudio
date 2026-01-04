@@ -1302,7 +1302,7 @@ public class K {
         }
     }
 
-    public static class Flip extends FlipBase {
+    public static class Flip extends FlipBase implements Indexable  {
         public K.KSymbolVector x;
         public K.KBaseVector<? extends KBase> y;
 
@@ -1310,6 +1310,21 @@ public class K {
             super();
             x = names;
             y = cols;
+        }
+
+        @Override
+        public Dict at(int index) {
+            KBase[] array = new KBase[y.count()];
+            for (int col=0; col < array.length; col++) {
+                K.KBase kBase = y.at(col);
+                if (kBase instanceof Indexable) {
+                     array[col] = ((Indexable)kBase).at(index);
+                } else {
+                    array[col] = kBase;
+                }
+            }
+
+            return new Dict(x, new KList(array));
         }
 
         @Override
@@ -1324,7 +1339,11 @@ public class K {
 
         @Override
         public int count() {
-            return y.at(0).count();
+            for (int index = 0; index< y.count(); index++) {
+                K.KBase col = y.at(index);
+                if (col instanceof Indexable) return col.count();
+            }
+            return 1;
         }
     }
 
@@ -1541,7 +1560,11 @@ public class K {
 
     }
 
-    public static abstract class KBaseVector<E extends KBase> extends KBase {
+    public interface Indexable {
+        K.KBase at(int index);
+    }
+
+    public static abstract class KBaseVector<E extends KBase> extends KBase implements Indexable {
         protected Object array;
         private final int length;
         private byte attr = 0;
@@ -1551,8 +1574,6 @@ public class K {
             this.array = array;
             this.length = Array.getLength(array);
         }
-
-        public abstract E at(int i);
 
         public byte getAttr() {
             return attr;
@@ -1641,6 +1662,7 @@ public class K {
             super(array, KType.List);
         }
 
+        @Override
         public KBase at(int i) {
             return (KBase) Array.get(array, i);
         }

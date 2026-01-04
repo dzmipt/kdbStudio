@@ -90,7 +90,7 @@ public enum KType {
     }
 
     public boolean isVector() {
-        return elementType != null;
+        return type >= List.type && type <= TimeVector.type;
     }
 
     public KType getElementType() {

@@ -5,7 +5,7 @@ public class ListModel extends KTableModel {
 
     public ListModel(K.KBaseVector<? extends K.KBase> list) {
         super(list.count());
-        column = new KColumn("value", list);
+        column = new KColumn("value", list, list.count());
     }
     @Override
     public boolean isKey(int column) {

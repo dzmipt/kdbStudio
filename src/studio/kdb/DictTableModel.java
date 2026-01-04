@@ -7,6 +7,8 @@ public class DictTableModel extends KTableModel {
     public DictTableModel(K.Dict dict) {
         super(dict.count());
 
+        int len = dict.count();
+
         boolean keyFlip = dict.x instanceof K.Flip;
         boolean valueFlip = dict.y instanceof K.Flip;
         keyCount = keyFlip ? ((K.Flip)dict.x).x.count() : 1;
@@ -27,14 +29,14 @@ public class DictTableModel extends KTableModel {
                 name = keyColumn ? "key" : "value";
             }
 
-            K.KBaseVector<? extends K.KBase> data;
+            K.KBase data;
             if (obj instanceof K.Flip) {
-                data = (K.KBaseVector<? extends K.KBase>) ((K.Flip)obj).y.at(index);
+                data = ((K.Flip)obj).y.at(index);
             } else { //list
-                data = (K.KBaseVector<? extends K.KBase>)obj;
+                data = obj;
             }
 
-            columns[col] = new KColumn(name, data);
+            columns[col] = new KColumn(name, data, len);
         }
     }
 

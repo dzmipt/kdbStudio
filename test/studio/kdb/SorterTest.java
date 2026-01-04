@@ -9,7 +9,7 @@ public class SorterTest {
     @Test
     public void testSort() {
         K.KIntVector array = new K.KIntVector(2, 1, 1, 2, 3);
-        KColumn column = new KColumn("test", array);
+        KColumn column = new KColumn("test", array, array.count());
         assertArrayEquals(new int[] {1, 2, 0, 3, 4},
                 Sorter.sort(column, new int[]{0, 1, 2, 3 ,4}) );
 
@@ -21,7 +21,7 @@ public class SorterTest {
     @Test
     public void testReverse() {
         K.KIntVector array = new K.KIntVector(2, 1, 1, 2, 3);
-        KColumn column = new KColumn("test", array);
+        KColumn column = new KColumn("test", array, array.count());
         assertArrayEquals(new int[] {4, 0, 3, 1, 2},
                 Sorter.reverse(column, new int[]{1, 2, 0, 3, 4}) );
 

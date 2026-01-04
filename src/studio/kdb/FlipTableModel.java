@@ -7,10 +7,14 @@ public class FlipTableModel extends KTableModel {
     public FlipTableModel(K.Flip flip) {
         super(flip.count());
 
+        int len = flip.count();
         int count = flip.x.count();
         columns = new KColumn[count];
+
         for (int index=0; index<count; index++) {
-            columns[index] = new KColumn(flip.x.at(index).getString(), (K.KBaseVector<? extends K.KBase>) flip.y.at(index) );
+            String name = flip.x.at(index).getString();
+            K.KBase kBase = flip.y.at(index);
+            columns[index] = new KColumn(name, kBase, len);
         }
     }
 
