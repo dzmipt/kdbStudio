@@ -4,6 +4,9 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.junit.jupiter.api.Test;
 import studio.ui.Util;
+import studio.ui.action.config.ActionConfig;
+import studio.ui.action.config.ConfigParser;
+import studio.ui.action.config.MenuConfig;
 
 import javax.swing.*;
 import java.awt.event.KeyEvent;
@@ -53,8 +56,8 @@ public class ActionConfigTest {
 
     @Test
     public void parseActionTest() {
-        List<ActionConfig> actions = new ActionConfigParser("testActionConfig.json").getActions();
-        assertEquals(4, actions.size());
+        List<ActionConfig> actions = new ConfigParser("testActionConfig.json").getActions();
+        assertEquals(6, actions.size());
 
         ActionConfig serverAction = actions.get(0);
         assertEquals("serverBack", serverAction.getId());
@@ -64,6 +67,7 @@ public class ActionConfigTest {
         assertEquals(KeyEvent.VK_B, serverAction.getMnemonic());
         assertEquals(KeyStroke.getKeyStroke("meta shift OPEN_BRACKET"), serverAction.getKeyStroke(true));
         assertEquals(KeyStroke.getKeyStroke("ctrl shift OPEN_BRACKET"), serverAction.getKeyStroke(false));
+        assertFalse(serverAction.isToggle());
 
         ActionConfig osTestAction = actions.get(1);
         assertEquals("osTestAction", osTestAction.getId());
@@ -86,6 +90,9 @@ public class ActionConfigTest {
 
         ActionConfig nullIconAction = actions.get(3);
         assertNull(nullIconAction.getIcon());
+
+        assertTrue(actions.get(4).isToggle());
+        assertFalse(actions.get(5).isToggle());
     }
 
     @Test
@@ -108,4 +115,43 @@ public class ActionConfigTest {
         assertTrue(ids.equals(actionIds));
     }
 
+    @Test
+    public void menuBarConfigTest() {
+        List<MenuConfig> menuBarItems = new ConfigParser("testActionConfig.json").getMenuConfig().getList();
+        assertEquals(2, menuBarItems.size());
+
+        MenuConfig.Menu menu = (MenuConfig.Menu) menuBarItems.get(0);
+        assertEquals("First Menu", menu.getText());
+
+        List<MenuConfig> items = menu.getItems().getList();
+        assertEquals(7, items.size());
+        assertEquals("action1", ((MenuConfig.Action)items.get(0)).getId());
+        assertInstanceOf(MenuConfig.Separator.class, items.get(1));
+        assertEquals("action2", ((MenuConfig.Action)items.get(2)).getId());
+        assertEquals("testMark", ((MenuConfig.Marker)items.get(3)).getId());
+
+        MenuConfig.Condition condition = (MenuConfig.Condition) items.get(4);
+        assertFalse(condition.isMac());
+        List<MenuConfig> items1 = condition.getItems().getList();
+        assertEquals(2, items1.size());
+        assertEquals("a", ((MenuConfig.Action)items1.get(0)).getId());
+        assertInstanceOf(MenuConfig.Separator.class, items1.get(1));
+
+        condition = (MenuConfig.Condition) items.get(5);
+        assertTrue(condition.isMac());
+        items1 = condition.getItems().getList();
+        assertEquals(1, items1.size());
+        assertInstanceOf(MenuConfig.Separator.class, items1.get(0));
+
+        MenuConfig.Menu subMenu = (MenuConfig.Menu)items.get(6);
+        assertEquals("Sub-menu", subMenu.getText());
+        items1 = subMenu.getItems().getList();
+        assertEquals(0, items1.size());
+
+        menu = (MenuConfig.Menu) menuBarItems.get(1);
+        assertEquals("Empty Menu", menu.getText());
+        items1 = menu.getItems().getList();
+        assertEquals(0, items1.size());
+
+    }
 }

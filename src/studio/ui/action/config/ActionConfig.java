@@ -1,9 +1,10 @@
-package studio.ui.action;
+package studio.ui.action.config;
 
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import studio.ui.StudioIcon;
 import studio.ui.Util;
+import studio.ui.action.BaseAction;
 
 import javax.swing.*;
 import java.awt.*;
@@ -24,13 +25,16 @@ public class ActionConfig {
     private KeyStroke macKeyStroke = null;
     private KeyStroke otherKeyStroke = null;
 
+    private boolean toggle = false;
+
     private static final String TEXT = "text";
     private static final String ICON = "icon";
     private static final String DESCRIPTION = "description";
     private static final String KEY = "key";
     private static final String STROKE = "stroke";
-    private static final String MAC = "mac";
-    private static final String OTHER = "other";
+    public static final String MAC = "mac";
+    public static final String OTHER = "other";
+    private static final String TOGGLE = "toggle";
 
     private static final Map<String, Integer> MODIFIERS = new TreeMap<>(String.CASE_INSENSITIVE_ORDER);
     static {
@@ -70,6 +74,7 @@ public class ActionConfig {
                 config.setOtherKeyStroke(getKeyStroke(false, j.getAsString()));
             }
         }
+        if (json.has(TOGGLE)) config.setToggle(json.get(TOGGLE).getAsBoolean());
         return config;
     }
 
@@ -106,13 +111,13 @@ public class ActionConfig {
         }
     }
 
-    public Action apply(Action action) {
+    public <S> BaseAction<S> apply(BaseAction<S> action) {
         action.putValue(Action.NAME, getText());
         action.putValue(Action.SMALL_ICON, getIcon());
         action.putValue(Action.SHORT_DESCRIPTION, description);
         action.putValue(Action.MNEMONIC_KEY, getMnemonic());
         action.putValue(Action.ACCELERATOR_KEY, getKeyStroke());
-
+        if (isToggle()) action.setSelected(false);
         return action;
     }
 
@@ -159,6 +164,10 @@ public class ActionConfig {
         return getKeyStroke(Util.MAC_OS_X);
     }
 
+    public boolean isToggle() {
+        return toggle;
+    }
+
     private void setIconName(String iconName) {
         this.iconName = iconName;
     }
@@ -181,5 +190,9 @@ public class ActionConfig {
 
     private void setOtherKeyStroke(KeyStroke otherKeyStroke) {
         this.otherKeyStroke = otherKeyStroke;
+    }
+
+    private void setToggle(boolean toggle) {
+        this.toggle = toggle;
     }
 }

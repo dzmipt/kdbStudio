@@ -327,9 +327,10 @@
     },
     "wordWrap": {
       "text": "Word wrap",
-      "description": "Word wrap for all tabs",
+      "description": "Word wrap",
       "key": "W",
-      "stroke": "menu shift w"
+      "stroke": "menu shift w",
+      "toggle": true
     },
     "splitEditorRight": {
       "text": "Split right",
@@ -345,19 +346,103 @@
       "text": "Unix",
       "icon": "null",
       "description": "Set Unix line ending - LF",
-      "key": "U"
+      "key": "U",
+      "toggle": true
     },
     "lineEndingWindows": {
       "text": "Windows",
       "icon": "null",
       "description": "Set Windows line ending - CRLF",
-      "key": "W"
+      "key": "W",
+      "toggle": true
     },
     "lineEndingMacOS9": {
       "text": "MacOS 9",
       "icon": "null",
       "description": "Set Classic MacOS line ending - CR",
-      "key": "M"
+      "key": "M",
+      "toggle": true
     }
-  }
+  },
+
+  "menuBar": [
+    {
+      "menu": "File",
+      "items": [
+        "newWindow", "newTab", "openFile",
+        {"menu": "Open Recent",
+          "items": [
+            {
+              "mark": "openMRU"
+            }
+          ]
+        },
+        "saveFile", "saveAsFile", "saveAllFiles",
+        "closeTab", "closeFile", null,
+        {
+          "items": ["settings"],
+          "os": "other"
+        },
+        "openInExcel", "export", "chart",
+        {
+          "items": [null, "exit"],
+          "os": "other"
+        }
+      ]
+    },
+    {
+      "menu": "Edit",
+      "items": [
+        "undo", "redo", null, "cut", "copy", "paste", null,
+        "wordWrap",
+        {
+          "menu": "Line Ending",
+          "items": [
+            "lineEndingUnix", "lineEndingWindows", "lineEndingMacOS9"
+          ]
+        },
+        "clean", "selectAll", null, "find", "replace", "convertTabsToSpaces"
+      ]
+    },
+    {
+      "menu": "Server",
+      "items": [
+        "addServer", "editServer", "removeServer",
+        {"menu": "Clone",
+          "items": [{
+            "mark": "clone"
+            }]
+        },
+        null, "serverBack", "serverForward", "serverList", "serverHistory", "loadServerTree", "exportServerTree",
+        "importFromQPad", null, "connectionStats"
+      ]
+    },
+    {
+      "menu": "Query",
+      "items": [
+        "executeCurrentLine", "executeCurrentLineAndChart", "execute", "executeAndChart", "stop", "refresh",
+        "toggleCommaFormat", "upload", "findInResult", "prevResult", "nextResult"
+      ]
+    },
+    {
+      "menu": "Window",
+      "items": [
+        "splitEditorRight", "splitEditorDown", null, "minMaxDivider", "toggleDividerOrientation",
+        "arrangeAll", "nextEditorTab", "prevEditorTab",
+        {
+          "mark": "windows"
+        }
+      ]
+    },
+    {
+      "menu": "Help",
+      "items": [
+        "codeKxCom",
+        {
+          "items": ["about"],
+          "os": "other"
+        }
+      ]
+    }
+  ]
 }

@@ -5,6 +5,7 @@ import studio.kdb.Config;
 import studio.kdb.ServerTreeNode;
 import studio.kdb.config.ServerTreeNodeSerializer;
 import studio.ui.*;
+import studio.ui.action.config.StudioWindowAction;
 import studio.ui.rstextarea.ConvertTabsToSpacesAction;
 import studio.ui.rstextarea.FindReplaceAction;
 import studio.ui.rstextarea.RSTextAreaFactory;

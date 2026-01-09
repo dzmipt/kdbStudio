@@ -1,4 +1,4 @@
-package studio.ui.action;
+package studio.ui.action.config;
 
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
@@ -10,12 +10,15 @@ import java.util.ArrayList;
 import java.util.List;
 
 
-public class ActionConfigParser {
+public class ConfigParser {
+
+    private final static String ACTIONS = "actions";
+    private final static String MENU_BAR = "menuBar";
 
     private final JsonObject jsonRoot;
 
-    public ActionConfigParser(String filename) {
-        try (InputStream inputStream = ActionConfigParser.class.getClassLoader().getResourceAsStream(filename) ) {
+    public ConfigParser(String filename) {
+        try (InputStream inputStream = ConfigParser.class.getClassLoader().getResourceAsStream(filename) ) {
             jsonRoot = JsonParser.parseReader(new InputStreamReader(inputStream)).getAsJsonObject();
         } catch (IOException e) {
             throw new IllegalStateException("Error on parsing " + filename, e);
@@ -24,7 +27,7 @@ public class ActionConfigParser {
 
     public List<ActionConfig> getActions() {
         List<ActionConfig> actions = new ArrayList<>();
-        JsonObject jsonActions = jsonRoot.getAsJsonObject("actions");
+        JsonObject jsonActions = jsonRoot.getAsJsonObject(ACTIONS);
         for (String id: jsonActions.keySet()) {
             try {
                 actions.add(ActionConfig.parse(id, jsonActions.getAsJsonObject(id)));
@@ -33,6 +36,10 @@ public class ActionConfigParser {
             }
         }
         return actions;
+    }
+
+    public MenuConfigItems getMenuConfig() {
+        return MenuConfigItems.parse(jsonRoot.getAsJsonArray(MENU_BAR));
     }
 
 }

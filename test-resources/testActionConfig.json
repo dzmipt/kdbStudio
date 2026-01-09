@@ -20,6 +20,38 @@
     "nullIconAction": {
       "text": "",
       "icon": "null"
+    },
+    "toggleAction": {
+      "text": "toggleAction",
+      "toggle": true
+    },
+    "NonToggleAction": {
+      "text": "NonToggleAction",
+      "toggle": false
     }
-  }
+  },
+
+  "menuBar": [
+    {
+      "menu": "First Menu",
+      "items": [
+        "action1", null, "action2",
+        {"mark": "testMark"},
+        {"os": "other",
+          "items": ["a", null]
+        },
+        {"os": "mac",
+          "items": [null]
+        },
+        {"menu": "Sub-menu",
+          "items": []
+        }
+      ]
+    },
+    {
+      "menu": "Empty Menu",
+      "items": []
+    }
+
+  ]
 }

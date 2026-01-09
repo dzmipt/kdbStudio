@@ -1,4 +1,4 @@
-package studio.ui.action;
+package studio.ui.action.config;
 
 import org.fife.ui.rsyntaxtextarea.RSyntaxTextArea;
 import studio.ui.EditorTab;

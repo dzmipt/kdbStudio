@@ -4,7 +4,6 @@ import kx.KMessage;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.fife.ui.rsyntaxtextarea.RSyntaxTextArea;
-import studio.core.Studio;
 import studio.kdb.*;
 import studio.kdb.config.ActionOnExit;
 import studio.kdb.config.ExecAllOption;
@@ -57,58 +56,33 @@ public class StudioWindow extends StudioFrame {
     private SearchPanel resultSearchPanel;
     private ServerList serverList;
 
+    private StudioActionMap studioActionMap;
+    private MenuFactory menuFactory;
+
     private StudioAction serverBackAction;
     private StudioAction serverForwardAction;
-    private StudioAction arrangeAllAction;
-    private StudioAction closeFileAction;
-    private StudioAction closeTabAction;
-    private StudioAction cleanAction;
-    private StudioAction openFileAction;
     private StudioAction openInExcel;
     private StudioAction codeKxComAction;
     private StudioAction serverListAction;
-    private StudioAction serverHistoryAction;
-    private StudioAction newWindowAction;
-    private StudioAction newTabAction;
-    private StudioAction saveFileAction;
-    private StudioAction saveAllFilesAction;
-    private StudioAction saveAsFileAction;
     private StudioAction exportAction;
     private StudioAction chartAction;
-    private StudioAction executeAndChartAction;
-    private StudioAction executeCurrentLineAndChartAction;
     private StudioAction undoAction;
     private StudioAction redoAction;
     private StudioAction cutAction;
     private StudioAction copyAction;
     private StudioAction pasteAction;
-    private StudioAction selectAllAction;
     private StudioAction findAction;
     private StudioAction replaceAction;
-    private StudioAction convertTabsToSpacesAction;
     private StudioAction stopAction;
     private StudioAction executeAction;
     private StudioAction executeCurrentLineAction;
     private StudioAction refreshAction;
-    private StudioAction aboutAction;
-    private StudioAction exitAction;
-    private StudioAction settingsAction;
-    private StudioAction toggleDividerOrientationAction;
     private StudioAction minMaxDividerAction;
-    private StudioAction loadServerTreeAction;
-    private StudioAction exportServerTreeAction;
-    private StudioAction importFromQPadAction;
-    private StudioAction connectionStatsAction;
     private StudioAction editServerAction;
-    private StudioAction addServerAction;
     private StudioAction removeServerAction;
-    private StudioAction toggleCommaFormatAction;
     private StudioAction uploadAction;
-    private StudioAction findInResultAction;
     private StudioAction prevResultAction;
     private StudioAction nextResultAction;
-    private StudioAction nextEditorTabAction;
-    private StudioAction prevEditorTabAction;
     private StudioAction[] lineEndingActions;
     private StudioAction wordWrapAction;
     private StudioAction splitEditorRight;
@@ -532,68 +506,41 @@ public class StudioWindow extends StudioFrame {
     }
 
     private void initActions() {
-        serverBackAction = ActionRegistry.getStudioAction(this, Actions.serverBack);
-        serverForwardAction = ActionRegistry.getStudioAction(this, Actions.serverForward);
-        cleanAction = ActionRegistry.getStudioAction(this, Actions.clean);
-        arrangeAllAction = ActionRegistry.getStudioAction(this, Actions.arrangeAll);
-        minMaxDividerAction = ActionRegistry.getStudioAction(this, Actions.minMaxDivider);
-        toggleDividerOrientationAction = ActionRegistry.getStudioAction(this, Actions.toggleDividerOrientation);
-        closeTabAction = ActionRegistry.getStudioAction(this, Actions.closeTab);
-        closeFileAction = ActionRegistry.getStudioAction(this, Actions.closeFile);
-        openFileAction = ActionRegistry.getStudioAction(this, Actions.openFile);
-        newWindowAction = ActionRegistry.getStudioAction(this, Actions.newWindow);
-        newTabAction = ActionRegistry.getStudioAction(this, Actions.newTab);
-        serverListAction = ActionRegistry.getStudioAction(this, Actions.serverList);
-        serverHistoryAction = ActionRegistry.getStudioAction(this, Actions.serverHistory);
-        loadServerTreeAction = ActionRegistry.getStudioAction(this, Actions.loadServerTree);
-        exportServerTreeAction = ActionRegistry.getStudioAction(this, Actions.exportServerTree);
-        importFromQPadAction = ActionRegistry.getStudioAction(this, Actions.importFromQPad);
-        connectionStatsAction = ActionRegistry.getStudioAction(this, Actions.connectionStats);
-        editServerAction = ActionRegistry.getStudioAction(this, Actions.editServer);
-        addServerAction = ActionRegistry.getStudioAction(this, Actions.addServer);
-        removeServerAction = ActionRegistry.getStudioAction(this, Actions.removeServer);
-        saveFileAction = ActionRegistry.getStudioAction(this, Actions.saveFile);
-        saveAllFilesAction = ActionRegistry.getStudioAction(this, Actions.saveAllFiles);
-        saveAsFileAction = ActionRegistry.getStudioAction(this, Actions.saveAsFile);
-        exportAction = ActionRegistry.getStudioAction(this, Actions.export);
-        chartAction = ActionRegistry.getStudioAction(this, Actions.chart);
-        executeAndChartAction = ActionRegistry.getStudioAction(this, Actions.executeAndChart);
-        executeCurrentLineAndChartAction = ActionRegistry.getStudioAction(this, Actions.executeCurrentLineAndChart);
-        stopAction = ActionRegistry.getStudioAction(this, Actions.stop);
-        openInExcel = ActionRegistry.getStudioAction(this, Actions.openInExcel);
-        executeAction = ActionRegistry.getStudioAction(this, Actions.execute);
-        executeCurrentLineAction = ActionRegistry.getStudioAction(this, Actions.executeCurrentLine);
-        refreshAction = ActionRegistry.getStudioAction(this, Actions.refresh);
-        toggleCommaFormatAction = ActionRegistry.getStudioAction(this, Actions.toggleCommaFormat);
-        uploadAction = ActionRegistry.getStudioAction(this, Actions.upload);
-        findInResultAction = ActionRegistry.getStudioAction(this, Actions.findInResult);
-        prevResultAction = ActionRegistry.getStudioAction(this, Actions.prevResult);
-        nextResultAction = ActionRegistry.getStudioAction(this, Actions.nextResult);
-        aboutAction = ActionRegistry.getStudioAction(this, Actions.about);
-        exitAction = ActionRegistry.getStudioAction(this, Actions.exit);
-        settingsAction = ActionRegistry.getStudioAction(this, Actions.settings);
-        codeKxComAction = ActionRegistry.getStudioAction(this, Actions.codeKxCom);
-        copyAction = ActionRegistry.getStudioAction(this, Actions.copy);
-        cutAction = ActionRegistry.getStudioAction(this, Actions.cut);
-        pasteAction = ActionRegistry.getStudioAction(this, Actions.paste);
-        selectAllAction = ActionRegistry.getStudioAction(this, Actions.selectAll);
-        undoAction = ActionRegistry.getStudioAction(this, Actions.undo);
-        redoAction = ActionRegistry.getStudioAction(this, Actions.redo);
-        findAction = ActionRegistry.getStudioAction(this, Actions.find);
-        replaceAction = ActionRegistry.getStudioAction(this, Actions.replace);
-        convertTabsToSpacesAction = ActionRegistry.getStudioAction(this, Actions.convertTabsToSpaces);
-        nextEditorTabAction = ActionRegistry.getStudioAction(this, Actions.nextEditorTab);
-        prevEditorTabAction = ActionRegistry.getStudioAction(this, Actions.prevEditorTab);
+        studioActionMap = ActionRegistry.getStudioActionMap(this);
+        serverBackAction = studioActionMap.get(Actions.serverBack);
+        serverForwardAction = studioActionMap.get(Actions.serverForward);
+        minMaxDividerAction = studioActionMap.get(Actions.minMaxDivider);
+        serverListAction = studioActionMap.get(Actions.serverList);
+        editServerAction = studioActionMap.get(Actions.editServer);
+        removeServerAction = studioActionMap.get(Actions.removeServer);
+        exportAction = studioActionMap.get(Actions.export);
+        chartAction = studioActionMap.get(Actions.chart);
+        stopAction = studioActionMap.get(Actions.stop);
+        openInExcel = studioActionMap.get(Actions.openInExcel);
+        executeAction = studioActionMap.get(Actions.execute);
+        executeCurrentLineAction = studioActionMap.get(Actions.executeCurrentLine);
+        refreshAction = studioActionMap.get(Actions.refresh);
+        uploadAction = studioActionMap.get(Actions.upload);
+        prevResultAction = studioActionMap.get(Actions.prevResult);
+        nextResultAction = studioActionMap.get(Actions.nextResult);
+        codeKxComAction = studioActionMap.get(Actions.codeKxCom);
+        copyAction = studioActionMap.get(Actions.copy);
+        cutAction = studioActionMap.get(Actions.cut);
+        pasteAction = studioActionMap.get(Actions.paste);
+        undoAction = studioActionMap.get(Actions.undo);
+        redoAction = studioActionMap.get(Actions.redo);
+        findAction = studioActionMap.get(Actions.find);
+        replaceAction = studioActionMap.get(Actions.replace);
 
         lineEndingActions = new StudioAction[LineEnding.values().length];
-        lineEndingActions[LineEnding.Unix.ordinal()] = ActionRegistry.getStudioAction(this, Actions.lineEndingUnix);
-        lineEndingActions[LineEnding.Windows.ordinal()] = ActionRegistry.getStudioAction(this, Actions.lineEndingWindows);
-        lineEndingActions[LineEnding.MacOS9.ordinal()] = ActionRegistry.getStudioAction(this, Actions.lineEndingMacOS9);
+        lineEndingActions[LineEnding.Unix.ordinal()] = studioActionMap.get(Actions.lineEndingUnix);
+        lineEndingActions[LineEnding.Windows.ordinal()] = studioActionMap.get(Actions.lineEndingWindows);
+        lineEndingActions[LineEnding.MacOS9.ordinal()] = studioActionMap.get(Actions.lineEndingMacOS9);
 
-        wordWrapAction = ActionRegistry.getStudioAction(this, Actions.wordWrap);
+        wordWrapAction = studioActionMap.get(Actions.wordWrap);
 
-        splitEditorRight = ActionRegistry.getStudioAction(this, Actions.splitEditorRight);
-        splitEditorDown = ActionRegistry.getStudioAction(this, Actions.splitEditorDown);
+        splitEditorRight = studioActionMap.get(Actions.splitEditorRight);
+        splitEditorDown = studioActionMap.get(Actions.splitEditorDown);
     }
 
     public Action getSplitAction(boolean vertically) {
@@ -678,19 +625,6 @@ public class StudioWindow extends StudioFrame {
         WindowFactory.forEach(StudioWindow::refreshServerList);
     }
 
-    private void addToMenu(JMenu menu, Action... actions) {
-        for (Action action: actions) {
-            if (action == null) {
-                menu.addSeparator();
-            } else {
-                if (action.getValue(Action.SMALL_ICON) == null) {
-                    action.putValue(Action.SMALL_ICON, Util.BLANK_ICON);
-                }
-                menu.add(action);
-            }
-        }
-    }
-
     private void setNamesInMenu(JMenu menu) {
         menu.setName(menu.getText());
         for (int index = 0; index < menu.getMenuComponentCount(); index++) {
@@ -715,169 +649,73 @@ public class StudioWindow extends StudioFrame {
         WindowFactory.forEach(StudioWindow::refreshMenu);
     }
 
-    private JMenu openMRUMenu, cloneMenu, windowMenu;
-    private int windowMenuWindowIndex;
+    private void cloneServer(Server server) {
+        Server clone = server.newName("Clone of " + server.getName());
+        EditServerForm f = new EditServerForm(StudioWindow.this, clone);
+        f.alignAndShow();
+
+        if (f.getResult() == ACCEPTED) {
+            clone = f.getServer();
+            if (clone.inServerTree()) {
+                CONFIG.getServerConfig().addServer(clone);
+            }
+            setServer(clone);
+            refreshAll();
+        }
+    }
 
     private void refreshMenu() {
-        openMRUMenu.removeAll();
-
-        List<String> mru = CONFIG.getStringArray(Config.MRU_FILES);
-        String mnems = "123456789";
-        for (int i = 0; i < mru.size(); i++) {
-            final String filename = mru.get(i);
-
-            JMenuItem item = new JMenuItem((i + 1) + " " + filename);
-            if (i<mnems.length()) {
-                item.setMnemonic(mnems.charAt(i));
-            }
-            item.setIcon(Util.BLANK_ICON);
-            item.addActionListener(e -> loadMRUFile(filename));
-            openMRUMenu.add(item);
+        menuFactory.cleanAtMarker(MenuFactory.openMRU_MARK);
+        int index = 1;
+        for (String filename: CONFIG.getStringArray(Config.MRU_FILES)) {
+            menuFactory.addAtMarker(MenuFactory.openMRU_MARK,
+                    BaseAction.build((index++) + " " + filename, null, filename, this::loadMRUFile) );
         }
 
-        cloneMenu.removeAll();
+        menuFactory.cleanAtMarker(MenuFactory.clone_MARK);
         Server[] servers = CONFIG.getServerConfig().getServers();
         int count = Math.min(MAX_SERVERS_TO_CLONE, servers.length);
         for (int i = 0; i < count; i++) {
-            final Server s = servers[i];
-            JMenuItem item = new JMenuItem(s.getFullName());
-            item.addActionListener(e -> {
-                Server clone = s.newName("Clone of " + s.getName()) ;
-                EditServerForm f = new EditServerForm(StudioWindow.this,clone);
-                f.alignAndShow();
-
-                if (f.getResult() == ACCEPTED) {
-                    clone = f.getServer();
-                    if (clone.inServerTree()) {
-                        CONFIG.getServerConfig().addServer(clone);
-                    }
-                    setServer(clone);
-                    refreshAll();
-                }
-            });
-
-            cloneMenu.add(item);
+            menuFactory.addAtMarker(MenuFactory.clone_MARK,
+                    BaseAction.build(servers[i].getFullName(), null, servers[i], this::cloneServer) );
         }
 
 
-        for (int index=windowMenu.getMenuComponentCount()-1; index>=windowMenuWindowIndex; index--) {
-            windowMenu.remove(index);
-        }
+        menuFactory.cleanAtMarker(MenuFactory.windows_MARK);
 
         List<StudioWindow> windows = WindowFactory.allStudioWindows();
-        count = windows.size();
-        UserAction[] windowMenuActions = new UserAction[count];
-        if (count > 0) {
-            windowMenu.addSeparator();
+        if (!windows.isEmpty()) {
+            menuFactory.addAtMarker(MenuFactory.windows_MARK, null);
 
-            for (int index = 0; index < count; index++) {
-                StudioWindow window = windows.get(index);
-                windowMenuActions[index] = UserAction.create((index + 1) + " " + window.getCaption(),
-                        window == this ? Util.CHECK_ICON : Util.BLANK_ICON, "", 0 , null,
-                        e -> WindowFactory.activate(window));
+            index = 1;
+            for (StudioWindow window: windows) {
+                menuFactory.addAtMarker(MenuFactory.windows_MARK,
+                        BaseAction.build((index++) + " " + window.getCaption(),
+                                window == this ? Util.CHECK_ICON : Util.BLANK_ICON,
+                                window, WindowFactory::activate )
+                        );
             }
-
-            addToMenu(windowMenu, windowMenuActions);
         }
 
         List<Chart> charts = WindowFactory.allCharts();
         if (!charts.isEmpty()) {
-            windowMenu.addSeparator();
+            menuFactory.addAtMarker(MenuFactory.windows_MARK, null);
 
-            for(int index = 0; index < charts.size(); index++) {
-                Chart chart = charts.get(index);
-                UserAction action = UserAction.create((index + 1) + " " + chart.getChartTitle(),
-                        Util.BLANK_ICON, "", 0, null,
-                        e -> WindowFactory.activate(chart.getFrame()) );
-
-                addToMenu(windowMenu, action);
+            index = 1;
+            for(Chart chart: charts) {
+                menuFactory.addAtMarker(MenuFactory.windows_MARK,
+                        BaseAction.build((index++) + " " + chart.getChartTitle(),
+                                chart.getFrame(), WindowFactory::activate )
+                );
             }
         }
 
     }
 
     private void createMenuBar() {
-        openMRUMenu = new JMenu("Open Recent");
-        openMRUMenu.setIcon(Util.BLANK_ICON);
-
-        cloneMenu = new JMenu("Clone");
-        cloneMenu.setIcon(Util.DATA_COPY_ICON);
-
-        windowMenu = new JMenu("Window");
-        windowMenu.setMnemonic(KeyEvent.VK_W);
-
-
-        JMenuBar menuBar = new JMenuBar();
-        JMenu menu = new JMenu("File");
-        menu.setMnemonic(KeyEvent.VK_F);
-
-        addToMenu(menu, newWindowAction, newTabAction, openFileAction);
-        menu.add(openMRUMenu);
-        addToMenu(menu,saveFileAction, saveAsFileAction, saveAllFilesAction, closeTabAction, closeFileAction, null);
-
-        if (!Studio.hasMacOSSystemMenu()) {
-            addToMenu(menu, settingsAction);
-        }
-
-        addToMenu(menu, openInExcel, exportAction, chartAction);
-
-        if (!Studio.hasMacOSSystemMenu()) {
-            addToMenu(menu, null, exitAction);
-        }
-        menuBar.add(menu);
-
-
-        menu = new JMenu("Edit");
-        menu.setMnemonic(KeyEvent.VK_E);
-
-        addToMenu(menu, undoAction, redoAction, null, cutAction, copyAction, pasteAction, null);
-
-        menu.add(new JCheckBoxMenuItem(wordWrapAction));
-
-        JMenu lineEndingSubMenu = new JMenu("Line Ending");
-        lineEndingSubMenu.setIcon(Util.BLANK_ICON);
-        for (Action action: lineEndingActions) {
-            lineEndingSubMenu.add(new JCheckBoxMenuItem(action));
-        }
-        menu.add(lineEndingSubMenu);
-
-        addToMenu(menu, cleanAction, selectAllAction, null, findAction, replaceAction, convertTabsToSpacesAction);
-        menuBar.add(menu);
-
-        menu = new JMenu("Server");
-        menu.setMnemonic(KeyEvent.VK_S);
-
-        addToMenu(menu, addServerAction, editServerAction, removeServerAction);
-        menu.add(cloneMenu);
-
-        addToMenu(menu, null, serverBackAction, serverForwardAction,
-                serverListAction, serverHistoryAction, loadServerTreeAction, exportServerTreeAction, importFromQPadAction, null, connectionStatsAction);
-
-        menuBar.add(menu);
-
-        menu = new JMenu("Query");
-        menu.setMnemonic(KeyEvent.VK_Q);
-
-        addToMenu(menu, executeCurrentLineAction, executeCurrentLineAndChartAction, executeAction, executeAndChartAction, stopAction, refreshAction,
-                toggleCommaFormatAction, uploadAction, findInResultAction, prevResultAction, nextResultAction);
-        menuBar.add(menu);
-
-        //Window menu
-        addToMenu(windowMenu, splitEditorRight, splitEditorDown, null, minMaxDividerAction, toggleDividerOrientationAction,
-                arrangeAllAction, nextEditorTabAction, prevEditorTabAction);
-
-        windowMenuWindowIndex = windowMenu.getMenuComponentCount();
-        menuBar.add(windowMenu);
-
-        menu = new JMenu("Help");
-        menu.setMnemonic(KeyEvent.VK_H);
-        menu.add(new JMenuItem(codeKxComAction));
-        if (!Studio.hasMacOSSystemMenu())
-            menu.add(new JMenuItem(aboutAction));
-        menuBar.add(menu);
-
+        menuFactory = ActionRegistry.getMenuFactory(studioActionMap);
+        JMenuBar menuBar = menuFactory.buildMenuBar();
         setNamesInMenu(menuBar);
-
         setJMenuBar(menuBar);
     }
 
