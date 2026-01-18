@@ -67,6 +67,7 @@ public class GroupLayoutSimple extends GroupLayout {
                 for (int i=0; i<line.components.length; i++) {
                     Component component = line.components[i];
                     if (stack.maxWidth || maxWidthComponents.contains(component)) {
+                        // Why we don't add here with max=Integer.MAX_VALUE ??
                         lineGroup.addComponent(component);
                     } else {
                         lineGroup.addComponent(component, PREFERRED_SIZE, PREFERRED_SIZE, PREFERRED_SIZE);
@@ -89,7 +90,7 @@ public class GroupLayoutSimple extends GroupLayout {
                 Line line = stack.lines.get(lineIndex);
                 for (int i=0; i<line.components.length; i++) {
                     Component component = line.components[i];
-                    lineGroup.addComponent(component, PREFERRED_SIZE, PREFERRED_SIZE, PREFERRED_SIZE);
+                        lineGroup.addComponent(component, PREFERRED_SIZE, PREFERRED_SIZE, PREFERRED_SIZE);
                     if (padding >-1 && i<line.components.length-1) lineGroup.addGap(padding);
                 }
                 if (line.glue != null) {
