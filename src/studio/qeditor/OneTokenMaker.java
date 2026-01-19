@@ -16,7 +16,7 @@ public class OneTokenMaker extends TokenMakerBase {
     @Override
     public Token getTokenList(Segment text, int initialTokenType, int startOffset) {
         resetTokenList();
-        addToken(text, text.offset, text.getEndIndex() - 1, token.getTokenType(), 0);
+        addToken(text, text.offset, text.getEndIndex() - 1, token.getTokenType(), startOffset);
         return firstToken;
     }
 
