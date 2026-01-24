@@ -23,33 +23,18 @@ public class QPadImport {
     private static final Logger log = LogManager.getLogger();
 
     public static void doImport(StudioWindow window) {
-        if (dialog == null) {
-            dialog = new QPadImportDialog(window);
-            dialog.align();
+        dialog = new QPadImportDialog(window);
+        dialog.align();
+        dialog.setVisible(true);
+        if (dialog.getResult() == EscapeDialog.DialogResult.CANCELLED) return;
+
+        if (dialog.getImportTo() == QPadImportDialog.Location.Overwrite) {
+            Config.getInstance().getServerConfig().setRoot(new ServerTreeNode());
         }
 
-        ServerTreeNode serverTree;
         ServerTreeNode rootToImport = new ServerTreeNode();
-        while(true) {
-            dialog.setVisible(true);
-            if (dialog.getResult() == EscapeDialog.DialogResult.CANCELLED) return;
-
-            if (dialog.getImportTo() == QPadImportDialog.Location.Overwrite) {
-                Config.getInstance().getServerConfig().setRoot(new ServerTreeNode());
-            }
-
-            String rootName = dialog.getRootName().trim();
-            if (rootName.length() > 0) {
-                serverTree = Config.getInstance().getServerTree();
-                if (serverTree.getChild(rootName) != null) {
-                    StudioOptionPane.showError(window, "Folder to import already exists (" + rootName + ")",
-                            "Folder Exists");
-                    continue;
-                }
-                rootToImport = rootToImport.add(rootName);
-            }
-            break;
-        }
+        String rootName = dialog.getRootName();
+        if (!rootName.isEmpty()) rootToImport = rootToImport.add(rootName);
 
         try {
             List<Server> serverList = QPadConverter.importFromFiles(new File(dialog.getServersCfgLocation()),

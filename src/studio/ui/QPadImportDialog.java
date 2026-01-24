@@ -5,9 +5,9 @@ import studio.core.Credentials;
 import studio.kdb.Config;
 
 import javax.swing.*;
+import javax.swing.filechooser.FileFilter;
 import java.awt.*;
 import java.io.File;
-import javax.swing.filechooser.FileFilter;
 
 import static javax.swing.GroupLayout.PREFERRED_SIZE;
 
@@ -50,7 +50,7 @@ public class QPadImportDialog extends EscapeDialog {
     }
 
     public String getRootName() {
-        return txtRootName.getText();
+        return txtRootName.getText().trim();
     }
 
     private void refreshCredentials() {
@@ -75,8 +75,8 @@ public class QPadImportDialog extends EscapeDialog {
         txtPassword = new JPasswordField();
 
 
-        JLabel lblLocation = new JLabel("Location where servers will be imported in the current Server Tree:     ");
-        btnOverwrite = new JRadioButton("Overwrite");
+        JLabel lblLocation = new JLabel("Do you want to replace current server tree?     ");
+        btnOverwrite = new JRadioButton("Replace");
         btnAppend = new JRadioButton("Append");
         ButtonGroup buttonGroup = new ButtonGroup();
         buttonGroup.add(btnOverwrite);
@@ -194,13 +194,23 @@ public class QPadImportDialog extends EscapeDialog {
         }
 
         if (getImportTo() == null) {
-            StudioOptionPane.showError(this, "Select how current Server Tree should be modified: Overwrite or Append", "Where to Import");
+            StudioOptionPane.showError(this, "Select how current Server Tree should be modified: Replace or Append", "Where to Import");
             return;
         }
 
         if (getRootName().contains("/")) {
             StudioOptionPane.showError(this, "Folder name can't contain /", "Wrong Folder Name");
             return;
+        }
+
+
+        if (getImportTo() == Location.Append) {
+            String rootName = getRootName();
+            if (Config.getInstance().getServerTree().getChild(rootName) != null) {
+                StudioOptionPane.showError(this, "Folder to import already exists (" + rootName + ")",
+                        "Folder Exists");
+                return;
+            }
         }
 
         accept();
