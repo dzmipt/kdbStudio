@@ -86,6 +86,8 @@ public class Config  {
 
     public static final String LOG_DEBUG = configDefault("logDebug", ConfigType.BOOLEAN, false);
 
+    public static final String ALIGN_RIGHT_NUMBERS_IN_RESULT = configDefault("alignNumbersInResult", ConfigType.BOOLEAN, true);
+
     public static final String CONFIG_VERSION = configDefault("version", ConfigType.ENUM, ConfigVersion.V_NO); // to force version to save
 
     public static final String OLD_CONFIG_FILENAME = "studio.properties";

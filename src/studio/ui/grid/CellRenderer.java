@@ -1,9 +1,6 @@
 package studio.ui.grid;
 
-import studio.kdb.Config;
-import studio.kdb.K;
-import studio.kdb.KFormatContext;
-import studio.kdb.KTableModel;
+import studio.kdb.*;
 import studio.kdb.config.GridColorConfig;
 import studio.kdb.config.GridColorToken;
 import studio.ui.Util;
@@ -51,6 +48,19 @@ public class CellRenderer extends DefaultTableCellRenderer {
         formatContextNoType = new KFormatContext(formatContext).setShowType(false);
     }
 
+
+    public int getAlignment(K.KBase value) {
+        boolean align = Config.getInstance().getBoolean(Config.ALIGN_RIGHT_NUMBERS_IN_RESULT);
+        if (align && value != null) {
+            KType type = value.getType();
+            if (type.getType() < 0 &&
+                type != KType.Symbol && type != KType.Char && type != KType.Guid ) {
+                return SwingConstants.RIGHT;
+            }
+        }
+        return SwingConstants.LEFT;
+    }
+
     public Component getTableCellRendererComponent(JTable table,
                                                    Object value,
                                                    boolean isSelected,
@@ -59,6 +69,8 @@ public class CellRenderer extends DefaultTableCellRenderer {
                                                    int column) {
         if (value != null) {
             K.KBase kb = (K.KBase) value;
+            setHorizontalAlignment(getAlignment(kb));
+
             String text = kb.toString(
                 kb instanceof K.KBaseVector ? formatContextWithType : formatContextNoType);
             text = Util.limitString(text, Config.getInstance().getInt(Config.MAX_CHARS_IN_TABLE_CELL));

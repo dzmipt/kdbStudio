@@ -19,6 +19,7 @@ public class SettingsResultTab extends SettingsTab {
     private final JFormattedTextField txtCellMaxWidth;
     private final JFormattedTextField txtMaxFractionDigits;
     private final JFormattedTextField txtEmulateDoubleClickTimeout;
+    private final JCheckBox chBoxAlignNumbers;
     private final JCheckBox chBoxOpenServerInCurrentTab;
     private final JCheckBox chBoxInspectResultInCurrentTab;
 
@@ -67,6 +68,9 @@ public class SettingsResultTab extends SettingsTab {
         txtCellMaxWidth = new JFormattedTextField(maxWidthFormatter);
         txtCellMaxWidth.setValue(CONFIG.getInt(Config.CELL_MAX_WIDTH));
 
+        chBoxAlignNumbers = new JCheckBox("Align numbers and dates to the right");
+        chBoxAlignNumbers.setSelected(CONFIG.getBoolean(Config.ALIGN_RIGHT_NUMBERS_IN_RESULT));
+
         chBoxOpenServerInCurrentTab = new JCheckBox("Open servers from popup menu in the current editor tab");
         chBoxOpenServerInCurrentTab.setSelected(CONFIG.getBoolean(Config.SERVER_FROM_RESULT_IN_CURRENT));
         chBoxInspectResultInCurrentTab = new JCheckBox("Inspect result in the current tab");
@@ -80,6 +84,7 @@ public class SettingsResultTab extends SettingsTab {
                         .addLineAndGlue(lblResultTabsCount, txtTabsCount)
                         .addLine(lblMaxCharsInResult, txtMaxCharsInResult, lblMaxCharsInTableCell, txtMaxCharsInTableCell)
                         .addLine(lblCellRightPadding, txtCellRightPadding, lblCellMaxWidth, txtCellMaxWidth)
+                        .addLineAndGlue(chBoxAlignNumbers)
                         .addLineAndGlue(chBoxOpenServerInCurrentTab)
                         .addLineAndGlue(chBoxInspectResultInCurrentTab)
 
@@ -132,6 +137,7 @@ public class SettingsResultTab extends SettingsTab {
         KFormatContext.setMaxFractionDigits(maxFractionDigits);
 
         boolean changedResult = CONFIG.setInt(Config.EMULATED_DOUBLE_CLICK_TIMEOUT, getEmulatedDoubleClickTimeout());
+        changedResult |= CONFIG.setBoolean(Config.ALIGN_RIGHT_NUMBERS_IN_RESULT, chBoxAlignNumbers.isSelected());
         result.setRefreshResultSettings(changedResult);
     }
 }

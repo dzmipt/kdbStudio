@@ -129,6 +129,7 @@ public class ConfigAllTest {
         assertEquals(new Color(0xfefefe), colors.get(EditorColorToken.BACKGROUND));
         assertEquals(new Color(0xabcdef), colors.get(EditorColorToken.SELECTED));
         assertEquals(new Color(0x987654), colors.get(EditorColorToken.CURRENT_LINE_HIGHLIGHT));
+        assertEquals(false, config.getBoolean(Config.ALIGN_RIGHT_NUMBERS_IN_RESULT));
     }
 
     private BasicStroke getStroke(float... dashArray) {

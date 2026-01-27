@@ -1,3 +1,4 @@
+* Setting to align numbers and dates to the right in the result set
 * Adding JVM Memory widget
 
 `dz7.0` 2025.12.07

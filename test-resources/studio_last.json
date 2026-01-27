@@ -194,5 +194,7 @@
       "current_line_highlight": "987654"
   },
 
+  "alignNumbersInResult" : false,
+
   "version": "V2_3"
 }
