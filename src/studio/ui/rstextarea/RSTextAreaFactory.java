@@ -25,6 +25,7 @@ import java.util.ListIterator;
 import java.util.stream.Collectors;
 
 import static org.fife.ui.rsyntaxtextarea.RSyntaxTextAreaEditorKit.*;
+import static studio.ui.rstextarea.DeleteNextWordAction.deleteNextWordAction;
 
 public class RSTextAreaFactory {
 
@@ -71,6 +72,7 @@ public class RSTextAreaFactory {
         actions.add(new HideSearchPanelAction());
         actions.add(new ConvertTabsToSpacesAction());
         actions.add(new CommentAction());
+        actions.add(new DeleteNextWordAction());
 
         actionMap = new ActionMapUIResource();
         for (Action a : actions) {
@@ -97,6 +99,8 @@ public class RSTextAreaFactory {
         inputMap.put(KeyStroke.getKeyStroke(KeyEvent.VK_X,      defaultModifier), rstaCutAsStyledTextAction);
         inputMap.put(KeyStroke.getKeyStroke(KeyEvent.VK_CUT,    0),      rstaCutAsStyledTextAction);
         inputMap.put(KeyStroke.getKeyStroke(KeyEvent.VK_DELETE, shift),           rstaCutAsStyledTextAction);
+        inputMap.put(KeyStroke.getKeyStroke(KeyEvent.VK_DELETE, defaultModifier), deleteNextWordAction);
+
 
         inputMap.remove(KeyStroke.getKeyStroke(KeyEvent.VK_ENTER, defaultModifier)); // used for execute current line
         inputMap.remove(KeyStroke.getKeyStroke(KeyEvent.VK_J, defaultModifier)); // used for adding thousand commas
