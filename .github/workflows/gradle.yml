@@ -68,7 +68,7 @@ jobs:
 
     - name: Report
       uses: dorny/test-reporter@v1
-      if: always()
+      if: ${{ always() && github.event.pull_request.head.repo.fork == false }}
       with:
         name: JUnit Tests - ${{ runner.os }}
         path: build/test-results/*/*.xml
