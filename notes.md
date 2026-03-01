@@ -1,3 +1,4 @@
+* Adding an action to delete next/previous word (Ctrl (Command for MacOS) + delete/backspace )
 * Setting to align numbers and dates to the right in the result set
 * Adding JVM Memory widget
 

@@ -11,14 +11,13 @@ import javax.swing.text.Segment;
 import java.awt.event.ActionEvent;
 import java.text.CharacterIterator;
 
-public class DeleteNextWordAction extends RecordableTextAction {
+public class DeletePreviousWordAction extends RecordableTextAction {
 
-    public static final String deleteNextWordAction = "kdbStudio.deleteNextWordAction";
+    public static final String deletePreviousWordAction = "kdbStudio.DeletePreviousWordAction";
     private final static Logger log = LogManager.getLogger();
 
-
-    public DeleteNextWordAction() {
-        super(deleteNextWordAction);
+    public DeletePreviousWordAction() {
+        super(deletePreviousWordAction);
     }
 
     @Override
@@ -28,8 +27,9 @@ public class DeleteNextWordAction extends RecordableTextAction {
             return;
         }
         try {
-            int start = textArea.getSelectionStart();
-            int end = getEndOffsetForRemoval(textArea, start);
+            int end = textArea.getSelectionEnd();
+            int start = getStartOffsetRemoval(textArea, end);
+
             if (end > start) {
                 textArea.getDocument().remove(start, end - start);
             } else {
@@ -41,32 +41,32 @@ public class DeleteNextWordAction extends RecordableTextAction {
         }
     }
 
-    private int getEndOffsetForRemoval(RTextArea textArea, int offset) throws BadLocationException {
-        int endSelection = textArea.getSelectionEnd();
-        if (endSelection < offset) {
-            return endSelection;
+    private int getStartOffsetRemoval(RTextArea textArea, int offset) throws BadLocationException {
+        int startSelection = textArea.getSelectionStart();
+        if (startSelection < offset) {
+            return startSelection;
         }
-        int endOffset = textArea.getLineEndOffsetOfCurrentLine();
-        if (endOffset <= offset) {
-            return offset;
+        int startOffset = textArea.getLineStartOffsetOfCurrentLine();
+        if (startOffset == offset) {
+            return Math.max(0, offset-1);
         }
 
         Segment segment = new Segment();
-        textArea.getDocument().getText(offset, endOffset-offset, segment);
+        textArea.getDocument().getText(startOffset, offset-startOffset, segment);
 
-        char ch = segment.first();
+        char ch = segment.last();
         if (Character.isWhitespace(ch)) {
             do {
-                ch = segment.next();
+                ch = segment.previous();
             } while ( ch != CharacterIterator.DONE && Character.isWhitespace(ch));
         } else if (Character.isLetterOrDigit(ch)) {
             do {
-                ch = segment.next();
+                ch = segment.previous();
             } while ( ch != CharacterIterator.DONE && Character.isLetterOrDigit(ch));
         } else {
-            segment.next();
+            segment.previous();
         }
-        return offset + segment.getIndex() - segment.getBeginIndex();
+        return offset + segment.getIndex() - segment.getEndIndex();
     }
 
     @Override
