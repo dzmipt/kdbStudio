@@ -62,9 +62,11 @@ public class Session implements ConnectionStateListener, KAuthentication {
 
     @Override
     public void connectionStateChange(ConnectionContext context) {
-        for(EditorTab editor: editors) {
-            editor.setSessionContext(context);
-        }
+        SwingUtilities.invokeLater(()-> {
+                for (EditorTab editor : editors) {
+                    editor.setSessionContext(context);
+                }
+        } );
     }
 
     @Override
