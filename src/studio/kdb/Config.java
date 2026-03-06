@@ -87,6 +87,7 @@ public class Config  {
     public static final String LOG_DEBUG = configDefault("logDebug", ConfigType.BOOLEAN, false);
 
     public static final String ALIGN_RIGHT_NUMBERS_IN_RESULT = configDefault("alignNumbersInResult", ConfigType.BOOLEAN, true);
+    public static final String DEFAULT_TLS_RESOLUTION = configDefault("defaultTLSResolution", ConfigType.ENUM, TLSResolutionMode.TCP);
 
     public static final String CONFIG_VERSION = configDefault("version", ConfigType.ENUM, ConfigVersion.V_NO); // to force version to save
 
@@ -326,11 +327,25 @@ public class Config  {
             authMethod = getDefaultAuthMechanism();
             conn = conn.changeUserPassword(getDefaultCredentials(authMethod));
         }
-        return serverConfig.getServer(conn, authMethod);
+        return getServer(conn, authMethod);
     }
 
     public Server getServer(QConnection conn, String authMethod) {
-        return serverConfig.getServer(conn, authMethod);
+        Server server = serverConfig.getServer(conn, authMethod);
+        if (! server.getName().isEmpty()) return server;
+
+        //anonymous server
+        TLSResolutionMode tlsResolutionMode = getEnum(Config.DEFAULT_TLS_RESOLUTION);
+
+        if (conn.isUseTLS()) {
+            if (tlsResolutionMode == TLSResolutionMode.TLS_TCP) return server.newFlipTLS(true);
+            return server;
+        }
+
+        if (tlsResolutionMode == TLSResolutionMode.TCP) return server;
+        if (tlsResolutionMode == TLSResolutionMode.TCP_TLS) return server.newFlipTLS(true);
+
+        return serverConfig.getServer(conn.useTLS(true), authMethod).newFlipTLS(tlsResolutionMode.isFlipTLS());
     }
 
     public Server getServerByNewAuthMethod(QConnection conn, String authMethod) {

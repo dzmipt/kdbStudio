@@ -61,7 +61,7 @@ public class ConnectionStats {
         int index = 0;
         for (Session session: sessionsCount.keySet()) {
             serverNames[index] = session.getServer().getFullName();
-            servers[index] = session.getServer().getConnectionString().substring(1);
+            servers[index] = session.getConnection().toString(false).substring(1);
             statuses[index] = session.getConnectionContext().isConnected() ? "Connected" : "Disconnected";
             numbers[index] = sessionsCount.get(session);
 

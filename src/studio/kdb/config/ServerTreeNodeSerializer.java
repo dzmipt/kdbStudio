@@ -94,9 +94,14 @@ public class ServerTreeNodeSerializer implements JsonSerializer<ServerTreeNode>,
             String authMethod = json.get("authMethod").getAsString();
             if (authMethod == null) authMethod = DefaultAuthenticationMechanism.NAME;
 
+            boolean flipTLS = false;
+            if (json.has("flipTLS")) {
+                flipTLS = json.get("flipTLS").getAsBoolean();
+            }
+
 
             return new ServerTreeNode(
-                    new QConnection(handle).toServer(name, authMethod, bgColor) );
+                    new QConnection(handle).toServer(name, authMethod, bgColor).newFlipTLS(flipTLS) );
         }
     }
 
@@ -118,6 +123,7 @@ public class ServerTreeNodeSerializer implements JsonSerializer<ServerTreeNode>,
             json.addProperty("handle", server.getConnectionStringWithPwd());
             json.addProperty("bgColor", Integer.toHexString(server.getBackgroundColor().getRGB()).substring(2));
             json.addProperty("authMethod", server.getAuthenticationMechanism());
+            json.addProperty("flipTLS", server.isFlipTLS());
         }
         return json;
     }

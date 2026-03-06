@@ -195,6 +195,7 @@
   },
 
   "alignNumbersInResult" : false,
+  "defaultTLSResolution": "TLS_TCP",
 
   "version": "V2_3"
 }

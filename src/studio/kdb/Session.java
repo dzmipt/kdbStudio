@@ -11,15 +11,13 @@ import studio.ui.EditorTab;
 import studio.ui.StudioOptionPane;
 import studio.ui.StudioWindow;
 import studio.ui.WindowFactory;
+import studio.utils.QConnection;
 
 import javax.swing.*;
 import java.io.IOException;
 import java.text.DecimalFormat;
 import java.text.NumberFormat;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
 
 public class Session implements ConnectionStateListener, KAuthentication {
@@ -138,6 +136,16 @@ public class Session implements ConnectionStateListener, KAuthentication {
         return server;
     }
 
+    public QConnection getConnection() {
+        QConnection connection = server.getConnection();
+        if (kConn.getConnectionContext().isConnected()) {
+            boolean isTLS = kConn.getConnectionContext().isSecure();
+            return connection.useTLS(isTLS);
+        }
+
+        return  connection;
+    }
+
     public void validate() {
         if (!Config.getInstance().getBoolean(Config.SESSION_INVALIDATION_ENABLED)) return;
 
@@ -152,12 +160,25 @@ public class Session implements ConnectionStateListener, KAuthentication {
         }
     }
 
+    private Properties getConnectionProperties(String name, QConnection conn, boolean isSecure) {
+        Properties p = new Properties();
+        p.put("NAME", name);
+        p.put("HOST", conn.getHost());
+        p.put("PORT", conn.getPort());
+        p.put("USERNAME", conn.getUser());
+        p.put("PASSWORD", conn.getPassword());
+        p.put("USETLS", isSecure);
+        return p;
+    }
+
     @Override
     public String getUserPassword(ConnectionContext context) throws IOException {
         try {
             String authMethod = server.getAuthenticationMechanism();
             log.info("Getting authentication credential for {} with auth.method {}",
                     server.getDescription(true), authMethod);
+
+            Properties props = getConnectionProperties(server.getName(), server.getConnection(), context.isSecure());
 
             Class<?> clazz = AuthenticationManager.getInstance().lookup(authMethod);
             if (clazz == null) {
@@ -166,7 +187,7 @@ public class Session implements ConnectionStateListener, KAuthentication {
             context.setAuthMethod(authMethod);
             IAuthenticationMechanism authenticationMechanism = (IAuthenticationMechanism) clazz.newInstance();
 
-            authenticationMechanism.setProperties(server.getAsProperties());
+            authenticationMechanism.setProperties(props);
             Credentials credentials = authenticationMechanism.getCredentials();
 
             if (!credentials.getUsername().isEmpty()) {
@@ -183,7 +204,7 @@ public class Session implements ConnectionStateListener, KAuthentication {
 
     public static class SessionCreator {
         public KConnection createConnection(Server s, KAuthentication authentication) {
-            return new KConnection(s.getHost(), s.getPort(), s.getUseTLS(), authentication);
+            return new KConnection(s.getHost(), s.getPort(), s.getUseTLS(), s.isFlipTLS(), authentication);
         }
     }
 

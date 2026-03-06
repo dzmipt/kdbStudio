@@ -165,7 +165,7 @@ public class EditorTab implements FileWatcher.Listener, EditorStatusBarCallback 
                 message = "No message with exception. Exception is " + error;
             StudioOptionPane.showError(editorPane,
                     "\nAn unexpected error occurred whilst communicating with " +
-                            getServer().getConnectionString() +
+                            getConnectionString() +
                             "\n\nError detail is\n\n" + message + "\n\n",
                     "Studio for kdb+");
         }
@@ -176,7 +176,7 @@ public class EditorTab implements FileWatcher.Listener, EditorStatusBarCallback 
     @Override
     public void connect(String authMethod) {
         if (! getServer().getAuthenticationMechanism().equals(authMethod)) {
-            Server newServer = Config.getInstance().getServerByNewAuthMethod(getServer().getConnection(), authMethod);
+            Server newServer = Config.getInstance().getServerByNewAuthMethod(session.getConnection(), authMethod);
             studioWindow.setServer(newServer);
         }
 
@@ -185,10 +185,15 @@ public class EditorTab implements FileWatcher.Listener, EditorStatusBarCallback 
 
     @Override
     public void connectTLS(boolean useTLS) {
+        Server newServer = getServer();
         if (getServer().getUseTLS() != useTLS) {
             QConnection conn = getServer().getConnection().changeTLS(useTLS);
             String auth = getServer().getAuthenticationMechanism();
-            Server newServer = Config.getInstance().getServer(conn, auth);
+            newServer = Config.getInstance().getServer(conn, auth);
+        }
+        newServer = newServer.newFlipTLS(false);
+
+        if (newServer != getServer()) {
             studioWindow.setServer(newServer);
         }
 
@@ -252,6 +257,7 @@ public class EditorTab implements FileWatcher.Listener, EditorStatusBarCallback 
 
     public void setSessionContext(ConnectionContext context) {
         editorPane.setSessionContext(context);
+        studioWindow.refreshConnectionText();
     }
 
     public void setStudioWindow(StudioWindow studioWindow) {
@@ -341,6 +347,10 @@ public class EditorTab implements FileWatcher.Listener, EditorStatusBarCallback 
     public Server getServer() {
         if (serverIndex == -1) return Server.NO_SERVER;
         return serverHistory.get(serverIndex);
+    }
+
+    public String getConnectionString() {
+        return session.getConnection().toString(false);
     }
 
     private void serverRefreshed() {

@@ -15,6 +15,7 @@ public class QConnection {
     private final boolean useTLS;
 
     private final static String TCPS_PREFIX = "tcps://";
+    private final static String TCP_PREFIX = "tcp://";
 
     public QConnection(String host, int port, String user, String password, boolean useTLS) {
         this.host = host;
@@ -32,6 +33,10 @@ public class QConnection {
         useTLS = connection.startsWith(TCPS_PREFIX);
         if (useTLS) {
             connection = connection.substring(TCPS_PREFIX.length());
+        }
+
+        if (connection.startsWith(TCP_PREFIX)) {
+            connection = connection.substring(TCP_PREFIX.length());
         }
 
         int i0 = connection.indexOf(':');
@@ -60,6 +65,11 @@ public class QConnection {
             user = connection.substring(i1, i2);
             password = i2 == connection.length() ? "" : connection.substring(i2+1);
         }
+    }
+
+    public QConnection useTLS(boolean useTLS) {
+        if (this.useTLS == useTLS) return this;
+        return new QConnection(host, port, user, password, useTLS);
     }
 
     public String getHost() {

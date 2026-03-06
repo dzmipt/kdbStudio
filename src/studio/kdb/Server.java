@@ -9,7 +9,6 @@ import java.awt.*;
 import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
-import java.util.Properties;
 import java.util.stream.Collectors;
 
 public class Server {
@@ -18,19 +17,9 @@ public class Server {
     private final String name;
     private final QConnection conn;
     private final ServerTreeNode parent;
+    private final boolean flipTLS;
 
     public static final Server NO_SERVER = new Server("", "", 0, "", "", Color.WHITE, DefaultAuthenticationMechanism.NAME, false);
-
-    public Properties getAsProperties() {
-        Properties p = new Properties();
-        p.put("NAME", name);
-        p.put("HOST", conn.getHost());
-        p.put("PORT", conn.getPort());
-        p.put("USERNAME", conn.getUser());
-        p.put("PASSWORD", conn.getPassword());
-        p.put("USETLS", conn.isUseTLS());
-        return p;
-    }
 
     public String getAuthenticationMechanism() {
         return authenticationMechanism;
@@ -48,6 +37,10 @@ public class Server {
         return conn.getUser();
     }
 
+    public boolean isFlipTLS() {
+        return  flipTLS;
+    }
+
     public static Server newServer() {
         String authMethod = Config.getInstance().getDefaultAuthMechanism();
         Credentials credentials = Config.getInstance().getDefaultCredentials(authMethod);
@@ -61,6 +54,7 @@ public class Server {
         Server s = (Server) obj;
         boolean res =  s.name.equals(name)
                     && Objects.equals(s.conn, conn)
+                    && s.flipTLS == flipTLS
                     && Objects.equals(s.authenticationMechanism ,authenticationMechanism);
 
         if (! res) return false;
@@ -88,6 +82,10 @@ public class Server {
     }
 
     public Server(String name, QConnection conn, String authMethod, Color bgColor, ServerTreeNode parent) {
+        this (name, conn, authMethod, bgColor, parent, false);
+    }
+
+    public Server(String name, QConnection conn, String authMethod, Color bgColor, ServerTreeNode parent, boolean flipTLS) {
         if (parent != null && ! parent.isFolder()) throw new IllegalArgumentException("Parent ServerTreeNode can be folder only");
 
         this.name = name;
@@ -95,14 +93,24 @@ public class Server {
         this.backgroundColor = bgColor;
         this.authenticationMechanism = authMethod;
         this.parent = parent;
+        this.flipTLS = flipTLS;
     }
 
     public Server newName(String name) {
+        if (this.name.equals(name)) return this;
         return new Server(name, conn, authenticationMechanism, backgroundColor, parent);
     }
 
-    public Server newAuthMethod(String authMethod){
+    public Server newAuthMethod(String authMethod) {
+        if (this.authenticationMechanism.equals(authMethod)) return this;
+
         return new Server(name, conn, authMethod, backgroundColor, parent);
+    }
+
+    public Server newFlipTLS(boolean flipTLS) {
+        if (this.flipTLS == flipTLS) return this;
+
+        return new Server(name, conn, authenticationMechanism, backgroundColor, parent, flipTLS);
     }
 
     public String getName() {

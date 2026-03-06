@@ -14,6 +14,7 @@ public class KConnection {
     private final String host;
     private final int port;
     private final boolean useTLS;
+    private final boolean flipTLS;
 
     private DataInputStream inputStream;
     private OutputStream outputStream;
@@ -116,9 +117,8 @@ public class KConnection {
         return socket;
     }
 
-    public synchronized void connect(KDBTrustManager trustManager) throws IOException, K4AccessException {
-        if (connectionContext.isConnected() ) return;
-
+    private void connect(boolean useTLS, KDBTrustManager trustManager) throws  IOException, K4AccessException {
+        connectionContext.setSecure(useTLS);
         String userPassword = authentication == null ? "" : authentication.getUserPassword(connectionContext);
 
         if (useTLS) {
@@ -133,9 +133,38 @@ public class KConnection {
         baos.write(0);
         outputStream.write(baos.toByteArray());
         if (inputStream.read() == -1) {
+            close();
             throw new K4AccessException();
         }
         connectionContext.setConnected(true);
+    }
+
+    public synchronized void connect(KDBTrustManager trustManager) throws IOException, K4AccessException {
+        if (connectionContext.isConnected() ) return;
+
+        Exception exc1 = null;
+        Exception exc2 = null;
+
+        try {
+            connect(useTLS, trustManager);
+        } catch (IOException | K4AccessException e) {
+            exc1 = e;
+        }
+
+        if (!connectionContext.isConnected() && flipTLS) {
+            try {
+                connect(!useTLS, trustManager);
+            } catch (IOException | K4AccessException e) {
+                exc2 = e;
+            }
+        }
+
+        if (!connectionContext.isConnected()) {
+            if (exc1 instanceof K4AccessException) throw (K4AccessException) exc1;
+            if (exc2 instanceof K4AccessException) throw (K4AccessException) exc2;
+            throw (IOException) exc1;
+        }
+
         stats.connected();
 
         socketReader = new SocketReader(s);
@@ -149,16 +178,16 @@ public class KConnection {
     }
 
     public KConnection(String h, int p, boolean useTLS) {
-        this(h, p, useTLS, null);
+        this(h, p, useTLS, false, null);
     }
 
-    public KConnection(String h, int p, boolean useTLS, KAuthentication authentication) {
+    public KConnection(String h, int p, boolean useTLS, boolean flipTLS, KAuthentication authentication) {
         connectionContext = new ConnectionContext();
-        connectionContext.setSecure(useTLS);
         host = h;
         port = p;
         this.authentication = authentication;
         this.useTLS = useTLS;
+        this.flipTLS = flipTLS;
     }
 
     public void setConnectionStateListener(ConnectionStateListener connectionStateListener) {

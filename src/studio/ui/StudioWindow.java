@@ -723,7 +723,7 @@ public class StudioWindow extends StudioFrame {
         String connection = txtServer.getText().trim();
         if (connection.isEmpty()) return;
         Server server = editor.getServer();
-        if (server != Server.NO_SERVER && server.getConnectionString().equals(connection)) return;
+        if (server != Server.NO_SERVER && editor.getConnectionString().equals(connection)) return;
 
         try {
             setServer(CONFIG.getServerByConnectionString(connection));
@@ -758,14 +758,14 @@ public class StudioWindow extends StudioFrame {
         refreshServer();
     }
 
-    private void refreshConnectionText() {
+    public void refreshConnectionText() {
         Server server = editor.getServer();
         if (server == Server.NO_SERVER) {
             txtServer.setText("");
             txtServer.setToolTipText("Select connection details");
         } else {
-            txtServer.setText(server.getConnectionString());
-            txtServer.setToolTipText(server.getConnectionStringWithPwd());
+            txtServer.setText(editor.getConnectionString());
+            txtServer.setToolTipText(editor.getSession().getConnection().toString());
         }
     }
 

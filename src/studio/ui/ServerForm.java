@@ -8,6 +8,7 @@ import studio.kdb.Server;
 import studio.kdb.ServerTreeNode;
 import studio.kdb.Workspace;
 import studio.kdb.config.ColorToken;
+import studio.kdb.config.TLSResolutionMode;
 
 import javax.swing.*;
 import java.awt.*;
@@ -34,7 +35,8 @@ public class ServerForm extends EscapeDialog {
         txtUsername.setText(this.server.getUsername());
         txtPort.setText("" + this.server.getPort());
         txtPassword.setText(this.server.getPassword());
-        chkBoxUseTLS.setSelected(this.server.getUseTLS());
+
+        comboBoxTLS.setSelectedItem(TLSResolutionMode.get(server.getUseTLS(), server.isFlipTLS()));
         DefaultComboBoxModel<String> dcbm = (DefaultComboBoxModel<String>) authenticationMechanism.getModel();
         String[] am;
         am = AuthenticationManager.getInstance().getAuthenticationMechanisms();
@@ -62,7 +64,6 @@ public class ServerForm extends EscapeDialog {
         txtName.setToolTipText("The logical name for the server");
         txtHostname.setToolTipText("The hostname or ip address for the server");
         txtPort.setToolTipText("The port for the server");
-        chkBoxUseTLS.setToolTipText("Use TLS for a secure connection");
         txtUsername.setToolTipText("The username used to connect to the server");
         txtPassword.setToolTipText("The password used to connect to the server");
         authenticationMechanism.setToolTipText("The authentication mechanism to use");
@@ -129,7 +130,7 @@ public class ServerForm extends EscapeDialog {
         sampleTextOnBackgroundTextField.setName("sampleTextOnBackground");
         authenticationMechanism = new javax.swing.JComboBox();
         authMethodLabel = new javax.swing.JLabel();
-        chkBoxUseTLS = new javax.swing.JCheckBox();
+        comboBoxTLS = new JComboBox<>(TLSResolutionMode.values());
         tlsLabel = new javax.swing.JLabel();
 
         logicalNameLabel.setText("Name");
@@ -208,7 +209,7 @@ public class ServerForm extends EscapeDialog {
                                                         .addComponent(authenticationMechanism, 0, 418, Short.MAX_VALUE)
                                                         .addComponent(txtPassword, DEFAULT_SIZE, 418, Short.MAX_VALUE)
                                                         .addComponent(txtUsername, DEFAULT_SIZE, 418, Short.MAX_VALUE)
-                                                        .addComponent(chkBoxUseTLS)
+                                                        .addComponent(comboBoxTLS)
                                                         .addComponent(txtPort, DEFAULT_SIZE, 418, Short.MAX_VALUE)
                                                         .addComponent(txtHostname, DEFAULT_SIZE, 418, Short.MAX_VALUE)
                                                         .addComponent(txtName, DEFAULT_SIZE, 418, Short.MAX_VALUE))
@@ -252,7 +253,7 @@ public class ServerForm extends EscapeDialog {
                                 .addPreferredGap(RELATED)
                                 .addGroup(layout.createParallelGroup(LEADING)
                                         .addComponent(tlsLabel, TRAILING)
-                                        .addComponent(chkBoxUseTLS, TRAILING))
+                                        .addComponent(comboBoxTLS, TRAILING))
                                 .addPreferredGap(RELATED)
                                 .addComponent(jSeparator2, PREFERRED_SIZE, 10, PREFERRED_SIZE)
                                 .addPreferredGap(RELATED)
@@ -310,12 +311,13 @@ public class ServerForm extends EscapeDialog {
                 parent = Config.getInstance().getServerTree().findPath(server.getFolderPath(), true);
             }
 
+            TLSResolutionMode tlsMode = (TLSResolutionMode) comboBoxTLS.getSelectedItem();
             server = new Server(name, host, port, user, password,
                     sampleTextOnBackgroundTextField.getBackground(),
                     (String) authenticationMechanism.getSelectedItem(),
-                    chkBoxUseTLS.isSelected(),
+                    tlsMode.isUseTLS(),
                     parent
-            );
+            ).newFlipTLS(tlsMode.isFlipTLS());
             accept();
         } catch (NumberFormatException e) {
             StudioOptionPane.showError(this, "Can't parse port to integer", "Studio for kdb+");
@@ -347,7 +349,7 @@ public class ServerForm extends EscapeDialog {
     private javax.swing.JButton cancelButton;
     private javax.swing.JTextField txtHostname;
     private javax.swing.JLabel hostnameLabel;
-    private javax.swing.JCheckBox chkBoxUseTLS;
+    private JComboBox<TLSResolutionMode> comboBoxTLS;
     private javax.swing.JLabel colorLabel;
     private javax.swing.JLabel tlsLabel;
     private javax.swing.JSeparator jSeparator1;

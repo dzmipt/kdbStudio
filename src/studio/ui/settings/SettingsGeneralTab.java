@@ -5,6 +5,7 @@ import studio.core.Credentials;
 import studio.kdb.Config;
 import studio.kdb.config.ActionOnExit;
 import studio.kdb.config.KdbMessageLimitAction;
+import studio.kdb.config.TLSResolutionMode;
 import studio.ui.GroupLayoutSimple;
 
 import javax.swing.*;
@@ -23,6 +24,7 @@ public class SettingsGeneralTab extends SettingsTab {
     private final JCheckBox chBoxShowServerCombo;
     private final JCheckBox chBoxAutoSave;
     private final JComboBox<ActionOnExit> comboBoxActionOnExit;
+    private final JComboBox<TLSResolutionMode> comboBoxTLSResolution;
 
     private static final Config CONFIG = Config.getInstance();
 
@@ -68,6 +70,10 @@ public class SettingsGeneralTab extends SettingsTab {
         JLabel lblUser = new JLabel("  User:");
         JLabel lblPassword = new JLabel("  Password:");
 
+        JLabel lblTLSResolution = new JLabel("TLS mode for anonymous connections: ");
+        comboBoxTLSResolution = new JComboBox<>(TLSResolutionMode.values());
+        comboBoxTLSResolution.setSelectedItem(CONFIG.getEnum(Config.DEFAULT_TLS_RESOLUTION));
+
         GroupLayoutSimple layout = new GroupLayoutSimple(this);
         layout.setStacks(
                 new GroupLayoutSimple.Stack()
@@ -77,6 +83,7 @@ public class SettingsGeneralTab extends SettingsTab {
                         .addLineAndGlue(chBoxSessionReuse)
                         .addLineAndGlue(lblKdbMessageSize, txtKdbMessageSizeLimit, lblKdbMessageSizeSuffix, comboBoxKdbMessageSizeAction)
                         .addLine(lblAuthMechanism, comboBoxAuthMechanism, lblUser, txtUser, lblPassword, txtPassword)
+                        .addLineAndGlue(lblTLSResolution, comboBoxTLSResolution)
         );
 
     }
@@ -118,6 +125,7 @@ public class SettingsGeneralTab extends SettingsTab {
         CONFIG.setEnum(Config.KDB_MESSAGE_SIZE_LIMIT_ACTION, (KdbMessageLimitAction) comboBoxKdbMessageSizeAction.getSelectedItem());
         CONFIG.setDefaultAuthMechanism(auth);
         CONFIG.setDefaultCredentials(auth, new Credentials(getUser(), getPassword()));
+        CONFIG.setEnum(Config.DEFAULT_TLS_RESOLUTION, (TLSResolutionMode) comboBoxTLSResolution.getSelectedItem());
 
         boolean changed = CONFIG.setBoolean(Config.SHOW_SERVER_COMBOBOX, isShowServerComboBox());
         result.setRefreshComboServerVisibility(changed);

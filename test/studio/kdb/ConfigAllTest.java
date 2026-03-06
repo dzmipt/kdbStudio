@@ -130,6 +130,7 @@ public class ConfigAllTest {
         assertEquals(new Color(0xabcdef), colors.get(EditorColorToken.SELECTED));
         assertEquals(new Color(0x987654), colors.get(EditorColorToken.CURRENT_LINE_HIGHLIGHT));
         assertEquals(false, config.getBoolean(Config.ALIGN_RIGHT_NUMBERS_IN_RESULT));
+        assertEquals(TLSResolutionMode.TLS_TCP, config.getEnum(Config.DEFAULT_TLS_RESOLUTION));
     }
 
     private BasicStroke getStroke(float... dashArray) {
