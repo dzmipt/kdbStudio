@@ -34,7 +34,6 @@ import java.util.Collection;
 import java.util.List;
 
 import static javax.swing.JSplitPane.VERTICAL_SPLIT;
-import static studio.ui.EscapeDialog.DialogResult.ACCEPTED;
 import static studio.ui.EscapeDialog.DialogResult.CANCELLED;
 
 public class StudioWindow extends StudioFrame {
@@ -439,33 +438,39 @@ public class StudioWindow extends StudioFrame {
         }
     }
 
-    public void editServer() {
-        EditServerForm f = new EditServerForm(this, editor.getServer());
-        f.alignAndShow();
-        if (f.getResult() == ACCEPTED) {
-            if (stopAction.isEnabled())
-                stopAction.actionPerformed(new ActionEvent(this, ActionEvent.ACTION_PERFORMED, Actions.stop));
+    private void addOrEditServer(boolean add, Server initServer) {
+        Server newServer = ServerEditor.selectServer(add, this, initServer,
+                server -> {
+                    try {
+                        if (add) {
+                            CONFIG.getServerConfig().addServer(server);
+                        } else if (server.inServerTree()) {
+                            CONFIG.getServerConfig().replaceServer(initServer, server);
+                        }
+                        return true;
+                    } catch (IllegalArgumentException e) {
+                        log.warn("Error in server tree modification", e);
+                        StudioOptionPane.showError(StudioWindow.this, "Error in server tree modification: " + e.getMessage(), "Error");
+                        return false;
+                    }
 
-            Server newServer = f.getServer();
-            if (newServer.inServerTree()) {
-                CONFIG.getServerConfig().replaceServer(editor.getServer(), newServer);
-            }
-            setServer(newServer);
-            refreshAll();
-        }
+                } );
+
+        if (newServer == null) return;
+
+        if (stopAction.isEnabled())
+            stopAction.actionPerformed(new ActionEvent(this, ActionEvent.ACTION_PERFORMED, Actions.stop));
+
+        setServer(newServer);
+        refreshAll();
+    }
+
+    public void editServer() {
+        addOrEditServer(false, editor.getServer());
     }
 
     public void addServer() {
-        AddServerForm f = new AddServerForm(this, editor.getServer());
-        f.alignAndShow();
-        if (f.getResult() == ACCEPTED) {
-            Server server = f.getServer();
-            if (server.inServerTree()) {
-                CONFIG.getServerConfig().addServer(server);
-            }
-            setServer(server);
-            refreshAll();
-        }
+        addOrEditServer(true, editor.getServer());
     }
 
     public void removeServer() {
@@ -651,17 +656,7 @@ public class StudioWindow extends StudioFrame {
 
     private void cloneServer(Server server) {
         Server clone = server.newName("Clone of " + server.getName());
-        EditServerForm f = new EditServerForm(StudioWindow.this, clone);
-        f.alignAndShow();
-
-        if (f.getResult() == ACCEPTED) {
-            clone = f.getServer();
-            if (clone.inServerTree()) {
-                CONFIG.getServerConfig().addServer(clone);
-            }
-            setServer(clone);
-            refreshAll();
-        }
+        addOrEditServer(true, clone);
     }
 
     private void refreshMenu() {

@@ -189,16 +189,13 @@ public class ServerConfig {
     public void replaceServer(Server oldServer, Server newServer) {
         ServerTreeNode oldFolder = serverTree.findPath(oldServer.getFolderPath(), false);
         if (oldFolder == null) {
-            // ?? Is it possible
-            return;
-        }
-        if (oldServer.getFullName().equals(newServer.getFullName())
-            && servers.get(newServer.getFullName()) != Server.NO_SERVER) {
-            log.warn("Can't add  duplicate");
-            return;
+            throw new IllegalArgumentException("Previous server is not in the tree");
         }
 
         ServerTreeNode newFolder = serverTree.findPath(newServer.getFolderPath(), true);
+        if (newFolder == null) {
+            throw new IllegalArgumentException("Can't resolve location of new server");
+        }
 
         int index = oldFolder.remove(oldServer);
         if (index == -1 || oldFolder!=newFolder) {

@@ -5,6 +5,7 @@ import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.KeyEvent;
 import java.util.Objects;
+import java.util.function.BooleanSupplier;
 
 public class EscapeDialog extends JDialog {
 
@@ -14,6 +15,8 @@ public class EscapeDialog extends JDialog {
 
     private boolean removeContentOnDispose = true;
     private StudioFrame.Helper helper = null;
+
+    private BooleanSupplier acceptValidator = null;
 
     private static Window getWindow(Component component) {
         if (component == null) return null;
@@ -27,6 +30,10 @@ public class EscapeDialog extends JDialog {
         setContentPane(getContentPane());
         setTitle(title);
         initComponents();
+    }
+
+    public void setAcceptValidator(BooleanSupplier acceptValidator) {
+        this.acceptValidator = acceptValidator;
     }
 
     @Override
@@ -107,6 +114,9 @@ public class EscapeDialog extends JDialog {
     }
 
     public void accept() {
+        if (acceptValidator != null && ! acceptValidator.getAsBoolean()) {
+            return;
+        }
         result = DialogResult.ACCEPTED;
         dispose();
     }

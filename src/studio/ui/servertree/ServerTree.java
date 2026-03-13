@@ -6,8 +6,7 @@ import studio.kdb.Config;
 import studio.kdb.Server;
 import studio.kdb.ServerTreeNode;
 import studio.kdb.config.ServerTreeNodeSerializer;
-import studio.ui.EditServerForm;
-import studio.ui.EscapeDialog;
+import studio.ui.ServerEditor;
 import studio.ui.StudioOptionPane;
 import studio.ui.UserAction;
 
@@ -324,11 +323,9 @@ public class ServerTree extends JTree implements TreeExpansionListener {
             Server server = Server.newServer();
             server = server.newParent(parent);
 
-            EditServerForm serverForm = new EditServerForm(this, server);
-            serverForm.alignAndShow();
-            if (serverForm.getResult() == EscapeDialog.DialogResult.CANCELLED) return;
+            server = ServerEditor.selectServer(true, this, server);
+            if (server == null) return;
 
-            server = serverForm.getServer();
             newNode = new ServerTreeNode(server);
 
             if (! server.getFolderPath().equals(parent.getFolderPath())) {
