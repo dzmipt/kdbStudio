@@ -83,9 +83,9 @@ dependencies {
     implementation group: 'com.formdev', name: 'flatlaf', version: '3.7.1'
     implementation group: 'com.formdev', name: 'flatlaf-extras', version: '3.7.1'
 
-    testImplementation group: 'org.junit.jupiter', name: 'junit-jupiter-api', version: '6.0.3'
-    testImplementation group: 'org.junit.jupiter', name:'junit-jupiter-params', version: '6.0.3'
-    testRuntimeOnly group: 'org.junit.jupiter', name: 'junit-jupiter-engine', version: '6.0.3'
+    testImplementation group: 'org.junit.jupiter', name: 'junit-jupiter-api', version: '5.14.3'
+    testImplementation group: 'org.junit.jupiter', name:'junit-jupiter-params', version: '5.14.3'
+    testRuntimeOnly group: 'org.junit.jupiter', name: 'junit-jupiter-engine', version: '5.14.3'
 
     intTestImplementation group: 'org.assertj', name: 'assertj-swing-junit', version: '3.17.1'
 }
