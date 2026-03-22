@@ -20,7 +20,8 @@ import java.awt.event.ActionEvent;
 import java.awt.event.KeyEvent;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
-import java.util.*;
+import java.util.Enumeration;
+import java.util.HashSet;
 
 public class ServerTree extends JTree implements TreeExpansionListener {
 
@@ -31,7 +32,7 @@ public class ServerTree extends JTree implements TreeExpansionListener {
     private ServerTreeNode root;
     private DefaultTreeModel treeModel;
     private boolean showServerNodes = true;
-    private List<String> filters = new ArrayList<>();
+    private String filter = "";
     private boolean listView = false;
 
     private boolean ignoreExpansionListener = false;
@@ -429,12 +430,7 @@ big tree (few thousands nodes overall). From time to time, the whole UI is froze
     }
 
     public void setFilter(String filter) {
-        filters.clear();
-        StringTokenizer st = new StringTokenizer(filter," \t");
-        while (st.hasMoreTokens()) {
-            String word = st.nextToken().trim();
-            if (word.length()>0) filters.add(word.toLowerCase());
-        }
+        this.filter = filter.trim();
         refreshServers();
     }
 
@@ -448,43 +444,14 @@ big tree (few thousands nodes overall). From time to time, the whole UI is froze
         return result;
     }
 
-    private ServerTreeNode filter(ServerTreeNode parent, java.util.List<String> filters) {
-        String value = parent.isFolder() ? parent.getFolder() : parent.getServer().getDescription(false);
-        value = value.toLowerCase();
-        java.util.List<String> left = new ArrayList<>();
-        for(String filter:filters) {
-            if (! value.contains(filter)) {
-                left.add(filter);
-            }
-        }
-
-        if (left.size() ==0) return parent.copy();
-
-        java.util.List<ServerTreeNode> children = new ArrayList<>();
-        for (ServerTreeNode child: parent.childNodes()) {
-            ServerTreeNode childFiltered = filter(child, left);
-            if (childFiltered != null) {
-                children.add(childFiltered);
-            }
-        }
-
-        if (children.size() == 0) return null;
-
-        ServerTreeNode result = new ServerTreeNode(parent.getFolder());
-        for (ServerTreeNode child: children) {
-            result.add(child);
-        }
-        return result;
-    }
-
     private void refreshServers() {
         ServerTreeNode serverTree = Config.getInstance().getServerTree();
         if (!showServerNodes) {
             serverTree = filterOutServers(serverTree);
         }
 
-        if (filters.size() > 0) {
-            setRoot(filter(serverTree, filters));
+        if (! filter.isEmpty()) {
+            setRoot(serverTree.filter(filter));
             expandAll(); // expand all if we apply any filters
         } else {
             ignoreExpansionListener = true;
@@ -500,7 +467,7 @@ big tree (few thousands nodes overall). From time to time, the whole UI is froze
             if (activeNode != null) {
                 TreePath path = new TreePath(activeNode.getPath());
                 expandPath(path.getParentPath());
-                //validate before scrollPathToVisible is needed to layout all nodes
+                //validate before scrollPathToVisible is needed to lay out all nodes
                 validate();
                 scrollPathToVisible(path);
             }
@@ -525,7 +492,7 @@ big tree (few thousands nodes overall). From time to time, the whole UI is froze
     @Override
     public void treeExpanded(TreeExpansionEvent event) {
         if (ignoreExpansionListener) return;
-        if (filters.size() > 0) return;
+        if (! filter.isEmpty()) return;
 
         TreePath path = event.getPath();
         collapsedPath.remove(path);
@@ -535,7 +502,7 @@ big tree (few thousands nodes overall). From time to time, the whole UI is froze
     @Override
     public void treeCollapsed(TreeExpansionEvent event) {
         if (ignoreExpansionListener) return;
-        if (filters.size() > 0) return;
+        if (!filter.isEmpty()) return;
 
         TreePath path = event.getPath();
         expandedPath.remove(path);

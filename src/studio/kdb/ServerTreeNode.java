@@ -3,9 +3,7 @@ package studio.kdb;
 import javax.swing.tree.DefaultMutableTreeNode;
 import javax.swing.tree.MutableTreeNode;
 import javax.swing.tree.TreeNode;
-import java.util.Collections;
-import java.util.List;
-import java.util.Vector;
+import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -25,11 +23,11 @@ public class ServerTreeNode extends DefaultMutableTreeNode {
         super(folder, true);
     }
 
-    public ServerTreeNode copy() {
+    public ServerTreeNode deepCopy() {
         if (isFolder()) {
             ServerTreeNode parent = new ServerTreeNode(getFolder());
             for (ServerTreeNode child: childNodes()) {
-                parent.add(child.copy());
+                parent.add(child.deepCopy());
     }
         return parent;
         } else {
@@ -226,6 +224,44 @@ public class ServerTreeNode extends DefaultMutableTreeNode {
         }
 
         return folder;
+    }
+
+
+    public ServerTreeNode filter(String filter) {
+        List<String> words = Arrays.stream( filter.trim().split("\\s+") )
+                                .map(String::toLowerCase)
+                                .collect(Collectors.toList());
+        return filter(words);
+    }
+
+    public ServerTreeNode filter(List<String> words) {
+        String value = isFolder() ? getFolder() : getServer().getDescription(false);
+        value = value.toLowerCase();
+        java.util.List<String> left = new ArrayList<>();
+        for(String filter:words) {
+            if (! value.contains(filter)) {
+                left.add(filter);
+            }
+        }
+
+        if (left.isEmpty()) return deepCopy();
+
+        List<ServerTreeNode> children = new ArrayList<>();
+        for (ServerTreeNode child: childNodes()) {
+            ServerTreeNode childFiltered = child.filter(left);
+            if (childFiltered != null) {
+                children.add(childFiltered);
+            }
+        }
+
+        if (children.isEmpty()) return null;
+
+        ServerTreeNode result = new ServerTreeNode(getFolder());
+        for (ServerTreeNode child: children) {
+            result.add(child);
+        }
+        return result;
+
     }
 
     public boolean theSame(ServerTreeNode that) {
