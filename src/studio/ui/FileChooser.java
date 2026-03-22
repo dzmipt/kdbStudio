@@ -47,16 +47,16 @@ public class FileChooser {
         return openFile(parent, null, filters);
     }
 
-    public static File openFile(Component parent, String title, FileFilter... filters) {
-        return chooseFile(parent, Config.OPEN_FILE_CHOOSER, JFileChooser.OPEN_DIALOG, title, null, filters);
+    public static File openFile(Component parent, String fileChooserType, FileFilter... filters) {
+        return chooseFile(parent, fileChooserType, JFileChooser.OPEN_DIALOG, null, null, filters);
     }
 
     public static File saveFile(Component parent, FileFilter... filters) {
         return saveFile(parent, null, null, filters);
     }
 
-    public static File saveFile(Component parent, String title, File defaultFile, FileFilter... filters) {
-        return chooseFile(parent, Config.SAVE_FILE_CHOOSER, JFileChooser.SAVE_DIALOG, title, defaultFile, filters);
+    public static File saveFile(Component parent, String fileChooserType, File defaultFile, FileFilter... filters) {
+        return chooseFile(parent, fileChooserType, JFileChooser.SAVE_DIALOG, null, defaultFile, filters);
     }
 
     public static File chooseFile(Component parent, String fileChooserType, int dialogType, String title, File defaultFile, FileFilter... filters) {

@@ -356,7 +356,7 @@ public class StudioWindow extends StudioFrame {
     }
 
     public void openFile() {
-        File file = FileChooser.openFile(this, FileChooser.Q_FF);
+        File file = FileChooser.openFile(this, Config.OPEN_FILE_CHOOSER, FileChooser.Q_FF);
 
         if (file == null) return;
         String filename = file.getAbsolutePath();

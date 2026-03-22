@@ -494,9 +494,11 @@ public class Config  {
     }
 
     public FileChooserConfig getFileChooserConfig(String key) {
+        if (key == null) return new FileChooserConfig();
         return studioConfig.getFileChooserConfig(key);
     }
     public boolean setFileChooserConfig(String key, FileChooserConfig value) {
+        if (key == null) return false;
         return studioConfig.setFileChooserConfig(key, value);
     }
 

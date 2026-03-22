@@ -255,9 +255,12 @@ public class EditorsPanel extends JPanel {
 
     public static boolean saveAsFile(EditorTab editor) {
         String filename = editor.getFilename();
-        File file = FileChooser.saveFile(editor.getStudioWindow(), "Save script as",
-                filename == null ? null : new File(filename), FileChooser.Q_FF);
-
+        File file = FileChooser.chooseFile(editor.getStudioWindow(),
+                                            Config.SAVE_FILE_CHOOSER,
+                                            JFileChooser.SAVE_DIALOG,
+                                            "Save script as",
+                                            filename == null ? null : new File(filename),
+                                            FileChooser.Q_FF );
         if (file == null) return false;
 
         filename = file.getAbsolutePath();
