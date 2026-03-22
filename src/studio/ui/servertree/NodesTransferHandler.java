@@ -69,7 +69,7 @@ public class NodesTransferHandler extends TransferHandler {
             return false;
         }
 
-        log.info("Now we need to import");
+        log.debug("Now we need to import");
         try {
             ServerTreeNode importNode = (ServerTreeNode) support.getTransferable().getTransferData(nodesFlavor);
 
