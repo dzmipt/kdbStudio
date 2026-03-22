@@ -89,11 +89,11 @@ public class ServerForm extends EscapeDialog {
     }
 
     private void updateFolder() {
-        ServerList serverList = new ServerList(this, Workspace.DEFAULT_BOUNDS);
+        ServerTreeDialog serverTreeDialog = new ServerTreeDialog(this, Workspace.DEFAULT_BOUNDS);
 
         ServerTreeNode folder = Config.getInstance().getServerTree().findPath(server.getFolderPath(), false);
 
-        ServerTreeNode newFolder = serverList.showFolders(folder);
+        ServerTreeNode newFolder = serverTreeDialog.showFolders(folder);
         if (newFolder != null && newFolder != folder) {
             server = server.newParent(newFolder);
             updateFolderLabel();

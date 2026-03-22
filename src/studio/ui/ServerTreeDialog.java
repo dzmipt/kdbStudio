@@ -13,7 +13,7 @@ import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.util.List;
 
-public class ServerList extends EscapeDialog implements NodeSelectedListener {
+public class ServerTreeDialog extends EscapeDialog implements NodeSelectedListener {
 
     private JPanel contentPane;
     private JTabbedPane tabbedPane;
@@ -33,7 +33,7 @@ public class ServerList extends EscapeDialog implements NodeSelectedListener {
 
     private final KeyStroke TREE_VIEW_KEYSTROKE = Util.getMenuShortcut(KeyEvent.VK_T);
 
-    public ServerList(Window parent, Rectangle bounds) {
+    public ServerTreeDialog(Window parent, Rectangle bounds) {
         super(parent, "Server List");
         setRemoveContentOnDispose(false);
         initComponents();

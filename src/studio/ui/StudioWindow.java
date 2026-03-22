@@ -53,7 +53,7 @@ public class StudioWindow extends StudioFrame {
     private DraggableTabbedPane resultsPane;
     private SearchPanel editorSearchPanel;
     private SearchPanel resultSearchPanel;
-    private ServerList serverList;
+    private ServerTreeDialog serverTreeDialog;
 
     private StudioActionMap studioActionMap;
     private MenuFactory menuFactory;
@@ -728,13 +728,13 @@ public class StudioWindow extends StudioFrame {
         }
     }
 
-    public ServerList getServerList() {
-        return serverList;
+    public ServerTreeDialog getServerList() {
+        return serverTreeDialog;
     }
 
     public void showServerList(boolean selectHistory) {
         log.info("Show server list from {}", getTitle());
-        Server selectedServer = serverList.showServerTree(editor.getServer(), serverHistory, selectHistory);
+        Server selectedServer = serverTreeDialog.showServerTree(editor.getServer(), serverHistory, selectHistory);
 
         if (selectedServer == null || selectedServer.equals(editor.getServer())) return;
 
@@ -1033,7 +1033,7 @@ public class StudioWindow extends StudioFrame {
         topPanel.add(rootEditorsPanel, BorderLayout.CENTER);
 
         initFrame(workspaceWindow.getLocation(), toolbar, splitpane, mainStatusBar);
-        serverList = new ServerList(this, workspaceWindow.getServerListBounds());
+        serverTreeDialog = new ServerTreeDialog(this, workspaceWindow.getServerListBounds());
         splitpane.setDividerLocation(workspaceWindow.getResultDividerLocation());
 
         rootEditorsPanel.loadDividerLocation(workspaceWindow);
