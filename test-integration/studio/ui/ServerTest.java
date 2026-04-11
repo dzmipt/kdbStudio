@@ -13,6 +13,7 @@ import studio.core.DefaultAuthenticationMechanism;
 import studio.kdb.Server;
 import studio.kdb.ServerTreeNode;
 import studio.kdb.config.ServerConfig;
+import studio.ui.server.ServerEditor;
 import studio.utils.QConnection;
 
 import java.awt.*;

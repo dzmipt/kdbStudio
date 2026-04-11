@@ -6,9 +6,9 @@ import studio.kdb.Config;
 import studio.kdb.Server;
 import studio.kdb.ServerTreeNode;
 import studio.kdb.config.ServerTreeNodeSerializer;
-import studio.ui.ServerEditor;
 import studio.ui.StudioOptionPane;
 import studio.ui.UserAction;
+import studio.ui.server.ServerEditor;
 
 import javax.accessibility.AccessibleContext;
 import javax.accessibility.AccessibleRole;

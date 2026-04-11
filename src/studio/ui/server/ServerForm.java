@@ -1,5 +1,5 @@
 
-package studio.ui;
+package studio.ui.server;
 
 import studio.core.AuthenticationManager;
 import studio.core.Credentials;
@@ -9,6 +9,10 @@ import studio.kdb.ServerTreeNode;
 import studio.kdb.Workspace;
 import studio.kdb.config.ColorToken;
 import studio.kdb.config.TLSResolutionMode;
+import studio.ui.ColorChooser;
+import studio.ui.EscapeDialog;
+import studio.ui.ServerTreeDialog;
+import studio.ui.StudioOptionPane;
 
 import javax.swing.*;
 import java.awt.*;

@@ -186,7 +186,7 @@ public class ServerConfig {
         }
     }
 
-    public void replaceServer(Server oldServer, Server newServer) {
+    private void replaceServerInternal(Server oldServer, Server newServer) {
         ServerTreeNode oldFolder = serverTree.findPath(oldServer.getFolderPath(), false);
         if (oldFolder == null) {
             throw new IllegalArgumentException("Previous server is not in the tree");
@@ -202,6 +202,28 @@ public class ServerConfig {
             index = newFolder.getChildCount();
         }
         newFolder.add(index, newServer);
+    }
+
+    public void replaceServers(List<Server> oldServers, List<Server> newServers) {
+        if (oldServers.size() != newServers.size()) {
+            throw new IllegalArgumentException("Size of old and new server lists are different");
+        }
+
+        boolean modified = false;
+        try {
+            for (int i=0; i<oldServers.size(); i++) {
+                replaceServerInternal(oldServers.get(i), newServers.get(i));
+                modified = true;
+            }
+        } finally {
+            if (modified) {
+                setRoot(serverTree);
+            }
+        }
+    }
+
+    public void replaceServer(Server oldServer, Server newServer) {
+        replaceServerInternal(oldServer, newServer);
         setRoot(serverTree);
     }
 

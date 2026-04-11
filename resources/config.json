@@ -113,6 +113,12 @@
       "description": "Configure a new server",
       "key": "A"
     },
+    "bulkEditServers": {
+      "text": "Bulk Edit",
+      "icon": "server_information",
+      "description": "Bulk server modification",
+      "key": "B"
+    },
     "removeServer": {
       "text": "Remove",
       "icon": "server_delete",
@@ -407,7 +413,7 @@
     {
       "menu": "Server",
       "items": [
-        "addServer", "editServer", "removeServer",
+        "addServer", "editServer", "bulkEditServers", "removeServer",
         {"menu": "Clone",
           "items": [{
             "mark": "clone"

@@ -130,6 +130,9 @@ public class Studio {
     }
 
     public static void initLF() {
+        FlatInspector.install( "ctrl shift alt X" );
+        FlatUIDefaultsInspector.install( "ctrl shift alt Y" );
+
         String lookAndFeelClassName = Config.getInstance().getString(Config.LOOK_AND_FEEL);
         try {
             UIManager.setLookAndFeel(lookAndFeelClassName);
@@ -227,9 +230,6 @@ public class Studio {
     //Executed on the Event Dispatcher Thread
     private static void init(String[] args) {
         WindowFactory.init();
-
-        FlatInspector.install( "ctrl shift alt X" );
-        FlatUIDefaultsInspector.install( "ctrl shift alt Y" );
 
 //        debugFocusTransfer();
         log.info("Start Studio with args {}", Arrays.asList(args));

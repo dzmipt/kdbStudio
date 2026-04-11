@@ -9,6 +9,7 @@ import studio.ui.action.config.StudioWindowAction;
 import studio.ui.rstextarea.ConvertTabsToSpacesAction;
 import studio.ui.rstextarea.FindReplaceAction;
 import studio.ui.rstextarea.RSTextAreaFactory;
+import studio.ui.server.BulkEditServerDialog;
 import studio.utils.LineEnding;
 
 import java.awt.event.ActionEvent;
@@ -36,6 +37,7 @@ public class Actions {
     public final static String connectionStats = "connectionStats";
     public final static String editServer = "editServer";
     public final static String addServer = "addServer";
+    public final static String bulkEditServers = "bulkEditServers";
     public final static String removeServer = "removeServer";
     public final static String saveFile = "saveFile";
     public final static String saveAllFiles = "saveAllFiles";
@@ -135,6 +137,7 @@ public class Actions {
         add(connectionStats, ConnectionStats::getStats);
         add(editServer, StudioWindow::editServer);
         add(addServer, StudioWindow::addServer);
+        add(bulkEditServers, studioWindow -> BulkEditServerDialog.run());
         add(removeServer, StudioWindow::removeServer);
         addEditorAction(saveFile, EditorsPanel::saveEditor);
         addStaticAction(saveAllFiles, StudioWindow::saveAll);

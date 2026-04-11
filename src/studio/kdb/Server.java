@@ -3,6 +3,7 @@ package studio.kdb;
 import studio.core.Credentials;
 import studio.core.DefaultAuthenticationMechanism;
 import studio.kdb.config.EditorColorToken;
+import studio.kdb.config.TLSResolutionMode;
 import studio.utils.QConnection;
 
 import java.awt.*;
@@ -39,6 +40,10 @@ public class Server {
 
     public boolean isFlipTLS() {
         return  flipTLS;
+    }
+
+    public TLSResolutionMode getTLSResolutionMode() {
+        return TLSResolutionMode.get(getUseTLS(), isFlipTLS());
     }
 
     public static Server newServer() {
@@ -124,7 +129,12 @@ public class Server {
 
     public String getFolderName() {
         if (parent == null) return "";
-        return parent.getFolderPath().stream().skip(1).collect(Collectors.joining("/"));
+        return getFolderName(parent.getFolderPath());
+    }
+
+    public static String getFolderName(List<String> folderPath) {
+        if (folderPath == null) return "";
+        return folderPath.stream().skip(1).collect(Collectors.joining("/"));
     }
 
     public String getHost() {
