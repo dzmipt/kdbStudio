@@ -158,7 +158,6 @@ public class BulkEditServerDialog extends EscapeDialog implements DocumentChange
 
            boolean enable = ! servers.isEmpty();
            serverEditor.setVisible(enable);
-           btnOK.setEnabled(enable);
            btnApply.setEnabled(enable && serverEditor.amended());
        } finally {
            refreshing = false;
