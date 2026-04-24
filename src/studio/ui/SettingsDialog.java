@@ -8,6 +8,7 @@ import studio.kdb.config.ColorToken;
 import studio.kdb.config.EditorColorToken;
 import studio.kdb.config.ServerConfig;
 import studio.kdb.config.TokenStyle;
+import studio.ui.grid.ResultGrid;
 import studio.ui.rstextarea.StudioRSyntaxTextArea;
 import studio.ui.settings.*;
 

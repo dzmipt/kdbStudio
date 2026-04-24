@@ -9,6 +9,7 @@ import studio.kdb.config.EditorColorToken;
 import studio.kdb.config.TokenStyle;
 import studio.qeditor.QTokenMakerFactory;
 import studio.ui.action.QueryResult;
+import studio.ui.grid.ResultGrid;
 import studio.ui.rstextarea.StudioRSyntaxTextArea;
 
 import javax.swing.*;

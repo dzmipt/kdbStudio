@@ -11,6 +11,7 @@ import studio.ui.action.*;
 import studio.ui.chart.Chart;
 import studio.ui.dndtabbedpane.DragEvent;
 import studio.ui.dndtabbedpane.DraggableTabbedPane;
+import studio.ui.grid.ResultGrid;
 import studio.ui.search.SearchPanel;
 import studio.ui.server.ServerEditor;
 import studio.ui.statusbar.MainStatusBar;

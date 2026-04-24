@@ -1,11 +1,10 @@
-package studio.ui;
+package studio.ui.grid;
 
 import org.fife.ui.rtextarea.SearchContext;
 import studio.kdb.*;
+import studio.ui.*;
 import studio.ui.action.CopyTableSelectionAction;
 import studio.ui.action.TableUserAction;
-import studio.ui.grid.QGrid;
-import studio.ui.grid.QGridPanel;
 import studio.ui.search.*;
 
 import javax.swing.*;

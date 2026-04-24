@@ -1,7 +1,6 @@
 package studio.ui.grid;
 
 import studio.kdb.KTableModel;
-import studio.ui.IndexHeader;
 
 import javax.swing.*;
 import javax.swing.event.ChangeEvent;

@@ -5,6 +5,7 @@ import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import studio.kdb.K;
 import studio.kdb.KFormatContext;
 import studio.ui.action.QueryResult;
+import studio.ui.grid.ResultGrid;
 
 import javax.swing.*;
 import javax.swing.table.TableModel;
