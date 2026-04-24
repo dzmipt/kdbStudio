@@ -368,6 +368,11 @@
       "description": "Set Classic MacOS line ending - CR",
       "key": "M",
       "toggle": true
+    },
+    "showTrustedCA": {
+      "text": "Show JVM Trusted CA",
+      "description": "Show certificate from JVM's trust store",
+      "key" : "J"
     }
   },
 
@@ -388,6 +393,10 @@
         {
           "items": ["settings"],
           "os": "other"
+        },
+        {
+          "menu": "Certificates ...",
+          "items":["showTrustedCA"]
         },
         "openInExcel", "export", "chart",
         {

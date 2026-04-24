@@ -77,6 +77,7 @@ public class Actions {
     public final static String lineEndingUnix = "lineEndingUnix";
     public final static String lineEndingWindows = "lineEndingWindows";
     public final static String lineEndingMacOS9 = "lineEndingMacOS9";
+    public final static String showTrustedCA = "showTrustedCA";
 
     public final static Map<String, StudioWindowAction> studioWindowActions = new HashMap<>();
 
@@ -218,6 +219,8 @@ public class Actions {
                 studioWindow.setLineEnding(LineEnding.Windows) );
         add(lineEndingMacOS9, studioWindow ->
                 studioWindow.setLineEnding(LineEnding.MacOS9) );
+
+        add(showTrustedCA, StudioWindow::showTrustCA);
     }
 
 }

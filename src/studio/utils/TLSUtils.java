@@ -1,5 +1,7 @@
 package studio.utils;
 
+import studio.kdb.K;
+
 import javax.naming.InvalidNameException;
 import javax.naming.ldap.LdapName;
 import javax.naming.ldap.Rdn;
@@ -139,6 +141,35 @@ public class TLSUtils {
         try (OutputStream out = Files.newOutputStream(path)) {
             ks.store(out, new char[0]);
         }
+    }
+
+    public static K.Flip getTrustCAList() throws GeneralSecurityException {
+        X509Certificate[] certificates = TLSUtils.getDefaultTrustManager().getAcceptedIssuers();
+        int count = certificates.length;
+
+        String[] subjs = new String[count];
+        String[] issuers = new String[count];
+        long[] from = new long[count];
+        long[] to = new long[count];
+        K.KByteVector[] serials = new K.KByteVector[count];
+
+        for (int index = 0; index < count; index++) {
+            X509Certificate cert = certificates[index];
+            subjs[index] = cert.getSubjectDN().toString();
+            issuers[index] = cert.getIssuerDN().toString();
+            from[index] = K.KTimestamp.of(cert.getNotBefore().toInstant()).toLong();
+            to[index] = K.KTimestamp.of(cert.getNotAfter().toInstant()).toLong();
+            serials[index] = new K.KByteVector(cert.getSerialNumber().toByteArray());
+        }
+
+        return new K.Flip(new K.KSymbolVector("Subject", "Until", "From", "Serial", "Issuer"),
+                new K.KList(
+                        new K.KSymbolVector(subjs),
+                        new K.KTimestampVector(to),
+                        new K.KTimestampVector(from),
+                        new K.KList(serials),
+                        new K.KSymbolVector(issuers)
+                ) );
     }
 
 }

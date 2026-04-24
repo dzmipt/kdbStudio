@@ -18,6 +18,11 @@ public class QueryResult {
         setResult(new KMessage(kObject));
     }
 
+    public QueryResult(Throwable error) {
+        this(null, "", false);
+        setResult(new KMessage(error));
+    }
+
     public QueryResult(Server server, String query, boolean chartAfter) {
         this.server = server;
         this.query = query;

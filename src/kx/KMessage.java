@@ -2,29 +2,23 @@ package kx;
 
 import studio.kdb.K;
 
-import java.io.IOException;
-
 public class KMessage {
 
     private K.KBase object = null;
     private K4Exception error = null;
-    private IOException exception = null;
+    private Throwable exception = null;
     private long bytesSent = 0;
     private long bytesReceived = 0;
     private K.KTimestamp started = K.KTimestamp.NULL;
     private K.KTimestamp finished = K.KTimestamp.NULL;
 
-
     public KMessage(K.KBase result) {
         this.object = result;
     }
 
-    public KMessage(K4Exception error) {
-        this.error = error;
-    }
-
-    public KMessage(IOException exception) {
-        this.exception = exception;
+    public KMessage(Throwable throwable) {
+        if (throwable instanceof K4Exception) this.error = (K4Exception) throwable;
+        else this.exception = throwable;
     }
 
     public K.KBase getObject() {

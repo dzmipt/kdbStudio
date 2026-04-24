@@ -16,6 +16,7 @@ import studio.ui.server.ServerEditor;
 import studio.ui.statusbar.MainStatusBar;
 import studio.utils.Content;
 import studio.utils.LineEnding;
+import studio.utils.TLSUtils;
 import studio.utils.log4j.EnvConfig;
 
 import javax.swing.*;
@@ -30,6 +31,7 @@ import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.security.GeneralSecurityException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -493,6 +495,15 @@ public class StudioWindow extends StudioFrame {
                 setServer(servers[0]);
 
             refreshAll();
+        }
+    }
+
+    public void showTrustCA() {
+        try {
+            addResultTab(new QueryResult(TLSUtils.getTrustCAList()), "JVM Trust Store");
+        } catch (GeneralSecurityException e) {
+            log.error("Error on getting JVM trust store", e);
+            addResultTab(new QueryResult(e), "JVM Trust Store");
         }
     }
 

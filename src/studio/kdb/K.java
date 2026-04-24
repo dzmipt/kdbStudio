@@ -1131,7 +1131,10 @@ public class K {
         }
 
         public static KTimestamp of(LocalDateTime dateTime) {
-            Instant instant = dateTime.toInstant(ZoneOffset.UTC);
+            return of(dateTime.toInstant(ZoneOffset.UTC));
+        }
+
+        public static KTimestamp of(Instant instant) {
             long ns = instant.getEpochSecond() * NS_IN_SEC + instant.getNano() - MILLIS_OFFSET * NS_IN_MLS;
             return new KTimestamp(ns);
         }
