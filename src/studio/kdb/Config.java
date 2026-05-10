@@ -393,6 +393,10 @@ public class Config  {
         return studioConfig.set(Config.TOKEN_STYLE_CONFIG, tokenStyleMap);
     }
 
+    public Color getBackgroundColor() {
+        return getEditorColors().get(EditorColorToken.BACKGROUND);
+    }
+
     public ColorMap getEditorColors() {
         return (ColorMap) studioConfig.get(Config.EDITOR_COLOR_CONFIG);
     }

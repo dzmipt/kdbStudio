@@ -295,7 +295,7 @@ public class ConfigAllTest {
     }
 
     private void testTokenColors(Config config) {
-        assertEquals(new Color(0xfefefe), config.getEditorColors().get(EditorColorToken.BACKGROUND));
+        assertEquals(new Color(0xfefefe), config.getBackgroundColor());
 
         TokenStyleMap colorTokenConfig = config.getTokenStyleConfig();;
         assertEquals(new Color(0x00ff00), colorTokenConfig.getColor(ColorToken.CHARVECTOR));

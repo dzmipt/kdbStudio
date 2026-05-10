@@ -5,7 +5,6 @@ import org.fife.ui.rsyntaxtextarea.RSyntaxDocument;
 import studio.kdb.*;
 import studio.kdb.ListModel;
 import studio.kdb.config.ColorToken;
-import studio.kdb.config.EditorColorToken;
 import studio.kdb.config.TokenStyle;
 import studio.qeditor.QTokenMakerFactory;
 import studio.ui.action.QueryResult;
@@ -60,7 +59,7 @@ public class ResultPane extends JPanel {
             Config config = Config.getInstance();
             Font font = config.getFont(Config.FONT_EDITOR);
 
-            Color bgColor = config.getEditorColors().get(EditorColorToken.BACKGROUND);
+            Color bgColor = config.getBackgroundColor();
             TokenStyle style = config.getTokenStyleConfig().get(ColorToken.ERROR);
             Color fgColor = style.getColor();
 

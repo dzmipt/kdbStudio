@@ -5,7 +5,6 @@ import studio.core.Studio;
 import studio.kdb.Config;
 import studio.kdb.Server;
 import studio.kdb.config.ColorToken;
-import studio.kdb.config.EditorColorToken;
 import studio.kdb.config.ServerConfig;
 import studio.kdb.config.TokenStyle;
 import studio.ui.grid.ResultGrid;
@@ -72,14 +71,14 @@ public class SettingsDialog extends EscapeDialog {
     }
 
     public void saveSettings() {
-        Color oldBgColor = CONFIG.getEditorColors().get(EditorColorToken.BACKGROUND);
+        Color oldBgColor = CONFIG.getBackgroundColor();
 
         SettingsSaveResult result = new SettingsSaveResult();
         for(SettingsTab tab: pages.values() ) {
             tab.saveSettings(result);
         }
 
-        Color newBgColor = CONFIG.getEditorColors().get(EditorColorToken.BACKGROUND);
+        Color newBgColor = CONFIG.getBackgroundColor();
         if (! newBgColor.equals(oldBgColor) ) {
             int res = StudioOptionPane.showYesNoDialog(this, "Background color is changed.\n" +
                     "Do you want to update background for all servers with old background color?", "Background color changed");
@@ -142,7 +141,7 @@ public class SettingsDialog extends EscapeDialog {
                 if (errorPane != null) {
                     Font font = CONFIG.getFont(Config.FONT_EDITOR);
 
-                    Color bgColor = CONFIG.getEditorColors().get(EditorColorToken.BACKGROUND);
+                    Color bgColor = CONFIG.getBackgroundColor();
                     TokenStyle style = CONFIG.getTokenStyleConfig().get(ColorToken.ERROR);
                     Color fgColor = style.getColor();
 

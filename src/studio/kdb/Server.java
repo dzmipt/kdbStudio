@@ -2,7 +2,6 @@ package studio.kdb;
 
 import studio.core.Credentials;
 import studio.core.DefaultAuthenticationMechanism;
-import studio.kdb.config.EditorColorToken;
 import studio.kdb.config.TLSResolutionMode;
 import studio.utils.QConnection;
 
@@ -50,7 +49,7 @@ public class Server {
         String authMethod = Config.getInstance().getDefaultAuthMechanism();
         Credentials credentials = Config.getInstance().getDefaultCredentials(authMethod);
         QConnection conn = new QConnection("", 0, credentials.getUsername(), credentials.getPassword(), false);
-        return new Server("", conn, authMethod, Config.getInstance().getEditorColors().get(EditorColorToken.BACKGROUND), null);
+        return new Server("", conn, authMethod, Config.getInstance().getBackgroundColor(), null);
     }
 
     @Override

@@ -258,7 +258,7 @@ public class ServerConfig {
             }
         }
 
-        Color bgColor = Config.getInstance().getEditorColors().get(EditorColorToken.BACKGROUND);
+        Color bgColor = Config.getInstance().getBackgroundColor();
         return new Server("", host, port, user, password, bgColor, auth, useTLS);
     }
 
