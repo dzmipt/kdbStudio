@@ -41,7 +41,7 @@ public class SettingsDialog extends EscapeDialog {
             tabs.addTab(title, new JScrollPane(pages.get(title)));
         }
 
-        tabs.setPreferredSize(new Dimension(705, 705));
+        tabs.setPreferredSize(new Dimension(750, 705));
 
         btnOk = new JButton("OK");
         btnCancel = new JButton("Cancel");
@@ -115,7 +115,7 @@ public class SettingsDialog extends EscapeDialog {
             editor.setAnimateBracketMatching(CONFIG.getBoolean(Config.RSTA_ANIMATE_BRACKET_MATCHING));
             editor.setSyntaxScheme(CONFIG.getFont(Config.FONT_EDITOR), CONFIG.getTokenStyleConfig());
             editor.setEditorColors(CONFIG.getEditorColors());
-            editor.setBackground(editorTab.getServer().getBackgroundColor());
+            editor.setBackground(CONFIG.getServerBgColor(editorTab.getServer()));
 
             editor.setTabSize(CONFIG.getInt(Config.EDITOR_TAB_SIZE));
             editor.setTabsEmulated(CONFIG.getBoolean(Config.EDITOR_TAB_EMULATED));

@@ -5,6 +5,7 @@ import org.apache.logging.log4j.Logger;
 import studio.core.Credentials;
 import studio.core.DefaultAuthenticationMechanism;
 import studio.kdb.config.*;
+import studio.kdb.config.server.BgColorRules;
 import studio.ui.Util;
 import studio.ui.settings.StrokeStyleEditor;
 import studio.utils.*;
@@ -88,6 +89,8 @@ public class Config  {
 
     public static final String ALIGN_RIGHT_NUMBERS_IN_RESULT = configDefault("alignNumbersInResult", ConfigType.BOOLEAN, true);
     public static final String DEFAULT_TLS_RESOLUTION = configDefault("defaultTLSResolution", ConfigType.ENUM, TLSResolutionMode.TCP);
+
+    public static final String BG_COLOR_RULES = configDefault("serverBgColorRules", ConfigType.BG_COLOR_RULES, new BgColorRules());
 
     public static final String CONFIG_VERSION = configDefault("version", ConfigType.ENUM, ConfigVersion.V_NO); // to force version to save
 
@@ -535,6 +538,24 @@ public class Config  {
             strokes.add(StrokeStyleEditor.parseDashArray(text));
         }
         return strokes;
+    }
+
+    public BgColorRules getServerBgColorRules() {
+        return (BgColorRules)studioConfig.get(Config.BG_COLOR_RULES);
+    }
+
+    public boolean setServerBgColorRules(BgColorRules rules) {
+        return studioConfig.set(Config.BG_COLOR_RULES, rules);
+    }
+
+    public boolean overrideServerBgColor(Server server) {
+        return getServerBgColorRules().overrideColor(server) != null;
+    }
+
+    public Color getServerBgColor(Server server) {
+        Color color = getServerBgColorRules().overrideColor(server);
+        if (color != null) return color;
+        return server.getBackgroundColor();
     }
 
 }

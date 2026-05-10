@@ -2,12 +2,18 @@ package studio.kdb;
 
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import studio.core.Credentials;
 import studio.core.DefaultAuthenticationMechanism;
 import studio.kdb.config.*;
+import studio.kdb.config.server.BgColorRules;
+import studio.kdb.config.server.FieldGetter;
+import studio.kdb.config.server.Operation;
+import studio.kdb.config.server.ServerFilterRule;
 import studio.ui.Util;
 import studio.utils.LineEnding;
 import studio.utils.MockConfig;
@@ -30,6 +36,8 @@ public class ConfigAllTest {
 
     private static InstrumentedMockConfig lastConfig;
     private static Path lastStudioConfigPath;
+
+    private final static Logger log = LogManager.getLogger();
 
     @BeforeAll
     public static void prepare() throws IOException {
@@ -84,11 +92,11 @@ public class ConfigAllTest {
 
             Set<String> set = new HashSet<>(definedTypes);
             set.removeAll(keysInTest);
-            System.out.println("Keys missed in the test: " + set);
+            log.info("Keys missed in the test: " + set);
 
             set = new HashSet<>(keysInTest);
             set.removeAll(definedTypes);
-            System.out.println("Extra keys the test: " + set);
+            log.info("Extra keys the test: " + set);
 
             assertEquals(definedTypes, keysInTest);
 
@@ -109,11 +117,11 @@ public class ConfigAllTest {
 
         Set<String> set = new HashSet<>(definedTypes);
         set.removeAll(accessedKeys);
-        System.out.println("Not accessed keys: " + set);
+        log.info("Not accessed keys: " + set);
 
         set = new HashSet<>(accessedKeys);
         set.removeAll(definedTypes);
-        System.out.println("Access not defined keys (how?): " + set);
+        log.info("Access not defined keys (how?): " + set);
 
         assertEquals(definedTypes, accessedKeys);
     }
@@ -131,6 +139,14 @@ public class ConfigAllTest {
         assertEquals(new Color(0x987654), colors.get(EditorColorToken.CURRENT_LINE_HIGHLIGHT));
         assertEquals(false, config.getBoolean(Config.ALIGN_RIGHT_NUMBERS_IN_RESULT));
         assertEquals(TLSResolutionMode.TLS_TCP, config.getEnum(Config.DEFAULT_TLS_RESOLUTION));
+
+
+        BgColorRules rules = new BgColorRules();
+        rules.add(ServerFilterRule.newRule(FieldGetter.Names.port, Operation.Names.smaller, new Color(0x213243), 1111));
+        rules.add(ServerFilterRule.newRule(FieldGetter.Names.fullName, Operation.Names.likes, new Color(0x999999), "test.*"));
+        rules.add(ServerFilterRule.newRule(FieldGetter.Names.tls, Operation.Names.equals, new Color(0xaaaaaa), TLSResolutionMode.TCP_TLS));
+
+        assertEquals(rules, config.getServerBgColorRules());
     }
 
     private BasicStroke getStroke(float... dashArray) {

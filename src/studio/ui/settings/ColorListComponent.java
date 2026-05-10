@@ -264,11 +264,6 @@ public class ColorListComponent extends JComponent implements DropTargetListener
     }
 
     @Override
-    public void paint(Graphics g) {
-        super.paint(g);
-    }
-
-    @Override
     protected void paintComponent(Graphics g) {
         super.paintComponent(g);
 
@@ -344,8 +339,8 @@ public class ColorListComponent extends JComponent implements DropTargetListener
 
 
     private class DraggableLabel extends DragSourceAdapter implements DragGestureListener {
-        private DragSource dragSource = new DragSource();
-        private ColorLabel label;
+        private final DragSource dragSource = new DragSource();
+        private final ColorLabel label;
 
         public DraggableLabel(ColorLabel label) {
             this.label = label;

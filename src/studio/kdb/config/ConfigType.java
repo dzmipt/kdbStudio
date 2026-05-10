@@ -7,6 +7,7 @@ import com.google.gson.JsonPrimitive;
 import org.apache.commons.collections4.list.UnmodifiableList;
 import studio.core.Credentials;
 import studio.kdb.FileChooserConfig;
+import studio.kdb.config.server.BgColorRules;
 import studio.ui.Util;
 
 import java.awt.*;
@@ -408,6 +409,22 @@ public enum ConfigType {
             return json;
         }
     },
+    BG_COLOR_RULES {
+        @Override
+        public Object fromJson(JsonElement jsonElement, Object defaultValue) {
+            return BgColorRules.fromJson(jsonElement.getAsJsonArray());
+        }
+
+        @Override
+        public JsonElement toJson(Object value) {
+            return ((BgColorRules)value).toJson();
+        }
+
+        @Override
+        public Object clone(Object value) {
+            return ((BgColorRules)value).copy();
+        }
+    },
     STRING_ARRAY(STRING),
     INT_ARRAY(INT),
     DOUBLE_ARRAY(DOUBLE),
@@ -422,7 +439,7 @@ public enum ConfigType {
         return new Dimension(d.width, d.height);
     }
 
-    private static FileChooserConfig clone (FileChooserConfig config) {
+    private static FileChooserConfig clone(FileChooserConfig config) {
         return new FileChooserConfig(config.getFilename(), clone(config.getPreferredSize()));
     }
 

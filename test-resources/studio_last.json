@@ -197,5 +197,26 @@
   "alignNumbersInResult" : false,
   "defaultTLSResolution": "TLS_TCP",
 
+  "serverBgColorRules": [
+    {
+      "field": "port",
+      "operation": "smaller",
+      "argument": 1111,
+      "color": "213243"
+    },
+    {
+      "field": "fullName",
+      "operation": "likes",
+      "argument": "test.*",
+      "color": "999999"
+    },
+    {
+      "field": "tls",
+      "operation": "equals",
+      "argument": "TCP_TLS",
+      "color": "AAAAAA"
+    }
+  ],
+
   "version": "V2_3"
 }

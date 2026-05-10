@@ -3,6 +3,7 @@ package studio.ui.settings;
 import studio.kdb.Config;
 import studio.kdb.config.ExecAllOption;
 import studio.ui.GroupLayoutSimple;
+import studio.ui.Util;
 import studio.utils.LineEnding;
 
 import javax.swing.*;
@@ -19,6 +20,7 @@ public class SettingsEditorTab extends SettingsTab {
     private final JCheckBox chBoxReplaceTabOnOpen;
     private final JComboBox<ExecAllOption> comboBoxExecAll;
     private final JComboBox<LineEnding> comboBoxLineEnding;
+    private final BgColorRulesEditor bgColorRulesEditor;
 
     private static final Config CONFIG = Config.getInstance();
 
@@ -53,7 +55,11 @@ public class SettingsEditorTab extends SettingsTab {
         comboBoxExecAll = new JComboBox<>(ExecAllOption.values());
         comboBoxExecAll.setSelectedItem(CONFIG.getEnum(Config.EXEC_ALL));
 
-        GroupLayoutSimple layout = new GroupLayoutSimple(this);
+        JLabel lblBgColorRules = new JLabel("Rules to override background color based on server properties:");
+        bgColorRulesEditor = new BgColorRulesEditor(CONFIG.getServerBgColorRules());
+        JPanel bgColorRulesPanel = bgColorRulesEditor.getEditorPanel();
+
+        GroupLayoutSimple layout = new GroupLayoutSimple(this, bgColorRulesPanel);
         layout.setStacks(
                 new GroupLayoutSimple.Stack()
                         .addLineAndGlue(chBoxRTSAAnimateBracketMatching, chBoxRTSAHighlightCurrentLine,
@@ -61,6 +67,10 @@ public class SettingsEditorTab extends SettingsTab {
                         .addLineAndGlue(chBoxEmulateTab, txtEmulatedTabSize, chBoxReplaceTabOnOpen)
                         .addLineAndGlue(lblDefaultLineEnding, comboBoxLineEnding)
                         .addLineAndGlue(lblExecAll, comboBoxExecAll)
+                        .addLine(Util.getLineInViewPort())
+                        .addLineAndGlue(lblBgColorRules)
+                        .addLine(bgColorRulesPanel)
+                        .addLine(Util.getLineInViewPort())
         );
     }
 
@@ -95,7 +105,8 @@ public class SettingsEditorTab extends SettingsTab {
         changedEditor |= CONFIG.setBoolean(Config.RSTA_INSERT_PAIRED_CHAR, chBoxRTSAInsertPairedChar.isSelected());
         changedEditor |= CONFIG.setBoolean(Config.EDITOR_TAB_EMULATED, chBoxEmulateTab.isSelected());
         changedEditor |= CONFIG.setInt(Config.EDITOR_TAB_SIZE, (Integer)txtEmulatedTabSize.getValue());
-        changedEditor |= CONFIG.setBoolean(Config.AUTO_REPLACE_TAB_ON_OPEN, chBoxReplaceTabOnOpen.isSelected());;
+        changedEditor |= CONFIG.setBoolean(Config.AUTO_REPLACE_TAB_ON_OPEN, chBoxReplaceTabOnOpen.isSelected());
+        changedEditor |= CONFIG.setServerBgColorRules(bgColorRulesEditor.getRules());
 
         result.setRefreshEditorsSettings(changedEditor);
 

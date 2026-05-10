@@ -80,6 +80,8 @@ public class Util {
     public final static ImageIcon LOCK_ICON = StudioIcon.getIcon("lock");
     public final static ImageIcon LOCK_CROSSED_ICON = StudioIcon.getIcon("lock_crossed");
     public final static ImageIcon UNLOCK_ICON = StudioIcon.getIcon("unlock");
+    public final static ImageIcon CROSS_ICON = StudioIcon.getIcon("cross");
+    public final static ImageIcon THREE_DOTS_ICON = StudioIcon.getIcon("3dots");
 
     public final static int menuShortcutKeyMask = GraphicsEnvironment.isHeadless() ? KeyEvent.CTRL_DOWN_MASK :
                                                     java.awt.Toolkit.getDefaultToolkit().getMenuShortcutKeyMaskEx();

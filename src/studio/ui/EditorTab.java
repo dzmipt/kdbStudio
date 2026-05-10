@@ -360,7 +360,7 @@ public class EditorTab implements FileWatcher.Listener, EditorStatusBarCallback 
         session = Session.newSession(this);
         setSessionContext(session.getConnectionContext());
 
-        getTextArea().setBackground(getServer().getBackgroundColor());
+        getTextArea().setBackground(Config.getInstance().getServerBgColor(getServer()));
 
         studioWindow.getMainStatusBar().setTemporaryStatus("Changed server: " + getServer().getDescription(true));
 

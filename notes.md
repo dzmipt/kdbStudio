@@ -1,3 +1,4 @@
+* Adding rules for background color override based on server connection details
 * Adding bulk server modification dialog
 * Ability to fallback between TLS and tcp for a server connection
     * Setting for TLS mode for anonymous server connections

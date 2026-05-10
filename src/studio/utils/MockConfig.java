@@ -1,6 +1,7 @@
 package studio.utils;
 
 import org.apache.commons.io.FileUtils;
+import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.core.Appender;
 import org.apache.logging.log4j.core.Logger;
 import org.apache.logging.log4j.core.LoggerContext;
@@ -23,6 +24,7 @@ public class MockConfig extends Config {
 
     private static Path basePath;
 
+    private final static org.apache.logging.log4j.Logger log = LogManager.getLogger();
     public static synchronized void mock(Path newBasePath) throws IOException {
         basePath = newBasePath;
         FilesBackup.setEnabled(false);
@@ -59,8 +61,7 @@ public class MockConfig extends Config {
                 try {
                     FileUtils.deleteDirectory(dir.toFile());
                 } catch (IOException e) {
-                    System.err.printf("Error on folder %s removal\n", dir);
-                    e.printStackTrace(System.err);
+                    log.error("Error on folder {} removal", dir, e);
                 }
             }
         }

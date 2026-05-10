@@ -1,11 +1,17 @@
 package studio.kdb.config;
 
 import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import org.junit.jupiter.api.Test;
 import studio.core.Credentials;
+import studio.core.DefaultAuthenticationMechanism;
 import studio.kdb.FileChooserConfig;
 import studio.kdb.KType;
+import studio.kdb.config.server.BgColorRules;
+import studio.kdb.config.server.FieldGetter;
+import studio.kdb.config.server.Operation;
+import studio.kdb.config.server.ServerFilterRule;
 
 import java.awt.*;
 import java.util.ArrayList;
@@ -269,6 +275,57 @@ public class ConfigTypeTest {
         colorSchema = colorSchema.newColors(List.of(Color.BLACK, Color.CYAN, Color.DARK_GRAY));
         assertEquals(List.of(Color.BLACK, Color.CYAN, Color.DARK_GRAY), colorSchema.getColors());
         check(ConfigType.CHART_COLOR_SCHEMA, colorSchema);
+    }
 
+    private void checkJson(ServerFilterRule<?> rule) {
+        JsonObject json = rule.toJson();
+        ServerFilterRule<?> newRule = ServerFilterRule.fromJson(json);
+        assertEquals(rule, newRule);
+    }
+
+    @Test
+    public void testServerFilterRule() {
+        ServerFilterRule<?> rule = ServerFilterRule.newDefault();
+        Color initColor = rule.getColor();
+        checkJson(rule);
+
+        ServerFilterRule.EditableServerFilterRule<?> editable = rule.newEditable();
+        editable.setColor(new Color(1,2,3));
+        checkJson(editable.getRule());
+
+        checkJson(ServerFilterRule.from(FieldGetter.Names.name, Operation.Names.likes));
+
+        rule = ServerFilterRule.newRule(FieldGetter.Names.name, Operation.Names.likes, new Color(22, 11, 22), "testHighlight");
+        checkJson(rule);
+
+        //check that init rules are not changed
+        checkJson(ServerFilterRule.from(FieldGetter.Names.name, Operation.Names.likes));
+
+        rule = ServerFilterRule.newRule(FieldGetter.Names.auth, Operation.Names.equals, new Color(23, 13, 23), DefaultAuthenticationMechanism.NAME);
+        checkJson(rule);
+
+        rule = ServerFilterRule.newRule(FieldGetter.Names.port, Operation.Names.smaller, new Color(24, 14, 24), 1024);
+        checkJson(rule);
+
+        rule = ServerFilterRule.newRule(FieldGetter.Names.tls, Operation.Names.equals, new Color(25, 15, 25), TLSResolutionMode.TLS);
+        checkJson(rule);
+
+        assertEquals(initColor, ServerFilterRule.newDefault().getColor());
+        assertEquals(initColor, ServerFilterRule.from(FieldGetter.Names.name, Operation.Names.likes).getColor());
+    }
+
+    @Test
+    public void testBgColorRules() {
+        BgColorRules rules = new BgColorRules();
+        check(ConfigType.BG_COLOR_RULES, rules);
+
+        rules.add(ServerFilterRule.newDefault());
+        check(ConfigType.BG_COLOR_RULES, rules);
+
+        rules.add(ServerFilterRule.from(FieldGetter.Names.name, Operation.Names.likes));
+        check(ConfigType.BG_COLOR_RULES, rules);
+
+        rules.add(ServerFilterRule.newRule(FieldGetter.Names.port, Operation.Names.smaller, new Color(26, 16, 26), 1024));
+        check(ConfigType.BG_COLOR_RULES, rules);
     }
 }
