@@ -38,7 +38,7 @@ public class ServerFilterRulePanel extends JPanel {
     }
 
     public ServerFilterRule<?> getRule() {
-        return rule;
+        return rule.getRule();
     }
 
     private void refresh() {
