@@ -12,6 +12,7 @@ import java.util.Set;
 public class GroupLayoutSimple extends GroupLayout {
 
     private final Set<Component> maxWidthComponents = new HashSet<>();
+    private int stackGap = -1;
     private int padding = -1;
     private boolean baseline = true;
     private Dimension preferredSize = null;
@@ -48,6 +49,10 @@ public class GroupLayoutSimple extends GroupLayout {
         setAutoCreateContainerGaps(false);
     }
 
+    public void setStackGap(int stackGap) {
+        this.stackGap = stackGap;
+    }
+
     public void setBaseline(boolean baseline) {
         this.baseline = baseline;
     }
@@ -75,6 +80,9 @@ public class GroupLayoutSimple extends GroupLayout {
 
         SequentialGroup normalHorizontalGroup = createSequentialGroup();
         for (Stack stack: stacks) {
+            if (stackGap != -1 && stack != stacks[0]) {
+                normalHorizontalGroup.addGap(stackGap);
+            }
             ParallelGroup stackGroup = createParallelGroup(Alignment.LEADING);
             for (Line line: stack.lines) {
                 if (line == null || line.parallel) continue;
@@ -105,13 +113,12 @@ public class GroupLayoutSimple extends GroupLayout {
             for (Stack stack: stacks) {
                 Line line = stack.lines.get(lineIndex);
                 if (line == null) continue;
-                for (int i=0; i<line.components.length; i++) {
-                    Component component = line.components[i];
-                        lineGroup.addComponent(component, PREFERRED_SIZE, PREFERRED_SIZE, PREFERRED_SIZE);
-                    if (padding >-1 && i<line.components.length-1) lineGroup.addGap(padding);
-                }
-                if (line.glue != null) {
-                    lineGroup.addComponent(line.glue, PREFERRED_SIZE, PREFERRED_SIZE, PREFERRED_SIZE);
+                for (Component component: line.components) {
+                    if (padding != -1 && line.components.get(0) != component) {
+                        lineGroup.addGap(padding);
+                    }
+
+                    lineGroup.addComponent(component, PREFERRED_SIZE, PREFERRED_SIZE, PREFERRED_SIZE);
                 }
             }
             verticalGroup.addGroup(lineGroup);
@@ -129,13 +136,33 @@ public class GroupLayoutSimple extends GroupLayout {
         List<Line> lines = new ArrayList<>();
         boolean maxWidth = false;
 
+        public Component box(int width, int height) {
+            return Box.createRigidArea(new Dimension(width, height));
+        }
+        public Component glue() {
+            return Box.createGlue();
+        }
         public Stack addLine(Component... line) {
-            lines.add(new Line(line, false));
+            lines.add(new Line(line));
             return this;
         }
         public Stack addLineAndGlue(Component... line) {
-            lines.add(new Line(line, true));
+            lines.add(new Line(line));
+            return continueGlue();
+        }
+        public Stack continueLine(Component... line) {
+            Line lastLine = lines.get(lines.size()-1);
+            lastLine.components.addAll(List.of(line));
             return this;
+        }
+        public Stack continueGlue() {
+            return continueLine(glue());
+        }
+        public Stack addLine(int width, int height) {
+            return addLine(box(width, height));
+        }
+        public Stack continueLine(int width, int height) {
+            return continueLine(box(width, height));
         }
         public Stack skipLine() {
             lines.add(null);
@@ -148,26 +175,23 @@ public class GroupLayoutSimple extends GroupLayout {
 
     private static class Line {
         boolean parallel = false;
-        Component[] components;
-        Component glue = null;
-        Line(Component[] components, boolean hasGlue) {
-            this.components = components;
-            if (hasGlue) glue = Box.createGlue();
+        List<Component> components = new ArrayList<>();
+
+        Line(Component... components) {
+            this.components.addAll(List.of(components));
         }
 
         SequentialGroup addToLineGroup(GroupLayoutSimple groupLayout, SequentialGroup lineGroup, boolean isMaxWidth) {
-            for (int i=0; i<components.length; i++) {
-                Component component = components[i];
+            for (Component component: components) {
+                if (groupLayout.padding != -1 && component != components.get(0)) {
+                    lineGroup.addGap(groupLayout.padding);
+                }
                 if (isMaxWidth || groupLayout.maxWidthComponents.contains(component)) {
                     // Why we don't add here with max=Integer.MAX_VALUE ??
                     lineGroup.addComponent(component);
                 } else {
                     lineGroup.addComponent(component, PREFERRED_SIZE, PREFERRED_SIZE, PREFERRED_SIZE);
                 }
-                if (groupLayout.padding >-1 && i<components.length-1) lineGroup.addGap(groupLayout.padding);
-            }
-            if (glue != null) {
-                lineGroup.addComponent(glue);
             }
             return lineGroup;
         }

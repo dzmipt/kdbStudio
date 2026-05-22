@@ -20,7 +20,6 @@ import java.awt.event.ActionListener;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
 
@@ -28,21 +27,27 @@ public class MultipleServerEditor extends JPanel {
 
     private List<Server> servers;
 
+    private final ServerField<String> nameField = new ServerField<>(new Editor.TextEditor(), FieldGetter.NAME);
     private final ServerField<List<String>> folderField = new ServerField<>(new Editor.FolderEditor(), FieldGetter.FOLDER_PATH);
     private final ServerField<String> hostField = new ServerField<>(new Editor.TextEditor(), FieldGetter.HOST);
-    private final ServerField<Integer> portField = new ServerField<>(new Editor.IntEditor(), FieldGetter.PORT);
+    private final ServerField<Integer> portField = new ServerField<>(new Editor.PortEditor(), FieldGetter.PORT);
     private final ServerField<TLSResolutionMode> tlsField = new ServerField<>(new Editor.TLSEditor(), FieldGetter.TLS);
     private final ServerField<String> userField = new ServerField<>(new Editor.TextEditor(), FieldGetter.USER);
     private final ServerField<String> passwordField = new ServerField<>(new Editor.PasswordEditor(), FieldGetter.PASSWORD);
     private final ServerField<String> authMethodField = new ServerField<>(new Editor.AuthMethodEditor(), FieldGetter.AUTH);
     private final ServerField<Color> bgColorField = new ServerField<>(new Editor.BgColorEditor(), FieldGetter.COLOR);
 
-    private final ServerField<?>[] fields = {folderField, hostField, portField, tlsField, userField, passwordField, authMethodField, bgColorField};
+    private final ServerField<?>[] initFields =
+            {nameField, folderField, null, hostField, portField, tlsField, null, userField, passwordField, authMethodField, null, bgColorField};
+
+    private final List<ServerField<?>> fields = new ArrayList<>();
+    private final boolean editName;
 
     private ChangeListener changeListener = null;
     private final static Logger log = LogManager.getLogger();
 
-    public MultipleServerEditor() {
+    public MultipleServerEditor(boolean editName) {
+        this.editName = editName;
         setServers(new ArrayList<>());
 
 
@@ -52,8 +57,24 @@ public class MultipleServerEditor extends JPanel {
         GroupLayoutSimple.Stack stackLabels = new GroupLayoutSimple.Stack();
         GroupLayoutSimple.Stack stackEditors = new GroupLayoutSimple.Stack();
 
+        List<JSeparator> separators = new ArrayList<>();
         List<JLabel> labels = new ArrayList<>();
-        for (ServerField<?> f: fields) {
+        for (ServerField<?> f: initFields) {
+            if (f == null) {
+                JSeparator separator = new JSeparator();
+                separator.setPreferredSize(new Dimension(470,10));
+                separators.add(separator);
+
+                stackUndo.addLine(32, 10).continueLine(separator).continueLine(8,10);
+                stackLabels.skipLine();
+                stackEditors.skipLine();
+                continue;
+            }
+
+            if (!editName && f.fieldGetter == FieldGetter.NAME) continue;
+
+            fields.add(f);
+
             JLabel label = new JLabel();
             updateLabelText(label, f);
             labels.add(label);
@@ -85,15 +106,17 @@ public class MultipleServerEditor extends JPanel {
         }
 
         layout.addMaxWidthComponents(
-                Arrays.stream(fields).map(ServerField::getEditor).toArray(Component[]::new)
+                fields.stream().map(ServerField::getEditor).toArray(Component[]::new)
         );
+        layout.addMaxWidthComponents(separators.toArray(Component[]::new));
+
         layout.setStacks(stackUndo, stackLabels, stackEditors);
     }
 
     private void updateLabelText(JLabel label, ServerField<?> field) {
         String text = field.getLabel();
-        if (field.theSame()) {
-            text = String.format("<html><b><i>%s</i></b></html>",text);
+        if ((servers.size()>1 && field.theSame()) || field.amended()) {
+            text = String.format("<html><b><i>%s</i></b></html>", text);
         }
         label.setText(text);
     }
@@ -124,6 +147,8 @@ public class MultipleServerEditor extends JPanel {
         ServerTreeNode root = Config.getInstance().getServerConfig().getServerTree();
         List<Server> newServers = new ArrayList<>();
         for (Server server: servers) {
+            String name = editName ? nameField.getValueForServer(server) : server.getName();
+
             List<String> folderPath = folderField.getValueForServer(server);
             ServerTreeNode parent = root.findPath(folderPath, true);
             String host = hostField.getValueForServer(server);
@@ -135,7 +160,7 @@ public class MultipleServerEditor extends JPanel {
             Color bgColor = bgColorField.getValueForServer(server);
 
             QConnection conn = new QConnection(host, port, username, password, tlsResolutionMode.isUseTLS());
-            Server newServer = new Server(server.getName(), conn, authMethod, bgColor, parent, tlsResolutionMode.isFlipTLS());
+            Server newServer = new Server(name, conn, authMethod, bgColor, parent, tlsResolutionMode.isFlipTLS());
             newServers.add(newServer);
         }
         return newServers;
@@ -225,7 +250,12 @@ public class MultipleServerEditor extends JPanel {
         }
 
         E getValue() {
-            return editor.getValue();
+            try {
+                return editor.getValue();
+            } catch (RuntimeException e) {
+                throw new RuntimeException(
+                        String.format("Can't parse field %s. Error: %s", fieldGetter.getName(), e.getMessage()), e);
+            }
         }
 
         boolean amended() {
@@ -233,7 +263,7 @@ public class MultipleServerEditor extends JPanel {
         }
 
         boolean theSame() {
-            return amended || commonValue != null;
+            return commonValue != null;
         }
         E getValueForServer(Server server) {
             return amended() ? getValue() : fieldGetter.getValue(server);

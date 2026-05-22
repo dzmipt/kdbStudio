@@ -32,17 +32,17 @@ public class ServerEditor {
 
         String title = add ? "Add a new server" : "Edit Server Details";
 
-        ServerForm form = new ServerForm(owner, title, initServer);
+        EditServerDialog dialog = new EditServerDialog(owner, title, initServer);
         if (serverValidator != null) {
-            form.setAcceptValidator( () -> serverValidator.test(form.getServer()) );
+            dialog.setAcceptValidator( () -> serverValidator.test(dialog.getServer()) );
         }
 
-        form.alignAndShow();
-        if (form.getResult() == CANCELLED) {
+        dialog.alignAndShow();
+        if (dialog.getResult() == CANCELLED) {
             return null;
         }
 
-        return form.getServer();
+        return dialog.getServer();
     }
 
     public synchronized static void mock(Server server) {

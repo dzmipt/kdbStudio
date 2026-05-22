@@ -9,6 +9,7 @@ import studio.kdb.ServerTreeNode;
 import studio.kdb.config.ServerConfig;
 import studio.ui.DocumentChangeListener;
 import studio.ui.EscapeDialog;
+import studio.ui.StudioOptionPane;
 import studio.ui.WindowFactory;
 
 import javax.swing.*;
@@ -75,7 +76,7 @@ public class BulkEditServerDialog extends EscapeDialog implements DocumentChange
         btnCancel =new JButton("Cancel");
         btnApply = new JButton("Apply");
 
-        serverEditor = new MultipleServerEditor();
+        serverEditor = new MultipleServerEditor(false);
         serverEditor.setBorder(
                 new CompoundBorder(BorderFactory.createEtchedBorder(),
                                     new EmptyBorder(0,5,0,5)  ) );
@@ -166,19 +167,26 @@ public class BulkEditServerDialog extends EscapeDialog implements DocumentChange
 
     @Override
     public void accept() {
-        applyChange();
-        super.accept();
+        if (applyChange()) {
+            super.accept();
+        }
     }
 
-    private void applyChange() {
-        if (!serverEditor.amended()) return;
+    private boolean applyChange() {
+        if (!serverEditor.amended()) return true;
 
-        List<Server> servers = serverEditor.getServers();
-        List<Server> newServers = serverEditor.getAmendedServers();
-        ServerConfig serverConfig = Config.getInstance().getServerConfig();
-        serverConfig.replaceServers(servers, newServers);
+        try {
+            List<Server> servers = serverEditor.getServers();
+            List<Server> newServers = serverEditor.getAmendedServers();
+            ServerConfig serverConfig = Config.getInstance().getServerConfig();
+            serverConfig.replaceServers(servers, newServers);
 
-        documentChanged(null);
+            documentChanged(null);
+            return true;
+        } catch (RuntimeException e) {
+            StudioOptionPane.showError(this, e.getMessage(), "Error");
+            return false;
+        }
     }
 
     @Override

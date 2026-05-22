@@ -36,7 +36,6 @@ public abstract class Editor<E> {
             if (changeListener != null) changeListener.stateChanged(null);
             getComponent().putClientProperty("JComponent.outline", null);
         } catch (RuntimeException e) {
-            log.warn("Error in changing value: {}", e.getMessage());
             getComponent().putClientProperty("JComponent.outline", "error");
         }
     }
@@ -70,10 +69,11 @@ public abstract class Editor<E> {
         }
     }
 
-    public static class IntEditor extends Editor<Integer> {
+    public static class PortEditor extends Editor<Integer> {
         private final JTextField txtField = new JTextField();
+        private boolean acceptNull = true;
 
-        public IntEditor() {
+        public PortEditor() {
             txtField.getDocument().addDocumentListener((DocumentChangeListener)e -> valueChanged() );
         }
 
@@ -84,16 +84,20 @@ public abstract class Editor<E> {
 
         @Override
         public void setValue(Integer value) {
+            acceptNull = value == null;
             if (value == null) txtField.setText("");
             else txtField.setText("" + value);
         }
 
         @Override
         public Integer getValue() {
-            try {
-                return Integer.parseInt(txtField.getText());
-            } catch (NumberFormatException ignore) {}
-            return null;
+            if (acceptNull && txtField.getText().isBlank()) return null;
+
+            int value = Integer.parseInt(txtField.getText());
+            if (value <=0 || value >=65536)
+                throw new RuntimeException(
+                        String.format("Port can't have value %d", value) );
+            return value;
         }
     }
 
