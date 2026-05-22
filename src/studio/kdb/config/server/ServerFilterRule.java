@@ -63,7 +63,7 @@ public class ServerFilterRule<E> {
             } else if (value instanceof Integer) {
 
                 map = getOpMap((FieldGetter<Integer>) f,
-                        Editor.IntEditor::new,
+                        Editor.PortEditor::new,
                         () -> Operation.newEquals(0),
                         () -> Operation.newBigger(0),
                         () -> Operation.newLess(0)

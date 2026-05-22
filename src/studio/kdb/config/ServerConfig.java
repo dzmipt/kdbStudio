@@ -115,9 +115,18 @@ public class ServerConfig {
     }
 
 
-    private void validate(Server server) {
+    private void validateNaming(Server server) {
         String name = server.getName();
-        String fullName = server.getFullName();
+
+        if (name.trim().isEmpty()) {
+            throw new IllegalArgumentException("Server name can't be empty");
+        }
+        if (name.contains(",")) {
+            throw new IllegalArgumentException("Server name can't contains ,");
+        }
+        if (name.contains("/")) {
+            throw new IllegalArgumentException("Server name can't contains /");
+        }
 
         server.getFolderPath()
                 .stream()
@@ -127,7 +136,12 @@ public class ServerConfig {
                         throw new IllegalArgumentException("Folder name can't be empty");
                     }
                 });
+    }
 
+    private void validate(Server server) {
+        validateNaming(server);
+
+        String fullName = server.getFullName();
         ServerTreeNode parent = serverTree.findPath(server.getFolderPath(), false);
         if (parent != null && parent.getChild(server) != null) {
             throw new IllegalArgumentException("Server with full name " + fullName + " already exists");
@@ -135,15 +149,6 @@ public class ServerConfig {
 
         if (serverNames.contains(fullName)) {
             throw new IllegalArgumentException("Server with full name " + fullName + " already exists");
-        }
-        if (name.trim().isEmpty()) {
-            throw new IllegalArgumentException("Server name can't be empty");
-        }
-        if (name.contains(",")) {
-            throw new IllegalArgumentException("Server name can't contains ,");
-        }
-        if (name.contains("/")) {
-            throw new IllegalArgumentException("Server name can't contains /");
         }
     }
 
@@ -186,7 +191,7 @@ public class ServerConfig {
         }
     }
 
-    private void replaceServerInternal(Server oldServer, Server newServer) {
+    private void replaceServerInternal(Server oldServer, Server newServer, boolean rename) {
         ServerTreeNode oldFolder = serverTree.findPath(oldServer.getFolderPath(), false);
         if (oldFolder == null) {
             throw new IllegalArgumentException("Previous server is not in the tree");
@@ -195,6 +200,27 @@ public class ServerConfig {
         ServerTreeNode newFolder = serverTree.findPath(newServer.getFolderPath(), true);
         if (newFolder == null) {
             throw new IllegalArgumentException("Can't resolve location of new server");
+        }
+
+        validateNaming(newServer);
+        if (! oldServer.getFullName().equals(newServer.getFullName())) {
+            String newName = newServer.getName();
+
+            for (int suffixIndex = 0;; suffixIndex++) {
+                ServerTreeNode child = newFolder.getChildWithName(newServer.getName());
+                if (child == null) break;
+
+                if (!rename) {
+                    if (child.isFolder()) {
+                        throw new IllegalArgumentException("Folder with name " + newServer.getFullName() + " already exist");
+                    } else {
+                        throw new IllegalArgumentException("Server with name " + newServer.getFullName() + " already exist");
+                    }
+                }
+
+                String name = newName + ".copy" + (suffixIndex > 0 ? suffixIndex: "");
+                newServer = newServer.newName(name);
+            }
         }
 
         int index = oldFolder.remove(oldServer);
@@ -212,7 +238,7 @@ public class ServerConfig {
         boolean modified = false;
         try {
             for (int i=0; i<oldServers.size(); i++) {
-                replaceServerInternal(oldServers.get(i), newServers.get(i));
+                replaceServerInternal(oldServers.get(i), newServers.get(i), true);
                 modified = true;
             }
         } finally {
@@ -223,7 +249,7 @@ public class ServerConfig {
     }
 
     public void replaceServer(Server oldServer, Server newServer) {
-        replaceServerInternal(oldServer, newServer);
+        replaceServerInternal(oldServer, newServer, false);
         setRoot(serverTree);
     }
 
