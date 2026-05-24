@@ -6,6 +6,7 @@ import studio.kdb.Config;
 import studio.kdb.Server;
 import studio.kdb.ServerTreeNode;
 import studio.kdb.config.TLSResolutionMode;
+import studio.kdb.config.server.BgColorRules;
 import studio.kdb.config.server.Editor;
 import studio.kdb.config.server.FieldGetter;
 import studio.ui.GroupLayoutSimple;
@@ -19,14 +20,14 @@ import java.awt.*;
 import java.awt.event.ActionListener;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
-import java.util.ArrayList;
+import java.util.*;
 import java.util.List;
-import java.util.Objects;
 
 public class MultipleServerEditor extends JPanel {
 
     private List<Server> servers;
 
+    private final Editor.BgColorEditor bgColorEditor = new Editor.BgColorEditor();
     private final ServerField<String> nameField = new ServerField<>(new Editor.TextEditor(), FieldGetter.NAME);
     private final ServerField<List<String>> folderField = new ServerField<>(new Editor.FolderEditor(), FieldGetter.FOLDER_PATH);
     private final ServerField<String> hostField = new ServerField<>(new Editor.TextEditor(), FieldGetter.HOST);
@@ -35,7 +36,7 @@ public class MultipleServerEditor extends JPanel {
     private final ServerField<String> userField = new ServerField<>(new Editor.TextEditor(), FieldGetter.USER);
     private final ServerField<String> passwordField = new ServerField<>(new Editor.PasswordEditor(), FieldGetter.PASSWORD);
     private final ServerField<String> authMethodField = new ServerField<>(new Editor.AuthMethodEditor(), FieldGetter.AUTH);
-    private final ServerField<Color> bgColorField = new ServerField<>(new Editor.BgColorEditor(), FieldGetter.COLOR);
+    private final ServerField<Color> bgColorField = new ServerField<>(bgColorEditor, FieldGetter.COLOR);
 
     private final ServerField<?>[] initFields =
             {nameField, folderField, null, hostField, portField, tlsField, null, userField, passwordField, authMethodField, null, bgColorField};
@@ -88,10 +89,13 @@ public class MultipleServerEditor extends JPanel {
                 undoButton.setEnabled(f.amended());
                 updateLabelText(label, f);
                 if (changeListener != null) changeListener.stateChanged(e);
+                refreshColorOverride();
             } );
             undoButton.setListener(e-> f.resetToCommonValue());
 
             stackUndo.addLine(undoButton);
+
+            refreshColorOverride();
         }
 
         int width = 0, height = 0;
@@ -111,6 +115,37 @@ public class MultipleServerEditor extends JPanel {
         layout.addMaxWidthComponents(separators.toArray(Component[]::new));
 
         layout.setStacks(stackUndo, stackLabels, stackEditors);
+    }
+
+    private void refreshColorOverride() {
+        BgColorRules rules = Config.getInstance().getServerBgColorRules();
+        Set<FieldGetter.Names> ruleFields = rules.getFieldGetterSet();
+
+        Set<FieldGetter.Names> knownFields = new HashSet<>();
+
+        for (ServerField<?> f: fields) {
+            if (f.theSame() || f.amended) {
+                knownFields.add(f.fieldGetter.getName());
+            }
+        }
+
+        ruleFields.removeAll(knownFields);
+        if (knownFields.contains(FieldGetter.Names.folderPath)) {
+            ruleFields.remove(FieldGetter.Names.folderName);
+
+            if (knownFields.contains(FieldGetter.Names.name)) {
+                ruleFields.remove(FieldGetter.Names.fullName);
+            }
+        }
+
+        if (! ruleFields.isEmpty()) {
+            bgColorEditor.setColorOverride(null);
+            return;
+        }
+
+        Server amendedServer = amendServer(servers.get(0));
+        bgColorEditor.setColorOverride(rules.overrideColor(amendedServer) );
+
     }
 
     private void updateLabelText(JLabel label, ServerField<?> field) {
@@ -143,25 +178,28 @@ public class MultipleServerEditor extends JPanel {
         return servers;
     }
 
-    public List<Server> getAmendedServers() {
+    private Server amendServer(Server server) {
         ServerTreeNode root = Config.getInstance().getServerConfig().getServerTree();
+        String name = editName ? nameField.getValueForServer(server) : server.getName();
+
+        List<String> folderPath = folderField.getValueForServer(server);
+        ServerTreeNode parent = root.findPath(folderPath, true);
+        String host = hostField.getValueForServer(server);
+        int port = portField.getValueForServer(server);
+        TLSResolutionMode tlsResolutionMode = tlsField.getValueForServer(server);
+        String username = userField.getValueForServer(server);
+        String password = passwordField.getValueForServer(server);
+        String authMethod = authMethodField.getValueForServer(server);
+        Color bgColor = bgColorField.getValueForServer(server);
+
+        QConnection conn = new QConnection(host, port, username, password, tlsResolutionMode.isUseTLS());
+        return new Server(name, conn, authMethod, bgColor, parent, tlsResolutionMode.isFlipTLS());
+    }
+
+    public List<Server> getAmendedServers() {
         List<Server> newServers = new ArrayList<>();
         for (Server server: servers) {
-            String name = editName ? nameField.getValueForServer(server) : server.getName();
-
-            List<String> folderPath = folderField.getValueForServer(server);
-            ServerTreeNode parent = root.findPath(folderPath, true);
-            String host = hostField.getValueForServer(server);
-            int port = portField.getValueForServer(server);
-            TLSResolutionMode tlsResolutionMode = tlsField.getValueForServer(server);
-            String username = userField.getValueForServer(server);
-            String password = passwordField.getValueForServer(server);
-            String authMethod = authMethodField.getValueForServer(server);
-            Color bgColor = bgColorField.getValueForServer(server);
-
-            QConnection conn = new QConnection(host, port, username, password, tlsResolutionMode.isUseTLS());
-            Server newServer = new Server(name, conn, authMethod, bgColor, parent, tlsResolutionMode.isFlipTLS());
-            newServers.add(newServer);
+            newServers.add(amendServer(server));
         }
         return newServers;
     }

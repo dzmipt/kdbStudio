@@ -6,6 +6,8 @@ import studio.kdb.Server;
 
 import java.awt.*;
 import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.Set;
 
 public class BgColorRules extends ArrayList<ServerFilterRule<?>> {
 
@@ -15,6 +17,14 @@ public class BgColorRules extends ArrayList<ServerFilterRule<?>> {
             if (color != null) return color;
         }
         return null;
+    }
+
+    public Set<FieldGetter.Names> getFieldGetterSet() {
+        HashSet<FieldGetter.Names> set = new HashSet<>();
+        for (ServerFilterRule<?> rule: this) {
+            set.add(rule.getFieldName());
+        }
+        return set;
     }
 
     public static BgColorRules fromJson(JsonArray jsonArray) {

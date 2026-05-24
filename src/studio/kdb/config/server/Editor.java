@@ -11,6 +11,7 @@ import studio.kdb.config.ColorMap;
 import studio.kdb.config.ColorToken;
 import studio.kdb.config.TLSResolutionMode;
 import studio.ui.ColorChooser;
+import studio.ui.ColorLabel;
 import studio.ui.DocumentChangeListener;
 import studio.ui.ServerTreeDialog;
 
@@ -173,6 +174,9 @@ public abstract class Editor<E> {
 
     public static class BgColorEditor extends Editor<Color> {
         private final JTextField txtField = new JTextField("Sample text on background");
+        private final JPanel pnlOverride;
+        private final ColorLabel colorOverride;
+        private final JPanel panel;
 
         public BgColorEditor() {
             ColorMap colorMap = Config.getInstance().getEditorColors();
@@ -187,6 +191,18 @@ public abstract class Editor<E> {
                     onColorChange();
                 }
             });
+
+
+            colorOverride = new ColorLabel();
+            pnlOverride = new JPanel(new FlowLayout());
+            pnlOverride.add(new JLabel("Rules override:"));
+            pnlOverride.add(colorOverride);
+
+            setColorOverride(null);
+
+            panel = new JPanel(new BorderLayout());
+            panel.add(txtField, BorderLayout.CENTER);
+            panel.add(pnlOverride, BorderLayout.EAST);
         }
 
         private void onColorChange() {
@@ -200,7 +216,16 @@ public abstract class Editor<E> {
 
         @Override
         public JComponent getComponent() {
-            return txtField;
+            return panel;
+        }
+
+        public void setColorOverride(Color color) {
+            if (color == null) {
+                pnlOverride.setVisible(false);
+            } else {
+                colorOverride.setColor(color);
+                pnlOverride.setVisible(true);
+            }
         }
 
         private Color getDefaultBgColor() {
