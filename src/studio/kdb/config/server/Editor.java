@@ -194,6 +194,7 @@ public abstract class Editor<E> {
 
 
             colorOverride = new ColorLabel();
+            colorOverride.setEditable(false);
             pnlOverride = new JPanel(new FlowLayout());
             pnlOverride.add(new JLabel("Rules override:"));
             pnlOverride.add(colorOverride);

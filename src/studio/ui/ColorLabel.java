@@ -15,6 +15,7 @@ public class ColorLabel extends JLabel {
     private final List<ChangeListener> listeners = new ArrayList<>();
 
     private boolean singleClick = true;
+    private boolean editable;
 
     public ColorLabel(Color color, int size) {
         super(new SquareIcon(color, size));
@@ -24,6 +25,8 @@ public class ColorLabel extends JLabel {
         addMouseListener(new MouseAdapter() {
             @Override
             public void mouseClicked(MouseEvent e) {
+                if (!editable) return;
+
                 if ( !singleClick && e.getClickCount() >= 2 ) {
                     selectColor();
                 }
@@ -31,11 +34,14 @@ public class ColorLabel extends JLabel {
 
             @Override
             public void mousePressed(MouseEvent e) {
+                if (!editable) return;
+
                 if (singleClick) {
                     selectColor();
                 }
             }
         });
+        setEditable(true);
     }
 
     public ColorLabel() {
@@ -44,6 +50,15 @@ public class ColorLabel extends JLabel {
 
     public ColorLabel(Color color) {
         this(color, DEFAULT_SIZE);
+    }
+
+    public void setEditable(boolean editable) {
+        this.editable = editable;
+        if (editable) {
+            Cursor.getPredefinedCursor(Cursor.HAND_CURSOR);
+        } else {
+            setCursor(Cursor.getDefaultCursor());
+        }
     }
 
     public boolean isSingleClick() {
