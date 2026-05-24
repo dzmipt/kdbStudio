@@ -99,6 +99,8 @@ public class SettingsDialog extends EscapeDialog {
         if (result.isChangedLF()) {
             Studio.initLF();
             FlatLaf.updateUI();
+            ColorChooser.updateUI();
+            FileChooser.updateUI();
         }
     }
 

@@ -31,6 +31,12 @@ public class FileChooser {
     private static boolean mocked = false;
     private static File mockResult;
 
+    public static void updateUI() {
+        for (JFileChooser fileChooser: fileChooserMap.values()) {
+            SwingUtilities.updateComponentTreeUI(fileChooser);
+        }
+    }
+
     public static void setMocked(boolean isMocked) {
         if (mocked == isMocked) return;
 
@@ -80,8 +86,6 @@ public class FileChooser {
                 defaultFile = new File(config.getFilename());
             }
 
-        } else {
-            SwingUtilities.updateComponentTreeUI(fileChooser);
         }
 
         if (defaultFile != null) {

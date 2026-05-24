@@ -17,6 +17,12 @@ public class ColorChooser {
 
     private static Color mockColor = null; // null means not mocked
 
+    public static void updateUI() {
+        if (colorChooser == null) return;
+
+        SwingUtilities.updateComponentTreeUI(colorChooser);
+    }
+
     public static synchronized void mock(Color returnColor) {
         mockColor = returnColor;
         if (returnColor == null) log.info("Reset mock status");
@@ -33,7 +39,6 @@ public class ColorChooser {
         if (mockColor != null) return mockColor;
 
         if (colorChooser == null) colorChooser = new JColorChooser();
-        else SwingUtilities.updateComponentTreeUI(colorChooser);
 
         if (initColor != null) colorChooser.setColor(initColor);
         if (previewPanel != null) colorChooser.setPreviewPanel(previewPanel);
