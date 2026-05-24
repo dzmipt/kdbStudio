@@ -163,7 +163,9 @@ public abstract class Editor<E> {
 
         @Override
         public void setValue(String value) {
+            comboBox.setEditable(true);
             comboBox.setSelectedItem(value);
+            comboBox.setEditable(false);
         }
 
         @Override
