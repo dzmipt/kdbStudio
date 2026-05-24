@@ -118,6 +118,11 @@ public class MultipleServerEditor extends JPanel {
     }
 
     private void refreshColorOverride() {
+        if (servers.isEmpty()) {
+            bgColorEditor.setColorOverride(null);
+            return;
+        }
+
         BgColorRules rules = Config.getInstance().getServerBgColorRules();
         Set<FieldGetter.Names> ruleFields = rules.getFieldGetterSet();
 
