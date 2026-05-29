@@ -8,6 +8,7 @@ import studio.utils.LineEnding;
 import java.awt.*;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.Properties;
 
 public class Workspace {
@@ -127,6 +128,19 @@ public class Workspace {
         return window;
     }
 
+    @Override
+    public final boolean equals(Object o) {
+        if (!(o instanceof Workspace)) return false;
+
+        Workspace workspace = (Workspace) o;
+        return selectedWindow == workspace.selectedWindow && windows.equals(workspace.windows);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(windows, selectedWindow);
+    }
+
     public static class Window {
 
         private final List<Tab> tabs = new ArrayList<>();
@@ -183,6 +197,12 @@ public class Workspace {
             return left = new Window();
         }
 
+        public Window addLeft(boolean verticalSplit, double dividerLocation) {
+            setVerticalSplit(verticalSplit);
+            setDividerLocation(dividerLocation);
+            return left = new Window();
+        }
+
         public Window addRight() {
             return right = new Window();
         }
@@ -191,16 +211,18 @@ public class Workspace {
             return verticalSplit;
         }
 
-        public void setVerticalSplit(boolean verticalSplit) {
+        public Window setVerticalSplit(boolean verticalSplit) {
             this.verticalSplit = verticalSplit;
+            return this;
         }
 
         public double getDividerLocation() {
             return dividerLocation;
         }
 
-        public void setDividerLocation(double dividerLocation) {
+        public Window setDividerLocation(double dividerLocation) {
             this.dividerLocation = dividerLocation;
+            return this;
         }
 
         protected void save(String prefix, Properties p) {
@@ -240,6 +262,24 @@ public class Workspace {
             window.load(prefix, p);
             return window;
         }
+
+        @Override
+        public boolean equals(Object o) {
+            if (!(o instanceof Window)) return false;
+
+            Window window = (Window) o;
+            return selectedTab == window.selectedTab &&
+                    verticalSplit == window.verticalSplit &&
+                    Double.compare(dividerLocation, window.dividerLocation) == 0 &&
+                    tabs.equals(window.tabs) &&
+                    Objects.equals(left, window.left) &&
+                    Objects.equals(right, window.right);
+        }
+
+        @Override
+        public int hashCode() {
+            return Objects.hash(tabs, selectedTab, left, right, verticalSplit, dividerLocation);
+        }
     }
 
 
@@ -252,31 +292,35 @@ public class Workspace {
 
         public TopWindow(Server server, String filename) {
             super(server, filename);
-            location = new Rectangle(-1,-1, 0,0);
+            location = DEFAULT_BOUNDS;
+            serverListBounds = DEFAULT_BOUNDS;
         }
 
         public double getResultDividerLocation() {
             return resultDividerLocation;
         }
 
-        public void setResultDividerLocation(double resultDividerLocation) {
+        public TopWindow setResultDividerLocation(double resultDividerLocation) {
             this.resultDividerLocation = resultDividerLocation;
+            return this;
         }
 
         public Rectangle getLocation() {
             return location;
         }
 
-        public void setLocation(Rectangle location) {
+        public TopWindow setLocation(Rectangle location) {
             this.location = location;
+            return this;
         }
 
         public Rectangle getServerListBounds() {
             return serverListBounds;
         }
 
-        public void setServerListBounds(Rectangle serverListBounds) {
+        public TopWindow setServerListBounds(Rectangle serverListBounds) {
             this.serverListBounds = serverListBounds;
+            return this;
         }
 
         protected void load(String prefix, Properties p) {
@@ -297,13 +341,28 @@ public class Workspace {
 
             super.save(prefix, p);
         }
+
+        @Override
+        public boolean equals(Object o) {
+            if (!(o instanceof TopWindow)) return false;
+            if (!super.equals(o)) return false;
+
+            TopWindow topWindow = (TopWindow) o;
+            return Double.compare(resultDividerLocation, topWindow.resultDividerLocation) == 0 &&
+                    location.equals(topWindow.location) && serverListBounds.equals(topWindow.serverListBounds);
+        }
+
+        @Override
+        public int hashCode() {
+            return Objects.hash(super.hashCode(), resultDividerLocation, location, serverListBounds);
+        }
     }
 
     public static class Tab {
         private String filename = null;
         private String serverFullName = null;
         private String serverConnection = null;
-        private String serverAuth = null;
+        private String serverAuth = Config.getInstance().getDefaultAuthMechanism();
         private String content = "";
         private boolean modified = false;
         private LineEnding lineEnding = LineEnding.Unix;
@@ -428,6 +487,26 @@ public class Workspace {
             } catch (NumberFormatException e) {
                 log.error("Failed to parse {} of key {}", p.getProperty(prefix + CARET, "0"), prefix + CARET, e);
             }
+        }
+
+        @Override
+        public final boolean equals(Object o) {
+            if (!(o instanceof Tab)) return false;
+
+            Tab tab = (Tab) o;
+            return modified == tab.modified &&
+                    caret == tab.caret &&
+                    Objects.equals(filename, tab.filename) &&
+                    Objects.equals(serverFullName, tab.serverFullName) &&
+                    Objects.equals(serverConnection, tab.serverConnection) &&
+                    serverAuth.equals(tab.serverAuth) &&
+                    content.equals(tab.content) &&
+                    lineEnding == tab.lineEnding;
+        }
+
+        @Override
+        public int hashCode() {
+            return Objects.hash(filename, serverFullName, serverConnection, serverAuth, content, modified, lineEnding, caret);
         }
     }
 }
