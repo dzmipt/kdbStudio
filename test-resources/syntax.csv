@@ -221,6 +221,11 @@ d.a,identifier
 .a.b-1,identifier,operator,long
 a-a,identifier,operator,identifier
 1--1,long,operator,long
+.0.a,unknown
+.a.0,identifier
+a.0,identifier
+.a.0b.c,identifier
+.a.0.c,identifier
 
 ss,keyword
 ssr,keyword

@@ -393,7 +393,7 @@ public class QSyntaxParser  {
 
         add(State.Identifier, alphaNumeric +"_", State.Identifier, IDENTIFIER, LooksLike);
         add(State.Identifier, ".", State.IdentifierDot, IDENTIFIER, LooksLike);
-        add(State.IdentifierDot, alpha, State.Identifier, IDENTIFIER, LooksLike);
+        add(State.IdentifierDot, alphaNumeric, State.Identifier, IDENTIFIER, LooksLike);
         add(State.Dot, alpha, State.Identifier, IDENTIFIER, LooksLike);
     }
 
