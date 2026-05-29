@@ -365,9 +365,7 @@ public class EditorsPanel extends JPanel {
 
     public void getWorkspace(Workspace.Window window) {
         if (tabbedEditors == null) {
-            window.setVerticalSplit(isVerticalSplit());
-            window.setDividerLocation(Util.getDividerLocation(splitPane));
-            left.getWorkspace(window.addLeft());
+            left.getWorkspace(window.addLeft(isVerticalSplit(), Util.getDividerLocation(splitPane)));
             right.getWorkspace(window.addRight());
         } else {
             Config config = Config.getInstance();

@@ -44,6 +44,7 @@ public class WorkspaceSaver {
     }
 
     private static synchronized void setWorkspace(Workspace w) {
+        if (!enabled) return;
         workspace = w;
     }
 

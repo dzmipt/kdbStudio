@@ -1398,10 +1398,10 @@ public class StudioWindow extends StudioFrame {
         Window activeWindow = KeyboardFocusManager.getCurrentKeyboardFocusManager().getActiveWindow();
 
         WindowFactory.forEach(window -> {
-            Workspace.TopWindow workspaceWindow = workspace.addWindow(window == activeWindow);
-            workspaceWindow.setResultDividerLocation(Util.getDividerLocation(window.splitpane));
-            workspaceWindow.setLocation(window.getBounds());
-            workspaceWindow.setServerListBounds(window.getServerList().getBounds());
+            Workspace.TopWindow workspaceWindow = workspace.addWindow(window == activeWindow)
+                .setResultDividerLocation(Util.getDividerLocation(window.splitpane))
+                .setLocation(window.getBounds())
+                .setServerListBounds(window.getServerList().getBounds());
             window.rootEditorsPanel.getWorkspace(workspaceWindow);
         });
         return workspace;
