@@ -19,7 +19,7 @@ public class FilesBackup {
 
     private static final String BACKUP_FOLDER = "backup";
 
-    protected static long BACKUP_PERIOD_MILLIS = 24*60*60*1000L; // ond day
+    protected static long BACKUP_PERIOD_MILLIS = 24*60*60*1000L; // one day
     private final static int RETAIN_BACKUP_HISTORY_DAYS = 14; // keep the last 2 weeks
 
     private final Map<Path, Long> lastBackupTime = new HashMap<>();
