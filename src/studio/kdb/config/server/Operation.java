@@ -117,7 +117,7 @@ public abstract class Operation<E> {
 
         @Override
         public boolean test(String serverValue) {
-            return serverValue.contains(arg.trim());
+            return serverValue.toLowerCase().contains(arg.trim().toLowerCase());
         }
     }
 
