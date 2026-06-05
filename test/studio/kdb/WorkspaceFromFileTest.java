@@ -1,13 +1,20 @@
 package studio.kdb;
 
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import studio.kdb.config.WorkspaceToJsonConverter;
+import studio.ui.action.WorkspaceSaver;
 import studio.utils.LineEnding;
+import studio.utils.MockConfig;
 import studio.utils.QConnection;
 
 import java.awt.*;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.util.Properties;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -16,6 +23,23 @@ public class WorkspaceFromFileTest {
 
     private Properties propertiesFromFile;
     private Workspace workspace;
+    private static Server server1, server2, server3, server5;
+
+    @BeforeAll
+    public static void initConfig() throws IOException {
+        MockConfig.mock();
+        ServerTreeNode root = Config.getInstance().getServerTree();;
+
+        server1 = new Server("server1", new QConnection("`:tcps://serverHost1:2000:user:password"),
+                "Plain", Color.BLACK, root);
+        server2 = new Server("server2", new QConnection("`:serverHost2:2000"),
+                "Plain", Color.BLACK, root);
+        server3 = new Server("server3", new QConnection("`:serverHost2:1100"),
+                "dzAuth", Color.BLACK, root);
+        server5 = new Server("server5", new QConnection("`:serverHost4:2100:user1:password1"),
+                "Plain", Color.BLACK, root.add("folder"));
+        Config.getInstance().getServerConfig().addServers(false, server1, server2, server3, server5);
+    }
 
     @BeforeEach
     public void load() throws IOException {
@@ -29,7 +53,6 @@ public class WorkspaceFromFileTest {
 
     @BeforeEach
     public void init() {
-        ServerTreeNode root = new ServerTreeNode();
         workspace = new Workspace();
         workspace
                 .addWindow(false)
@@ -43,8 +66,7 @@ public class WorkspaceFromFileTest {
                 .setLineEnding(LineEnding.MacOS9)
                 .setModified(true)
                 .addFilename("/folder/file.q")
-                .addServer(new Server("server1", new QConnection("`:tcps://serverHost1:2000:user:password"),
-                        "Plain", Color.BLACK, root));
+                .addServer(server1);
 
         workspace.getWindows()[0].getLeft()
                 .addTab(true)
@@ -52,8 +74,7 @@ public class WorkspaceFromFileTest {
                 .addContent("oneMore")
                 .setLineEnding(LineEnding.Unix)
                 .setModified(true)
-                .addServer(new Server("server2", new QConnection("`:serverHost2:2000"),
-                        "Plain", Color.BLACK, root));
+                .addServer(server2);
 
         workspace.getWindows()[0]
                 .addRight()
@@ -63,8 +84,7 @@ public class WorkspaceFromFileTest {
                 .addContent("right")
                 .setLineEnding(LineEnding.Windows)
                 .setModified(true)
-                .addServer(new Server("server3", new QConnection("`:serverHost2:1100"),
-                        "dzAuth", Color.BLACK, root));
+                .addServer(server3);
 
         workspace.getWindows()[0]
                 .getRight()
@@ -88,8 +108,7 @@ public class WorkspaceFromFileTest {
                 .addContent("newWindow")
                 .setLineEnding(LineEnding.MacOS9)
                 .setModified(false)
-                .addServer(new Server("server5", new QConnection("`:serverHost4:2100:user1:password1"),
-                        "Plain", Color.BLACK, root.add("folder")));
+                .addServer(server5);
     }
 
     @Test
@@ -105,4 +124,35 @@ public class WorkspaceFromFileTest {
         workspace.save(properties);
         assertEquals(propertiesFromFile, properties);
     }
+
+    @Test
+    public void testWorkspaceToJsonConverter() {
+        WorkspaceToJsonConverter converter = new WorkspaceToJsonConverter(propertiesFromFile);
+        Workspace workspaceFromConverter = converter.load();
+        assertEquals(workspace, workspaceFromConverter);
+    }
+
+    @Test
+    public void testWorkspaceSaverJsonLoad() throws IOException {
+        try (InputStream inputStream =
+                     WorkspaceFromFileTest.class.getClassLoader().getResourceAsStream("workspace.json")) {
+
+            JsonObject json = JsonParser.parseReader(new InputStreamReader(inputStream)).getAsJsonObject();
+            Workspace workspaceFromJson = WorkspaceSaver.fromJson(json);
+            assertEquals(workspace, workspaceFromJson);
+        }
+    }
+
+    @Test
+    public void testWorkspaceSaverToJson() throws IOException {
+        try (InputStream inputStream =
+                     WorkspaceFromFileTest.class.getClassLoader().getResourceAsStream("workspace.json")) {
+
+            JsonObject json = WorkspaceSaver.toJson(workspace);
+            Workspace workspaceConverted = WorkspaceSaver.fromJson(json);
+            assertEquals(workspace, workspaceConverted);
+        }
+
+    }
+
 }

@@ -94,7 +94,7 @@ public class MockConfig extends Config {
     }
 
     @Override
-    public Workspace loadWorkspace() {
+    public Workspace getWorkspace() {
         if (workspace == null) workspace = new Workspace();
         return workspace;
     }

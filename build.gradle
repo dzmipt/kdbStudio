@@ -55,7 +55,7 @@ sourceSets {
 configurations {
     txtmark
     intTestImplementation.extendsFrom implementation
-    intTestRunimeOnly.extendsFrom runtimeOnly
+    intTestRuntimeOnly.extendsFrom runtimeOnly
     intTestCompileOnly.extendsFrom compileOnly
 }
 

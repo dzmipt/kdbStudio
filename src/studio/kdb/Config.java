@@ -1,5 +1,9 @@
 package studio.kdb;
 
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import studio.core.Credentials;
@@ -7,6 +11,7 @@ import studio.core.DefaultAuthenticationMechanism;
 import studio.kdb.config.*;
 import studio.kdb.config.server.BgColorRules;
 import studio.ui.Util;
+import studio.ui.action.WorkspaceSaver;
 import studio.ui.settings.StrokeStyleEditor;
 import studio.utils.*;
 import studio.utils.log4j.EnvConfig;
@@ -16,10 +21,12 @@ import java.awt.*;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.Reader;
+import java.io.Writer;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.Properties;
 import java.util.regex.Pattern;
 
@@ -95,31 +102,41 @@ public class Config  {
     public static final String CONFIG_VERSION = configDefault("version", ConfigType.ENUM, ConfigVersion.V_NO); // to force version to save
 
     public static final String OLD_CONFIG_FILENAME = "studio.properties";
+    public static final String OLD_WORKSPACE_FILENAME = "workspace.properties";
     public static final String CONFIG_FILENAME = "studio.json";
-    public static final String WORKSPACE_FILENAME = "workspace.properties";
     public static final String SERVERCONFIG_FILENAME = "servers.json";
+    public static final String WORKSPACE_FILENAME = "workspace.json";
 
     protected StudioConfig studioConfig;
-    protected PropertiesConfig workspaceConfig;
     protected ServerConfig serverConfig;
     private HistoricalList<Server> serverHistory;
 
+    private Workspace workspace = new Workspace();
+    private FileConfig workspaceConfig;
+
+    private Gson gson;
+
     private final Path basePath;
     // Can be overridden in test cases
-    protected static Config instance = new Config();
+    protected volatile static Config instance = null;
+
+    private Config(Path path, boolean initialize) {
+        this.basePath = path;
+        if (initialize) {
+            init();
+        }
+    }
 
     protected Config(Path path) {
-        this.basePath = path;
-        init();
+        this(path, true);
     }
 
     private Config() {
-        this(EnvConfig.getBaseFolder());
+        this(EnvConfig.getBaseFolder(), false);
     }
 
     public void saveToDisk() {
         FileConfig.saveAllOnDisk();
-        workspaceConfig.saveToDisk();
     }
 
     public void exit() {
@@ -132,50 +149,72 @@ public class Config  {
         return serverConfig;
     }
 
-    protected Path getWorkspacePath() {
-        return basePath.resolve(WORKSPACE_FILENAME);
+    public Workspace getWorkspace() {
+        return workspace;
     }
 
-	public Workspace loadWorkspace() {
-		Workspace workspace = new Workspace();
-        Path path = getWorkspacePath();
-        log.info("Loading workspace from {}", path);
-		if (Files.exists(path)) {
-			try (InputStream inp = Files.newInputStream(path)) {
-				Properties p = new Properties();
-				p.load(inp);
-                log.info("Loaded {} properties in workspace file", p.size());
+    private void convertOldWorkspace() {
+        if (workspaceConfig.fileExists()) return;
 
-                workspace.load(p);
+        Path oldPath = basePath.resolve(OLD_WORKSPACE_FILENAME);
+        log.info("Workspace config {} not found. Trying to convert from old {}", workspaceConfig.getPath(), oldPath);
+        if (!Files.exists(oldPath)) {
+            log.info("Old workspace file {} is not found", oldPath);
+            return;
+        }
 
-                StringBuilder str = new StringBuilder();
-                Workspace.Window[] windows = workspace.getWindows();
-                for (Workspace.Window window: windows) {
-                    if (str.length()>0) str.append(", ");
-                    if (window == null) str.append("null");
-                    else {
-                        Workspace.Tab[] tabs = window.getAllTabs();
-                        str.append(tabs == null ? "null tabs" : "" + tabs.length);
-                    }
-                }
+        try {
+            FilesBackup.getInstance().backup(oldPath);
+        } catch (Exception e) {
+            log.error("Error in backing up old workspace file {}", oldPath, e);
+        }
 
-                log.info("Number of tabs in loaded windows: " + str);
-			} catch (IOException e) {
-				log.error("Can't load workspace", e);
-			}
-		}
-		return workspace;
-	}
+        try (InputStream inputStream = Files.newInputStream(oldPath)) {
+            Properties properties = new Properties();
+            properties.load(inputStream);
+            log.info("Read {} properties from workspace", properties.size());
+            Workspace newWorkspace = new WorkspaceToJsonConverter(properties).load();
+            saveWorkspace(newWorkspace);
+            log.info("Successfully converted old workspace");
+        } catch (Exception e) {
+            log.error("An error in reading old workspace file {}", oldPath, e);
+        } finally {
+            try {
+                log.info("Deleting of old workspace file {}", oldPath);
+                Files.delete(oldPath);
+            } catch (IOException e) {
+                log.error("Error on old workspace file {} removal", oldPath, e);
+            }
+        }
+    }
+
+    private void initWorkspace() {
+        convertOldWorkspace();
+
+        if (! workspaceConfig.fileExists()) {
+            return;
+        }
+
+        try {
+            String content = workspaceConfig.getContent();
+            JsonObject json = JsonParser.parseString(content).getAsJsonObject();
+            workspace = WorkspaceSaver.fromJson(json);
+        } catch (Exception e) {
+            log.error("Error in reading workspace file {}", workspaceConfig.getPath(), e);
+        }
+    }
+
 
     public void saveWorkspace(Workspace workspace) {
-        Properties previousConfig = new Properties();
-        previousConfig.putAll(workspaceConfig);
-        workspaceConfig.clear();
-        workspace.save(workspaceConfig);
+        if (Objects.equals(this.workspace, workspace)) return;
+        this.workspace = workspace;
 
-        if (previousConfig.equals(workspaceConfig)) return;
-
-        workspaceConfig.save();
+        try (Writer writer = workspaceConfig.getWriter()){
+            JsonObject json = WorkspaceSaver.toJson(workspace);
+            gson.toJson(json, writer);
+        } catch (IOException e ) {
+            log.error("Error on saving workspace to {}", workspaceConfig, e);
+        }
     }
 
     public TableConnExtractor getTableConnExtractor() {
@@ -183,10 +222,18 @@ public class Config  {
     }
 
     public static Config getInstance() {
+        if (instance == null) {
+            synchronized (Config.class) {
+                if (instance == null) {
+                    instance = new Config();
+                    instance.init();
+                }
+            }
+        }
         return instance;
     }
 
-    protected void init() {
+    protected synchronized void init() {
         serverConfig = new ServerConfig(new FileConfig(basePath.resolve(SERVERCONFIG_FILENAME)));
 
         checkOldPropertiesToUpgrade();
@@ -195,8 +242,14 @@ public class Config  {
         FileConfig fileConfig = new FileConfig(basePath.resolve(CONFIG_FILENAME));
         studioConfig = createStudioConfig(configTypeRegistry, fileConfig, defaultFileConfig, new ConfigConverter());
 
-        workspaceConfig = new PropertiesConfig(getWorkspacePath());
         initServerHistory();
+
+        gson = new GsonBuilder()
+                .setPrettyPrinting()
+                .create();
+
+        workspaceConfig = new FileConfig(basePath.resolve(WORKSPACE_FILENAME));
+        initWorkspace();
     }
 
     protected StudioConfig createStudioConfig(ConfigTypeRegistry configTypeRegistry,

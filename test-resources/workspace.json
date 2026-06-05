@@ -1,0 +1,79 @@
+{
+  "windows": [
+    {
+      "location": {"x": -1913, "y": 234, "width": 1792, "height": 881},
+      "serverListLocation": {"x": 970, "y": 430, "width": 300, "height": 400},
+      "resultDividerLocation": 0.9,
+      "dividerLocation": 0.5,
+      "left": {
+        "tabs": [
+          {
+            "selected": false,
+            "caret": 14,
+            "content": "some test\nnew line",
+            "lineEnding": "MacOS9",
+            "modified": true,
+            "filename": "/folder/file.q",
+            "serverAuth": "Plain",
+            "serverConnection": "`:tcps://serverHost1:2000:user:password",
+            "serverFullname": "server1"
+          },
+          {
+            "selected": true,
+            "caret": 7,
+            "content": "oneMore",
+            "lineEnding": "Unix",
+            "modified": true,
+            "serverAuth": "Plain",
+            "serverConnection": "`:serverHost2:2000",
+            "serverFullname": "server2"
+          }
+        ]
+      },
+      "right": {
+        "dividerLocation": 0.7,
+        "up": {
+          "tabs": [{
+              "selected": true,
+              "caret": 5,
+              "content": "right",
+              "lineEnding": "Windows",
+              "modified": true,
+              "serverAuth": "dzAuth",
+              "serverConnection": "`:serverHost2:1100",
+              "serverFullname": "server3"
+            }]
+        },
+        "down": {
+          "tabs": [{
+              "selected": true,
+              "caret": 9,
+              "content": "rightDown",
+              "lineEnding": "MacOS9",
+              "modified": true,
+              "serverAuth": "Plain",
+              "serverConnection": "`:serverHost3:1300"
+            }]
+        }
+      }
+    },
+    {
+      "location": {"x": 224, "y": 126, "width": 1100, "height": 1008},
+      "serverListLocation": {"x": 97, "y": 43, "width": 320, "height": 410},
+      "resultDividerLocation": 0.4,
+      "selected": true,
+      "tabs": [
+        {
+          "selected": true,
+          "caret": 9,
+          "content": "newWindow",
+          "lineEnding": "MacOS9",
+          "modified": false,
+          "serverAuth": "Plain",
+          "serverConnection": "`:serverHost4:2100:user1:password1",
+          "serverFullname": "folder/server5"
+        }
+      ]
+    }
+  ]
+}

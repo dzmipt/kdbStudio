@@ -242,7 +242,7 @@ public class Studio {
         if (args.length > 0) {
             WindowFactory.newStudioWindow(getInitServer(), args[0]);
         } else {
-            Workspace workspace = Config.getInstance().loadWorkspace();
+            Workspace workspace = Config.getInstance().getWorkspace();
             // Reload files from disk if it was modified somewhere else
             for (Workspace.Window window: workspace.getWindows()) {
                 for (Workspace.Tab tab: window.getAllTabs()) {
