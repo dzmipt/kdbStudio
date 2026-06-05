@@ -114,7 +114,12 @@ public class KDBTrustManager implements X509TrustManager {
         CertChainInfoDialog dialog = new CertChainInfoDialog(studioWindow, chain,
                 canStore ? CertChainInfoDialog.Mode.AcceptAndStore : CertChainInfoDialog.Mode.AcceptOnly);
 
-        setReconnect(dialog.getResult() == EscapeDialog.DialogResult.ACCEPTED);
+        if (dialog.getResult() != EscapeDialog.DialogResult.ACCEPTED) {
+            setReconnect(false);
+            throw certException;
+        }
+
+        setReconnect(true);
 
         if (dialog.getModeResult() == CertChainInfoDialog.Mode.AcceptOnly) {
             this.acceptCertificate = chain[0];
