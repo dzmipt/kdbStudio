@@ -90,6 +90,9 @@ public class KConnection {
 
             for (; ; ) {
                 try {
+                    if (trustManager != null) {
+                        trustManager.setReconnect(false);
+                    }
                     if (plainSocket != null) {
                         plainSocket.close();
                     }
