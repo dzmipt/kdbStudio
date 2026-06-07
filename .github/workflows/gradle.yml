@@ -67,7 +67,7 @@ jobs:
         path: ./failed-gui-tests/
 
     - name: Report
-      uses: dorny/test-reporter@v1
+      uses: dorny/test-reporter@v3
       if: ${{ always() && github.event.pull_request.head.repo.fork == false }}
       with:
         name: JUnit Tests - ${{ runner.os }}
