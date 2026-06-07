@@ -375,6 +375,6 @@ public class ResultGrid extends JPanel implements MouseWheelListener, SearchPane
         markers.clear();
         table.repaint();
         studioWindow.getResultSearchPanel().setVisible(false);
-        table.requestFocus();
+        table.requestFocusInWindow();
     }
 }

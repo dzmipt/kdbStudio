@@ -145,7 +145,7 @@ public class ServerTreeDialog extends EscapeDialog implements NodeSelectedListen
         toolbarPanel.add(toolbar, BorderLayout.WEST);
         toolbarPanel.add(filter, BorderLayout.CENTER);
 
-        filter.requestFocus();
+        filter.requestFocusInWindow();
 
         serverHistoryList = new JList<>();
         serverHistoryList.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);

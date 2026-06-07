@@ -438,7 +438,7 @@ public class StudioWindow extends StudioFrame {
 
             EditorsPanel.refreshEditorTitle(editor);
             refreshServer();
-            editor.getTextArea().requestFocus();
+            editor.getTextArea().requestFocusInWindow();
         }
     }
 
@@ -748,6 +748,8 @@ public class StudioWindow extends StudioFrame {
     public void showServerList(boolean selectHistory) {
         log.info("Show server list from {}", getTitle());
         Server selectedServer = serverTreeDialog.showServerTree(editor.getServer(), serverHistory, selectHistory);
+        requestFocus();
+        editor.getTextArea().requestFocusInWindow();
 
         if (selectedServer == null || selectedServer.equals(editor.getServer())) return;
 
@@ -825,7 +827,7 @@ public class StudioWindow extends StudioFrame {
         txtServer.setName("serverEntryTextField");
         txtServer.addActionListener(e -> {
             selectConnectionString();
-            editor.getTextArea().requestFocus();
+            editor.getTextArea().requestFocusInWindow();
         });
         txtServer.addFocusListener(new FocusAdapter() {
             @Override

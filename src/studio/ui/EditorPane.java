@@ -1,6 +1,8 @@
 package studio.ui;
 
 import kx.ConnectionContext;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.fife.ui.rtextarea.RTextScrollPane;
 import org.fife.ui.rtextarea.SearchContext;
 import org.fife.ui.rtextarea.SearchEngine;
@@ -28,6 +30,7 @@ public class EditorPane extends JPanel implements MouseWheelListener, SearchPane
     private final SearchPanel searchPanel;
     private final MainStatusBar mainStatusBar;
     private final EditorStatusBar editorStatusBar;
+    private static final Logger log = LogManager.getLogger();
 
     public EditorPane(boolean editable, SearchPanel searchPanel, MainStatusBar mainStatusBar) {
         super(new BorderLayout());
@@ -158,6 +161,6 @@ public class EditorPane extends JPanel implements MouseWheelListener, SearchPane
     @Override
     public void closeSearchPanel() {
         hideSearchPanel();
-        textArea.requestFocus();
+        textArea.requestFocusInWindow();
     }
 }

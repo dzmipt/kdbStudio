@@ -55,7 +55,7 @@ public class TableRowHeader extends JList {
                     int index = locationToIndex(e.getPoint());
                     table.setColumnSelectionInterval(0,table.getColumnCount() - 1);
                     table.setRowSelectionInterval(startIndex,index);
-                    table.requestFocus();
+                    table.requestFocusInWindow();
                 }
             };
             addMouseListener(mia);

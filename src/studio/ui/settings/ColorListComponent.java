@@ -155,7 +155,7 @@ public class ColorListComponent extends JComponent implements DropTargetListener
     }
 
     private void selectLabel(ColorLabel label, boolean forced) {
-        requestFocus();
+        requestFocusInWindow();
         if (forced) {
             selectedLabel = label;
         } else {

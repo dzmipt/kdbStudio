@@ -31,13 +31,13 @@ import javax.swing.*;
 import javax.swing.text.DefaultEditorKit;
 import java.awt.*;
 import java.awt.event.FocusEvent;
+import java.awt.event.InputEvent;
 import java.awt.event.KeyEvent;
 import java.io.IOException;
 import java.io.PrintStream;
-import java.lang.ref.Reference;
-import java.lang.reflect.Field;
-import java.util.*;
+import java.util.Arrays;
 import java.util.List;
+import java.util.Locale;
 
 public class Studio {
 
@@ -167,13 +167,74 @@ public class Studio {
         UIManager.put("TabbedPane.tabInsets", new Insets(1, 6, 1, 6));
     }
 
+
+    private static final int KEY_MODIFIERS_MASK =
+            InputEvent.CTRL_DOWN_MASK |
+                    InputEvent.SHIFT_DOWN_MASK |
+                    InputEvent.ALT_DOWN_MASK |
+                    InputEvent.META_DOWN_MASK;
+
+    private static void addExtraDebugLogging() {
+        KeyStroke keyStroke = KeyStroke.getKeyStroke("ctrl shift meta P");
+        Toolkit.getDefaultToolkit().addAWTEventListener( e -> {
+            if( e.getID() == KeyEvent.KEY_RELEASED &&
+                    ((KeyEvent)e).getKeyCode() == keyStroke.getKeyCode() &&
+                    (((KeyEvent)e).getModifiersEx() & KEY_MODIFIERS_MASK) == (keyStroke.getModifiers() & KEY_MODIFIERS_MASK)  ) {
+
+                log.info("DDEBUG output:");
+                KeyboardFocusManager kfm =
+                        KeyboardFocusManager.getCurrentKeyboardFocusManager();
+
+                log.info("DDEBUG activeWindow  = " + kfm.getActiveWindow());
+                log.info("DDEBUG focusedWindow = " + kfm.getFocusedWindow());
+                log.info("DDEBUG focusOwner    = " + kfm.getFocusOwner());
+
+                for (Window w : Window.getWindows()) {
+                    log.info(
+                            "\nDDEBUG Window: " + w +
+                                    "\nDDEBUG  visible=" + w.isVisible() +
+                                    "\nDDEBUG  active=" + w.isActive() +
+                                    "\nDDEBUG  focusable=" + w.isFocusableWindow() +
+                                    "\nDDEBUG  showing=" + w.isShowing() +
+                                    "\nDDEBUG  type=" + w.getType()
+                    );
+                }
+
+                log.info("DDEBUG end");
+            }
+        }, AWTEvent.KEY_EVENT_MASK  );
+
+//        Toolkit.getDefaultToolkit().addAWTEventListener(
+//                e -> {
+//                    if (e instanceof MouseEvent) {
+//                        MouseEvent me = (MouseEvent) e;
+//                        log.info("DDEBUG mouseEvent: " +
+//                                me.getID() + " " +
+//                                        me.getComponent());
+//                    }
+//                },
+//                AWTEvent.MOUSE_EVENT_MASK
+//        );
+
+    }
+
+    private static String getObjectClass(Object obj) {
+        return obj == null ? "null": obj.getClass().toString();
+    }
+
     private static void debugFocusTransfer() {
+//        addExtraDebugLogging();
+
         KeyboardFocusManager custom = new DefaultKeyboardFocusManager() {
             @Override
             public boolean dispatchEvent(AWTEvent e) {
                 if (e instanceof FocusEvent) {
                     FocusEvent fe = (FocusEvent) e;
-                    log.info("FocusManger: focusEvent - {}; cause - {}", fe, fe.getCause(), new Exception("Debug"));
+                    String type = fe.getID() == FocusEvent.FOCUS_GAINED ? "FOCUS_GAINED" :
+                                        fe.getID() == FocusEvent.FOCUS_LOST ? "FOCUS_LOST" : "unknown";
+
+                    log.info("FocusManger: focusEvent type:{}, temporary:{}, oposite:{}, cause:{}",
+                                    type, fe.isTemporary(), getObjectClass(fe.getOppositeComponent()), fe.getCause());
                 }
                 return super.dispatchEvent(e);
             }
@@ -182,56 +243,27 @@ public class Studio {
 
         KeyboardFocusManager.getCurrentKeyboardFocusManager().addPropertyChangeListener(
                 e -> {
-//                    log.info("Property: {}; old: {};\nnew: {}", e.getPropertyName(), e.getOldValue(), e.getNewValue());
                     String name = e.getPropertyName();
                     if (name.equals("focusOwner") || name.equals("permanentFocusOwner")) {
-                        String oldV = e.getOldValue() == null ? "null": e.getOldValue().getClass().toString();
-                        String newV = e.getNewValue() == null ? "null": e.getNewValue().getClass().toString();
-                        log.info("{}: focusOwner {} -> {}", name, oldV, newV);
+                        log.info("{}: focusOwner {} -> {}", name, getObjectClass(e.getOldValue()), getObjectClass(e.getNewValue()));
                     }
                 }
 
         );
 
-        Toolkit.getDefaultToolkit().addAWTEventListener(e -> {
-            if (e.getID() == FocusEvent.FOCUS_GAINED || e.getID() == FocusEvent.FOCUS_LOST) {
-                log.info("Get focus event {}", e, new Exception("Debug"));
-            }
-        }, AWTEvent.FOCUS_EVENT_MASK);
+//        Toolkit.getDefaultToolkit().addAWTEventListener(e -> {
+//            if (e.getID() == FocusEvent.FOCUS_GAINED || e.getID() == FocusEvent.FOCUS_LOST) {
+//                log.info("AWT focus event {}", e);
+//            }
+//        }, AWTEvent.FOCUS_EVENT_MASK);
 
-
-        try {
-            Field mrfoField = KeyboardFocusManager.class.getDeclaredField("mostRecentFocusOwners");
-            mrfoField.setAccessible(true);
-            final Map delegate = (Map) mrfoField.get(null);
-            HashMap map = new HashMap() {
-                @Override
-                public Object put(Object key, Object value) {
-                    if (value instanceof Reference) {
-                        log.info("KFM: Value: {}", ((Reference)value).get().getClass());
-                    } else if (value == null) {
-                        log.info("KFM: Value is null");
-                    }
-//                    log.info("stacktrace", new Throwable());
-                    return delegate.put(key, value);
-                }
-
-                @Override
-                public Object get(Object key) {
-                    return delegate.get(key);
-                }
-            };
-            mrfoField.set(null, map);
-        } catch (Exception e) {
-            log.error("Exception", e);
-        }
     }
 
     //Executed on the Event Dispatcher Thread
     private static void init(String[] args) {
         WindowFactory.init();
 
-//        debugFocusTransfer();
+        debugFocusTransfer();
         log.info("Start Studio with args {}", Arrays.asList(args));
         log.info("Process pid is {}", ProcessHandle.current().pid());
         initLF();

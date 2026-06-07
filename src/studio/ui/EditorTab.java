@@ -123,7 +123,7 @@ public class EditorTab implements FileWatcher.Listener, EditorStatusBarCallback 
         RSyntaxTextArea textArea = getTextArea();
         //@TODO do we need to discard all changes??
         textArea.discardAllEdits();
-        textArea.requestFocus();
+        textArea.requestFocusInWindow();
     }
 
     public void executeQuery(QueryTask queryTask) {

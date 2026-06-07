@@ -83,7 +83,7 @@ public class EditorsPanel extends JPanel {
             SwingUtilities.invokeLater(()-> {
                 if (index < tabbedEditors.getTabCount()) {
                     //to prevent IndexOutOfBoundException when tab is closed
-                    getEditorTab(index).getTextArea().requestFocus();
+                    getEditorTab(index).getTextArea().requestFocusInWindow();
                 }
             } );
         }
@@ -152,7 +152,7 @@ public class EditorsPanel extends JPanel {
 
         addTab(editor);
         textArea.getDocument().addDocumentListener(new MarkingDocumentListener(editor));
-        textArea.requestFocus();
+        textArea.requestFocusInWindow();
         textArea.setActionsUpdateListener(() -> editor.getStudioWindow().refreshActionState());
 
         studioWindow.refreshActionState();

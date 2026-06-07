@@ -133,7 +133,7 @@ public class SearchPanel extends JPanel {
         super.setVisible(visible);
         if (visible) {
             txtFind.selectAll();
-            txtFind.requestFocus();
+            txtFind.requestFocusInWindow();
         }
     }
 
