@@ -117,38 +117,32 @@ static def buildTime() {
 }
 
 def getGitRevNumber = { ->
-    def stdout = new ByteArrayOutputStream()
-    def errout = new ByteArrayOutputStream()
-    def hash = ""
-    def rev = ""
     try {
-        exec {
+        def rev = providers.exec {
             commandLine 'git', 'rev-list', '--count', 'HEAD'
-            standardOutput = stdout
-            errorOutput = errout
-        }
-        rev = stdout.toString().trim()
-
-        stdout.reset()
-        exec {
+        }.standardOutput.asText.get().trim()
+        def hash = providers.exec {
             commandLine 'git', 'rev-parse', '--short', 'HEAD'
-            standardOutput = stdout
-            errorOutput = errout
-        }
-        hash = stdout.toString().trim()
+        }.standardOutput.asText.get().trim()
 
+        return ", commit number: $rev, hash: $hash"
     } catch (Throwable e) {
         println "Error getting git revision: " + e
         println errout.toString()
     }
 
-    if (hash == "" || rev == "") return "";
-    return ", commit number: $rev, hash: $hash"
+    return "";
 }
 
+def buildFile = layout.buildDirectory.file("resources/build.txt")
+
 tasks.register('getBuildHash') {
+    outputs.file(buildFile)
+
     doLast {
-        file("resources/build.txt").text = buildTime() + getGitRevNumber()
+        def file = buildFile.get().asFile
+        file.parentFile.mkdirs()
+        file.text = buildTime() + getGitRevNumber()
     }
 }
 
