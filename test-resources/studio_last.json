@@ -195,7 +195,7 @@
   },
 
   "alignNumbersInResult" : false,
-  "useTCPandTLSConnections" : false,
+  "tryTLSConnectionFirst" : false,
   "failoverBetweenTLSandTCPConnections" : false,
 
   "serverBgColorRules": [
