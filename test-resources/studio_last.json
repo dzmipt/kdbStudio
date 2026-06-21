@@ -195,7 +195,8 @@
   },
 
   "alignNumbersInResult" : false,
-  "defaultTLSResolution": "TLS_TCP",
+  "useTCPandTLSConnections" : false,
+  "failoverBetweenTLSandTCPConnections" : false,
 
   "serverBgColorRules": [
     {
@@ -213,7 +214,7 @@
     {
       "field": "tls",
       "operation": "equals",
-      "argument": "TCP_TLS",
+      "argument": "true",
       "color": "AAAAAA"
     }
   ],

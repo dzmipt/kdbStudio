@@ -44,6 +44,8 @@ public class ConfigTest {
         ((MockConfig)config).reload();
         config.setDefaultAuthMechanism("testAuth");
         config.setDefaultCredentials("testAuth", new Credentials("testUser", "testPassword"));
+        config.setBoolean(Config.TRY_TLS_CONNECTION_FIRST, false);
+        config.setBoolean(Config.FAILOVER_BETWEEN_TLS_AND_TCP_CONNECTIONS, false);
 
         ServerTreeNode parent = config.getServerTree().add("testFolder");
         server = new Server("testServer", "localhost",1111,
@@ -310,6 +312,43 @@ public class ConfigTest {
         assertEquals("testPassword", aServer.getPassword());
         assertEquals("", aServer.getName());
         assertEquals("testAuth", aServer.getAuthenticationMechanism());
+    }
+
+
+    @Test
+    public void getServerTest() {
+        Color color = new Color(102, 103,104);
+        Server s1 = new Server("name1", new QConnection("host:100"), "auth1", color);
+        Server s2 = new Server("name2", new QConnection("host:100"), "auth2", color);
+        Server s3 = new Server("name3", new QConnection("tcps://host:100"), "auth1", color);
+        config.getServerConfig().addServers(false, s1, s2, s3);
+
+        assertEquals(s1, config.getServer(new QConnection("host:100"), "auth1"));
+        assertEquals(s2, config.getServer(new QConnection("host:100"), "auth2"));
+        assertEquals(s2, config.getServer(new QConnection("tcp://host:100"), "auth2"));
+        assertEquals(s3, config.getServer(new QConnection("tcps://host:100"), "auth1"));
+        assertEquals("", config.getServer(new QConnection("tcps://host:100"), "auth2").getName());
+
+
+        config.setBoolean(Config.TRY_TLS_CONNECTION_FIRST, true);
+        assertEquals(s3, config.getServer(new QConnection("host:100"), "auth1"));
+        Server s = config.getServer(new QConnection("host:100"), "auth2");
+        assertEquals("", s.getName());
+        assertTrue(s.getUseTLS());
+        assertEquals(s2, config.getServer(new QConnection("tcp://host:100"), "auth2"));
+        assertEquals(s3, config.getServer(new QConnection("tcps://host:100"), "auth1"));
+
+
+        config.setBoolean(Config.FAILOVER_BETWEEN_TLS_AND_TCP_CONNECTIONS, true);
+        assertEquals(s3, config.getServer(new QConnection("host:100"), "auth1"));
+        assertEquals(s1, config.getServer(new QConnection("tcp://host:100"), "auth1"));
+
+
+        s = config.getServer(new QConnection("host:1000"), "auth1");
+        assertTrue(s.getUseTLS());
+        assertTrue(s.isFlipTLS());
+        assertEquals("", s.getName());
+        assertEquals("auth1", s.getAuthenticationMechanism());
     }
 
 }

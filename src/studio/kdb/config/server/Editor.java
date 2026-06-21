@@ -9,7 +9,6 @@ import studio.kdb.ServerTreeNode;
 import studio.kdb.Workspace;
 import studio.kdb.config.ColorMap;
 import studio.kdb.config.ColorToken;
-import studio.kdb.config.TLSResolutionMode;
 import studio.ui.ColorChooser;
 import studio.ui.ColorLabel;
 import studio.ui.DocumentChangeListener;
@@ -126,26 +125,27 @@ public abstract class Editor<E> {
         }
     }
 
-    public static class TLSEditor extends Editor<TLSResolutionMode> {
-        private final JComboBox<TLSResolutionMode> comboBox = new JComboBox<>(TLSResolutionMode.values());
+    public static class BooleanEditor extends Editor<Boolean> {
+        private final JCheckBox checkBox = new JCheckBox();
 
-        public TLSEditor() {
-            comboBox.addActionListener(e-> valueChanged());
+        public BooleanEditor() {
+            checkBox.addActionListener(e-> valueChanged());
         }
 
         @Override
         public JComponent getComponent() {
-            return comboBox;
+            return checkBox;
         }
 
         @Override
-        public void setValue(TLSResolutionMode value) {
-            comboBox.setSelectedItem(value);
+        public void setValue(Boolean value) {
+            if (value == null) value = false;
+            checkBox.setSelected(value);
         }
 
         @Override
-        public TLSResolutionMode getValue() {
-            return (TLSResolutionMode)comboBox.getSelectedItem();
+        public Boolean getValue() {
+            return checkBox.isSelected();
         }
     }
 

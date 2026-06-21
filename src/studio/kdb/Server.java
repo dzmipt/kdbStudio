@@ -2,7 +2,6 @@ package studio.kdb;
 
 import studio.core.Credentials;
 import studio.core.DefaultAuthenticationMechanism;
-import studio.kdb.config.TLSResolutionMode;
 import studio.utils.QConnection;
 
 import java.awt.*;
@@ -39,10 +38,6 @@ public class Server {
 
     public boolean isFlipTLS() {
         return  flipTLS;
-    }
-
-    public TLSResolutionMode getTLSResolutionMode() {
-        return TLSResolutionMode.get(getUseTLS(), isFlipTLS());
     }
 
     public static Server newServer() {

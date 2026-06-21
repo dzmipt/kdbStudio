@@ -307,7 +307,7 @@ public class ConfigTypeTest {
         rule = ServerFilterRule.newRule(FieldGetter.Names.port, Operation.Names.smaller, new Color(24, 14, 24), 1024);
         checkJson(rule);
 
-        rule = ServerFilterRule.newRule(FieldGetter.Names.tls, Operation.Names.equals, new Color(25, 15, 25), TLSResolutionMode.TLS);
+        rule = ServerFilterRule.newRule(FieldGetter.Names.tls, Operation.Names.equals, new Color(25, 15, 25), true);
         checkJson(rule);
 
         assertEquals(initColor, ServerFilterRule.newDefault().getColor());
