@@ -15,8 +15,8 @@ group = "com.github.dzmipt"
 version = "dz7.0"
 
 compileJava {
-    sourceCompatibility = JavaVersion.VERSION_11
-    targetCompatibility = JavaVersion.VERSION_11
+    sourceCompatibility = JavaVersion.VERSION_17
+    targetCompatibility = JavaVersion.VERSION_17
 }
 
 repositories {
@@ -101,6 +101,11 @@ tasks.register('integrationTest', Test) {
 
     testClassesDirs = sourceSets.intTest.output.classesDirs
     classpath = sourceSets.intTest.runtimeClasspath
+    jvmArgs(
+            '--add-opens=java.base/java.util=ALL-UNNAMED',
+            '--add-opens=java.desktop/java.awt=ALL-UNNAMED',
+            '--add-opens=java.desktop/javax.swing=ALL-UNNAMED'
+    )
     testLogging {
         events "passed", "skipped", "failed", "standardOut", "standardError"
         showStandardStreams = true
