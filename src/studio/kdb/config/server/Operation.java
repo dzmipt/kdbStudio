@@ -1,7 +1,5 @@
 package studio.kdb.config.server;
 
-import studio.kdb.config.TLSResolutionMode;
-
 import java.util.Objects;
 import java.util.regex.Pattern;
 
@@ -53,7 +51,7 @@ public abstract class Operation<E> {
         return new Smaller(template);
     }
 
-    public static Operation<TLSResolutionMode> newEquals(TLSResolutionMode template) {
+    public static Operation<Boolean> newEquals(boolean template) {
         return new Equals<>(template);
     }
 

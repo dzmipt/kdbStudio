@@ -40,7 +40,7 @@ public class ServerFilterRuleTest {
         assertEquals(FieldGetter.Names.tls, rule.getFieldName());
         assertEquals(Operation.Names.equals, rule.getOperationName());
 
-        assertInstanceOf(TLSResolutionMode.class, rule.newEditable().getArg());
+        assertEquals(false, rule.newEditable().getArg());
         assertEquals(rule, rule.newEditable().getRule());
     }
 

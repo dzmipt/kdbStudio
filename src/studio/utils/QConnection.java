@@ -13,16 +13,22 @@ public class QConnection {
     private final String user;
     private final String password;
     private final boolean useTLS;
+    private final boolean specifiedProtocol;
 
     private final static String TCPS_PREFIX = "tcps://";
     private final static String TCP_PREFIX = "tcp://";
 
-    public QConnection(String host, int port, String user, String password, boolean useTLS) {
+    private QConnection(String host, int port, String user, String password, boolean useTLS, boolean specifiedProtocol) {
         this.host = host;
         this.port = port;
         this.user = user;
         this.password = password;
         this.useTLS = useTLS;
+        this.specifiedProtocol = specifiedProtocol;
+    }
+
+    public QConnection(String host, int port, String user, String password, boolean useTLS) {
+        this(host, port, user, password, useTLS, true);
     }
 
     public QConnection(String connection) throws IllegalArgumentException {
@@ -33,10 +39,12 @@ public class QConnection {
         useTLS = connection.startsWith(TCPS_PREFIX);
         if (useTLS) {
             connection = connection.substring(TCPS_PREFIX.length());
-        }
-
-        if (connection.startsWith(TCP_PREFIX)) {
+            specifiedProtocol = true;
+        } else if (connection.startsWith(TCP_PREFIX)) {
             connection = connection.substring(TCP_PREFIX.length());
+            specifiedProtocol = true;
+        } else {
+            specifiedProtocol = false;
         }
 
         int i0 = connection.indexOf(':');
@@ -67,11 +75,6 @@ public class QConnection {
         }
     }
 
-    public QConnection useTLS(boolean useTLS) {
-        if (this.useTLS == useTLS) return this;
-        return new QConnection(host, port, user, password, useTLS);
-    }
-
     public String getHost() {
         return host;
     }
@@ -90,6 +93,10 @@ public class QConnection {
 
     public boolean isUseTLS() {
         return useTLS;
+    }
+
+    public boolean isSpecifiedProtocol() {
+        return specifiedProtocol;
     }
 
     public Server toServer(String name, String authMethod, Color bgColor) {
@@ -120,7 +127,7 @@ public class QConnection {
     public QConnection changeTLS(boolean newUseTLS) {
         if (newUseTLS == this.useTLS) return this;
 
-        return new QConnection(host, port, user, password, newUseTLS);
+        return new QConnection(host, port, user, password, newUseTLS, true);
     }
 
     public QConnection changeUserPassword(Credentials credentials) {
@@ -130,7 +137,7 @@ public class QConnection {
     public QConnection changeUserPassword(String newUser, String newPassword) {
         if (Objects.equals(newUser, this.user) && Objects.equals(newPassword, this.password)) return this;
 
-        return new QConnection(host, port, newUser, newPassword, useTLS);
+        return new QConnection(host, port, newUser, newPassword, useTLS, specifiedProtocol);
     }
 
     @Override

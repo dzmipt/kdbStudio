@@ -140,7 +140,7 @@ public class Session implements ConnectionStateListener, KAuthentication {
         QConnection connection = server.getConnection();
         if (kConn.getConnectionContext().isConnected()) {
             boolean isTLS = kConn.getConnectionContext().isSecure();
-            return connection.useTLS(isTLS);
+            return connection.changeTLS(isTLS);
         }
 
         return  connection;

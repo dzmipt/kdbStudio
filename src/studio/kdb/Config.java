@@ -95,7 +95,8 @@ public class Config  {
     public static final String LOG_DEBUG = configDefault("logDebug", ConfigType.BOOLEAN, false);
 
     public static final String ALIGN_RIGHT_NUMBERS_IN_RESULT = configDefault("alignNumbersInResult", ConfigType.BOOLEAN, true);
-    public static final String DEFAULT_TLS_RESOLUTION = configDefault("defaultTLSResolution", ConfigType.ENUM, TLSResolutionMode.TCP);
+    public static final String FAILOVER_BETWEEN_TLS_AND_TCP_CONNECTIONS = configDefault("failoverBetweenTLSandTCPConnections", ConfigType.BOOLEAN, true);
+    public static final String TRY_TLS_CONNECTION_FIRST = configDefault("tryTLSConnectionFirst", ConfigType.BOOLEAN, true);
 
     public static final String BG_COLOR_RULES = configDefault("serverBgColorRules", ConfigType.BG_COLOR_RULES, new BgColorRules());
 
@@ -387,21 +388,20 @@ public class Config  {
     }
 
     public Server getServer(QConnection conn, String authMethod) {
+        if (!conn.isSpecifiedProtocol()) {
+            if (getBoolean(Config.TRY_TLS_CONNECTION_FIRST)) {
+                conn = conn.changeTLS(true);
+            }
+        }
+
         Server server = serverConfig.getServer(conn, authMethod);
         if (! server.getName().isEmpty()) return server;
 
-        //anonymous server
-        TLSResolutionMode tlsResolutionMode = getEnum(Config.DEFAULT_TLS_RESOLUTION);
-
-        if (conn.isUseTLS()) {
-            if (tlsResolutionMode == TLSResolutionMode.TLS_TCP) return server.newFlipTLS(true);
-            return server;
+        if (getBoolean(Config.FAILOVER_BETWEEN_TLS_AND_TCP_CONNECTIONS)) {
+            server = server.newFlipTLS(true);
         }
 
-        if (tlsResolutionMode == TLSResolutionMode.TCP) return server;
-        if (tlsResolutionMode == TLSResolutionMode.TCP_TLS) return server.newFlipTLS(true);
-
-        return serverConfig.getServer(conn.useTLS(true), authMethod).newFlipTLS(tlsResolutionMode.isFlipTLS());
+        return server;
     }
 
     public Server getServerByNewAuthMethod(QConnection conn, String authMethod) {

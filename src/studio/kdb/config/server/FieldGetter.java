@@ -1,7 +1,6 @@
 package studio.kdb.config.server;
 
 import studio.kdb.Server;
-import studio.kdb.config.TLSResolutionMode;
 
 import java.awt.*;
 import java.util.List;
@@ -41,7 +40,7 @@ public class FieldGetter<E> {
     public final static FieldGetter<String> FOLDER_NAME = new FieldGetter<>(Names.folderName, Server::getFolderName);
     public final static FieldGetter<String> HOST = new FieldGetter<>(Names.host, Server::getHost);
     public final static FieldGetter<Integer> PORT = new FieldGetter<>(Names.port, Server::getPort);
-    public final static FieldGetter<TLSResolutionMode> TLS = new FieldGetter<>(Names.tls, Server::getTLSResolutionMode);
+    public final static FieldGetter<Boolean> TLS = new FieldGetter<>(Names.tls, Server::getUseTLS);
     public final static FieldGetter<String> USER = new FieldGetter<>(Names.user, Server::getUsername);
     public final static FieldGetter<String> PASSWORD = new FieldGetter<>(Names.password, Server::getPassword);
     public final static FieldGetter<String> AUTH = new FieldGetter<>(Names.auth, Server::getAuthenticationMechanism);
