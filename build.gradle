@@ -15,8 +15,8 @@ group = "com.github.dzmipt"
 version = "dz7.0"
 
 compileJava {
-    sourceCompatibility = JavaVersion.VERSION_11
-    targetCompatibility = JavaVersion.VERSION_11
+    sourceCompatibility = JavaVersion.VERSION_17
+    targetCompatibility = JavaVersion.VERSION_17
 }
 
 repositories {
@@ -83,9 +83,12 @@ dependencies {
     implementation group: 'com.formdev', name: 'flatlaf', version: '3.7.1'
     implementation group: 'com.formdev', name: 'flatlaf-extras', version: '3.7.1'
 
-    testImplementation group: 'org.junit.jupiter', name: 'junit-jupiter-api', version: '5.10.0'
-    testImplementation group: 'org.junit.jupiter', name:'junit-jupiter-params', version: '5.10.0'
-    testRuntimeOnly group: 'org.junit.jupiter', name: 'junit-jupiter-engine', version: '5.10.0'
+    testImplementation(platform("org.junit:junit-bom:5.14.4"))
+
+    testImplementation("org.junit.jupiter:junit-jupiter-api")
+    testImplementation("org.junit.jupiter:junit-jupiter-params")
+    testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine")
+    testRuntimeOnly("org.junit.platform:junit-platform-launcher")
 
     intTestImplementation group: 'org.assertj', name: 'assertj-swing-junit', version: '3.17.1'
 }
@@ -101,6 +104,11 @@ tasks.register('integrationTest', Test) {
 
     testClassesDirs = sourceSets.intTest.output.classesDirs
     classpath = sourceSets.intTest.runtimeClasspath
+    jvmArgs(
+            '--add-opens=java.base/java.util=ALL-UNNAMED',
+            '--add-opens=java.desktop/java.awt=ALL-UNNAMED',
+            '--add-opens=java.desktop/javax.swing=ALL-UNNAMED'
+    )
     testLogging {
         events "passed", "skipped", "failed", "standardOut", "standardError"
         showStandardStreams = true
@@ -117,38 +125,37 @@ static def buildTime() {
 }
 
 def getGitRevNumber = { ->
-    def stdout = new ByteArrayOutputStream()
-    def errout = new ByteArrayOutputStream()
-    def hash = ""
-    def rev = ""
     try {
-        exec {
+        def rev = providers.exec {
             commandLine 'git', 'rev-list', '--count', 'HEAD'
-            standardOutput = stdout
-            errorOutput = errout
-        }
-        rev = stdout.toString().trim()
-
-        stdout.reset()
-        exec {
+        }.standardOutput.asText.get().trim()
+        def hash = providers.exec {
             commandLine 'git', 'rev-parse', '--short', 'HEAD'
-            standardOutput = stdout
-            errorOutput = errout
-        }
-        hash = stdout.toString().trim()
+        }.standardOutput.asText.get().trim()
 
+        return ", commit number: $rev, hash: $hash"
     } catch (Throwable e) {
         println "Error getting git revision: " + e
         println errout.toString()
     }
 
-    if (hash == "" || rev == "") return "";
-    return ", commit number: $rev, hash: $hash"
+    return "";
 }
 
+def buildFile = layout.projectDirectory.file("resources/build.txt")
+def buildTimeProvider = providers.provider { buildTime() }
+def gitRevProvider = providers.provider { getGitRevNumber() }
+
 tasks.register('getBuildHash') {
+    inputs.property("buildTime", buildTimeProvider)
+    inputs.property("gitRev", gitRevProvider)
+
+    outputs.file(buildFile)
+
     doLast {
-        file("resources/build.txt").text = buildTime() + getGitRevNumber()
+        def file = buildFile.getAsFile()
+        file.parentFile.mkdirs()
+        file.text = "${buildTimeProvider.get()}${gitRevProvider.get()}"
     }
 }
 

@@ -5,7 +5,6 @@ import studio.core.Credentials;
 import studio.kdb.Config;
 import studio.kdb.config.ActionOnExit;
 import studio.kdb.config.KdbMessageLimitAction;
-import studio.kdb.config.TLSResolutionMode;
 import studio.ui.GroupLayoutSimple;
 
 import javax.swing.*;
@@ -24,7 +23,8 @@ public class SettingsGeneralTab extends SettingsTab {
     private final JCheckBox chBoxShowServerCombo;
     private final JCheckBox chBoxAutoSave;
     private final JComboBox<ActionOnExit> comboBoxActionOnExit;
-    private final JComboBox<TLSResolutionMode> comboBoxTLSResolution;
+    private final JCheckBox chBoxFailoverTLSConnection;
+    private final JCheckBox chBoxTryTLSConnectionFirst;
 
     private static final Config CONFIG = Config.getInstance();
 
@@ -70,9 +70,11 @@ public class SettingsGeneralTab extends SettingsTab {
         JLabel lblUser = new JLabel("  User:");
         JLabel lblPassword = new JLabel("  Password:");
 
-        JLabel lblTLSResolution = new JLabel("TLS mode for anonymous connections: ");
-        comboBoxTLSResolution = new JComboBox<>(TLSResolutionMode.values());
-        comboBoxTLSResolution.setSelectedItem(CONFIG.getEnum(Config.DEFAULT_TLS_RESOLUTION));
+        chBoxFailoverTLSConnection = new JCheckBox("Try TLS and non-TLS for anonymous connections");
+        chBoxFailoverTLSConnection.setSelected(CONFIG.getBoolean(Config.FAILOVER_BETWEEN_TLS_AND_TCP_CONNECTIONS));
+
+        chBoxTryTLSConnectionFirst = new JCheckBox("Try TLS Connection first for anonymous connections");
+        chBoxTryTLSConnectionFirst.setSelected(CONFIG.getBoolean(Config.TRY_TLS_CONNECTION_FIRST));
 
         GroupLayoutSimple layout = new GroupLayoutSimple(this);
         layout.setStacks(
@@ -83,7 +85,7 @@ public class SettingsGeneralTab extends SettingsTab {
                         .addLineAndGlue(chBoxSessionReuse)
                         .addLineAndGlue(lblKdbMessageSize, txtKdbMessageSizeLimit, lblKdbMessageSizeSuffix, comboBoxKdbMessageSizeAction)
                         .addLine(lblAuthMechanism, comboBoxAuthMechanism, lblUser, txtUser, lblPassword, txtPassword)
-                        .addLineAndGlue(lblTLSResolution, comboBoxTLSResolution)
+                        .addLineAndGlue(chBoxFailoverTLSConnection, chBoxTryTLSConnectionFirst)
         );
 
     }
@@ -125,7 +127,8 @@ public class SettingsGeneralTab extends SettingsTab {
         CONFIG.setEnum(Config.KDB_MESSAGE_SIZE_LIMIT_ACTION, (KdbMessageLimitAction) comboBoxKdbMessageSizeAction.getSelectedItem());
         CONFIG.setDefaultAuthMechanism(auth);
         CONFIG.setDefaultCredentials(auth, new Credentials(getUser(), getPassword()));
-        CONFIG.setEnum(Config.DEFAULT_TLS_RESOLUTION, (TLSResolutionMode) comboBoxTLSResolution.getSelectedItem());
+        CONFIG.setBoolean(Config.FAILOVER_BETWEEN_TLS_AND_TCP_CONNECTIONS, chBoxFailoverTLSConnection.isSelected());
+        CONFIG.setBoolean(Config.TRY_TLS_CONNECTION_FIRST, chBoxTryTLSConnectionFirst.isSelected());
 
         boolean changed = CONFIG.setBoolean(Config.SHOW_SERVER_COMBOBOX, isShowServerComboBox());
         result.setRefreshComboServerVisibility(changed);

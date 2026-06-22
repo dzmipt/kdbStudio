@@ -5,7 +5,6 @@ import org.apache.logging.log4j.Logger;
 import studio.kdb.Config;
 import studio.kdb.Server;
 import studio.kdb.ServerTreeNode;
-import studio.kdb.config.TLSResolutionMode;
 import studio.kdb.config.server.BgColorRules;
 import studio.kdb.config.server.Editor;
 import studio.kdb.config.server.FieldGetter;
@@ -32,7 +31,7 @@ public class MultipleServerEditor extends JPanel {
     private final ServerField<List<String>> folderField = new ServerField<>(new Editor.FolderEditor(), FieldGetter.FOLDER_PATH);
     private final ServerField<String> hostField = new ServerField<>(new Editor.TextEditor(), FieldGetter.HOST);
     private final ServerField<Integer> portField = new ServerField<>(new Editor.PortEditor(), FieldGetter.PORT);
-    private final ServerField<TLSResolutionMode> tlsField = new ServerField<>(new Editor.TLSEditor(), FieldGetter.TLS);
+    private final ServerField<Boolean> tlsField = new ServerField<>(new Editor.BooleanEditor(), FieldGetter.TLS);
     private final ServerField<String> userField = new ServerField<>(new Editor.TextEditor(), FieldGetter.USER);
     private final ServerField<String> passwordField = new ServerField<>(new Editor.PasswordEditor(), FieldGetter.PASSWORD);
     private final ServerField<String> authMethodField = new ServerField<>(new Editor.AuthMethodEditor(), FieldGetter.AUTH);
@@ -191,14 +190,14 @@ public class MultipleServerEditor extends JPanel {
         ServerTreeNode parent = root.findPath(folderPath, true);
         String host = hostField.getValueForServer(server);
         int port = portField.getValueForServer(server);
-        TLSResolutionMode tlsResolutionMode = tlsField.getValueForServer(server);
+        boolean useTLS = tlsField.getValueForServer(server);
         String username = userField.getValueForServer(server);
         String password = passwordField.getValueForServer(server);
         String authMethod = authMethodField.getValueForServer(server);
         Color bgColor = bgColorField.getValueForServer(server);
 
-        QConnection conn = new QConnection(host, port, username, password, tlsResolutionMode.isUseTLS());
-        return new Server(name, conn, authMethod, bgColor, parent, tlsResolutionMode.isFlipTLS());
+        QConnection conn = new QConnection(host, port, username, password, useTLS);
+        return new Server(name, conn, authMethod, bgColor, parent);
     }
 
     public List<Server> getAmendedServers() {

@@ -20,7 +20,7 @@ public class QConnectionTest {
         assertEquals(connection, new QConnection("`:server.some.domain:11::"));
         assertEquals(connection, new QConnection("  `:server.some.domain:11   "));
 
-        assertEquals(connection.useTLS(true), new QConnection("`:tcps://server.some.domain:11::"));
+        assertEquals(connection.changeTLS(true), new QConnection("`:tcps://server.some.domain:11::"));
     }
 
     @Test
@@ -74,6 +74,18 @@ public class QConnectionTest {
         assertThrows(IllegalArgumentException.class, ()-> {
             new QConnection(":host::uu:p");
         });
+
+        assertThrows(IllegalArgumentException.class, ()-> {
+            new QConnection(":tcps://tcp://host:100");
+        });
+
+    }
+
+    @Test
+    public void testSpecifiedProtocol() {
+        assertTrue(new QConnection("`:tcps://host:100").isSpecifiedProtocol());
+        assertTrue(new QConnection("`:tcp://host:100").isSpecifiedProtocol());
+        assertFalse(new QConnection("`:host:100").isSpecifiedProtocol());
 
     }
 }

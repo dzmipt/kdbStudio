@@ -6,7 +6,6 @@ import com.google.gson.JsonPrimitive;
 import studio.kdb.Config;
 import studio.kdb.Server;
 import studio.kdb.config.ConfigType;
-import studio.kdb.config.TLSResolutionMode;
 
 import javax.swing.*;
 import java.awt.*;
@@ -69,11 +68,11 @@ public class ServerFilterRule<E> {
                         () -> Operation.newLess(0)
                 );
 
-            } else if (value instanceof TLSResolutionMode) {
+            } else if (value instanceof Boolean) {
 
-                map = getOpMap((FieldGetter<TLSResolutionMode>) f,
-                        Editor.TLSEditor::new,
-                        () -> Operation.newEquals(TLSResolutionMode.TLS)
+                map = getOpMap((FieldGetter<Boolean>) f,
+                        Editor.BooleanEditor::new,
+                        () -> Operation.newEquals(false)
                 );
 
             } else {
@@ -109,9 +108,9 @@ public class ServerFilterRule<E> {
         return rule.newEditable().setColor(color).setArg(arg).getRule();
     }
 
-    public static ServerFilterRule<TLSResolutionMode> newRule(FieldGetter.Names fieldName, Operation.Names opName,
-                                                   Color color, TLSResolutionMode arg) {
-        ServerFilterRule<TLSResolutionMode> rule = (ServerFilterRule<TLSResolutionMode>)from (fieldName, opName);
+    public static ServerFilterRule<Boolean> newRule(FieldGetter.Names fieldName, Operation.Names opName,
+                                                   Color color, boolean arg) {
+        ServerFilterRule<Boolean> rule = (ServerFilterRule<Boolean>)from (fieldName, opName);
         return rule.newEditable().setColor(color).setArg(arg).getRule();
     }
 
@@ -192,8 +191,8 @@ public class ServerFilterRule<E> {
             jsonArg = new JsonPrimitive((String) value);
         } else if (value instanceof Integer) {
             jsonArg = new JsonPrimitive((Integer)value);
-        } else if (value instanceof TLSResolutionMode) {
-            jsonArg = ConfigType.ENUM.toJson(value);
+        } else if (value instanceof Boolean) {
+            jsonArg = new JsonPrimitive((Boolean) value);
         } else {
             throw new IllegalStateException("Unknown argument type for field: " + field);
         }
@@ -222,9 +221,8 @@ public class ServerFilterRule<E> {
             ((ServerFilterRule.EditableServerFilterRule<String>)editableRule).setArg(jsonArg.getAsString());
         } else if (defaultValue instanceof Integer) {
             ((ServerFilterRule.EditableServerFilterRule<Integer>)editableRule).setArg(jsonArg.getAsInt());
-        } else if (defaultValue instanceof TLSResolutionMode) {
-            TLSResolutionMode tls = (TLSResolutionMode) ConfigType.ENUM.fromJson(jsonArg, TLSResolutionMode.TLS);
-            ((ServerFilterRule.EditableServerFilterRule<TLSResolutionMode>)editableRule).setArg(tls);
+        } else if (defaultValue instanceof Boolean) {
+            ((ServerFilterRule.EditableServerFilterRule<Boolean>)editableRule).setArg(jsonArg.getAsBoolean());
         } else {
             throw new IllegalStateException("Unknown argument type for field: " + rule.field);
         }

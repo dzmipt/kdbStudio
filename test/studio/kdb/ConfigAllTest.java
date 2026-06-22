@@ -138,13 +138,14 @@ public class ConfigAllTest {
         assertEquals(new Color(0xabcdef), colors.get(EditorColorToken.SELECTED));
         assertEquals(new Color(0x987654), colors.get(EditorColorToken.CURRENT_LINE_HIGHLIGHT));
         assertEquals(false, config.getBoolean(Config.ALIGN_RIGHT_NUMBERS_IN_RESULT));
-        assertEquals(TLSResolutionMode.TLS_TCP, config.getEnum(Config.DEFAULT_TLS_RESOLUTION));
 
+        assertFalse(config.getBoolean(Config.TRY_TLS_CONNECTION_FIRST));
+        assertFalse(config.getBoolean(Config.FAILOVER_BETWEEN_TLS_AND_TCP_CONNECTIONS));
 
         BgColorRules rules = new BgColorRules();
         rules.add(ServerFilterRule.newRule(FieldGetter.Names.port, Operation.Names.smaller, new Color(0x213243), 1111));
         rules.add(ServerFilterRule.newRule(FieldGetter.Names.fullName, Operation.Names.likes, new Color(0x999999), "test.*"));
-        rules.add(ServerFilterRule.newRule(FieldGetter.Names.tls, Operation.Names.equals, new Color(0xaaaaaa), TLSResolutionMode.TCP_TLS));
+        rules.add(ServerFilterRule.newRule(FieldGetter.Names.tls, Operation.Names.equals, new Color(0xaaaaaa), true));
 
         assertEquals(rules, config.getServerBgColorRules());
     }
