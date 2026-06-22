@@ -29,6 +29,6 @@ then
    TAG="v.$VERSION"
    if ! git rev-parse $TAG >/dev/null 2>&1
    then
-       git tag $TAG
+       git tag -a $TAG -m "Release $VERSION"
    fi
 fi
