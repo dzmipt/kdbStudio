@@ -145,6 +145,9 @@ def getGitRevNumber = { ->
 def buildFile = layout.buildDirectory.file("resources/build.txt")
 
 tasks.register('getBuildHash') {
+    inputs.property("buildTime", providers.provider { buildTime() })
+    inputs.property("gitRev", providers.provider { getGitRevNumber() })
+
     outputs.file(buildFile)
 
     doLast {
