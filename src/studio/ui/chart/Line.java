@@ -56,11 +56,15 @@ public class Line extends AbstractAnnotation implements XYAnnotation {
     private void refresh() {
         if (!init) return;
         XYPlot plot = chartPanel.getChart().getXYPlot();
-        double xMin = plot.getDomainAxis().getLowerBound();
-        double xMax = plot.getDomainAxis().getUpperBound();
+        ValueAxis domainAxis = plot.getDomainAxis();
+        ValueAxis rangeAxis = plot.getRangeAxis();
+        if (domainAxis == null || rangeAxis == null) return;
 
-        double yMin = plot.getRangeAxis().getLowerBound();
-        double yMax = plot.getRangeAxis().getUpperBound();
+        double xMin = domainAxis.getLowerBound();
+        double xMax = domainAxis.getUpperBound();
+
+        double yMin = rangeAxis.getLowerBound();
+        double yMax = rangeAxis.getUpperBound();
 
         Line2D.Double line = new Line2D.Double(p0.x, p0.y, p1.x, p1.y);
         double xLow = intersectHorizontal(line, yMin);
