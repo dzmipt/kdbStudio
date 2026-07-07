@@ -17,6 +17,7 @@ public class Server {
     private final QConnection conn;
     private final ServerTreeNode parent;
     private final boolean flipTLS;
+    private final boolean hideProtocol;
 
     public static final Server NO_SERVER = new Server("", "", 0, "", "", Color.WHITE, DefaultAuthenticationMechanism.NAME, false);
 
@@ -54,6 +55,7 @@ public class Server {
         boolean res =  s.name.equals(name)
                     && Objects.equals(s.conn, conn)
                     && s.flipTLS == flipTLS
+                    && Objects.equals(s.hideProtocol, hideProtocol)
                     && Objects.equals(s.authenticationMechanism ,authenticationMechanism);
 
         if (! res) return false;
@@ -85,6 +87,10 @@ public class Server {
     }
 
     public Server(String name, QConnection conn, String authMethod, Color bgColor, ServerTreeNode parent, boolean flipTLS) {
+        this(name, conn, authMethod, bgColor, parent, flipTLS, false);
+    }
+
+    public Server(String name, QConnection conn, String authMethod, Color bgColor, ServerTreeNode parent, boolean flipTLS, boolean hideProtocol) {
         if (parent != null && ! parent.isFolder()) throw new IllegalArgumentException("Parent ServerTreeNode can be folder only");
 
         this.name = name;
@@ -93,7 +99,9 @@ public class Server {
         this.authenticationMechanism = authMethod;
         this.parent = parent;
         this.flipTLS = flipTLS;
+        this.hideProtocol = hideProtocol;
     }
+
 
     public Server newName(String name) {
         if (this.name.equals(name)) return this;
@@ -110,6 +118,12 @@ public class Server {
         if (this.flipTLS == flipTLS) return this;
 
         return new Server(name, conn, authenticationMechanism, backgroundColor, parent, flipTLS);
+    }
+
+    public Server hideProtocol() {
+        if (this.hideProtocol) return this;
+
+        return new Server(name, conn, authenticationMechanism, backgroundColor, parent, flipTLS, true);
     }
 
     public String getName() {
@@ -144,6 +158,9 @@ public class Server {
     }
 
     public String getConnectionString() {
+        if (hideProtocol && conn.isUseTLS()) {
+            return conn.changeTLS(false).toString(false);
+        }
         return conn.toString(false);
     }
 
@@ -152,6 +169,9 @@ public class Server {
     }
 
     public String getConnectionStringWithPwd() {
+        if (hideProtocol && conn.isUseTLS()) {
+            return conn.changeTLS(false).toString();
+        }
         return conn.toString();
     }
 

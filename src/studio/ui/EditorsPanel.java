@@ -432,7 +432,10 @@ public class EditorsPanel extends JPanel {
 
         String serverFullname = tab.getServerFullName();
         if (serverFullname != null) {
-            return config.getServerConfig().getServer(serverFullname);
+            Server server = config.getServerConfig().getServer(serverFullname);
+            if (server != Server.NO_SERVER) {
+                return server;
+            }
         }
 
 

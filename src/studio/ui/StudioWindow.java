@@ -836,6 +836,32 @@ public class StudioWindow extends StudioFrame {
             }
         });
 
+        // Custom copy behavior: when all text is selected and user presses Copy (Cmd/Ctrl+C),
+        // copy the editor session connection string instead of the selected text.
+        KeyStroke copyKS = KeyStroke.getKeyStroke(KeyEvent.VK_C, Toolkit.getDefaultToolkit().getMenuShortcutKeyMaskEx());
+        txtServer.getInputMap(JComponent.WHEN_FOCUSED).put(copyKS, "server-custom-copy");
+        txtServer.getActionMap().put("server-custom-copy", new AbstractAction() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                String text = txtServer.getText();
+                if (text != null && txtServer.getSelectionStart() == 0 && txtServer.getSelectionEnd() == text.length()) {
+                    try {
+                        Util.copyTextToClipboard(editor.getConnectionString());
+                    } catch (Exception ex) {
+                        log.error("Failed to copy connection to clipboard", ex);
+                    }
+                } else {
+                    // fallback to normal copy behavior
+                    txtServer.copy();
+                }
+            }
+        });
+
+//        TransferHandler transferHandler = txtServer.getTransferHandler();
+//        txtServer.setTransferHandler(new TransferHandler() {
+//
+//        });
+
         refreshServerList();
         refreshServer();
 

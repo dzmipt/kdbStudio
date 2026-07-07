@@ -388,7 +388,8 @@ public class Config  {
     }
 
     public Server getServer(QConnection conn, String authMethod) {
-        if (!conn.isSpecifiedProtocol()) {
+        boolean specifiedProtocol = conn.isSpecifiedProtocol();
+        if (! specifiedProtocol) {
             if (getBoolean(Config.TRY_TLS_CONNECTION_FIRST)) {
                 conn = conn.changeTLS(true);
             }
@@ -399,6 +400,9 @@ public class Config  {
 
         if (getBoolean(Config.FAILOVER_BETWEEN_TLS_AND_TCP_CONNECTIONS)) {
             server = server.newFlipTLS(true);
+            if (!specifiedProtocol) {
+                server = server.hideProtocol();
+            }
         }
 
         return server;

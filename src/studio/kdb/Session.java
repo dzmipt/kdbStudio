@@ -143,7 +143,7 @@ public class Session implements ConnectionStateListener, KAuthentication {
             return connection.changeTLS(isTLS);
         }
 
-        return  connection;
+        return connection;
     }
 
     public void validate() {
