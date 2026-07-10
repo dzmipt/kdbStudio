@@ -832,7 +832,7 @@ public class StudioWindow extends StudioFrame {
         txtServer.addFocusListener(new FocusAdapter() {
             @Override
             public void focusLost(FocusEvent e) {
-                selectConnectionString();
+                SwingUtilities.invokeLater(() -> selectConnectionString());
             }
         });
 
