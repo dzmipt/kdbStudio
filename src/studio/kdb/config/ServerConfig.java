@@ -326,7 +326,10 @@ public class ServerConfig {
                 password = credentials.getPassword();
             }
 
-            conn = new QConnection(host, port, user, password, defaultUseTLS);
+            if (!parser.isSpecifiedProtocol()) {
+                useTLS = defaultUseTLS;
+            }
+            conn = new QConnection(host, port, user, password, useTLS);
             boolean flipTLS = Config.getInstance().getBoolean(Config.FAILOVER_BETWEEN_TLS_AND_TCP_CONNECTIONS);
             return new Server("", conn, auth, bgColor, null, flipTLS);
         }

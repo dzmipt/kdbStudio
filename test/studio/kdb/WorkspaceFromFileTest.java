@@ -18,6 +18,7 @@ import java.io.InputStreamReader;
 import java.util.Properties;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class WorkspaceFromFileTest {
 
@@ -145,22 +146,22 @@ public class WorkspaceFromFileTest {
         assertEquals(workspace, workspaceConverted);
     }
 
-//    @Test
-//    public void testLoadTCPConnection() {
-//        Workspace workspace = new Workspace();
-//        workspace.addWindow(true)
-//                .addTab(true)
-//                    .addServer("", "`:test:12", "Plain");
-//        JsonObject json = WorkspaceSaver.toJson(workspace);
-//
-//        Config.getInstance().setBoolean(Config.TRY_TLS_CONNECTION_FIRST, true);
-//        Config.getInstance().setBoolean(Config.FAILOVER_BETWEEN_TLS_AND_TCP_CONNECTIONS, true);
-//        workspace = WorkspaceSaver.fromJson(json);
-//
-//        Server server = workspace.getWindows()[0].getAllTabs()[0].getServer();
-//        assertEquals("`:test:12", server.getConnectionStringWithPwd());
-//        assertTrue(server.isFlipTLS());
-//
-//    }
+    @Test
+    public void testLoadTCPConnection() {
+        Workspace workspace = new Workspace();
+        workspace.addWindow(true)
+                .addTab(true)
+                    .addServer("", "`:test:12", "Plain");
+        JsonObject json = WorkspaceSaver.toJson(workspace);
+
+        Config.getInstance().setBoolean(Config.TRY_TLS_CONNECTION_FIRST, true);
+        Config.getInstance().setBoolean(Config.FAILOVER_BETWEEN_TLS_AND_TCP_CONNECTIONS, true);
+        workspace = WorkspaceSaver.fromJson(json);
+
+        Server server = workspace.getWindows()[0].getAllTabs()[0].getServer();
+        assertEquals("`:test:12", server.getConnectionStringWithPwd());
+        assertTrue(server.isFlipTLS());
+
+    }
 
 }
