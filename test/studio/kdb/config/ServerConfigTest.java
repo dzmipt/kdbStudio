@@ -2,6 +2,8 @@ package studio.kdb.config;
 
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
+import studio.core.Credentials;
+import studio.kdb.Config;
 import studio.kdb.Server;
 import studio.kdb.ServerTreeNode;
 import studio.utils.FileConfig;
@@ -80,26 +82,36 @@ public class ServerConfigTest {
 
     @Test
     public void testGetByQConnection() throws IOException {
+        Config.getInstance().setBoolean(Config.TRY_TLS_CONNECTION_FIRST, true);
         File file = File.createTempFile("serverConfig", "json");
         file.delete();
         ServerConfig config = new ServerConfig(new FileConfig(file.toPath()));
         assertEquals(0, config.getServers().length);
 
         QConnection conn = new QConnection("host", 1234, "uuser", "pwd",true);
-        Server aServer = config.getServer(conn, "auth");
+        Server aServer = config.lookup(conn, "auth");
         assertEquals("host", aServer.getHost());
         assertEquals(1234, aServer.getPort());
-        assertEquals("uuser", aServer.getUsername());
-        assertEquals("pwd", aServer.getPassword());
+        assertTrue(aServer.getUsername().isEmpty());
+        assertTrue(aServer.getPassword().isEmpty());
         assertTrue(aServer.getUseTLS());
         assertEquals("auth", aServer.getAuthenticationMechanism());
         assertEquals("", aServer.getName());
         assertEquals(Color.WHITE, aServer.getBackgroundColor());
 
 
+        Config.getInstance().setBoolean(Config.TRY_TLS_CONNECTION_FIRST, false);
+        aServer = config.lookup(conn, "auth");
+        assertFalse(aServer.getUseTLS());
+
+        Config.getInstance().setDefaultCredentials("auth", new Credentials("authUser", "authPassword"));
+        aServer = config.lookup(conn, "auth");
+        assertEquals("authUser", aServer.getUsername());
+        assertEquals("authPassword", aServer.getPassword());
+
         config.addServer(server);
         assertEquals(1, config.getServers().length);
-        aServer = config.getServer(conn, "auth");
+        aServer = config.lookup(conn, "auth");
         assertEquals(new Color(1,2,3), aServer.getBackgroundColor());
         assertEquals("name", aServer.getName());
 

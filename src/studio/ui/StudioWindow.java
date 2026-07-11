@@ -733,11 +733,12 @@ public class StudioWindow extends StudioFrame {
         Server server = editor.getServer();
         if (server != Server.NO_SERVER && editor.getConnectionString().equals(connection)) return;
 
-        try {
-            setServer(CONFIG.getServerByConnectionString(connection));
-            refreshServer();
-        } catch (IllegalArgumentException e) {
+        Server newServer = CONFIG.getServerConfig().lookup(connection);
+        if (newServer == Server.NO_SERVER) {
             refreshConnectionText();
+        } else {
+            setServer(newServer);
+            refreshServer();
         }
     }
 

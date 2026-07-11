@@ -263,7 +263,7 @@ public class Studio {
     private static void init(String[] args) {
         WindowFactory.init();
 
-        debugFocusTransfer();
+//        debugFocusTransfer();
         log.info("Start Studio with args {}", Arrays.asList(args));
         log.info("Process pid is {}", ProcessHandle.current().pid());
         initLF();

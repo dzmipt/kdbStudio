@@ -26,7 +26,7 @@ public class WorkspaceTest {
 
 
         w1.addTab(true)
-                .addServer(Config.getInstance().getServerByConnectionString("`:server.com:12345:user:password"))
+                .addServer(Config.getInstance().getServerConfig().lookup("`:server.com:12345:user:password"))
                 .addFilename("test.q");
 
         w2.addTab(false)

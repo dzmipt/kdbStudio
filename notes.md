@@ -1,8 +1,8 @@
 * Convert workspace.properties to json format
 * Adding rules for background color override based on server connection details
 * Adding bulk server modification dialog
-* Ability to fallback between TLS and tcp for anonymous connection
-* Setting for TLS mode for anonymous server connections
+* Ability to fallback between tcps and tcp for anonymous connection
+* Setting for use tcps by default for anonymous server connections
 * Adding an action to delete next/previous word (Ctrl (Command for MacOS) + delete/backspace )
 * Setting to align numbers and dates to the right in the result set
 * Adding JVM Memory widget

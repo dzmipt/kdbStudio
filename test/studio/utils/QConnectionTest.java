@@ -8,84 +8,84 @@ public class QConnectionTest {
 
     @Test
     public void testBasic() {
-        QConnection connection = new QConnection("`:server.some.domain:11");
+        QConnection connection = QConnection.get("`:server.some.domain:11");
         assertEquals("server.some.domain", connection.getHost());
         assertEquals(11, connection.getPort());
         assertEquals("", connection.getUser());
         assertEquals("", connection.getPassword());
 
-        assertEquals(connection, new QConnection(":server.some.domain:11"));
-        assertEquals(connection, new QConnection("server.some.domain:11"));
-        assertEquals(connection, new QConnection("`:server.some.domain:11:"));
-        assertEquals(connection, new QConnection("`:server.some.domain:11::"));
-        assertEquals(connection, new QConnection("  `:server.some.domain:11   "));
+        assertEquals(connection, QConnection.get(":server.some.domain:11"));
+        assertEquals(connection, QConnection.get("server.some.domain:11"));
+        assertEquals(connection, QConnection.get("`:server.some.domain:11:"));
+        assertEquals(connection, QConnection.get("`:server.some.domain:11::"));
+        assertEquals(connection, QConnection.get("  `:server.some.domain:11   "));
 
-        assertEquals(connection.changeTLS(true), new QConnection("`:tcps://server.some.domain:11::"));
+        assertEquals(connection.changeTLS(true), QConnection.get("`:tcps://server.some.domain:11::"));
     }
 
     @Test
     public void testNoHost() {
-        QConnection connection = new QConnection("::123");
+        QConnection connection = QConnection.get("::123");
         assertEquals("", connection.getHost());
         assertEquals(123, connection.getPort());
     }
 
     @Test
     public void testUserPassword() {
-        QConnection connection = new QConnection(":host:1:uu:p");
+        QConnection connection = QConnection.get(":host:1:uu:p");
         assertEquals("host", connection.getHost());
         assertEquals("uu", connection.getUser());
         assertEquals("p", connection.getPassword());
 
-        connection = new QConnection(":host:1::p");
+        connection = QConnection.get(":host:1::p");
         assertEquals("", connection.getUser());
         assertEquals("p", connection.getPassword());
 
-        connection = new QConnection(":host:1:uu:");
+        connection = QConnection.get(":host:1:uu:");
         assertEquals("uu", connection.getUser());
         assertEquals("", connection.getPassword());
 
-        connection = new QConnection(":host:1:uu");
+        connection = QConnection.get(":host:1:uu");
         assertEquals("uu", connection.getUser());
         assertEquals("", connection.getPassword());
 
-        connection = new QConnection(":host:1:uu:pp:bb");
+        connection = QConnection.get(":host:1:uu:pp:bb");
         assertEquals("uu", connection.getUser());
         assertEquals("pp:bb", connection.getPassword());
     }
 
     @Test
     public void testProtocol() {
-        QConnection connection = new QConnection(":tcps://host:1:uu:p");
+        QConnection connection = QConnection.get(":tcps://host:1:uu:p");
         assertTrue(connection.isUseTLS());
 
-        connection = new QConnection(":tcp://host:1:uu:p");
+        connection = QConnection.get(":tcp://host:1:uu:p");
         assertFalse(connection.isUseTLS());
     }
 
     @Test
     public void testErrors() {
         assertThrows(IllegalArgumentException.class, ()-> {
-            new QConnection(":something://host:1:uu:p");
+            QConnection.get(":something://host:1:uu:p");
         });
         assertThrows(IllegalArgumentException.class, ()-> {
-            new QConnection(":host:xx:uu:p");
+            QConnection.get(":host:xx:uu:p");
         });
         assertThrows(IllegalArgumentException.class, ()-> {
-            new QConnection(":host::uu:p");
+            QConnection.get(":host::uu:p");
         });
 
         assertThrows(IllegalArgumentException.class, ()-> {
-            new QConnection(":tcps://tcp://host:100");
+            QConnection.get(":tcps://tcp://host:100");
         });
 
     }
 
     @Test
     public void testSpecifiedProtocol() {
-        assertTrue(new QConnection("`:tcps://host:100").isSpecifiedProtocol());
-        assertTrue(new QConnection("`:tcp://host:100").isSpecifiedProtocol());
-        assertFalse(new QConnection("`:host:100").isSpecifiedProtocol());
+        assertTrue(new QConnection.Parser("`:tcps://host:100").isSpecifiedProtocol());
+        assertTrue(new QConnection.Parser("`:tcp://host:100").isSpecifiedProtocol());
+        assertFalse(new QConnection.Parser("`:host:100").isSpecifiedProtocol());
 
     }
 }

@@ -30,13 +30,13 @@ public class WorkspaceFromFileTest {
         MockConfig.mock();
         ServerTreeNode root = Config.getInstance().getServerTree();;
 
-        server1 = new Server("server1", new QConnection("`:tcps://serverHost1:2000:user:password"),
+        server1 = new Server("server1", QConnection.get("`:tcps://serverHost1:2000:user:password"),
                 "Plain", Color.BLACK, root);
-        server2 = new Server("server2", new QConnection("`:serverHost2:2000"),
+        server2 = new Server("server2", QConnection.get("`:serverHost2:2000"),
                 "Plain", Color.BLACK, root);
-        server3 = new Server("server3", new QConnection("`:serverHost2:1100"),
+        server3 = new Server("server3", QConnection.get("`:serverHost2:1100"),
                 "dzAuth", Color.BLACK, root);
-        server5 = new Server("server5", new QConnection("`:serverHost4:2100:user1:password1"),
+        server5 = new Server("server5", QConnection.get("`:serverHost4:2100:user1:password1"),
                 "Plain", Color.BLACK, root.add("folder"));
         Config.getInstance().getServerConfig().addServers(false, server1, server2, server3, server5);
     }
@@ -94,7 +94,7 @@ public class WorkspaceFromFileTest {
                 .addContent("rightDown")
                 .setLineEnding(LineEnding.MacOS9)
                 .setModified(true)
-                .addServer(new Server("", new QConnection("`:serverHost3:1300"),
+                .addServer(new Server("", QConnection.get("`:serverHost3:1300"),
                         "Plain", Color.BLACK));
 
 

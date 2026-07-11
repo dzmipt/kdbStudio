@@ -101,7 +101,7 @@ public class ServerTreeNodeSerializer implements JsonSerializer<ServerTreeNode>,
 
 
             return new ServerTreeNode(
-                    new QConnection(handle).toServer(name, authMethod, bgColor).newFlipTLS(flipTLS) );
+                    QConnection.get(handle).toServer(name, authMethod, bgColor).newFlipTLS(flipTLS) );
         }
     }
 

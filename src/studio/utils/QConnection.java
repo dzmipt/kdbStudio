@@ -13,66 +13,20 @@ public class QConnection {
     private final String user;
     private final String password;
     private final boolean useTLS;
-    private final boolean specifiedProtocol;
 
     private final static String TCPS_PREFIX = "tcps://";
     private final static String TCP_PREFIX = "tcp://";
 
-    private QConnection(String host, int port, String user, String password, boolean useTLS, boolean specifiedProtocol) {
+    public static QConnection get(String connectionString) throws IllegalArgumentException {
+        return new Parser(connectionString).getConnection();
+    }
+
+    public QConnection(String host, int port, String user, String password, boolean useTLS) {
         this.host = host;
         this.port = port;
         this.user = user;
         this.password = password;
         this.useTLS = useTLS;
-        this.specifiedProtocol = specifiedProtocol;
-    }
-
-    public QConnection(String host, int port, String user, String password, boolean useTLS) {
-        this(host, port, user, password, useTLS, true);
-    }
-
-    public QConnection(String connection) throws IllegalArgumentException {
-        connection = connection.trim();
-        if (connection.startsWith("`")) connection = connection.substring(1);
-        if (connection.startsWith(":")) connection = connection.substring(1);
-
-        useTLS = connection.startsWith(TCPS_PREFIX);
-        if (useTLS) {
-            connection = connection.substring(TCPS_PREFIX.length());
-            specifiedProtocol = true;
-        } else if (connection.startsWith(TCP_PREFIX)) {
-            connection = connection.substring(TCP_PREFIX.length());
-            specifiedProtocol = true;
-        } else {
-            specifiedProtocol = false;
-        }
-
-        int i0 = connection.indexOf(':');
-        if (i0 == -1) {
-            throw new IllegalArgumentException("Wrong format of connection string");
-        }
-        host = connection.substring(0, i0);
-
-        i0++;
-        int i1 = connection.indexOf(':', i0);
-        if (i1 == -1) i1 = connection.length();
-        try {
-            port = Integer.parseInt(connection.substring(i0, i1)); // could throw NumberFormatException
-        } catch (NumberFormatException e) {
-            throw new IllegalArgumentException(e);
-        }
-
-        if (i1 == connection.length()) {
-            user = "";
-            password = "";
-        } else {
-            i1++;
-            int i2 = connection.indexOf(':', i1);
-            if (i2 == -1) i2 = connection.length();
-
-            user = connection.substring(i1, i2);
-            password = i2 == connection.length() ? "" : connection.substring(i2+1);
-        }
     }
 
     public String getHost() {
@@ -93,10 +47,6 @@ public class QConnection {
 
     public boolean isUseTLS() {
         return useTLS;
-    }
-
-    public boolean isSpecifiedProtocol() {
-        return specifiedProtocol;
     }
 
     public Server toServer(String name, String authMethod, Color bgColor) {
@@ -127,7 +77,7 @@ public class QConnection {
     public QConnection changeTLS(boolean newUseTLS) {
         if (newUseTLS == this.useTLS) return this;
 
-        return new QConnection(host, port, user, password, newUseTLS, true);
+        return new QConnection(host, port, user, password, newUseTLS);
     }
 
     public QConnection changeUserPassword(Credentials credentials) {
@@ -137,7 +87,7 @@ public class QConnection {
     public QConnection changeUserPassword(String newUser, String newPassword) {
         if (Objects.equals(newUser, this.user) && Objects.equals(newPassword, this.password)) return this;
 
-        return new QConnection(host, port, newUser, newPassword, useTLS, specifiedProtocol);
+        return new QConnection(host, port, newUser, newPassword, useTLS);
     }
 
     @Override
@@ -151,5 +101,89 @@ public class QConnection {
     @Override
     public int hashCode() {
         return Objects.hash(host, port, user, password, useTLS);
+    }
+    
+    
+    public static class Parser {
+        private IllegalArgumentException error = null;
+        private QConnection connection = null;
+        private boolean specifiedProtocol = false;
+        private boolean specifiedUser = false;
+        private boolean specifiedPassword = false;
+
+        public Parser(QConnection connection) {
+            this.connection = connection;
+        }
+
+        public Parser(String connectionString) {
+            connectionString = connectionString.trim();
+            if (connectionString.startsWith("`")) connectionString = connectionString.substring(1);
+            if (connectionString.startsWith(":")) connectionString = connectionString.substring(1);
+
+            boolean useTLS = connectionString.startsWith(TCPS_PREFIX);
+            if (useTLS) {
+                connectionString = connectionString.substring(TCPS_PREFIX.length());
+                specifiedProtocol = true;
+            } else if (connectionString.startsWith(TCP_PREFIX)) {
+                connectionString = connectionString.substring(TCP_PREFIX.length());
+                specifiedProtocol = true;
+            }
+
+            int i0 = connectionString.indexOf(':');
+            if (i0 == -1) {
+                error = new IllegalArgumentException("Wrong format of connectionString string");
+                return;
+            }
+            String host = connectionString.substring(0, i0);
+
+            i0++;
+            int i1 = connectionString.indexOf(':', i0);
+            if (i1 == -1) i1 = connectionString.length();
+            int port;
+            try {
+                port = Integer.parseInt(connectionString.substring(i0, i1)); // could throw NumberFormatException
+            } catch (NumberFormatException e) {
+                error = new IllegalArgumentException("Port must be an integer", e);
+                return;
+            }
+
+            String user = "";
+            String password = "";
+            if (i1 < connectionString.length()) {
+                specifiedUser = true;
+                String credentialsPart = connectionString.substring(i1 + 1);
+                int credSeparatorIndex = credentialsPart.indexOf(':');
+                if (credSeparatorIndex != -1) {
+                    specifiedPassword = true;
+                    user = credentialsPart.substring(0, credSeparatorIndex);
+                    password = credentialsPart.substring(credSeparatorIndex + 1);
+                } else {
+                    user = credentialsPart;
+                }
+            }
+
+            this.connection = new QConnection(host, port, user, password, useTLS);
+        }
+
+        public QConnection getConnection() throws IllegalArgumentException {
+            if (error != null) throw error;
+            return connection;
+        }
+
+        public boolean hasError() {
+            return error != null;
+        }
+
+        public boolean isSpecifiedProtocol() {
+            return specifiedProtocol;
+        }
+
+        public boolean isSpecifiedUser() {
+            return specifiedUser;
+        }
+
+        public boolean isSpecifiedPassword() {
+            return specifiedPassword;
+        }
     }
 }

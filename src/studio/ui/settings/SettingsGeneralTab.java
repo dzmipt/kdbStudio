@@ -70,10 +70,10 @@ public class SettingsGeneralTab extends SettingsTab {
         JLabel lblUser = new JLabel("  User:");
         JLabel lblPassword = new JLabel("  Password:");
 
-        chBoxFailoverTLSConnection = new JCheckBox("Try TLS and non-TLS for anonymous connections");
+        chBoxFailoverTLSConnection = new JCheckBox("Failover between tcp and tcps for anonymous connections");
         chBoxFailoverTLSConnection.setSelected(CONFIG.getBoolean(Config.FAILOVER_BETWEEN_TLS_AND_TCP_CONNECTIONS));
 
-        chBoxTryTLSConnectionFirst = new JCheckBox("Try TLS Connection first for anonymous connections");
+        chBoxTryTLSConnectionFirst = new JCheckBox("Try tcps connection first for anonymous connections");
         chBoxTryTLSConnectionFirst.setSelected(CONFIG.getBoolean(Config.TRY_TLS_CONNECTION_FIRST));
 
         GroupLayoutSimple layout = new GroupLayoutSimple(this);

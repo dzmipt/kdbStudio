@@ -1,5 +1,7 @@
 package studio.ui.grid;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.fife.ui.rtextarea.SearchContext;
 import studio.kdb.*;
 import studio.ui.*;
@@ -35,6 +37,8 @@ public class ResultGrid extends JPanel implements MouseWheelListener, SearchPane
     private final TableUserAction inspectCellAction;
 
     private long doubleClickTimeout;
+
+    private final static Logger log = LogManager.getLogger();
 
     public void setFormatContext(KFormatContext formatContext) {
         table.setFormatContext(formatContext);
@@ -254,13 +258,15 @@ public class ResultGrid extends JPanel implements MouseWheelListener, SearchPane
             boolean currentTab = Config.getInstance().getBoolean(Config.SERVER_FROM_RESULT_IN_CURRENT);
             newPopupMenu = new JPopupMenu();
             for (String connection : connections) {
-                Server server = Config.getInstance().getServerByConnectionString(connection);
+                Server server = Config.getInstance().getServerConfig().lookup(connection);
+                if (server == Server.NO_SERVER) continue;
+
                 String name = server.getName().isEmpty() ? connection : server.getName();
                 Action action;
                 if (currentTab) {
                     action = UserAction.create("Open " + connection,
                             "Open " + name + " in the current tab", 0,
-                            e -> studioWindow.setServer(server) );
+                            e -> studioWindow.setServer(server));
                 } else {
                     action = UserAction.create("Open " + connection,
                             "Open " + name + " in a new tab", 0,
@@ -268,18 +274,22 @@ public class ResultGrid extends JPanel implements MouseWheelListener, SearchPane
                 }
                 newPopupMenu.add(action);
             }
-            newPopupMenu.add(new JSeparator());
+            if (newPopupMenu.getComponentCount() == 0) {
+                newPopupMenu = popupMenu;
+            } else {
+                newPopupMenu.add(new JSeparator());
 
-            for (Component component: popupMenu.getComponents()) {
-                if (component instanceof JSeparator) newPopupMenu.addSeparator();
-                if (component instanceof JMenuItem) {
-                    Action action = ((JMenuItem) component).getAction();
-                    if (action != null) newPopupMenu.add(action);
+                for (Component component : popupMenu.getComponents()) {
+                    if (component instanceof JSeparator) newPopupMenu.addSeparator();
+                    if (component instanceof JMenuItem) {
+                        Action action = ((JMenuItem) component).getAction();
+                        if (action != null) newPopupMenu.add(action);
+                    }
                 }
             }
         }
 
-        for (Component component: popupMenu.getComponents()) {
+        for (Component component: newPopupMenu.getComponents()) {
             if (component instanceof JMenuItem) {
                 Action action = ((JMenuItem) component).getAction();
                 if (action instanceof TableUserAction) {

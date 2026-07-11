@@ -11,6 +11,7 @@ import studio.core.Credentials;
 import studio.core.DefaultAuthenticationMechanism;
 import studio.kdb.config.ActionOnExit;
 import studio.kdb.config.ExecAllOption;
+import studio.kdb.config.ServerConfig;
 import studio.utils.HistoricalList;
 import studio.utils.MockConfig;
 import studio.utils.QConnection;
@@ -29,6 +30,7 @@ import static org.junit.jupiter.api.Assertions.*;
 public class ConfigTest {
 
     private Config config;
+    private ServerConfig serverConfig;
     private Server server;
 
     @BeforeAll
@@ -42,6 +44,8 @@ public class ConfigTest {
 
         config = Config.getInstance();
         ((MockConfig)config).reload();
+        serverConfig = config.getServerConfig();
+
         config.setDefaultAuthMechanism("testAuth");
         config.setDefaultCredentials("testAuth", new Credentials("testUser", "testPassword"));
         config.setBoolean(Config.TRY_TLS_CONNECTION_FIRST, false);
@@ -219,37 +223,37 @@ public class ConfigTest {
     @Test
     public void testGetServerByConnectionString() {
         config.getServerConfig().addServer(server);
-        Server aServer = config.getServerByConnectionString("host:123");
+        Server aServer = serverConfig.lookup("host:123");
         assertEquals("host", aServer.getHost());
         assertEquals(123, aServer.getPort());
         assertEquals("testAuth", aServer.getAuthenticationMechanism());
         assertEquals("testUser", aServer.getUsername());
         assertEquals("testPassword", aServer.getPassword());
 
-        aServer = config.getServerByConnectionString("host:123:testUser:testPassword");
+        aServer = serverConfig.lookup("host:123:testUser:testPassword");
         assertEquals(DefaultAuthenticationMechanism.NAME, aServer.getAuthenticationMechanism());
 
-        aServer = config.getServerByConnectionString("host:123:uu:pp");
+        aServer = serverConfig.lookup("host:123:uu:pp");
         assertEquals(DefaultAuthenticationMechanism.NAME, aServer.getAuthenticationMechanism());
         assertEquals("uu", aServer.getUsername());
         assertEquals("pp", aServer.getPassword());
 
-        aServer = config.getServerByConnectionString("host:123:uu");
+        aServer = serverConfig.lookup("host:123:uu");
         assertEquals(DefaultAuthenticationMechanism.NAME, aServer.getAuthenticationMechanism());
         assertEquals("uu", aServer.getUsername());
         assertEquals("", aServer.getPassword());
 
-        aServer = config.getServerByConnectionString("host:123:uu:");
+        aServer = serverConfig.lookup("host:123:uu:");
         assertEquals(DefaultAuthenticationMechanism.NAME, aServer.getAuthenticationMechanism());
         assertEquals("uu", aServer.getUsername());
         assertEquals("", aServer.getPassword());
 
-        aServer = config.getServerByConnectionString("host:123:uu:pp:pp1:");
+        aServer = serverConfig.lookup("host:123:uu:pp:pp1:");
         assertEquals(DefaultAuthenticationMechanism.NAME, aServer.getAuthenticationMechanism());
         assertEquals("uu", aServer.getUsername());
         assertEquals("pp:pp1:", aServer.getPassword());
 
-        aServer = config.getServerByConnectionString("host:123:uu::pp:pp1:");
+        aServer = serverConfig.lookup("host:123:uu::pp:pp1:");
         assertEquals(DefaultAuthenticationMechanism.NAME, aServer.getAuthenticationMechanism());
         assertEquals("uu", aServer.getUsername());
         assertEquals(":pp:pp1:", aServer.getPassword());
@@ -258,16 +262,15 @@ public class ConfigTest {
     @Test
     public void testGetServerByNewAuthMethod() {
         config.getServerConfig().addServer(server);
-
-        Server aServer = config.getServerByNewAuthMethod(new QConnection("localhost:1111:user:pwd"), "testAuth");
+        Server aServer = serverConfig.lookup("localhost:1111:user:pwd", "testAuth");
         assertEquals("testUser", aServer.getUsername());
         assertEquals("testPassword", aServer.getPassword());
         assertEquals("", aServer.getName());
         assertEquals("testAuth", aServer.getAuthenticationMechanism());
 
-        aServer = config.getServerByNewAuthMethod(new QConnection("localhost:1111:user:p123"), DefaultAuthenticationMechanism.NAME);
-        assertEquals("", aServer.getUsername());
-        assertEquals("", aServer.getPassword());
+        aServer = serverConfig.lookup("localhost:1111:user:p123", DefaultAuthenticationMechanism.NAME);
+        assertEquals("user", aServer.getUsername());
+        assertEquals("p123", aServer.getPassword());
         assertEquals("", aServer.getName());
         assertEquals(DefaultAuthenticationMechanism.NAME, aServer.getAuthenticationMechanism());
     }
@@ -275,41 +278,40 @@ public class ConfigTest {
     @Test
     public void testGetServer() {
         config.getServerConfig().addServer(server);
-
-        Server aServer = config.getServer(new QConnection("localhost:1111:user:password"),  DefaultAuthenticationMechanism.NAME);
+        Server aServer = serverConfig.lookup("localhost:1111:user:password",  DefaultAuthenticationMechanism.NAME);
         assertEquals("user", aServer.getUsername());
         assertEquals("password", aServer.getPassword());
         assertEquals("", aServer.getName());
         assertEquals(DefaultAuthenticationMechanism.NAME, aServer.getAuthenticationMechanism());
 
-        aServer = config.getServer(new QConnection("localhost:1111:user:pwd"),  DefaultAuthenticationMechanism.NAME);
+        aServer = serverConfig.lookup("localhost:1111:user:pwd",  DefaultAuthenticationMechanism.NAME);
         assertEquals("user", aServer.getUsername());
         assertEquals("pwd", aServer.getPassword());
         assertEquals("testServer", aServer.getName());
         assertEquals(DefaultAuthenticationMechanism.NAME, aServer.getAuthenticationMechanism());
 
-        aServer = config.getServer(new QConnection("localhost:1111:user:p123"),  DefaultAuthenticationMechanism.NAME);
+        aServer = serverConfig.lookup("localhost:1111:user:p123",  DefaultAuthenticationMechanism.NAME);
         assertEquals("user", aServer.getUsername());
         assertEquals("p123", aServer.getPassword());
         assertEquals("", aServer.getName());
         assertEquals(DefaultAuthenticationMechanism.NAME, aServer.getAuthenticationMechanism());
 
-
-        aServer = config.getServer(new QConnection("localhost:1111:user:p123"), "testAuth");
-        assertEquals("user", aServer.getUsername());
-        assertEquals("p123", aServer.getPassword());
+        config.setDefaultCredentials("testAuth", new Credentials("someUser", "somePassword"));
+        aServer = serverConfig.lookup("localhost:1111:user:p123", "testAuth");
+        assertEquals("someUser", aServer.getUsername());
+        assertEquals("somePassword", aServer.getPassword());
         assertEquals("", aServer.getName());
         assertEquals("testAuth", aServer.getAuthenticationMechanism());
 
-        aServer = config.getServer(new QConnection("localhost:1111:testUser:p123"), "testAuth");
-        assertEquals("testUser", aServer.getUsername());
-        assertEquals("p123", aServer.getPassword());
+        aServer = serverConfig.lookup("localhost:1111:testUser:p123", "testAuth");
+        assertEquals("someUser", aServer.getUsername());
+        assertEquals("somePassword", aServer.getPassword());
         assertEquals("", aServer.getName());
         assertEquals("testAuth", aServer.getAuthenticationMechanism());
 
-        aServer = config.getServer(new QConnection("localhost:1111:testUser:testPassword"), "testAuth");
-        assertEquals("testUser", aServer.getUsername());
-        assertEquals("testPassword", aServer.getPassword());
+        aServer = serverConfig.lookup("localhost:1111:testUser:testPassword", "testAuth");
+        assertEquals("someUser", aServer.getUsername());
+        assertEquals("somePassword", aServer.getPassword());
         assertEquals("", aServer.getName());
         assertEquals("testAuth", aServer.getAuthenticationMechanism());
     }
@@ -318,33 +320,34 @@ public class ConfigTest {
     @Test
     public void getServerTest() {
         Color color = new Color(102, 103,104);
-        Server s1 = new Server("name1", new QConnection("host:100"), "auth1", color);
-        Server s2 = new Server("name2", new QConnection("host:100"), "auth2", color);
-        Server s3 = new Server("name3", new QConnection("tcps://host:100"), "auth1", color);
+        Server s1 = new Server("name1", QConnection.get("host:100"), "auth1", color);
+        Server s2 = new Server("name2", QConnection.get("host:100"), "auth2", color);
+        Server s3 = new Server("name3", QConnection.get("tcps://host:100"), "auth1", color);
         config.getServerConfig().addServers(false, s1, s2, s3);
 
-        assertEquals(s1, config.getServer(new QConnection("host:100"), "auth1"));
-        assertEquals(s2, config.getServer(new QConnection("host:100"), "auth2"));
-        assertEquals(s2, config.getServer(new QConnection("tcp://host:100"), "auth2"));
-        assertEquals(s3, config.getServer(new QConnection("tcps://host:100"), "auth1"));
-        assertEquals("", config.getServer(new QConnection("tcps://host:100"), "auth2").getName());
+
+        assertEquals(s1, serverConfig.lookup("host:100", "auth1"));
+        assertEquals(s2, serverConfig.lookup("host:100", "auth2"));
+        assertEquals(s2, serverConfig.lookup("tcp://host:100", "auth2"));
+        assertEquals(s3, serverConfig.lookup("tcps://host:100", "auth1"));
+        assertEquals("", serverConfig.lookup("tcps://host:100", "auth2").getName());
 
 
         config.setBoolean(Config.TRY_TLS_CONNECTION_FIRST, true);
-        assertEquals(s3, config.getServer(new QConnection("host:100"), "auth1"));
-        Server s = config.getServer(new QConnection("host:100"), "auth2");
-        assertEquals("", s.getName());
-        assertTrue(s.getUseTLS());
-        assertEquals(s2, config.getServer(new QConnection("tcp://host:100"), "auth2"));
-        assertEquals(s3, config.getServer(new QConnection("tcps://host:100"), "auth1"));
+        assertEquals(s3, serverConfig.lookup("host:100", "auth1"));
+        Server s = serverConfig.lookup("host:100", "auth2");
+        assertEquals(s2, s);
+        assertFalse(s.getUseTLS());
+        assertEquals(s2, serverConfig.lookup("tcp://host:100", "auth2"));
+        assertEquals(s3, serverConfig.lookup("tcps://host:100", "auth1"));
 
 
         config.setBoolean(Config.FAILOVER_BETWEEN_TLS_AND_TCP_CONNECTIONS, true);
-        assertEquals(s3, config.getServer(new QConnection("host:100"), "auth1"));
-        assertEquals(s1, config.getServer(new QConnection("tcp://host:100"), "auth1"));
+        assertEquals(s3, serverConfig.lookup("host:100", "auth1"));
+        assertEquals(s1, serverConfig.lookup("tcp://host:100", "auth1"));
 
 
-        s = config.getServer(new QConnection("host:1000"), "auth1");
+        s = serverConfig.lookup("host:1000", "auth1");
         assertTrue(s.getUseTLS());
         assertTrue(s.isFlipTLS());
         assertEquals("", s.getName());

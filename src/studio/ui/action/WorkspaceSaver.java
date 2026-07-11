@@ -11,7 +11,6 @@ import studio.kdb.Workspace;
 import studio.kdb.config.ConfigType;
 import studio.ui.StudioWindow;
 import studio.utils.LineEnding;
-import studio.utils.QConnection;
 
 import javax.swing.*;
 import java.awt.*;
@@ -166,7 +165,7 @@ public class WorkspaceSaver {
             auth = json.get(SERVER_AUTH).getAsString();
         }
 
-        Server server = Config.getInstance().getServerConfig().getServer(new QConnection(serverConnection), auth);
+        Server server = Config.getInstance().getServerConfig().lookup(serverConnection, auth);
         tab.addServer(server);
     }
 

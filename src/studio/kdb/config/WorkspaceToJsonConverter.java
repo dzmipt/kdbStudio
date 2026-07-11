@@ -112,7 +112,7 @@ public class WorkspaceToJsonConverter {
                 .setModified(modified);
 
         if (serverConnection == null) return;
-        QConnection conn = new QConnection(serverConnection);
+        QConnection conn = QConnection.get(serverConnection);
 
         if (serverAuth == null) {
             serverAuth = Config.getInstance().getDefaultAuthMechanism();

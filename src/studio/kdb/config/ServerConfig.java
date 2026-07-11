@@ -2,6 +2,7 @@ package studio.kdb.config;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import studio.core.Credentials;
 import studio.core.DefaultAuthenticationMechanism;
 import studio.kdb.Config;
 import studio.kdb.Server;
@@ -266,26 +267,79 @@ public class ServerConfig {
         return Server.NO_SERVER;
     }
 
-    public Server getServer(QConnection conn, String auth) {
+    public Server lookup(QConnection connection, String auth) {
+        return lookup(new QConnection.Parser(connection), auth);
+    }
+
+    public Server lookup(String connectionString) {
+        return lookup(connectionString, null);
+    }
+
+    public Server lookup(String connectionString, String auth) {
+        QConnection.Parser parser = new QConnection.Parser(connectionString);
+        if (parser.hasError()) return Server.NO_SERVER;
+
+        return lookup(parser, auth);
+    }
+
+    private Server lookup(QConnection.Parser parser, String auth) {
+        QConnection conn = parser.getConnection();
         String host = conn.getHost();
         int port = conn.getPort();
+
         String user = conn.getUser();
         String password = conn.getPassword();
         boolean useTLS = conn.isUseTLS();
 
+        String defaultAuthMechanism = Config.getInstance().getDefaultAuthMechanism();
+        boolean defaultUseTLS = Config.getInstance().getBoolean(Config.TRY_TLS_CONNECTION_FIRST);
+
+        Map<Server, Integer> list = new LinkedHashMap<>();
         for (Server s: servers.values()) {
-            if (s.getHost().equals(host) &&
-                    s.getPort() == port &&
-                    s.getUsername().equals(user) &&
-                    s.getPassword().equals(password) &&
-                    s.getUseTLS() == useTLS &&
-                    s.getAuthenticationMechanism().equals(auth)) {
-                return s;
+            if (s.getHost().equals(host) && s.getPort() == port) {
+                if (parser.isSpecifiedProtocol() && s.getUseTLS() != useTLS) continue;
+                if (parser.isSpecifiedUser() && !s.getUsername().equals(user)) continue;
+                if (parser.isSpecifiedPassword() && !s.getPassword().equals(password)) continue;
+                if (auth != null && !auth.equals(s.getAuthenticationMechanism())) continue;
+
+                int weight = 0;
+                if (s.getAuthenticationMechanism().equals(defaultAuthMechanism)) weight = 2;
+                if (s.getUseTLS() == defaultUseTLS) weight += 1;
+                list.put(s, weight);
             }
         }
 
-        Color bgColor = Config.getInstance().getBackgroundColor();
-        return new Server("", host, port, user, password, bgColor, auth, useTLS);
+        if (list.size() == 1) return list.keySet().iterator().next();
+
+        if (list.isEmpty()) {
+            Color bgColor = Config.getInstance().getBackgroundColor();
+            if (auth == null) {
+                if (parser.isSpecifiedUser()) {
+                    auth = DefaultAuthenticationMechanism.NAME;
+                } else {
+                    auth = defaultAuthMechanism;
+                }
+            }
+            if (! parser.isSpecifiedUser() || ! auth.equals(DefaultAuthenticationMechanism.NAME)) {
+                Credentials credentials = Config.getInstance().getDefaultCredentials(auth);
+                user = credentials.getUsername();
+                password = credentials.getPassword();
+            }
+
+            conn = new QConnection(host, port, user, password, defaultUseTLS);
+            boolean flipTLS = Config.getInstance().getBoolean(Config.FAILOVER_BETWEEN_TLS_AND_TCP_CONNECTIONS);
+            return new Server("", conn, auth, bgColor, null, flipTLS);
+        }
+
+        int maxWeight = -1;
+        Server bestServer = null;
+        for(Server server: list.keySet()) {
+            if (list.get(server) > maxWeight) {
+                maxWeight = list.get(server);
+                bestServer = server;
+            }
+        }
+        return bestServer;
     }
 
 

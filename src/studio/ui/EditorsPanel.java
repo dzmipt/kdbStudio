@@ -10,7 +10,6 @@ import studio.ui.dndtabbedpane.SelectedTabDecoration;
 import studio.ui.rstextarea.StudioRSyntaxTextArea;
 import studio.utils.Content;
 import studio.utils.FileReaderWriter;
-import studio.utils.QConnection;
 
 import javax.swing.*;
 import javax.swing.event.DocumentEvent;
@@ -444,10 +443,10 @@ public class EditorsPanel extends JPanel {
         if (auth == null) {
             auth = config.getDefaultAuthMechanism();
         }
-
         if (connectionString == null) return Server.NO_SERVER.newAuthMethod(auth);
 
-        return config.getServer(new QConnection(connectionString), auth);
+
+        return config.getServerConfig().lookup(connectionString, auth);
     }
 
     private EditorTab getEditorTab(int index) {

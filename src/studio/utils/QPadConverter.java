@@ -36,7 +36,7 @@ public class QPadConverter {
                                             Credentials defaultCredentials) {
         try {
             String auth;
-            QConnection conn = new QConnection(connectionString);
+            QConnection conn = QConnection.get(connectionString);
             String password = conn.getPassword();
             int index = password.indexOf('?');
             if (index >=0) {

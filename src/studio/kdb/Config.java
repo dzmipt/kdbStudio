@@ -13,7 +13,10 @@ import studio.kdb.config.server.BgColorRules;
 import studio.ui.Util;
 import studio.ui.action.WorkspaceSaver;
 import studio.ui.settings.StrokeStyleEditor;
-import studio.utils.*;
+import studio.utils.FileConfig;
+import studio.utils.FilesBackup;
+import studio.utils.HistoricalList;
+import studio.utils.LineEnding;
 import studio.utils.log4j.EnvConfig;
 
 import javax.swing.*;
@@ -96,7 +99,7 @@ public class Config  {
 
     public static final String ALIGN_RIGHT_NUMBERS_IN_RESULT = configDefault("alignNumbersInResult", ConfigType.BOOLEAN, true);
     public static final String FAILOVER_BETWEEN_TLS_AND_TCP_CONNECTIONS = configDefault("failoverBetweenTLSandTCPConnections", ConfigType.BOOLEAN, true);
-    public static final String TRY_TLS_CONNECTION_FIRST = configDefault("tryTLSConnectionFirst", ConfigType.BOOLEAN, true);
+    public static final String TRY_TLS_CONNECTION_FIRST = configDefault("tryTLSConnectionFirst", ConfigType.BOOLEAN, false);
 
     public static final String BG_COLOR_RULES = configDefault("serverBgColorRules", ConfigType.BG_COLOR_RULES, new BgColorRules());
 
@@ -369,48 +372,6 @@ public class Config  {
 
     public void setServerHistoryConfig(ServerHistoryConfig serverHistoryConfig) {
         studioConfig.set(Config.SERVER_HISTORY, serverHistoryConfig);
-    }
-
-
-    // Resolve or create a new server by connection string.
-    // Accept possible various connectionString such as:
-    // `:host:port:user:password
-    // host:port
-    // If user and password are not found, defaults form default AuthenticationMechanism are used
-    public Server getServerByConnectionString(String connectionString) {
-        QConnection conn = new QConnection(connectionString);
-        String authMethod = DefaultAuthenticationMechanism.NAME;
-        if (conn.getUser().isEmpty() && conn.getPassword().isEmpty()) {
-            authMethod = getDefaultAuthMechanism();
-            conn = conn.changeUserPassword(getDefaultCredentials(authMethod));
-        }
-        return getServer(conn, authMethod);
-    }
-
-    public Server getServer(QConnection conn, String authMethod) {
-        boolean specifiedProtocol = conn.isSpecifiedProtocol();
-        if (! specifiedProtocol) {
-            if (getBoolean(Config.TRY_TLS_CONNECTION_FIRST)) {
-                conn = conn.changeTLS(true);
-            }
-        }
-
-        Server server = serverConfig.getServer(conn, authMethod);
-        if (! server.getName().isEmpty()) return server;
-
-        if (getBoolean(Config.FAILOVER_BETWEEN_TLS_AND_TCP_CONNECTIONS)) {
-            server = server.newFlipTLS(true);
-            if (!specifiedProtocol) {
-                server = server.hideProtocol();
-            }
-        }
-
-        return server;
-    }
-
-    public Server getServerByNewAuthMethod(QConnection conn, String authMethod) {
-        conn = conn.changeUserPassword(getDefaultCredentials(authMethod));
-        return serverConfig.getServer(conn, authMethod);
     }
 
     public Object getDefault(String key) {
