@@ -85,7 +85,8 @@ public class SettingsGeneralTab extends SettingsTab {
                         .addLineAndGlue(chBoxSessionReuse)
                         .addLineAndGlue(lblKdbMessageSize, txtKdbMessageSizeLimit, lblKdbMessageSizeSuffix, comboBoxKdbMessageSizeAction)
                         .addLine(lblAuthMechanism, comboBoxAuthMechanism, lblUser, txtUser, lblPassword, txtPassword)
-                        .addLineAndGlue(chBoxFailoverTLSConnection, chBoxTryTLSConnectionFirst)
+                        .addLineAndGlue(chBoxFailoverTLSConnection)
+                        .addLineAndGlue(chBoxTryTLSConnectionFirst)
         );
 
     }
