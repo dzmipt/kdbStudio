@@ -178,6 +178,10 @@ public class QConnection {
             return specifiedProtocol;
         }
 
+        public void setSpecifiedProtocol(boolean specifiedProtocol) {
+            this.specifiedProtocol = specifiedProtocol;
+        }
+
         public boolean isSpecifiedUser() {
             return specifiedUser;
         }

@@ -406,7 +406,7 @@ public class EditorsPanel extends JPanel {
         for (Workspace.Tab tab: tabs) {
             try {
                 Content content = Content.newContent(tab.getContent(), tab.getLineEnding());
-                EditorTab editor = addTab(getServer(tab));
+                EditorTab editor = addTab(tab.getServer());
                 editor.setFilename(tab.getFilename());
                 editor.init(content);
                 editor.setModified(tab.isModified());
@@ -425,28 +425,6 @@ public class EditorsPanel extends JPanel {
             tabbedEditors.setSelectedIndex(selectedIndex);
         }
 
-    }
-    private static Server getServer(Workspace.Tab tab) {
-        Config config = Config.getInstance();
-
-        String serverFullname = tab.getServerFullName();
-        if (serverFullname != null) {
-            Server server = config.getServerConfig().getServer(serverFullname);
-            if (server != Server.NO_SERVER) {
-                return server;
-            }
-        }
-
-
-        String connectionString = tab.getServerConnection();
-        String auth = tab.getServerAuth();
-        if (auth == null) {
-            auth = config.getDefaultAuthMechanism();
-        }
-        if (connectionString == null) return Server.NO_SERVER.newAuthMethod(auth);
-
-
-        return config.getServerConfig().lookup(connectionString, auth);
     }
 
     private EditorTab getEditorTab(int index) {

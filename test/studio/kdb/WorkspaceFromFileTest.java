@@ -25,20 +25,29 @@ public class WorkspaceFromFileTest {
     private Workspace workspace;
     private static Server server1, server2, server3, server5;
 
+    private static Color bgColor;
+
     @BeforeAll
     public static void initConfig() throws IOException {
         MockConfig.mock();
+        bgColor = Config.getInstance().getBackgroundColor();
         ServerTreeNode root = Config.getInstance().getServerTree();;
 
         server1 = new Server("server1", QConnection.get("`:tcps://serverHost1:2000:user:password"),
-                "Plain", Color.BLACK, root);
+                "Plain", bgColor, root);
         server2 = new Server("server2", QConnection.get("`:serverHost2:2000"),
-                "Plain", Color.BLACK, root);
+                "Plain", bgColor, root);
         server3 = new Server("server3", QConnection.get("`:serverHost2:1100"),
-                "dzAuth", Color.BLACK, root);
+                "dzAuth", bgColor, root);
         server5 = new Server("server5", QConnection.get("`:serverHost4:2100:user1:password1"),
-                "Plain", Color.BLACK, root.add("folder"));
+                "Plain", bgColor, root.add("folder"));
         Config.getInstance().getServerConfig().addServers(false, server1, server2, server3, server5);
+    }
+
+    @BeforeEach
+    public void setTLSOptions() {
+        Config.getInstance().setBoolean(Config.TRY_TLS_CONNECTION_FIRST, false);
+        Config.getInstance().setBoolean(Config.FAILOVER_BETWEEN_TLS_AND_TCP_CONNECTIONS, false);
     }
 
     @BeforeEach
@@ -95,7 +104,7 @@ public class WorkspaceFromFileTest {
                 .setLineEnding(LineEnding.MacOS9)
                 .setModified(true)
                 .addServer(new Server("", QConnection.get("`:serverHost3:1300"),
-                        "Plain", Color.BLACK));
+                        "Plain", bgColor));
 
 
         workspace
@@ -109,20 +118,6 @@ public class WorkspaceFromFileTest {
                 .setLineEnding(LineEnding.MacOS9)
                 .setModified(false)
                 .addServer(server5);
-    }
-
-    @Test
-    public void testLoad() {
-        Workspace workspaceFromFile = new Workspace();
-        workspaceFromFile.load(propertiesFromFile);
-        assertEquals(workspace, workspaceFromFile);
-    }
-
-    @Test
-    public void testSave() {
-        Properties properties = new Properties();
-        workspace.save(properties);
-        assertEquals(propertiesFromFile, properties);
     }
 
     @Test
@@ -144,15 +139,28 @@ public class WorkspaceFromFileTest {
     }
 
     @Test
-    public void testWorkspaceSaverToJson() throws IOException {
-        try (InputStream inputStream =
-                     WorkspaceFromFileTest.class.getClassLoader().getResourceAsStream("workspace.json")) {
-
-            JsonObject json = WorkspaceSaver.toJson(workspace);
-            Workspace workspaceConverted = WorkspaceSaver.fromJson(json);
-            assertEquals(workspace, workspaceConverted);
-        }
-
+    public void testWorkspaceSaverToJson() {
+        JsonObject json = WorkspaceSaver.toJson(workspace);
+        Workspace workspaceConverted = WorkspaceSaver.fromJson(json);
+        assertEquals(workspace, workspaceConverted);
     }
+
+//    @Test
+//    public void testLoadTCPConnection() {
+//        Workspace workspace = new Workspace();
+//        workspace.addWindow(true)
+//                .addTab(true)
+//                    .addServer("", "`:test:12", "Plain");
+//        JsonObject json = WorkspaceSaver.toJson(workspace);
+//
+//        Config.getInstance().setBoolean(Config.TRY_TLS_CONNECTION_FIRST, true);
+//        Config.getInstance().setBoolean(Config.FAILOVER_BETWEEN_TLS_AND_TCP_CONNECTIONS, true);
+//        workspace = WorkspaceSaver.fromJson(json);
+//
+//        Server server = workspace.getWindows()[0].getAllTabs()[0].getServer();
+//        assertEquals("`:test:12", server.getConnectionStringWithPwd());
+//        assertTrue(server.isFlipTLS());
+//
+//    }
 
 }

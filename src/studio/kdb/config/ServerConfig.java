@@ -282,7 +282,7 @@ public class ServerConfig {
         return lookup(parser, auth);
     }
 
-    private Server lookup(QConnection.Parser parser, String auth) {
+    public Server lookup(QConnection.Parser parser, String auth) {
         QConnection conn = parser.getConnection();
         String host = conn.getHost();
         int port = conn.getPort();

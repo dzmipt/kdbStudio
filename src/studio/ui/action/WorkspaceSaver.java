@@ -148,25 +148,22 @@ public class WorkspaceSaver {
             tab.addFilename(json.get(FILENAME).getAsString());
         }
 
+        String serverFullName = "";
         if (json.has(SERVER_FULLNAME)) {
-            String serverFullName = json.get(SERVER_FULLNAME).getAsString();
-            Server server = Config.getInstance().getServerConfig().getServer(serverFullName);
-            if (server != Server.NO_SERVER) {
-                tab.addServer(server);
-                return;
-            }
+            serverFullName = json.get(SERVER_FULLNAME).getAsString();
         }
 
-        if (! json.has(SERVER_CONNECTION)) return;
-        String serverConnection = json.get(SERVER_CONNECTION).getAsString();
+        String serverConnection = "";
+        if (json.has(SERVER_CONNECTION)) {
+            serverConnection = json.get(SERVER_CONNECTION).getAsString();
+        }
 
         String auth = Config.getInstance().getDefaultAuthMechanism();
         if (json.has(SERVER_AUTH)) {
             auth = json.get(SERVER_AUTH).getAsString();
         }
 
-        Server server = Config.getInstance().getServerConfig().lookup(serverConnection, auth);
-        tab.addServer(server);
+        tab.addServer(serverFullName, serverConnection, auth);
     }
 
     private static boolean isSelected(JsonObject json) {
@@ -236,12 +233,10 @@ public class WorkspaceSaver {
             json.addProperty(FILENAME, filename);
         }
 
-        String fullName = tab.getServerFullName();
-        if (fullName != null) {
-            json.addProperty(SERVER_FULLNAME, fullName);
-        }
-        json.addProperty(SERVER_CONNECTION, tab.getServerConnection());
-        json.addProperty(SERVER_AUTH, tab.getServerAuth());
+        Server server = tab.getServer();
+        json.addProperty(SERVER_FULLNAME, server.getFullName());
+        json.addProperty(SERVER_CONNECTION, server.getConnectionStringWithPwd());
+        json.addProperty(SERVER_AUTH, server.getAuthenticationMechanism());
 
         return json;
     }
