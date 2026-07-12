@@ -19,6 +19,7 @@ import org.junit.runner.RunWith;
 import studio.core.Studio;
 import studio.kdb.Server;
 import studio.ui.dndtabbedpane.DraggableTabbedPane;
+import studio.utils.FileWatcher;
 import studio.utils.LogErrors;
 import studio.utils.Lookup;
 import studio.utils.MockConfig;
@@ -54,6 +55,11 @@ abstract public class StudioTest extends AssertJSwingJUnitTestCase {
     public static void initLogErrors() {
         Studio.initLogger();
         LogErrors.init();
+    }
+
+    @BeforeClass
+    public static void disableFileWatcher() {
+        FileWatcher.setMock(true);
     }
 
     @BeforeClass
