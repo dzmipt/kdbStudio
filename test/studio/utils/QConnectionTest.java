@@ -88,4 +88,21 @@ public class QConnectionTest {
         assertFalse(new QConnection.Parser("`:host:100").isSpecifiedProtocol());
 
     }
+
+    @Test
+    public void testSpecifiedUser() {
+        assertFalse(new QConnection.Parser("`:tcps://host:100").isSpecifiedUser());
+        assertTrue(new QConnection.Parser("`:tcp://host:100:user").isSpecifiedUser());
+        assertTrue(new QConnection.Parser("`:host:100:user:").isSpecifiedUser());
+        assertTrue(new QConnection.Parser("`:host:100:").isSpecifiedUser());
+    }
+
+    @Test
+    public void testSpecifiedPassword() {
+        assertFalse(new QConnection.Parser("`:tcps://host:100").isSpecifiedPassword());
+        assertFalse(new QConnection.Parser("`:tcp://host:100:user").isSpecifiedPassword());
+        assertTrue(new QConnection.Parser("`:host:100:user:").isSpecifiedPassword());
+        assertFalse(new QConnection.Parser("`:host:100:").isSpecifiedPassword());
+    }
+
 }
