@@ -94,7 +94,7 @@ public class ServerTest extends StudioTest {
 
 
         ServerEditor.mock(newServer);
-        frameFixture.menuItemWithPath("Server", "Edit").click();
+        clickMenuByPath("Server", "Edit");
 
         JTextComponentFixture editor = frameFixture.textBox("editor1");
         Color newBgColor = execute(() -> editor.target().getBackground());
@@ -108,7 +108,7 @@ public class ServerTest extends StudioTest {
                 new Color(170,200,100), DefaultAuthenticationMechanism.NAME, false );
 
         ServerEditor.mock(newServer);
-        frameFixture.menuItemWithPath("Server", "Add...").click();
+        clickMenuByPath("Server", "Add...");
 
 
         Pause.pause(2000);
