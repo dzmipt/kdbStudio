@@ -246,7 +246,7 @@ abstract public class StudioTest extends AssertJSwingJUnitTestCase {
 
     protected void clickMenuByPath(FrameFixture frameFixture, String... path) {
         log.info("start click menu: {}", Arrays.toString(path));
-        clickMenu(frameFixture.menuItemWithPath());
+        clickMenu(frameFixture.menuItemWithPath(path));
         log.info("finish click menu: {}", Arrays.toString(path));
     }
 
