@@ -6,12 +6,8 @@ import org.apache.logging.log4j.Logger;
 import javax.swing.*;
 import java.io.IOException;
 import java.nio.file.*;
-import java.sql.Time;
-import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
-import java.util.concurrent.TimeUnit;
 
 import static java.nio.file.StandardWatchEventKinds.*;
 
@@ -26,7 +22,16 @@ public class FileWatcher implements Runnable {
     private static final Map<Path, WatchKey> watchKeys = new HashMap<>();
     private static final Map<Listener, Path> listeners = new HashMap<>();
 
+    private static boolean mock = false;
+
+    public static void setMock(boolean newMockValue) {
+        mock = newMockValue;
+        log.info("FileWatcher mock mode set to {}", mock);
+    }
+
     public static synchronized void addListener(Path path, Listener listener) {
+        if (mock) return;
+
         if (watchService == null) {
             log.warn("Failed to watch {} as watchService is not initialized", path);
             return;
@@ -61,6 +66,8 @@ public class FileWatcher implements Runnable {
     }
 
     public static synchronized void removeListener(Listener listener) {
+        if (mock) return;
+
         Path path = listeners.remove(listener);
         if (path == null) {
             log.error("Ops... That's not expected. A listener not found in FileWatch.removeListener");
@@ -103,6 +110,8 @@ public class FileWatcher implements Runnable {
     }
 
     public static synchronized void start() {
+        if (mock) return;
+
         if (watchService != null) {
             log.error("Ups.. watchService was already started");
             return;
