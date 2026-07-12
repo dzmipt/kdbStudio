@@ -8,6 +8,7 @@ import org.junit.runners.model.FrameworkMethod;
 import org.junit.runners.model.InitializationError;
 import org.junit.runners.model.Statement;
 
+import java.awt.*;
 import java.lang.reflect.Method;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -49,7 +50,11 @@ public class TestRunner extends BlockJUnit4ClassRunner {
         try {
             Path path = Path.of(SCREENSHOT_FOLDER);
             Files.createDirectories(path);
-            new FailureScreenshotTaker(path.toFile()).saveScreenshot(testNameFrom(testClass, realMethod));
+
+            String failedTest = testNameFrom(testClass, realMethod);
+            log.info("Taking screenshot for failed test: {} into {}; is headless GraphicsEnvironment: {}",
+                    failedTest, path.toAbsolutePath(), GraphicsEnvironment.isHeadless());
+            new FailureScreenshotTaker(path.toFile()).saveScreenshot(failedTest);
         } catch (Exception e) {
             log.error("Error occurred while taking screenshot", e);
         }
