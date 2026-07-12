@@ -12,7 +12,6 @@ import studio.ui.search.Position;
 import javax.swing.text.BadLocationException;
 import java.io.File;
 import java.io.IOException;
-import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 
 import static org.assertj.swing.edt.GuiActionRunner.execute;
@@ -65,7 +64,7 @@ public class SearchTest  extends StudioTest {
     @Before
     public void openFile() throws IOException {
         File textFile = new File(getClass().getClassLoader().getResource("searchText.q").getFile());
-        content = new String(Files.readAllBytes(textFile.toPath()), StandardCharsets.UTF_8);
+        content = Files.readString(textFile.toPath()).replace("\r\n", "\n");
 
         openFile(textFile);
         editor = frameFixture.textBox("editor2");
