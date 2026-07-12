@@ -46,10 +46,10 @@ jobs:
       run: ./intTests-Xvfb.sh
       timeout-minutes: 5
 
-#    - name: Integration tests - Windows
-#      if: ${{ runner.os == 'Windows' }}
-#      run: ./gradlew integrationTest -x test
-#      timeout-minutes: 5
+    - name: Integration tests - Windows
+      if: ${{ runner.os == 'Windows' }}
+      run: ./gradlew integrationTest -x test
+      timeout-minutes: 5
 
     - name: Log files - Linux
       if: ${{ runner.os == 'Linux' }}
