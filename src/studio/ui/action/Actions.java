@@ -204,7 +204,7 @@ public class Actions {
         addEditorAction(nextEditorTab, editor ->
                 editor.getEditorsPanel().selectNextTab(true) );
         addEditorAction(prevEditorTab, editor ->
-                editor.getEditorsPanel().selectNextTab(true) );
+                editor.getEditorsPanel().selectNextTab(false) );
 
         add(wordWrap, StudioWindow::toggleWordWrap);
 
