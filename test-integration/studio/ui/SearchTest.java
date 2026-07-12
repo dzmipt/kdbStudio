@@ -1,5 +1,7 @@
 package studio.ui;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.assertj.swing.fixture.JPanelFixture;
 import org.assertj.swing.fixture.JTextComponentFixture;
 import org.fife.ui.rsyntaxtextarea.RSyntaxTextArea;
@@ -17,6 +19,8 @@ import static org.assertj.swing.edt.GuiActionRunner.execute;
 import static org.junit.Assert.assertEquals;
 
 public class SearchTest  extends StudioTest {
+
+    private final static Logger log = LogManager.getLogger();
 
     static class Selection {
         Position start, end;
@@ -150,7 +154,26 @@ public class SearchTest  extends StudioTest {
         searchPanel.textBox("ReplaceField").setText("select i,");
 
         searchPanel.button("ReplaceAllButton").click();
-        editor.requireText(content.replace("select", "select i,"));
+
+        String expectedText = content.replace("select", "select i,");
+        String actualText = editor.text();
+
+        log.info("Expected/Actual:{}\n{}", escape(expectedText), escape(actualText));
+        editor.requireText(expectedText);
+    }
+
+    private static String escape(String s) {
+        StringBuilder result = new StringBuilder();
+
+        for (char c : s.toCharArray()) {
+            if (c>=32 && c < 128) {
+                result.append(c);
+            } else {
+                result.append(String.format("\\u%04X", (int) c));
+            }
+        }
+
+        return result.toString();
     }
 
 }
