@@ -64,7 +64,7 @@ jobs:
       if: ${{ failure() }}
       with:
         name: Failed tests
-        path: ./failed-gui-tests/
+        path: ./build/screenshots/
 
     - name: Report
       uses: dorny/test-reporter@v3

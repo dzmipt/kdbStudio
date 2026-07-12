@@ -9,7 +9,6 @@ import org.assertj.swing.fixture.FrameFixture;
 import org.assertj.swing.fixture.JMenuItemFixture;
 import org.assertj.swing.fixture.JTabbedPaneFixture;
 import org.assertj.swing.fixture.JTextComponentFixture;
-import org.assertj.swing.junit.runner.GUITestRunner;
 import org.assertj.swing.junit.testcase.AssertJSwingJUnitTestCase;
 import org.assertj.swing.timing.Condition;
 import org.fife.ui.rsyntaxtextarea.RSyntaxTextArea;
@@ -19,10 +18,7 @@ import org.junit.runner.RunWith;
 import studio.core.Studio;
 import studio.kdb.Server;
 import studio.ui.dndtabbedpane.DraggableTabbedPane;
-import studio.utils.FileWatcher;
-import studio.utils.LogErrors;
-import studio.utils.Lookup;
-import studio.utils.MockConfig;
+import studio.utils.*;
 
 import javax.swing.*;
 import java.awt.*;
@@ -42,7 +38,7 @@ import static org.assertj.swing.util.Platform.controlOrCommandMask;
 import static org.junit.Assert.assertNotEquals;
 
 @GUITest
-@RunWith(GUITestRunner.class)
+@RunWith(TestRunner.class)
 abstract public class StudioTest extends AssertJSwingJUnitTestCase {
 
     protected FrameFixture frameFixture;
