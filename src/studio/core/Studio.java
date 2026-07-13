@@ -22,6 +22,7 @@ import studio.ui.StudioWindow;
 import studio.ui.Util;
 import studio.ui.WindowFactory;
 import studio.ui.action.WorkspaceSaver;
+import studio.ui.iminspector.Inspector;
 import studio.utils.Content;
 import studio.utils.FileReaderWriter;
 import studio.utils.FileWatcher;
@@ -129,7 +130,19 @@ public class Studio {
         return serverHistory.size() == 0 ? Server.NO_SERVER : serverHistory.get(0);
     }
 
+    private static void installInputMapScanner() {
+        KeyStroke keyStroke = KeyStroke.getKeyStroke( "ctrl shift alt Z" );
+        Toolkit.getDefaultToolkit().addAWTEventListener( e -> {
+            if( e.getID() == KeyEvent.KEY_RELEASED &&
+                    ((KeyEvent)e).getKeyCode() == keyStroke.getKeyCode() &&
+                    (((KeyEvent)e).getModifiersEx() & KEY_MODIFIERS_MASK) == (keyStroke.getModifiers() & KEY_MODIFIERS_MASK)  ) {
+                new Inspector().alignAndShow();
+            }
+        }, AWTEvent.KEY_EVENT_MASK );
+    }
+
     public static void initLF() {
+        installInputMapScanner();
         FlatInspector.install( "ctrl shift alt X" );
         FlatUIDefaultsInspector.install( "ctrl shift alt Y" );
 
