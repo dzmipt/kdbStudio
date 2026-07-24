@@ -147,8 +147,19 @@ public class Util {
 
 
     public static String getAcceleratorString(KeyStroke keyStroke) {
-        return InputEvent.getModifiersExText(keyStroke.getModifiers()) + (MAC_OS_X ? "": "+") +
-                KeyEvent.getKeyText(keyStroke.getKeyCode());
+        String modifiersText = InputEvent.getModifiersExText(keyStroke.getModifiers());
+        int code = keyStroke.getKeyCode();
+        String codeText = switch (code) {
+            case KeyEvent.VK_CONTROL, KeyEvent.VK_SHIFT,
+                 KeyEvent.VK_ALT, KeyEvent.VK_ALT_GRAPH,
+                 KeyEvent.VK_META -> "";
+            default -> KeyEvent.getKeyText(code);
+        };
+        if (MAC_OS_X) {
+            return modifiersText.replace("+","") + codeText;
+        } else {
+            return modifiersText + "+" + codeText;
+        }
     }
 
     public static String getTooltipWithAccelerator(String tooltip, KeyStroke keyStroke) {
