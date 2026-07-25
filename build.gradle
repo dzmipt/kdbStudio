@@ -23,6 +23,10 @@ compileJava {
     ]
 }
 
+run {
+    jvmArgs += "--enable-native-access=ALL-UNNAMED"
+}
+
 repositories {
     mavenCentral()
 }
@@ -111,7 +115,8 @@ tasks.register('integrationTest', Test) {
     jvmArgs(
             '--add-opens=java.base/java.util=ALL-UNNAMED',
             '--add-opens=java.desktop/java.awt=ALL-UNNAMED',
-            '--add-opens=java.desktop/javax.swing=ALL-UNNAMED'
+            '--add-opens=java.desktop/javax.swing=ALL-UNNAMED',
+            '--enable-native-access=ALL-UNNAMED'
     )
     testLogging {
         events "passed", "skipped", "failed", "standardOut", "standardError"
