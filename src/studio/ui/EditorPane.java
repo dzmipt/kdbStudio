@@ -81,13 +81,27 @@ public class EditorPane extends JPanel implements MouseWheelListener, SearchPane
         editorStatusBar.setEditorStatusBarCallback(callback);
     }
 
+    private final static long STUCK_SCROLL_THRESHOLD = 500;
+    private long prevScrollTimstamp = 0;
+
     @Override
     public void mouseWheelMoved(MouseWheelEvent e) {
-        if ((e.getModifiersEx() & Util.menuShortcutKeyMask) == 0) return;
+        long current = System.currentTimeMillis();
+        if ((e.getModifiersEx() & Util.menuShortcutKeyMask) == 0) {
+            prevScrollTimstamp = current;
+            return;
+        }
+
+        if (current - prevScrollTimstamp < STUCK_SCROLL_THRESHOLD) {
+            log.debug("Ignoring scroll as it looks like it stuck: previous scroll was {} ms ago", current - prevScrollTimstamp);
+            prevScrollTimstamp = current;
+            return;
+        }
 
         Font font = Config.getInstance().getFont(Config.FONT_EDITOR);
-        int newFontSize = font.getSize() + e.getWheelRotation();
-        if (newFontSize < 6) return;
+        int rotation = -e.getWheelRotation();
+        int newFontSize = font.getSize() + rotation;
+        if ( (newFontSize < 6 && rotation<0) || (newFontSize > 64 && rotation>0) ) return;
         font = font.deriveFont((float) newFontSize);
 
         Config.getInstance().setFont(Config.FONT_EDITOR, font);
