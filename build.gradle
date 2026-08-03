@@ -193,7 +193,7 @@ tasks.register('moveBuildLog4JPluginDat') {
 processResources.dependsOn('getBuildHash', 'convertNotes', 'moveBuildLog4JPluginDat')
 
 tasks.register('sourcesJar', Jar) {
-    dependsOn 'copyLog4JPluginDat'
+    dependsOn 'copyLog4JPluginDat', 'getBuildHash'
     archiveClassifier.set("sources")
     duplicatesStrategy = 'warn'
     from sourceSets.main.allSource
