@@ -12,7 +12,7 @@ plugins {
 
 group = "com.github.dzmipt"
 
-version = "dz7.0"
+version = "dz8.0"
 
 compileJava {
     sourceCompatibility = JavaVersion.VERSION_17
