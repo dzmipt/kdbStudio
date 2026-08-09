@@ -3,15 +3,10 @@ package studio.kdb.config;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import studio.kdb.Config;
-import studio.kdb.Server;
-import studio.kdb.ServerTreeNode;
 import studio.kdb.Workspace;
 import studio.utils.LineEnding;
-import studio.utils.QConnection;
 
 import java.awt.*;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Properties;
 
 public class WorkspaceToJsonConverter {
@@ -111,27 +106,10 @@ public class WorkspaceToJsonConverter {
                 .setCaret(caret)
                 .setModified(modified);
 
-        if (serverConnection == null) return;
-        QConnection conn = QConnection.get(serverConnection);
-
-        if (serverAuth == null) {
-            serverAuth = Config.getInstance().getDefaultAuthMechanism();
-        }
-
-        String serverName = "";
-        ServerTreeNode parent = null;
-        if (serverFullName != null) {
-            List<String> path = new ArrayList<>();
-            path.add("");
-            path.addAll(List.of(serverFullName.split("/")));
-            serverName = path.get(path.size()-1);
-            path.remove(path.size()-1);
-            parent = Config.getInstance().getServerTree().findPath(path, true);
-        }
-
-        Server server = new Server(serverName, conn, serverAuth, Color.BLACK, parent);
-
-        tab.addServer(server);
+        if (serverFullName == null) serverFullName = "";
+        if (serverConnection == null) serverConnection = "";
+        if (serverAuth == null) serverAuth = Config.getInstance().getDefaultAuthMechanism();
+        tab.addServer(serverFullName, serverConnection, serverAuth);
     }
 
     private int getInt(String key, int defValue) {

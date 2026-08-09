@@ -5,6 +5,8 @@ import com.google.gson.JsonParser;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import studio.kdb.config.ColorMap;
+import studio.kdb.config.EditorColorToken;
 import studio.kdb.config.WorkspaceToJsonConverter;
 import studio.ui.action.WorkspaceSaver;
 import studio.utils.LineEnding;
@@ -17,8 +19,7 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.util.Properties;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.*;
 
 public class WorkspaceFromFileTest {
 
@@ -26,22 +27,26 @@ public class WorkspaceFromFileTest {
     private Workspace workspace;
     private static Server server1, server2, server3, server5;
 
-    private static Color bgColor;
+    private static Color bgColor = new Color(14,15,16);
+    private static Color bgColor2 = new Color(24,25,26);
 
     @BeforeAll
     public static void initConfig() throws IOException {
         MockConfig.mock();
-        bgColor = Config.getInstance().getBackgroundColor();
+        ColorMap colorMap = new ColorMap(Config.getInstance().getEditorColors());
+        colorMap.put(EditorColorToken.BACKGROUND, bgColor);
+        Config.getInstance().setEditorColors(colorMap);
+
         ServerTreeNode root = Config.getInstance().getServerTree();;
 
         server1 = new Server("server1", QConnection.get("`:tcps://serverHost1:2000:user:password"),
-                "Plain", bgColor, root);
+                "Plain", bgColor2, root);
         server2 = new Server("server2", QConnection.get("`:serverHost2:2000"),
-                "Plain", bgColor, root);
+                "Plain", bgColor2, root);
         server3 = new Server("server3", QConnection.get("`:serverHost2:1100"),
-                "dzAuth", bgColor, root);
+                "dzAuth", bgColor2, root);
         server5 = new Server("server5", QConnection.get("`:serverHost4:2100:user1:password1"),
-                "Plain", bgColor, root.add("folder"));
+                "Plain", bgColor2, root.add("folder"));
         Config.getInstance().getServerConfig().addServers(false, server1, server2, server3, server5);
     }
 
@@ -121,11 +126,23 @@ public class WorkspaceFromFileTest {
                 .addServer(server5);
     }
 
+    private void assertWorkspace(Workspace actualWorkspace) {
+        assertEquals(workspace, actualWorkspace);
+
+        assertSame(server1, actualWorkspace.getWindows()[0].getLeft().getAllTabs()[0].getServer());
+        assertSame(server2, actualWorkspace.getWindows()[0].getLeft().getAllTabs()[1].getServer());
+        assertSame(server3, actualWorkspace.getWindows()[0].getRight().getLeft().getAllTabs()[0].getServer());
+        assertSame(server5, actualWorkspace.getWindows()[1].getAllTabs()[0].getServer());
+
+        assertEquals(bgColor,
+                actualWorkspace.getWindows()[0].getRight().getRight().getAllTabs()[0].getServer().getBackgroundColor());
+    }
+
     @Test
     public void testWorkspaceToJsonConverter() {
         WorkspaceToJsonConverter converter = new WorkspaceToJsonConverter(propertiesFromFile);
         Workspace workspaceFromConverter = converter.load();
-        assertEquals(workspace, workspaceFromConverter);
+        assertWorkspace(workspaceFromConverter);
     }
 
     @Test
@@ -135,7 +152,7 @@ public class WorkspaceFromFileTest {
 
             JsonObject json = JsonParser.parseReader(new InputStreamReader(inputStream)).getAsJsonObject();
             Workspace workspaceFromJson = WorkspaceSaver.fromJson(json);
-            assertEquals(workspace, workspaceFromJson);
+            assertWorkspace(workspaceFromJson);
         }
     }
 
@@ -143,7 +160,7 @@ public class WorkspaceFromFileTest {
     public void testWorkspaceSaverToJson() {
         JsonObject json = WorkspaceSaver.toJson(workspace);
         Workspace workspaceConverted = WorkspaceSaver.fromJson(json);
-        assertEquals(workspace, workspaceConverted);
+        assertWorkspace(workspaceConverted);
     }
 
     @Test
