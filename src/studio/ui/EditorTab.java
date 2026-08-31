@@ -189,7 +189,9 @@ public class EditorTab implements FileWatcher.Listener, EditorStatusBarCallback 
         if (newServer.getUseTLS() != useTLS) {
             QConnection conn = newServer.getConnection().changeTLS(useTLS);
             String auth = newServer.getAuthenticationMechanism();
-            newServer = Config.getInstance().getServerConfig().lookup(conn, auth);
+            QConnection.Parser parser = new QConnection.Parser(conn);
+            parser.setSpecifiedProtocol(true);
+            newServer = Config.getInstance().getServerConfig().lookup(parser, auth);
         }
         newServer = newServer.newFlipTLS(false);
 
