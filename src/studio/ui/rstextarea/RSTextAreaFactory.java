@@ -71,8 +71,8 @@ public class RSTextAreaFactory {
         actions.add(new HideSearchPanelAction());
         actions.add(new ConvertTabsToSpacesAction());
         actions.add(new CommentAction());
-        actions.add(new DeleteNextWordAction());
-        actions.add(new DeletePreviousWordAction());
+        actions.add(new DeleteWordAction.Next());
+        actions.add(new DeleteWordAction.Previous());
 
         actionMap = new ActionMapUIResource();
         for (Action a : actions) {
@@ -99,8 +99,8 @@ public class RSTextAreaFactory {
         inputMap.put(KeyStroke.getKeyStroke(KeyEvent.VK_X,      defaultModifier), rstaCutAsStyledTextAction);
         inputMap.put(KeyStroke.getKeyStroke(KeyEvent.VK_CUT,    0),      rstaCutAsStyledTextAction);
         inputMap.put(KeyStroke.getKeyStroke(KeyEvent.VK_DELETE, shift),           rstaCutAsStyledTextAction);
-        inputMap.put(KeyStroke.getKeyStroke(KeyEvent.VK_DELETE, defaultModifier), DeleteNextWordAction.deleteNextWordAction);
-        inputMap.put(KeyStroke.getKeyStroke(KeyEvent.VK_BACK_SPACE, defaultModifier), DeletePreviousWordAction.deletePreviousWordAction);
+        inputMap.put(KeyStroke.getKeyStroke(KeyEvent.VK_DELETE, defaultModifier), DeleteWordAction.deleteNextWordAction);
+        inputMap.put(KeyStroke.getKeyStroke(KeyEvent.VK_BACK_SPACE, defaultModifier), DeleteWordAction.deletePreviousWordAction);
 
 
         inputMap.remove(KeyStroke.getKeyStroke(KeyEvent.VK_ENTER, defaultModifier)); // used for execute current line
