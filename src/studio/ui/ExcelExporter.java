@@ -4,6 +4,8 @@ import org.apache.poi.ss.usermodel.*;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import studio.kdb.K;
 import studio.kdb.KFormatContext;
+import studio.kdb.KType;
+import studio.kdb.ToDouble;
 import studio.ui.action.QueryResult;
 import studio.ui.grid.ResultGrid;
 
@@ -96,6 +98,8 @@ class ExcelExporter {
                 K.KBase b = (K.KBase) model.getValueAt(i, j);
                 if (b.isNull()) {
                     cell.setCellValue("");
+                } else if (isFiniteNumber(b)) {
+                    cell.setCellValue(((ToDouble) b).toDouble());
                 } else {
                     cell.setCellValue(b.toString(KFormatContext.EXCEL));
                 }
@@ -120,6 +124,13 @@ class ExcelExporter {
             }
         }
         return workbook;
+    }
+
+    static boolean isFiniteNumber(K.KBase value) {
+        KType type = value.getType();
+        return (type == KType.Byte || type == KType.Short || type == KType.Int ||
+                type == KType.Long || type == KType.Float || type == KType.Double) &&
+                !((ToDouble) value).isNull() && !((ToDouble) value).isInfinity();
     }
 
     private static void addDetails(Workbook workbook, ResultTab tab) {

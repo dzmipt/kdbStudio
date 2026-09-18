@@ -1,5 +1,7 @@
 package studio.ui;
 
+import org.apache.poi.ss.usermodel.Cell;
+import org.apache.poi.ss.usermodel.CellType;
 import org.apache.poi.ss.usermodel.Workbook;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
@@ -11,7 +13,7 @@ import studio.kdb.Parser;
 import java.time.*;
 import java.util.TimeZone;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.*;
 
 public class ExcelExporterTest {
 
@@ -125,6 +127,42 @@ public class ExcelExporterTest {
 
         value = Parser.parse(KType.Datetime, "1950.05.16T16:26:31.123");
         check("1950-05-16T16:26:31.123", new K.KDatetimeVector(value));
+    }
+
+    @Test
+    public void numericValuesExportAsExcelNumbers() {
+        assertNumericCell(new K.KShortVector((short) 12), 12);
+        assertNumericCell(new K.KIntVector(34), 34);
+        assertNumericCell(new K.KLongVector(56), 56);
+        assertNumericCell(new K.KFloatVector(7.5f), 7.5);
+        assertNumericCell(new K.KDoubleVector(8.25), 8.25);
+    }
+
+    @Test
+    public void finiteNumberCheckAcceptsOnlyFiniteNumericValues() {
+        assertTrue(ExcelExporter.isFiniteNumber(new K.KByte((byte) 1)));
+        assertTrue(ExcelExporter.isFiniteNumber(new K.KShort((short) 2)));
+        assertTrue(ExcelExporter.isFiniteNumber(new K.KInteger(3)));
+        assertTrue(ExcelExporter.isFiniteNumber(new K.KLong(4)));
+        assertTrue(ExcelExporter.isFiniteNumber(new K.KFloat(5.5f)));
+        assertTrue(ExcelExporter.isFiniteNumber(new K.KDouble(6.5)));
+
+        assertFalse(ExcelExporter.isFiniteNumber(new K.KShort(Short.MIN_VALUE)));
+        assertFalse(ExcelExporter.isFiniteNumber(new K.KInteger(Integer.MIN_VALUE)));
+        assertFalse(ExcelExporter.isFiniteNumber(new K.KLong(Long.MIN_VALUE)));
+        assertFalse(ExcelExporter.isFiniteNumber(new K.KFloat(Float.NaN)));
+        assertFalse(ExcelExporter.isFiniteNumber(new K.KDouble(Double.NaN)));
+        assertFalse(ExcelExporter.isFiniteNumber(new K.KDouble(Double.POSITIVE_INFINITY)));
+        assertFalse(ExcelExporter.isFiniteNumber(new K.KInteger(Integer.MAX_VALUE)));
+        assertFalse(ExcelExporter.isFiniteNumber(new K.KDate(0)));
+        assertFalse(ExcelExporter.isFiniteNumber(new K.KSymbol("text")));
+    }
+
+    private void assertNumericCell(K.KBaseVector<? extends K.KBase> values, double expected) {
+        Workbook workbook = ExcelExporter.buildWorkbook(new ListModel(values), null);
+        Cell cell = workbook.getSheetAt(0).getRow(1).getCell(0);
+        assertEquals(CellType.NUMERIC, cell.getCellType());
+        assertEquals(expected, cell.getNumericCellValue());
     }
 
 }
