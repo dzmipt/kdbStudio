@@ -129,6 +129,9 @@ class ExcelExporter {
                 }
             }
         }
+        for (int i = 0; i < model.getColumnCount(); i++) {
+            sheet.autoSizeColumn(i);
+        }
         return workbook;
     }
 

@@ -147,6 +147,14 @@ public class ExcelExporterTest {
     }
 
     @Test
+    public void exportSizesColumnsToFitTheirContents() {
+        Workbook workbook = ExcelExporter.buildWorkbook(
+                new ListModel(new K.KSymbolVector("A value that is wider than the default Excel column")), null);
+
+        assertTrue(workbook.getSheetAt(0).getColumnWidth(0) > workbook.getSheetAt(0).getDefaultColumnWidth() * 256);
+    }
+
+    @Test
     public void booleanValuesExportAsExcelBooleans() {
         Workbook workbook = ExcelExporter.buildWorkbook(new ListModel(new K.KBooleanVector(true, false)), null);
         Cell trueCell = workbook.getSheetAt(0).getRow(1).getCell(0);
