@@ -98,6 +98,7 @@ public class Config  {
     public static final String LOG_DEBUG = configDefault("logDebug", ConfigType.BOOLEAN, false);
 
     public static final String ALIGN_RIGHT_NUMBERS_IN_RESULT = configDefault("alignNumbersInResult", ConfigType.BOOLEAN, true);
+    public static final String EXCEL_EXPORT_TEMPORAL_AS_DATE_TIME = configDefault("excelExportTemporalAsDateTime", ConfigType.BOOLEAN, true);
     public static final String FAILOVER_BETWEEN_TLS_AND_TCP_CONNECTIONS = configDefault("failoverBetweenTLSandTCPConnections", ConfigType.BOOLEAN, true);
     public static final String TRY_TLS_CONNECTION_FIRST = configDefault("tryTLSConnectionFirst", ConfigType.BOOLEAN, false);
 

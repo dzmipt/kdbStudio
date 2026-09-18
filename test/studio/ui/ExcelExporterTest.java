@@ -1,16 +1,14 @@
 package studio.ui;
 
-import org.apache.poi.ss.usermodel.Cell;
-import org.apache.poi.ss.usermodel.CellType;
-import org.apache.poi.ss.usermodel.Workbook;
+import org.apache.poi.ss.usermodel.*;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import studio.kdb.K;
-import studio.kdb.KType;
-import studio.kdb.ListModel;
-import studio.kdb.Parser;
+import studio.kdb.*;
 
 import java.time.*;
+import java.util.Locale;
 import java.util.TimeZone;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -20,6 +18,16 @@ public class ExcelExporterTest {
     @BeforeAll
     public static void setTimestamp() {
         TimeZone.setDefault(TimeZone.getTimeZone(ZoneId.of("Asia/Kolkata")));
+    }
+
+    @BeforeEach
+    public void exportTemporalValuesAsStringsByDefault() {
+        Config.getInstance().setBoolean(Config.EXCEL_EXPORT_TEMPORAL_AS_DATE_TIME, false);
+    }
+
+    @AfterEach
+    public void resetTemporalExportSetting() {
+        Config.getInstance().setBoolean(Config.EXCEL_EXPORT_TEMPORAL_AS_DATE_TIME, true);
     }
 
     private void check(String expected, K.KBaseVector<? extends K.KBase> list) {
@@ -139,6 +147,41 @@ public class ExcelExporterTest {
     }
 
     @Test
+    public void booleanValuesExportAsExcelBooleans() {
+        Workbook workbook = ExcelExporter.buildWorkbook(new ListModel(new K.KBooleanVector(true, false)), null);
+        Cell trueCell = workbook.getSheetAt(0).getRow(1).getCell(0);
+        Cell falseCell = workbook.getSheetAt(0).getRow(2).getCell(0);
+
+        assertEquals(CellType.BOOLEAN, trueCell.getCellType());
+        assertTrue(trueCell.getBooleanCellValue());
+        assertEquals(CellType.BOOLEAN, falseCell.getCellType());
+        assertFalse(falseCell.getBooleanCellValue());
+    }
+
+    @Test
+    public void temporalValuesExportAsFormattedExcelDatesAndTimes() {
+        Config.getInstance().setBoolean(Config.EXCEL_EXPORT_TEMPORAL_AS_DATE_TIME, true);
+        double excelZeroDate = DateUtil.getExcelDate(K.ZERO_DATE);
+        K.KDate date = K.KDate.of(LocalDate.of(2025, 5, 16));
+        K.KMonth month = K.KMonth.of(LocalDate.of(2025, 5, 1));
+        K.KTimestamp timestamp = K.KTimestamp.of(LocalDateTime.of(2003, 11, 29, 21, 33, 9, 12_000_000));
+        K.KTime time = K.KTime.of(LocalTime.of(11, 12, 34, 567_000_000));
+        K.KMinute minute = K.KMinute.of(LocalTime.of(11, 12));
+        K.KSecond second = K.KSecond.of(LocalTime.of(11, 12, 34));
+        K.KTimespan timespan = K.KTimespan.of(Duration.ofHours(10).plusMinutes(7).plusSeconds(23).plusMillis(123));
+
+        assertTemporalCell(new K.KDateVector(date.toInt()), DateUtil.getExcelDate(date.toLocalDate()), "2025-05-16");
+        assertTemporalCell(new K.KMonthVector(month.toInt()), DateUtil.getExcelDate(month.toLocalDateTime()), "2025-05");
+        assertTemporalCell(new K.KDatetimeVector(1.5), excelZeroDate + 1.5, "2000-01-02 12:00:00.000");
+        assertTemporalCell(new K.KTimestampVector(timestamp.toLong()), excelZeroDate + timestamp.toLong() / (double) K.NS_IN_DAY,
+                "2003-11-29 21:33:09.012");
+        assertTemporalCell(new K.KTimeVector(time.toInt()), time.toInt() / (double) K.MS_IN_DAY, "11:12:34.567");
+        assertTemporalCell(new K.KMinuteVector(minute.toInt()), minute.toInt() / (24.0 * 60), "11:12");
+        assertTemporalCell(new K.KSecondVector(second.toInt()), second.toInt() / (24.0 * 60 * 60), "11:12:34");
+        assertTemporalCell(new K.KTimespanVector(timespan.toLong()), timespan.toLong() / (double) K.NS_IN_DAY, "10:07:23.123");
+    }
+
+    @Test
     public void finiteNumberCheckAcceptsOnlyFiniteNumericValues() {
         assertTrue(ExcelExporter.isFiniteNumber(new K.KByte((byte) 1)));
         assertTrue(ExcelExporter.isFiniteNumber(new K.KShort((short) 2)));
@@ -163,6 +206,14 @@ public class ExcelExporterTest {
         Cell cell = workbook.getSheetAt(0).getRow(1).getCell(0);
         assertEquals(CellType.NUMERIC, cell.getCellType());
         assertEquals(expected, cell.getNumericCellValue());
+    }
+
+    private void assertTemporalCell(K.KBaseVector<? extends K.KBase> values, double expectedValue, String expectedText) {
+        Workbook workbook = ExcelExporter.buildWorkbook(new ListModel(values), null);
+        Cell cell = workbook.getSheetAt(0).getRow(1).getCell(0);
+        assertEquals(CellType.NUMERIC, cell.getCellType());
+        assertEquals(expectedValue, cell.getNumericCellValue(), 1e-10);
+        assertEquals(expectedText, new DataFormatter(Locale.US).formatCellValue(cell));
     }
 
 }

@@ -195,6 +195,7 @@
   },
 
   "alignNumbersInResult" : false,
+  "excelExportTemporalAsDateTime" : false,
   "tryTLSConnectionFirst" : false,
   "failoverBetweenTLSandTCPConnections" : false,
 

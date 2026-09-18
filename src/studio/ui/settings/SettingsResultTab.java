@@ -20,6 +20,7 @@ public class SettingsResultTab extends SettingsTab {
     private final JFormattedTextField txtMaxFractionDigits;
     private final JFormattedTextField txtEmulateDoubleClickTimeout;
     private final JCheckBox chBoxAlignNumbers;
+    private final JCheckBox chBoxExcelExportTemporalAsDateTime;
     private final JCheckBox chBoxOpenServerInCurrentTab;
     private final JCheckBox chBoxInspectResultInCurrentTab;
 
@@ -70,6 +71,8 @@ public class SettingsResultTab extends SettingsTab {
 
         chBoxAlignNumbers = new JCheckBox("Align numbers and dates to the right");
         chBoxAlignNumbers.setSelected(CONFIG.getBoolean(Config.ALIGN_RIGHT_NUMBERS_IN_RESULT));
+        chBoxExcelExportTemporalAsDateTime = new JCheckBox("Export temporal values to Excel as dates/times (negative times may not display correctly)");
+        chBoxExcelExportTemporalAsDateTime.setSelected(CONFIG.getBoolean(Config.EXCEL_EXPORT_TEMPORAL_AS_DATE_TIME));
 
         chBoxOpenServerInCurrentTab = new JCheckBox("Open servers from popup menu in the current editor tab");
         chBoxOpenServerInCurrentTab.setSelected(CONFIG.getBoolean(Config.SERVER_FROM_RESULT_IN_CURRENT));
@@ -85,6 +88,7 @@ public class SettingsResultTab extends SettingsTab {
                         .addLine(lblMaxCharsInResult, txtMaxCharsInResult, lblMaxCharsInTableCell, txtMaxCharsInTableCell)
                         .addLine(lblCellRightPadding, txtCellRightPadding, lblCellMaxWidth, txtCellMaxWidth)
                         .addLineAndGlue(chBoxAlignNumbers)
+                        .addLineAndGlue(chBoxExcelExportTemporalAsDateTime)
                         .addLineAndGlue(chBoxOpenServerInCurrentTab)
                         .addLineAndGlue(chBoxInspectResultInCurrentTab)
 
@@ -135,6 +139,8 @@ public class SettingsResultTab extends SettingsTab {
         CONFIG.setInt(Config.MAX_FRACTION_DIGITS, maxFractionDigits);
         //Looks like a hack??
         KFormatContext.setMaxFractionDigits(maxFractionDigits);
+
+        CONFIG.setBoolean(Config.EXCEL_EXPORT_TEMPORAL_AS_DATE_TIME, chBoxExcelExportTemporalAsDateTime.isSelected());
 
         boolean changedResult = CONFIG.setInt(Config.EMULATED_DOUBLE_CLICK_TIMEOUT, getEmulatedDoubleClickTimeout());
         changedResult |= CONFIG.setBoolean(Config.ALIGN_RIGHT_NUMBERS_IN_RESULT, chBoxAlignNumbers.isSelected());

@@ -2,10 +2,7 @@ package studio.ui;
 
 import org.apache.poi.ss.usermodel.*;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
-import studio.kdb.K;
-import studio.kdb.KFormatContext;
-import studio.kdb.KType;
-import studio.kdb.ToDouble;
+import studio.kdb.*;
 import studio.ui.action.QueryResult;
 import studio.ui.grid.ResultGrid;
 
@@ -15,6 +12,8 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.text.SimpleDateFormat;
+import java.util.EnumMap;
+import java.util.Map;
 import java.util.TimeZone;
 
 class ExcelExporter {
@@ -84,6 +83,9 @@ class ExcelExporter {
         Font headerFont = workbook.createFont();
         headerFont.setBold(true);
         headerCellStyle.setFont(headerFont);
+        boolean exportTemporalAsDateTime = Config.getInstance().getBoolean(Config.EXCEL_EXPORT_TEMPORAL_AS_DATE_TIME);
+        Map<KType, CellStyle> temporalStyles = exportTemporalAsDateTime ?
+                createTemporalStyles(workbook) : Map.of();
         for (int i = 0; i < model.getColumnCount(); i++) {
             Cell cell = headerRow.createCell(i);
             cell.setCellValue(model.getColumnName(i));
@@ -98,8 +100,12 @@ class ExcelExporter {
                 K.KBase b = (K.KBase) model.getValueAt(i, j);
                 if (b.isNull()) {
                     cell.setCellValue("");
+                } else if (b instanceof K.KBoolean) {
+                    cell.setCellValue(((K.KBoolean) b).toBoolean());
                 } else if (isFiniteNumber(b)) {
                     cell.setCellValue(((ToDouble) b).toDouble());
+                } else if (exportTemporalAsDateTime && isFiniteTemporal(b)) {
+                    setTemporalCellValue(cell, b, temporalStyles);
                 } else {
                     cell.setCellValue(b.toString(KFormatContext.EXCEL));
                 }
@@ -126,11 +132,68 @@ class ExcelExporter {
         return workbook;
     }
 
+    private static final String DATE_FORMAT = "yyyy-mm-dd";
+    private static final String MONTH_FORMAT = "yyyy-mm";
+    private static final String DATETIME_FORMAT = "yyyy-mm-dd hh:mm:ss.000";
+    private static final String TIME_FORMAT = "hh:mm:ss.000";
+    private static final String MINUTE_FORMAT = "hh:mm";
+    private static final String SECOND_FORMAT = "hh:mm:ss";
+    private static final String DURATION_FORMAT = "[h]:mm:ss.000";
+
     static boolean isFiniteNumber(K.KBase value) {
         KType type = value.getType();
         return (type == KType.Byte || type == KType.Short || type == KType.Int ||
                 type == KType.Long || type == KType.Float || type == KType.Double) &&
                 !((ToDouble) value).isNull() && !((ToDouble) value).isInfinity();
+    }
+
+    private static boolean isFiniteTemporal(K.KBase value) {
+        KType type = value.getType();
+        return (type == KType.Date || type == KType.Month || type == KType.Datetime ||
+                type == KType.Timestamp || type == KType.Time || type == KType.TimeLong ||
+                type == KType.Minute || type == KType.Second || type == KType.Timespan) &&
+                !((ToDouble) value).isNull() && !((ToDouble) value).isInfinity();
+    }
+
+    private static Map<KType, CellStyle> createTemporalStyles(Workbook workbook) {
+        Map<KType, CellStyle> styles = new EnumMap<>(KType.class);
+        styles.put(KType.Date, createStyle(workbook, DATE_FORMAT));
+        styles.put(KType.Month, createStyle(workbook, MONTH_FORMAT));
+        CellStyle datetimeStyle = createStyle(workbook, DATETIME_FORMAT);
+        styles.put(KType.Datetime, datetimeStyle);
+        styles.put(KType.Timestamp, datetimeStyle);
+        styles.put(KType.Time, createStyle(workbook, TIME_FORMAT));
+        styles.put(KType.TimeLong, createStyle(workbook, TIME_FORMAT));
+        styles.put(KType.Minute, createStyle(workbook, MINUTE_FORMAT));
+        styles.put(KType.Second, createStyle(workbook, SECOND_FORMAT));
+        styles.put(KType.Timespan, createStyle(workbook, DURATION_FORMAT));
+        return styles;
+    }
+
+    private static CellStyle createStyle(Workbook workbook, String format) {
+        CellStyle style = workbook.createCellStyle();
+        style.setDataFormat(workbook.createDataFormat().getFormat(format));
+        return style;
+    }
+
+    private static void setTemporalCellValue(Cell cell, K.KBase value, Map<KType, CellStyle> styles) {
+        cell.setCellValue(getTemporalExcelValue(value));
+        cell.setCellStyle(styles.get(value.getType()));
+    }
+
+    private static double getTemporalExcelValue(K.KBase value) {
+        KType type = value.getType();
+        if (type == KType.Date) return DateUtil.getExcelDate(((K.KDate) value).toLocalDate());
+        if (type == KType.Month) return DateUtil.getExcelDate(((K.KMonth) value).toLocalDateTime());
+        if (type == KType.Datetime) return DateUtil.getExcelDate(K.ZERO_DATE) + ((ToDouble) value).toDouble();
+        if (type == KType.Timestamp) return DateUtil.getExcelDate(K.ZERO_DATE) +
+                ((K.KTimestamp) value).toLong() / (double) K.NS_IN_DAY;
+        if (type == KType.Time) return ((K.KTime) value).toInt() / (double) K.MS_IN_DAY;
+        if (type == KType.TimeLong || type == KType.Timespan) {
+            return ((K.KLongBase) value).toLong() / (double) K.NS_IN_DAY;
+        }
+        if (type == KType.Minute) return ((K.KMinute) value).toInt() / (24.0 * 60);
+        return ((K.KSecond) value).toInt() / (24.0 * 60 * 60);
     }
 
     private static void addDetails(Workbook workbook, ResultTab tab) {

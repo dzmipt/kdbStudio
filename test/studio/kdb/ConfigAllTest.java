@@ -138,6 +138,7 @@ public class ConfigAllTest {
         assertEquals(new Color(0xabcdef), colors.get(EditorColorToken.SELECTED));
         assertEquals(new Color(0x987654), colors.get(EditorColorToken.CURRENT_LINE_HIGHLIGHT));
         assertEquals(false, config.getBoolean(Config.ALIGN_RIGHT_NUMBERS_IN_RESULT));
+        assertFalse(config.getBoolean(Config.EXCEL_EXPORT_TEMPORAL_AS_DATE_TIME));
 
         assertFalse(config.getBoolean(Config.TRY_TLS_CONNECTION_FIRST));
         assertFalse(config.getBoolean(Config.FAILOVER_BETWEEN_TLS_AND_TCP_CONNECTIONS));
