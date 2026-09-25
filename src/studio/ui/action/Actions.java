@@ -54,6 +54,7 @@ public class Actions {
     public final static String toggleCommaFormat = "toggleCommaFormat";
     public final static String upload = "upload";
     public final static String findInResult = "findInResult";
+    public final static String findInOpenTabs = "findInOpenTabs";
     public final static String prevResult = "prevResult";
     public final static String nextResult = "nextResult";
     public final static String about = "about";
@@ -172,6 +173,8 @@ public class Actions {
 
         add(findInResult, studioWindow ->
                 studioWindow.getResultSearchPanel().setVisible(true) );
+
+        add(findInOpenTabs, StudioWindow::showOpenTabsSearch);
 
         addResultTabAction(prevResult, tab ->
             tab.navigateCard(false) );

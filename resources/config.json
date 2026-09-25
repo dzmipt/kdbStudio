@@ -225,6 +225,16 @@
       "key": "F",
       "stroke": "menu shift f"
     },
+    "findInOpenTabs": {
+      "text": "Find in Open Tabs...",
+      "icon": "find",
+      "description": "Find text in all open editor tabs",
+      "key": "F",
+      "stroke": {
+        "mac": "ctrl shift f",
+        "other": "alt shift f"
+      }
+    },
     "prevResult": {
       "text": "Previous result",
       "icon": "left",
@@ -416,7 +426,7 @@
             "lineEndingUnix", "lineEndingWindows", "lineEndingMacOS9"
           ]
         },
-        "clean", "selectAll", null, "find", "replace", "convertTabsToSpaces"
+        "clean", "selectAll", null, "find", "findInOpenTabs", "replace", "convertTabsToSpaces"
       ]
     },
     {

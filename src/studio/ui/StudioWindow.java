@@ -983,6 +983,12 @@ public class StudioWindow extends StudioFrame {
         return editor;
     }
 
+    public void showOpenTabsSearch() {
+        List<EditorTab> editors = new ArrayList<>();
+        WindowFactory.forEachEditors(editors::add);
+        OpenTabsSearchDialog.show(this, editors);
+    }
+
     public EditorsPanel getRootEditorsPanel() {
         return rootEditorsPanel;
     }

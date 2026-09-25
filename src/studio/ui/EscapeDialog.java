@@ -25,7 +25,11 @@ public class EscapeDialog extends JDialog {
     }
 
     public EscapeDialog(Component windowOwner, String title) {
-        super(getWindow(windowOwner), "", ModalityType.APPLICATION_MODAL);
+        this(windowOwner, title, ModalityType.APPLICATION_MODAL);
+    }
+
+    public EscapeDialog(Component windowOwner, String title, Dialog.ModalityType modalityType) {
+        super(getWindow(windowOwner), "", modalityType);
         helper = new StudioFrame.Helper(this);
         setContentPane(getContentPane());
         setTitle(title);
