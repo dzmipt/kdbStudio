@@ -82,7 +82,7 @@ public class ServerConfig {
             } else {
                 Server server = child.getServer();
                 if (server.getBackgroundColor().equals(oldColor)) {
-                    server = new Server(server.getName(), server.getConnection(), server.getAuthenticationMechanism(), newColor, result);
+                    server = server.newBgColor(newColor).newParent(result);
                 }
                 result.add(server);
             }

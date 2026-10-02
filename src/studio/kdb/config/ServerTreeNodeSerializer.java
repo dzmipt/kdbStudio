@@ -93,8 +93,11 @@ public class ServerTreeNodeSerializer implements JsonSerializer<ServerTreeNode>,
             String authMethod = json.get("authMethod").getAsString();
             if (authMethod == null) authMethod = DefaultAuthenticationMechanism.NAME;
 
+            boolean defaultAuthMethod = getBoolean(json, "defaultAuthMethod");
+            boolean defaultCredentials = getBoolean(json, "defaultCredentials");
+
             return new ServerTreeNode(
-                    QConnection.get(handle).toServer(name, authMethod, bgColor));
+                    new Server(name, QConnection.get(handle), authMethod, bgColor, null, false, defaultAuthMethod, defaultCredentials));
         }
     }
 
@@ -113,10 +116,18 @@ public class ServerTreeNodeSerializer implements JsonSerializer<ServerTreeNode>,
         } else {
             Server server = node.getServer();
             json.addProperty("name", server.getName());
-            json.addProperty("handle", server.getConnectionStringWithPwd());
+            json.addProperty("handle", server.getServerConnection().toString());
             json.addProperty("bgColor", Integer.toHexString(server.getBackgroundColor().getRGB()).substring(2));
-            json.addProperty("authMethod", server.getAuthenticationMechanism());
+            json.addProperty("authMethod", server.getServerAuthenticationMechanism());
+            if (server.isDefaultAuthMethod()) json.addProperty("defaultAuthMethod", true);
+            if (server.isDefaultCredentials()) json.addProperty("defaultCredentials", true);
         }
         return json;
+    }
+
+    private static boolean getBoolean(JsonObject json, String key) {
+        JsonElement element = json.get(key);
+        if (element == null || element.isJsonNull()) return false;
+        return element.getAsBoolean();
     }
 }

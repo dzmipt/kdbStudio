@@ -18,6 +18,8 @@ public class FieldGetter<E> {
         user("Username"),
         password("Password"),
         auth("Auth. Method"),
+        defaultAuth("Default Auth. Method"),
+        defaultCredentials("Default User/Password"),
         color("Background Color");
 
         private final String text;
@@ -44,6 +46,12 @@ public class FieldGetter<E> {
     public final static FieldGetter<String> USER = new FieldGetter<>(Names.user, Server::getUsername);
     public final static FieldGetter<String> PASSWORD = new FieldGetter<>(Names.password, Server::getPassword);
     public final static FieldGetter<String> AUTH = new FieldGetter<>(Names.auth, Server::getAuthenticationMechanism);
+    public final static FieldGetter<Boolean> DEFAULT_AUTH = new FieldGetter<>(Names.defaultAuth, Server::isDefaultAuthMethod);
+    public final static FieldGetter<Boolean> DEFAULT_CREDENTIALS = new FieldGetter<>(Names.defaultCredentials, Server::isDefaultCredentials);
+    // Values stored with the server, ignoring default auth.method and default credentials flags
+    public final static FieldGetter<String> SERVER_USER = new FieldGetter<>(Names.user, Server::getServerUsername);
+    public final static FieldGetter<String> SERVER_PASSWORD = new FieldGetter<>(Names.password, Server::getServerPassword);
+    public final static FieldGetter<String> SERVER_AUTH = new FieldGetter<>(Names.auth, Server::getServerAuthenticationMechanism);
     public final static FieldGetter<Color> COLOR = new FieldGetter<>(Names.color, Server::getBackgroundColor);
 
 
