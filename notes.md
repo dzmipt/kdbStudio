@@ -1,3 +1,4 @@
+* Adding search in all opened tabs dialog
 * Update Export to Excel for numeric, boolean and temporal to use numeric in the output (and formatting for temporal types) 
 
 `dz8.0` 2026.08.03
