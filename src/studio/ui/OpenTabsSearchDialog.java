@@ -9,10 +9,7 @@ import javax.swing.table.AbstractTableModel;
 import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.text.BadLocationException;
 import java.awt.*;
-import java.awt.event.KeyEvent;
-import java.awt.event.WindowAdapter;
-import java.awt.event.WindowEvent;
-import java.awt.event.WindowListener;
+import java.awt.event.*;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.regex.PatternSyntaxException;
@@ -81,13 +78,22 @@ public class OpenTabsSearchDialog extends EscapeDialog {
         caseSensitive.addActionListener(e -> search());
         wholeWord.addActionListener(e -> search());
         regex.addActionListener(e -> search());
-        table.getInputMap().put(KeyStroke.getKeyStroke(KeyEvent.VK_ENTER, 0), "openMatch");
-        table.getActionMap().put("openMatch", new AbstractAction() {
-            @Override public void actionPerformed(java.awt.event.ActionEvent e) { openSelectedMatch(); }
+        table.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mousePressed(MouseEvent e) {
+                if (e.getClickCount()<2 || !SwingUtilities.isLeftMouseButton(e)) return;
+
+                int row = table.rowAtPoint(e.getPoint());
+                int column = table.columnAtPoint(e.getPoint());
+                if (row < 0 || column < 0) return;
+
+                openSelectedMatch(true);
+            }
         });
+
         table.getSelectionModel().addListSelectionListener(e -> {
             if (!e.getValueIsAdjusting() && e.getFirstIndex() >= 0 && table.getSelectedRow() >= 0) {
-                openSelectedMatch();
+                openSelectedMatch(false);
             }
         });
     }
@@ -153,7 +159,7 @@ public class OpenTabsSearchDialog extends EscapeDialog {
         return line.length() <= 240 ? line : line.substring(0, 237) + "...";
     }
 
-    private void openSelectedMatch() {
+    private void openSelectedMatch(boolean closeDialog) {
         int selectedRow = table.getSelectedRow();
         if (selectedRow < 0) return;
         Match match = model.get(table.convertRowIndexToModel(selectedRow));
@@ -163,16 +169,20 @@ public class OpenTabsSearchDialog extends EscapeDialog {
             return;
         }
 
-        StudioWindow studioWindow = match.editor.getStudioWindow();
-        // We need to bring the studioWindow toFront; and only after that the dialog toFront
-        WindowListener windowListener = new WindowAdapter() {
-            @Override
-            public void windowActivated(WindowEvent e) {
-                studioWindow.removeWindowListener(this);
-                OpenTabsSearchDialog.this.toFront();
-            }
-        };
-        studioWindow.addWindowListener(windowListener);
+        if (closeDialog) {
+            accept();
+        } else {
+            StudioWindow studioWindow = match.editor.getStudioWindow();
+            // We need to bring the studioWindow toFront; and only after that the dialog toFront
+            WindowListener windowListener = new WindowAdapter() {
+                @Override
+                public void windowActivated(WindowEvent e) {
+                    studioWindow.removeWindowListener(this);
+                    OpenTabsSearchDialog.this.toFront();
+                }
+            };
+            studioWindow.addWindowListener(windowListener);
+        }
 
         match.editor.getStudioWindow().toFront();
 
