@@ -15,7 +15,6 @@ import java.awt.*;
 import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.Type;
-import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 
 public class ServerTreeNodeSerializer implements JsonSerializer<ServerTreeNode>, JsonDeserializer<ServerTreeNode> {
@@ -39,7 +38,7 @@ public class ServerTreeNodeSerializer implements JsonSerializer<ServerTreeNode>,
         File file = FileChooser.openFile(parent, FileChooser.JSON_FF);
         if (file == null) return null;
         try {
-            String content = new String(Files.readAllBytes(file.toPath()), StandardCharsets.UTF_8);
+            String content = Files.readString(file.toPath());
             return ServerTreeNodeSerializer.fromJson(content);
 
         } catch (Exception e) {
@@ -60,7 +59,7 @@ public class ServerTreeNodeSerializer implements JsonSerializer<ServerTreeNode>,
 
         try {
             String content = ServerTreeNodeSerializer.toJson(root);
-            Files.write(file.toPath(), content.getBytes(StandardCharsets.UTF_8));
+            Files.writeString(file.toPath(), content);
         } catch (IOException e) {
             log.error("Error in saving to file {}", file, e);
             StudioOptionPane.showError(parent, "Error in saving to file " + file, "File Error");
