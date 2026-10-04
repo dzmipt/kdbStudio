@@ -26,12 +26,34 @@ public class ServerTreeNodeSerializer implements JsonSerializer<ServerTreeNode>,
             .create();
 
 
-    public static String toJson(ServerTreeNode serverTree) {
-        return gson.toJson(serverTree);
+    // Serialize children of the root as a json list
+    public static String toJson(ServerTreeNode root) {
+        JsonArray json = new JsonArray();
+        for (ServerTreeNode child: root.childNodes()) {
+            json.add(gson.toJsonTree(child, ServerTreeNode.class));
+        }
+        return gson.toJson(json);
     }
 
+    // Returns the root folder with deserialized nodes from the json list as children
     public static ServerTreeNode fromJson(String content) {
-        return gson.fromJson(content, ServerTreeNode.class);
+        ServerTreeNode root = new ServerTreeNode();
+        JsonElement json = JsonParser.parseString(content);
+        if (json == null || json.isJsonNull()) return root;
+
+        if (json.isJsonArray()) {
+            for (JsonElement child: json.getAsJsonArray()) {
+                root.add(gson.fromJson(child, ServerTreeNode.class));
+            }
+            return root;
+        }
+
+        // previous format: the root folder or a single node
+        ServerTreeNode node = gson.fromJson(json, ServerTreeNode.class);
+        if (node.isFolder() && node.getFolder().isEmpty()) return node;
+
+        root.add(node);
+        return root;
     }
 
     public static ServerTreeNode openImportDialog(Component parent) {

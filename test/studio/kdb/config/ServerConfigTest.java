@@ -81,6 +81,40 @@ public class ServerConfigTest {
     }
 
     @Test
+    public void testJsonFormat() {
+        ServerTreeNode root = new ServerTreeNode();
+        root.add(server);
+        root.add("folder").add(server.newName("inFolder"));
+
+        String json = ServerTreeNodeSerializer.toJson(root);
+        assertTrue(json.trim().startsWith("["));
+        assertDeepEquals(root, ServerTreeNodeSerializer.fromJson(json));
+
+        assertEquals("[]", ServerTreeNodeSerializer.toJson(new ServerTreeNode()));
+        assertEquals(0, ServerTreeNodeSerializer.fromJson("[]").getChildCount());
+        assertEquals(0, ServerTreeNodeSerializer.fromJson("").getChildCount());
+    }
+
+    @Test
+    public void testPreviousJsonFormat() {
+        String serverJson = "{\"name\":\"name\",\"handle\":\"`:host:1234:uuser:pwd\",\"bgColor\":\"010203\",\"authMethod\":\"auth\"}";
+
+        ServerTreeNode root = ServerTreeNodeSerializer.fromJson(serverJson);
+        assertTrue(root.isFolder());
+        assertEquals(1, root.getChildCount());
+        assertEquals("name", root.getChild(0).getServer().getName());
+
+        root = ServerTreeNodeSerializer.fromJson("{\"name\":\"\",\"children\":[" + serverJson + "]}");
+        assertEquals(1, root.getChildCount());
+        assertEquals("name", root.getChild(0).getServer().getName());
+
+        root = ServerTreeNodeSerializer.fromJson("{\"name\":\"folder\",\"children\":[" + serverJson + "]}");
+        assertEquals(1, root.getChildCount());
+        assertEquals("folder", root.getChild(0).getFolder());
+        assertEquals(1, root.getChild(0).getChildCount());
+    }
+
+    @Test
     public void testDefaultAuthServers() throws IOException {
         QConnection conn = new QConnection("host", 1234, "uuser", "pwd", false);
         Server defaultAuth = new Server("defaultAuth", conn, "auth", Color.WHITE, null, false, true, true);

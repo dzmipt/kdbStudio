@@ -51,13 +51,7 @@ public class ServerConfig {
         }
         try {
             String content = fileConfig.getContent();
-            ServerTreeNode node = ServerTreeNodeSerializer.fromJson(content);
-            if (node == null) node = new ServerTreeNode();
-            if (node.isFolder()) return node;
-
-            ServerTreeNode root = new ServerTreeNode();
-            root.add(node.getServer());
-            return root;
+            return ServerTreeNodeSerializer.fromJson(content);
         } catch (IOException e) {
             log.error("Error in reading server config from {}", fileConfig, e);
         } catch (Exception e) {
