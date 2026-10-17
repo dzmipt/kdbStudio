@@ -81,6 +81,94 @@ public class ServerConfigTest {
     }
 
     @Test
+    public void testJsonFormat() {
+        ServerTreeNode root = new ServerTreeNode();
+        root.add(server);
+        root.add("folder").add(server.newName("inFolder"));
+
+        String json = ServerTreeNodeSerializer.toJson(root);
+        assertTrue(json.trim().startsWith("["));
+        assertDeepEquals(root, ServerTreeNodeSerializer.fromJson(json));
+
+        assertEquals("[]", ServerTreeNodeSerializer.toJson(new ServerTreeNode()));
+        assertEquals(0, ServerTreeNodeSerializer.fromJson("[]").getChildCount());
+        assertEquals(0, ServerTreeNodeSerializer.fromJson("").getChildCount());
+    }
+
+    @Test
+    public void testPreviousJsonFormat() {
+        String serverJson = "{\"name\":\"name\",\"handle\":\"`:host:1234:uuser:pwd\",\"bgColor\":\"010203\",\"authMethod\":\"auth\"}";
+
+        ServerTreeNode root = ServerTreeNodeSerializer.fromJson(serverJson);
+        assertTrue(root.isFolder());
+        assertEquals(1, root.getChildCount());
+        assertEquals("name", root.getChild(0).getServer().getName());
+
+        root = ServerTreeNodeSerializer.fromJson("{\"name\":\"\",\"children\":[" + serverJson + "]}");
+        assertEquals(1, root.getChildCount());
+        assertEquals("name", root.getChild(0).getServer().getName());
+
+        root = ServerTreeNodeSerializer.fromJson("{\"name\":\"folder\",\"children\":[" + serverJson + "]}");
+        assertEquals(1, root.getChildCount());
+        assertEquals("folder", root.getChild(0).getFolder());
+        assertEquals(1, root.getChild(0).getChildCount());
+    }
+
+    @Test
+    public void testDefaultAuthServers() throws IOException {
+        QConnection conn = new QConnection("host", 1234, "uuser", "pwd", false);
+        Server defaultAuth = new Server("defaultAuth", conn, "auth", Color.WHITE, null, false, true, true);
+        Server defaultCredentials = new Server("defaultCredentials", conn, "auth2", Color.WHITE, null, false, false, true);
+
+        ServerTreeNode root = new ServerTreeNode();
+        root.add(server);
+        root.add(defaultAuth);
+        root.add(defaultCredentials);
+        testWriteRead(root);
+    }
+
+    @Test
+    public void testDefaultAuthEffectiveValues() {
+        Config config = Config.getInstance();
+        String prevAuth = config.getDefaultAuthMechanism();
+        try {
+            config.setDefaultAuthMechanism("defAuth");
+            config.setDefaultCredentials("defAuth", new Credentials("defUser", "defPwd"));
+            config.setDefaultCredentials("auth2", new Credentials("auth2User", "auth2Pwd"));
+
+            QConnection conn = new QConnection("host", 1234, "uuser", "pwd", false);
+            Server s = new Server("s", conn, "auth2", Color.WHITE, null, false, true, false);
+            assertEquals("defAuth", s.getAuthenticationMechanism());
+            assertEquals("defUser", s.getUsername());
+            assertEquals("defPwd", s.getPassword());
+            assertEquals("auth2", s.getServerAuthenticationMechanism());
+            assertEquals("uuser", s.getServerUsername());
+            assertEquals("pwd", s.getServerPassword());
+            assertEquals(conn, s.getServerConnection());
+
+            s = new Server("s", conn, "auth2", Color.WHITE, null, false, false, true);
+            assertEquals("auth2", s.getAuthenticationMechanism());
+            assertEquals("auth2User", s.getUsername());
+            assertEquals("auth2Pwd", s.getPassword());
+
+            s = new Server("s", conn, "auth2", Color.WHITE, null, false, false, false);
+            assertEquals("auth2", s.getAuthenticationMechanism());
+            assertEquals("uuser", s.getUsername());
+            assertEquals("pwd", s.getPassword());
+
+            s = new Server("s", conn, "auth2", Color.WHITE, null, false, true, true);
+            Server s2 = s.newAuthMethod("auth2");
+            assertFalse(s2.isDefaultAuthMethod());
+            assertTrue(s2.isDefaultCredentials());
+            assertEquals("auth2", s2.getAuthenticationMechanism());
+            assertTrue(s.newName("other").isDefaultAuthMethod());
+            assertTrue(s.newBgColor(Color.RED).isDefaultAuthMethod());
+        } finally {
+            config.setDefaultAuthMechanism(prevAuth);
+        }
+    }
+
+    @Test
     public void testGetByQConnection() throws IOException {
         Config.getInstance().setBoolean(Config.TRY_TLS_CONNECTION_FIRST, true);
         File file = File.createTempFile("serverConfig", "json");
