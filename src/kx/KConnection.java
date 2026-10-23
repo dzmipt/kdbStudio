@@ -26,6 +26,13 @@ public class KConnection {
     private final KAuthentication authentication;
     private final KConnectionStats stats = new KConnectionStats();
 
+    // State of the connect in progress. close() uses it to abort a connect that is stuck,
+    // e.g. when the server is busy and doesn't reply.
+    private final Object connectLock = new Object();
+    private boolean connecting = false;
+    private boolean connectAborted = false;
+    private Socket pendingSocket = null;
+
 
     public KConnectionStats getStats() {
         return stats;
@@ -42,7 +49,13 @@ public class KConnection {
         outputStream = s.getOutputStream();
     }
 
+    // Closes the connection. If the connection is being established in another thread, the attempt is aborted.
     public void close() {
+        abortConnect();
+        closeConnection();
+    }
+
+    private void closeConnection() {
         if (socketReader != null) {
             socketReader.interrupt();
             socketReader = null;
@@ -68,6 +81,27 @@ public class KConnection {
         }
         if (connectionStateListener != null) {
             connectionStateListener.connectionStateChange(connectionContext);
+        }
+    }
+
+    private void abortConnect() {
+        synchronized (connectLock) {
+            if (!connecting) return;
+            connectAborted = true;
+            closeQuietly(pendingSocket);
+        }
+    }
+
+    private static void closeQuietly(Socket socket) {
+        if (socket == null) return;
+        try {
+            socket.close();
+        } catch (IOException ignored) {}
+    }
+
+    private void checkAborted() throws ConnectionAbortedException {
+        synchronized (connectLock) {
+            if (connectAborted) throw new ConnectionAbortedException();
         }
     }
 
@@ -115,6 +149,10 @@ public class KConnection {
 
     private Socket bindSocket() throws IOException {
         Socket socket = new Socket();
+        synchronized (connectLock) {
+            if (connectAborted) throw new ConnectionAbortedException();
+            pendingSocket = socket;
+        }
         socket.setReceiveBufferSize(1024 * 1024);
         socket.connect(new InetSocketAddress(host, port));
         return socket;
@@ -123,6 +161,7 @@ public class KConnection {
     private void connect(boolean useTLS, KDBTrustManager trustManager) throws  IOException, K4AccessException {
         connectionContext.setSecure(useTLS);
         String userPassword = authentication == null ? "" : authentication.getUserPassword(connectionContext);
+        checkAborted();
 
         if (useTLS) {
             s = createSSLSocket(trustManager);
@@ -136,7 +175,7 @@ public class KConnection {
         baos.write(0);
         outputStream.write(baos.toByteArray());
         if (inputStream.read() == -1) {
-            close();
+            closeConnection();
             throw new K4AccessException();
         }
         connectionContext.setConnected(true);
@@ -145,27 +184,51 @@ public class KConnection {
     public synchronized void connect(KDBTrustManager trustManager) throws IOException, K4AccessException {
         if (connectionContext.isConnected() ) return;
 
-        Exception exc1 = null;
-        Exception exc2 = null;
+        synchronized (connectLock) {
+            connecting = true;
+            connectAborted = false;
+            pendingSocket = null;
+        }
 
         try {
-            connect(useTLS, trustManager);
-        } catch (IOException | K4AccessException e) {
-            exc1 = e;
-        }
+            Exception exc1 = null;
+            Exception exc2 = null;
 
-        if (!connectionContext.isConnected() && flipTLS) {
             try {
-                connect(!useTLS, trustManager);
+                connect(useTLS, trustManager);
             } catch (IOException | K4AccessException e) {
-                exc2 = e;
+                exc1 = e;
+                closeQuietly(pendingSocket);
             }
-        }
 
-        if (!connectionContext.isConnected()) {
-            if (exc1 instanceof K4AccessException) throw (K4AccessException) exc1;
-            if (exc2 instanceof K4AccessException) throw (K4AccessException) exc2;
-            throw (IOException) exc1;
+            checkAborted();
+
+            if (!connectionContext.isConnected() && flipTLS) {
+                try {
+                    connect(!useTLS, trustManager);
+                } catch (IOException | K4AccessException e) {
+                    exc2 = e;
+                    closeQuietly(pendingSocket);
+                }
+            }
+
+            checkAborted();
+
+            if (!connectionContext.isConnected()) {
+                if (exc1 instanceof K4AccessException) throw (K4AccessException) exc1;
+                if (exc2 instanceof K4AccessException) throw (K4AccessException) exc2;
+                throw (IOException) exc1;
+            }
+        } catch (ConnectionAbortedException e) {
+            connectionContext.setConnected(false);
+            closeQuietly(s);
+            throw e;
+        } finally {
+            synchronized (connectLock) {
+                connecting = false;
+                connectAborted = false;
+                pendingSocket = null;
+            }
         }
 
         stats.connected();
@@ -226,7 +289,7 @@ public class KConnection {
             message.setBytesSent(sentBytes);
             return message;
         } catch (IOException e) {
-            close();
+            closeConnection();
             throw e;
         }
     }
@@ -336,8 +399,14 @@ public class KConnection {
                     message.setFinished(K.KTimestamp.now());
                     lockRead.notifyAll();
                 }
-                close();
+                closeConnection();
             }
+        }
+    }
+
+    public static class ConnectionAbortedException extends IOException {
+        public ConnectionAbortedException() {
+            super("Connection was cancelled");
         }
     }
 
