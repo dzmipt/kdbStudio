@@ -77,25 +77,46 @@ public class ChartPanel extends studio.ui.chart.patched.ChartPanel {
         setMouseWheelEnabled(true);
         setMouseZoomable(true, true);
 
-        copyAction = addAccelerator(copyItem, Util.getMenuShortcut(KeyEvent.VK_C));
+        copyAction = addAccelerator(findMenuItem(COPY_COMMAND), Util.getMenuShortcut(KeyEvent.VK_C));
         copyAction.putValue(Action.SMALL_ICON, Util.COPY_ICON);
         copyAction.putValue(Action.SHORT_DESCRIPTION, "Copy the chart");
 
-        saveAction = addAccelerator(pngItem, Util.getMenuShortcut(KeyEvent.VK_S));
+        saveAction = addAccelerator(findMenuItem("SAVE_AS_PNG"), Util.getMenuShortcut(KeyEvent.VK_S));
         saveAction.putValue(Action.SMALL_ICON, Util.DISKS_ICON);
         saveAction.putValue(Action.SHORT_DESCRIPTION, "Save the chart");
 
-        /*propertiesAction = */ addAccelerator(propertiesItem, KeyStroke.getKeyStroke(KeyEvent.VK_ENTER, KeyEvent.ALT_DOWN_MASK));
-        /*zoomInAction = */ addAccelerator(zoomInBothMenuItem, Util.getMenuShortcut(KeyEvent.VK_PLUS),
+        /*propertiesAction = */ addAccelerator(findMenuItem(PROPERTIES_COMMAND), KeyStroke.getKeyStroke(KeyEvent.VK_ENTER, KeyEvent.ALT_DOWN_MASK));
+        /*zoomInAction = */ addAccelerator(findMenuItem(ZOOM_IN_BOTH_COMMAND), Util.getMenuShortcut(KeyEvent.VK_PLUS),
                                                           Util.getMenuShortcut(KeyEvent.VK_EQUALS),
                                                           Util.getMenuShortcut(KeyEvent.VK_ADD));
-        /*zoomOutAction = */ addAccelerator(zoomOutBothMenuItem, Util.getMenuShortcut(KeyEvent.VK_MINUS),
+        /*zoomOutAction = */ addAccelerator(findMenuItem(ZOOM_OUT_BOTH_COMMAND), Util.getMenuShortcut(KeyEvent.VK_MINUS),
                                                             Util.getMenuShortcut(KeyEvent.VK_SUBTRACT));
-        /*resetZoomAction = */ addAccelerator(zoomResetBothMenuItem, KeyStroke.getKeyStroke(KeyEvent.VK_ESCAPE, 0));
+        /*resetZoomAction = */ addAccelerator(findMenuItem(ZOOM_RESET_BOTH_COMMAND), KeyStroke.getKeyStroke(KeyEvent.VK_ESCAPE, 0));
 
         lineAction = UserAction.create("Add line", Util.LINE_ICON, "Add a line", KeyEvent.VK_L,null,
                                         e -> addLineAction() );
 //                        .addActionToComponent(this); // didn't figure out why keyStroke doesn't trigger the action
+    }
+
+    private JMenuItem findMenuItem(String actionCommand) {
+        JMenuItem item = findMenuItem(getPopupMenu().getSubElements(), actionCommand);
+        if (item == null) {
+            throw new IllegalStateException("Chart popup menu has no item with command " + actionCommand);
+        }
+        return item;
+    }
+
+    private static JMenuItem findMenuItem(MenuElement[] elements, String actionCommand) {
+        for (MenuElement element: elements) {
+            if (element instanceof JMenu) {
+                JMenuItem item = findMenuItem(((JMenu) element).getPopupMenu().getSubElements(), actionCommand);
+                if (item != null) return item;
+            } else if (element instanceof JMenuItem) {
+                JMenuItem item = (JMenuItem) element;
+                if (actionCommand.equals(item.getActionCommand())) return item;
+            }
+        }
+        return null;
     }
 
     private Action addAccelerator(JMenuItem menuItem, KeyStroke... keyStrokes) {
