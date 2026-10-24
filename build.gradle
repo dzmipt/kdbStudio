@@ -7,7 +7,7 @@ plugins {
     id("maven-publish")
     id("signing")
 
-    id("com.github.ben-manes.versions") version "${versionsPluginVersion}"
+    alias(libs.plugins.versions)
 }
 
 group = "com.github.dzmipt"
@@ -68,37 +68,37 @@ configurations {
 }
 
 dependencies {
-    txtmark "com.github.rjeschke:txtmark:${txtmarkVersion}"
+    txtmark libs.txtmark
 
-    implementation "org.apache.logging.log4j:log4j-api:${log4jVersion}"
-    implementation "org.apache.logging.log4j:log4j-core:${log4jVersion}"
-    implementation "org.apache.logging.log4j:log4j-iostreams:${log4jVersion}"
-    annotationProcessor "org.apache.logging.log4j:log4j-core:${log4jVersion}"
+    implementation libs.log4j.api
+    implementation libs.log4j.core
+    implementation libs.log4j.iostreams
+    annotationProcessor libs.log4j.core
 
-    implementation "com.fifesoft:rsyntaxtextarea:${rsyntaxtextareaVersion}"
+    implementation libs.rsyntaxtextarea
     //see studio.ui.chart.patched folder for the patch for jfreechart.
     // It will require review during the jfreechart upgrade.
-    implementation "org.jfree:jfreechart:${jfreechartVersion}"
+    implementation libs.jfreechart
 
-    implementation "org.apache.poi:poi:${poiVersion}"
-    implementation "org.apache.poi:poi-ooxml:${poiVersion}"
+    implementation libs.poi
+    implementation libs.poi.ooxml
 
-    implementation "net.java.dev.jna:jna:${jnaVersion}"
-    implementation "org.drjekyll:fontchooser:${fontchooserVersion}"
+    implementation libs.jna
+    implementation libs.fontchooser
 
-    implementation "com.google.code.gson:gson:${gsonVersion}"
+    implementation libs.gson
 
-    implementation "com.formdev:flatlaf:${flatlafVersion}"
-    implementation "com.formdev:flatlaf-extras:${flatlafVersion}"
+    implementation libs.flatlaf
+    implementation libs.flatlaf.extras
 
-    testImplementation(platform("org.junit:junit-bom:${junitVersion}"))
+    testImplementation(platform(libs.junit.bom))
 
     testImplementation("org.junit.jupiter:junit-jupiter-api")
     testImplementation("org.junit.jupiter:junit-jupiter-params")
     testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine")
     testRuntimeOnly("org.junit.platform:junit-platform-launcher")
 
-    intTestImplementation "org.assertj:assertj-swing-junit:${assertjSwingJunitVersion}"
+    intTestImplementation libs.assertj.swing.junit
 }
 
 test {
