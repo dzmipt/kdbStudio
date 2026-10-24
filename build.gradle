@@ -6,8 +6,6 @@ plugins {
     id("application")
     id("maven-publish")
     id("signing")
-
-    alias(libs.plugins.versions)
 }
 
 group = "com.github.dzmipt"
