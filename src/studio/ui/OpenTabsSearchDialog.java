@@ -26,6 +26,9 @@ public class OpenTabsSearchDialog extends EscapeDialog {
     private final MatchesTableModel model = new MatchesTableModel();
     private final JTable table = new JTable(model);
 
+    private Window pendingWindow = null;
+    private WindowFocusListener pendingListener = null;
+
     private OpenTabsSearchDialog(StudioWindow owner, List<EditorTab> editors) {
         super(null, "Find in Open Tabs", ModalityType.MODELESS);
         this.editors = editors;
@@ -169,22 +172,14 @@ public class OpenTabsSearchDialog extends EscapeDialog {
             return;
         }
 
+        StudioWindow studioWindow = match.editor.getStudioWindow();
         if (closeDialog) {
             accept();
         } else {
-            StudioWindow studioWindow = match.editor.getStudioWindow();
-            // We need to bring the studioWindow toFront; and only after that the dialog toFront
-            WindowListener windowListener = new WindowAdapter() {
-                @Override
-                public void windowActivated(WindowEvent e) {
-                    studioWindow.removeWindowListener(this);
-                    OpenTabsSearchDialog.this.toFront();
-                }
-            };
-            studioWindow.addWindowListener(windowListener);
+            keepOnTopOf(studioWindow);
         }
 
-        match.editor.getStudioWindow().toFront();
+        studioWindow.toFront();
 
         match.editor.selectEditor();
         JTextArea textArea = match.editor.getTextArea();
@@ -196,6 +191,43 @@ public class OpenTabsSearchDialog extends EscapeDialog {
             // The document may have changed since the result was created.
         }
         textArea.requestFocusInWindow();
+    }
+
+    // We need to bring the studioWindow to front and only after that the dialog.
+    // The dialog is brought to front after the studioWindow has fully got focus
+    // (including the focus transfer to the text area). Calling toFront() earlier, e.g. from
+    // windowActivated(), doesn't work on Windows: the subsequent focus transfer to the text area
+    // re-activates the studioWindow natively, and it ends up above the dialog.
+    private void keepOnTopOf(Window window) {
+        clearPendingListener();
+        if (window.isFocused()) {
+            SwingUtilities.invokeLater(this::toFront);
+            return;
+        }
+
+        pendingWindow = window;
+        pendingListener = new WindowAdapter() {
+            @Override
+            public void windowGainedFocus(WindowEvent e) {
+                clearPendingListener();
+                SwingUtilities.invokeLater(() -> {
+                    if (isVisible()) toFront();
+                });
+            }
+        };
+        window.addWindowFocusListener(pendingListener);
+    }
+
+    private void clearPendingListener() {
+        if (pendingWindow != null) pendingWindow.removeWindowFocusListener(pendingListener);
+        pendingWindow = null;
+        pendingListener = null;
+    }
+
+    @Override
+    public void dispose() {
+        clearPendingListener();
+        super.dispose();
     }
 
     private static class Match {
