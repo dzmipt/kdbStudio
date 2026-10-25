@@ -17,7 +17,9 @@ import java.util.regex.PatternSyntaxException;
 /** A modeless, live-search dialog for all editors belonging to one Studio window. */
 public class OpenTabsSearchDialog extends EscapeDialog {
 
-    private final List<EditorTab> editors;
+    private static OpenTabsSearchDialog instance = null;
+
+    private List<EditorTab> editors;
     private final JTextField searchField = new JTextField();
     private final JCheckBox caseSensitive = new JCheckBox("Case sensitive");
     private final JCheckBox wholeWord = new JCheckBox("Whole word");
@@ -101,11 +103,21 @@ public class OpenTabsSearchDialog extends EscapeDialog {
         });
     }
 
+    // Only one dialog exists at a time. If it is already open, it is refreshed with the current tabs
+    // and brought to front.
     public static void show(StudioWindow owner, List<EditorTab> editors) {
-        OpenTabsSearchDialog dialog = new OpenTabsSearchDialog(owner, editors);
-        dialog.align();
-        dialog.setVisible(true);
-        dialog.searchField.requestFocusInWindow();
+        if (instance != null) {
+            instance.editors = editors;
+            instance.search();
+            instance.toFront();
+            instance.searchField.requestFocusInWindow();
+            return;
+        }
+
+        instance = new OpenTabsSearchDialog(owner, editors);
+        instance.align();
+        instance.setVisible(true);
+        instance.searchField.requestFocusInWindow();
     }
 
     private void search() {
@@ -226,6 +238,7 @@ public class OpenTabsSearchDialog extends EscapeDialog {
 
     @Override
     public void dispose() {
+        if (instance == this) instance = null;
         clearPendingListener();
         super.dispose();
     }
