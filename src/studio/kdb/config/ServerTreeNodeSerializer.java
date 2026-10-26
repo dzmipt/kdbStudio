@@ -26,12 +26,34 @@ public class ServerTreeNodeSerializer implements JsonSerializer<ServerTreeNode>,
             .create();
 
 
-    public static String toJson(ServerTreeNode serverTree) {
-        return gson.toJson(serverTree);
+    // Serialize children of the root as a json list
+    public static String toJson(ServerTreeNode root) {
+        JsonArray json = new JsonArray();
+        for (ServerTreeNode child: root.childNodes()) {
+            json.add(gson.toJsonTree(child, ServerTreeNode.class));
+        }
+        return gson.toJson(json);
     }
 
+    // Returns the root folder with deserialized nodes from the json list as children
     public static ServerTreeNode fromJson(String content) {
-        return gson.fromJson(content, ServerTreeNode.class);
+        ServerTreeNode root = new ServerTreeNode();
+        JsonElement json = JsonParser.parseString(content);
+        if (json == null || json.isJsonNull()) return root;
+
+        if (json.isJsonArray()) {
+            for (JsonElement child: json.getAsJsonArray()) {
+                root.add(gson.fromJson(child, ServerTreeNode.class));
+            }
+            return root;
+        }
+
+        // previous format: the root folder or a single node
+        ServerTreeNode node = gson.fromJson(json, ServerTreeNode.class);
+        if (node.isFolder() && node.getFolder().isEmpty()) return node;
+
+        root.add(node);
+        return root;
     }
 
     public static ServerTreeNode openImportDialog(Component parent) {
@@ -93,8 +115,11 @@ public class ServerTreeNodeSerializer implements JsonSerializer<ServerTreeNode>,
             String authMethod = json.get("authMethod").getAsString();
             if (authMethod == null) authMethod = DefaultAuthenticationMechanism.NAME;
 
+            boolean defaultAuthMethod = getBoolean(json, "defaultAuthMethod");
+            boolean defaultCredentials = getBoolean(json, "defaultCredentials");
+
             return new ServerTreeNode(
-                    QConnection.get(handle).toServer(name, authMethod, bgColor));
+                    new Server(name, QConnection.get(handle), authMethod, bgColor, null, false, defaultAuthMethod, defaultCredentials));
         }
     }
 
@@ -113,10 +138,18 @@ public class ServerTreeNodeSerializer implements JsonSerializer<ServerTreeNode>,
         } else {
             Server server = node.getServer();
             json.addProperty("name", server.getName());
-            json.addProperty("handle", server.getConnectionStringWithPwd());
+            json.addProperty("handle", server.getServerConnection().toString());
             json.addProperty("bgColor", Integer.toHexString(server.getBackgroundColor().getRGB()).substring(2));
-            json.addProperty("authMethod", server.getAuthenticationMechanism());
+            json.addProperty("authMethod", server.getServerAuthenticationMechanism());
+            if (server.isDefaultAuthMethod()) json.addProperty("defaultAuthMethod", true);
+            if (server.isDefaultCredentials()) json.addProperty("defaultCredentials", true);
         }
         return json;
+    }
+
+    private static boolean getBoolean(JsonObject json, String key) {
+        JsonElement element = json.get(key);
+        if (element == null || element.isJsonNull()) return false;
+        return element.getAsBoolean();
     }
 }

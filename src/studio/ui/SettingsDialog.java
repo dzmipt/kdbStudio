@@ -168,7 +168,7 @@ public class SettingsDialog extends EscapeDialog {
            if (server.inServerTree()) {
                editor.setServer(serverConfig.getServer(server.getFullName()));
            } else if (server.getBackgroundColor().equals(oldColor)){
-               Server newServer = new Server(server.getName(), server.getConnection(), server.getAuthenticationMechanism(), newColor);
+               Server newServer = server.newBgColor(newColor);
                editor.setServer(newServer);
            }
         });

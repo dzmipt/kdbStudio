@@ -17,11 +17,36 @@ public class Server {
     private final QConnection conn;
     private final ServerTreeNode parent;
     private final boolean flipTLS;
+    private final boolean defaultAuthMethod;
+    private final boolean defaultCredentials;
 
     public static final Server NO_SERVER = new Server("", "", 0, "", "", Color.WHITE, DefaultAuthenticationMechanism.NAME, false);
 
+    /**
+     * Effective auth. method: from the Settings if the server uses default auth.method
+     */
     public String getAuthenticationMechanism() {
+        if (defaultAuthMethod) return Config.getInstance().getDefaultAuthMechanism();
         return authenticationMechanism;
+    }
+
+    /**
+     * Auth. method stored with the server (ignoring the default auth.method flag)
+     */
+    public String getServerAuthenticationMechanism() {
+        return authenticationMechanism;
+    }
+
+    public boolean isDefaultAuthMethod() {
+        return defaultAuthMethod;
+    }
+
+    public boolean isDefaultCredentials() {
+        return defaultCredentials;
+    }
+
+    private boolean useDefaultCredentials() {
+        return defaultAuthMethod || defaultCredentials;
     }
 
     public Color getBackgroundColor() {
@@ -29,10 +54,18 @@ public class Server {
     }
 
     public String getPassword() {
-        return conn.getPassword();
+        return getConnection().getPassword();
     }
 
     public String getUsername() {
+        return getConnection().getUser();
+    }
+
+    public String getServerPassword() {
+        return conn.getPassword();
+    }
+
+    public String getServerUsername() {
         return conn.getUser();
     }
 
@@ -44,7 +77,7 @@ public class Server {
         String authMethod = Config.getInstance().getDefaultAuthMechanism();
         Credentials credentials = Config.getInstance().getDefaultCredentials(authMethod);
         QConnection conn = new QConnection("", 0, credentials.getUsername(), credentials.getPassword(), false);
-        return new Server("", conn, authMethod, Config.getInstance().getBackgroundColor(), null);
+        return new Server("", conn, authMethod, Config.getInstance().getBackgroundColor(), null, false, true, true);
     }
 
     @Override
@@ -54,6 +87,8 @@ public class Server {
         boolean res =  s.name.equals(name)
                     && Objects.equals(s.conn, conn)
                     && s.flipTLS == flipTLS
+                    && s.defaultAuthMethod == defaultAuthMethod
+                    && s.defaultCredentials == defaultCredentials
                     && Objects.equals(s.authenticationMechanism ,authenticationMechanism);
 
         if (! res) return false;
@@ -85,6 +120,11 @@ public class Server {
     }
 
     public Server(String name, QConnection conn, String authMethod, Color bgColor, ServerTreeNode parent, boolean flipTLS) {
+        this(name, conn, authMethod, bgColor, parent, flipTLS, false, false);
+    }
+
+    public Server(String name, QConnection conn, String authMethod, Color bgColor, ServerTreeNode parent, boolean flipTLS,
+                  boolean defaultAuthMethod, boolean defaultCredentials) {
         if (parent != null && ! parent.isFolder()) throw new IllegalArgumentException("Parent ServerTreeNode can be folder only");
 
         this.name = name;
@@ -93,24 +133,32 @@ public class Server {
         this.authenticationMechanism = authMethod;
         this.parent = parent;
         this.flipTLS = flipTLS;
+        this.defaultAuthMethod = defaultAuthMethod;
+        this.defaultCredentials = defaultCredentials;
     }
 
 
     public Server newName(String name) {
         if (this.name.equals(name)) return this;
-        return new Server(name, conn, authenticationMechanism, backgroundColor, parent);
+        return new Server(name, conn, authenticationMechanism, backgroundColor, parent, false, defaultAuthMethod, defaultCredentials);
     }
 
     public Server newAuthMethod(String authMethod) {
-        if (this.authenticationMechanism.equals(authMethod)) return this;
+        if (!defaultAuthMethod && this.authenticationMechanism.equals(authMethod)) return this;
 
-        return new Server(name, conn, authMethod, backgroundColor, parent);
+        return new Server(name, conn, authMethod, backgroundColor, parent, false, false, defaultCredentials);
     }
 
     public Server newFlipTLS(boolean flipTLS) {
         if (this.flipTLS == flipTLS) return this;
 
-        return new Server(name, conn, authenticationMechanism, backgroundColor, parent, flipTLS);
+        return new Server(name, conn, authenticationMechanism, backgroundColor, parent, flipTLS, defaultAuthMethod, defaultCredentials);
+    }
+
+    public Server newBgColor(Color bgColor) {
+        if (this.backgroundColor.equals(bgColor)) return this;
+
+        return new Server(name, conn, authenticationMechanism, bgColor, parent, flipTLS, defaultAuthMethod, defaultCredentials);
     }
 
     public String getName() {
@@ -145,15 +193,27 @@ public class Server {
     }
 
     public String getConnectionString() {
-        return conn.toString(false);
+        return getConnection().toString(false);
     }
 
+    /**
+     * Effective connection: user and password are taken from the Settings if the server uses default credentials
+     */
     public QConnection getConnection() {
+        if (! useDefaultCredentials()) return conn;
+        Credentials credentials = Config.getInstance().getDefaultCredentials(getAuthenticationMechanism());
+        return conn.changeUserPassword(credentials);
+    }
+
+    /**
+     * Connection with user and password stored with the server (ignoring default credentials flags)
+     */
+    public QConnection getServerConnection() {
         return conn;
     }
 
     public String getConnectionStringWithPwd() {
-        return conn.toString();
+        return getConnection().toString();
     }
 
     public String getDescription(boolean fullName) {
@@ -182,7 +242,7 @@ public class Server {
     }
 
     public Server newParent(ServerTreeNode parent) {
-        return new Server(name, conn, authenticationMechanism, backgroundColor, parent);
+        return new Server(name, conn, authenticationMechanism, backgroundColor, parent, false, defaultAuthMethod, defaultCredentials);
     }
 
 }
