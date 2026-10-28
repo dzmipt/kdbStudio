@@ -92,6 +92,16 @@ public class GridColorsEditor extends JPanel {
         return label;
     }
 
+    public void setEditable(boolean editable) {
+        nullLabel.setEditable(editable);
+        for (ColorLabel label: fgLabels.values()) {
+            label.setEditable(editable);
+        }
+        for (ColorLabel label: bgLabels.values()) {
+            label.setEditable(editable);
+        }
+    }
+
     public GridColorConfig getConfig() {
         return config;
     }

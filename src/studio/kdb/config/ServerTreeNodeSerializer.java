@@ -80,14 +80,15 @@ public class ServerTreeNodeSerializer implements JsonSerializer<ServerTreeNode>,
         } else {
             String handle = json.get("handle").getAsString();
 
-            String colorValue = json.get("bgColor").getAsString();
-            Color bgColor = Color.WHITE;
-            try {
-                if (colorValue != null) {
+            Color bgColor = null; // default background color
+            JsonElement jsonColor = json.get("bgColor");
+            if (jsonColor != null) {
+                String colorValue = jsonColor.getAsString();
+                try {
                     bgColor = new Color(Integer.parseInt(colorValue, 16));
+                } catch (NumberFormatException e) {
+                    log.error("Can't parse color {}", colorValue);
                 }
-            } catch (NumberFormatException e) {
-                log.error("Can't parse color {}", colorValue);
             }
 
             String authMethod = json.get("authMethod").getAsString();
@@ -114,7 +115,10 @@ public class ServerTreeNodeSerializer implements JsonSerializer<ServerTreeNode>,
             Server server = node.getServer();
             json.addProperty("name", server.getName());
             json.addProperty("handle", server.getConnectionStringWithPwd());
-            json.addProperty("bgColor", Integer.toHexString(server.getBackgroundColor().getRGB()).substring(2));
+            Color bgColor = server.getBackgroundColor();
+            if (bgColor != null) {
+                json.addProperty("bgColor", Integer.toHexString(bgColor.getRGB()).substring(2));
+            }
             json.addProperty("authMethod", server.getAuthenticationMechanism());
         }
         return json;

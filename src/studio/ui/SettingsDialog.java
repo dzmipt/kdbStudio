@@ -71,20 +71,9 @@ public class SettingsDialog extends EscapeDialog {
     }
 
     public void saveSettings() {
-        Color oldBgColor = CONFIG.getBackgroundColor();
-
         SettingsSaveResult result = new SettingsSaveResult();
         for(SettingsTab tab: pages.values() ) {
             tab.saveSettings(result);
-        }
-
-        Color newBgColor = CONFIG.getBackgroundColor();
-        if (! newBgColor.equals(oldBgColor) ) {
-            int res = StudioOptionPane.showYesNoDialog(this, "Background color is changed.\n" +
-                    "Do you want to update background for all servers with old background color?", "Background color changed");
-            if (res == JOptionPane.YES_OPTION) {
-                updateBgColor(oldBgColor, newBgColor);
-            }
         }
 
         if (result.isRefreshComboServerVisibility()) {
@@ -159,20 +148,6 @@ public class SettingsDialog extends EscapeDialog {
         });
     }
 
-
-    public static void updateBgColor(Color oldColor, Color newColor) {
-        ServerConfig serverConfig = CONFIG.getServerConfig();
-        serverConfig.updateBgColor(oldColor, newColor);
-        WindowFactory.forEachEditors(editor -> {
-           Server server = editor.getServer();
-           if (server.inServerTree()) {
-               editor.setServer(serverConfig.getServer(server.getFullName()));
-           } else if (server.getBackgroundColor().equals(oldColor)){
-               Server newServer = new Server(server.getName(), server.getConnection(), server.getAuthenticationMechanism(), newColor);
-               editor.setServer(newServer);
-           }
-        });
-    }
 
     public static void main(String... args) throws UnsupportedLookAndFeelException {
         UIManager.setLookAndFeel(new javax.swing.plaf.nimbus.NimbusLookAndFeel());

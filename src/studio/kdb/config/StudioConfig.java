@@ -6,6 +6,7 @@ import org.apache.logging.log4j.Logger;
 import studio.kdb.FileChooserConfig;
 import studio.ui.Util;
 import studio.utils.FileConfig;
+import studio.utils.FilesBackup;
 
 import java.awt.*;
 import java.io.IOException;
@@ -116,6 +117,7 @@ public class StudioConfig {
                 boolean changed = jsonConverter.convert(json);
                 if (changed) {
                     log.info("The config has been converted");
+                    backup();
                     save(json);
                 }
             }
@@ -157,6 +159,32 @@ public class StudioConfig {
         } catch (IOException e) {
             log.error("Error on saving json {}", fileConfig.getPath(), e);
         }
+    }
+
+    private void backup() {
+        if (fileConfig == null || ! fileConfig.fileExists()) return;
+        try {
+            FilesBackup.getInstance().backup(fileConfig.getPath());
+        } catch (IOException e) {
+            log.error("Error on backup of {}", fileConfig.getPath(), e);
+        }
+    }
+
+    /**
+     * The default value which takes into account the default config file (from the plugin folder)
+     */
+    public Object getDefaultWithDefaultFile(String key) {
+        ConfigType type = getType(key);
+        JsonObject jDefault = getJson(defaultFileConfig);
+        JsonElement jsonElement = jDefault.get(key);
+        if (jsonElement != null) {
+            try {
+                return type.fromJson(jsonElement, registry.getDefault(key));
+            } catch (Exception e) {
+                log.warn("Error parsing key {} in the default config. Skipping...", key, e);
+            }
+        }
+        return getDefault(key);
     }
 
     public Object getDefault(String key) {

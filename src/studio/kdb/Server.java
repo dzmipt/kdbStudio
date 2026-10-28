@@ -18,14 +18,20 @@ public class Server {
     private final ServerTreeNode parent;
     private final boolean flipTLS;
 
-    public static final Server NO_SERVER = new Server("", "", 0, "", "", Color.WHITE, DefaultAuthenticationMechanism.NAME, false);
+    public static final Server NO_SERVER = new Server("", "", 0, "", "", null, DefaultAuthenticationMechanism.NAME, false);
 
     public String getAuthenticationMechanism() {
         return authenticationMechanism;
     }
 
+    // null means the default background color from the style schema
     public Color getBackgroundColor() {
         return backgroundColor;
+    }
+
+    public Server newBackgroundColor(Color backgroundColor) {
+        if (Objects.equals(this.backgroundColor, backgroundColor)) return this;
+        return new Server(name, conn, authenticationMechanism, backgroundColor, parent, flipTLS);
     }
 
     public String getPassword() {
@@ -44,7 +50,7 @@ public class Server {
         String authMethod = Config.getInstance().getDefaultAuthMechanism();
         Credentials credentials = Config.getInstance().getDefaultCredentials(authMethod);
         QConnection conn = new QConnection("", 0, credentials.getUsername(), credentials.getPassword(), false);
-        return new Server("", conn, authMethod, Config.getInstance().getBackgroundColor(), null);
+        return new Server("", conn, authMethod, null, null);
     }
 
     @Override

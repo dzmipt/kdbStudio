@@ -55,7 +55,7 @@ public class ColorLabel extends JLabel {
     public void setEditable(boolean editable) {
         this.editable = editable;
         if (editable) {
-            Cursor.getPredefinedCursor(Cursor.HAND_CURSOR);
+            setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
         } else {
             setCursor(Cursor.getDefaultCursor());
         }

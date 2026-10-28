@@ -7,7 +7,9 @@ import studio.core.DefaultAuthenticationMechanism;
 import studio.kdb.Config;
 import studio.kdb.Server;
 import studio.kdb.ServerTreeNode;
+import studio.ui.Util;
 import studio.utils.FileConfig;
+import studio.utils.FilesBackup;
 import studio.utils.QConnection;
 
 import java.awt.*;
@@ -74,15 +76,15 @@ public class ServerConfig {
         }
     }
 
-    private ServerTreeNode updateBgColor(ServerTreeNode serverTreeNode, Color oldColor, Color newColor) {
+    private ServerTreeNode convertBgColorToDefault(ServerTreeNode serverTreeNode, Color color) {
         ServerTreeNode result = new ServerTreeNode(serverTreeNode.getFolder());
         for (ServerTreeNode child: serverTreeNode.childNodes()) {
             if (child.isFolder()) {
-                result.add(updateBgColor(child, oldColor, newColor));
+                result.add(convertBgColorToDefault(child, color));
             } else {
                 Server server = child.getServer();
-                if (server.getBackgroundColor().equals(oldColor)) {
-                    server = new Server(server.getName(), server.getConnection(), server.getAuthenticationMechanism(), newColor, result);
+                if (color.equals(server.getBackgroundColor())) {
+                    server = server.newBackgroundColor(null);
                 }
                 result.add(server);
             }
@@ -90,8 +92,19 @@ public class ServerConfig {
         return result;
     }
 
-    public void updateBgColor(Color oldColor, Color newColor) {
-        setRoot(updateBgColor(serverTree, oldColor, newColor));
+    /**
+     * Servers with the given background color will use the default (the style schema's) background color
+     */
+    public void convertBgColorToDefault(Color color) {
+        if (! fileConfig.fileExists()) return;
+
+        log.info("Servers with background color {} are switched to the default background", Util.colorToString(color));
+        try {
+            FilesBackup.getInstance().backup(fileConfig.getPath());
+        } catch (IOException e) {
+            log.error("Error on backup of {}", fileConfig.getPath(), e);
+        }
+        setRoot(convertBgColorToDefault(serverTree, color));
     }
 
     public void setRoot(ServerTreeNode root) {
@@ -312,7 +325,7 @@ public class ServerConfig {
         if (list.size() == 1) return list.keySet().iterator().next();
 
         if (list.isEmpty()) {
-            Color bgColor = Config.getInstance().getBackgroundColor();
+            Color bgColor = null; // default background
             if (auth == null) {
                 if (parser.isSpecifiedUser()) {
                     auth = DefaultAuthenticationMechanism.NAME;

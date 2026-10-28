@@ -328,4 +328,17 @@ public class ConfigTypeTest {
         rules.add(ServerFilterRule.newRule(FieldGetter.Names.port, Operation.Names.smaller, new Color(26, 16, 26), 1024));
         check(ConfigType.BG_COLOR_RULES, rules);
     }
+
+    @Test
+    public void testStyleSchemas() {
+        check(ConfigType.STRING_MAP, java.util.Map.of());
+        check(ConfigType.STRING_MAP, java.util.Map.of("a", "b", "c", "d"));
+
+        StyleSchema light = StyleSchemas.getBuiltIn().get(StyleSchemas.LIGHT);
+        StyleSchema dark = StyleSchemas.getBuiltIn().get(StyleSchemas.DARK);
+        check(ConfigType.STYLE_SCHEMAS, java.util.Map.of());
+        check(ConfigType.STYLE_SCHEMAS, java.util.Map.of(
+                "a", light.newBasedOn(StyleSchemas.LIGHT),
+                "b", dark.newBasedOn(StyleSchemas.DARK).newGridColors(GridColorConfig.DEFAULT)));
+    }
 }

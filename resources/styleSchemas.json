@@ -1,0 +1,106 @@
+{
+  "Light": {
+    "editorColors": {
+      "background": "ffffff",
+      "selected": "c8c8ff",
+      "current_line_highlight": "ffffaa"
+    },
+    "tokens": {
+      "default": "000000",
+      "error": "ff0000:Bold",
+      "bracket": "000000",
+      "command": "f0b400",
+      "eolcomment": "808080:Italic",
+      "keyword": "0000ff:Bold",
+      "identifier": "b4a000",
+      "symbol": "b30086",
+      "charvector": "00c814",
+      "boolean": "33ccff",
+      "byte": "3368ff",
+      "short": "3368ff",
+      "long": "3368ff",
+      "real": "3368ff",
+      "integer": "3368ff",
+      "float": "3368ff",
+      "timestamp": "b88a00",
+      "timespan": "b88a00",
+      "datetime": "b88a00",
+      "date": "b88a00",
+      "month": "b88a00",
+      "minute": "b88a00",
+      "second": "b88a00",
+      "time": "b88a00"
+    },
+    "gridColors": {
+      "foreground": {
+        "null": "ff9696",
+        "key": "000000",
+        "odd": "000000",
+        "even": "000000",
+        "mark": "000000",
+        "selected": "ffffff",
+        "mark_selected": "ffffff"
+      },
+      "background": {
+        "key": "ebffeb",
+        "odd": "ffffff",
+        "even": "ebebff",
+        "mark": "f5d9bf",
+        "selected": "2675bf",
+        "mark_selected": "929e9f"
+      }
+    }
+  },
+  "Dark": {
+    "editorColors": {
+      "background": "2b2b2b",
+      "selected": "214283",
+      "current_line_highlight": "323232"
+    },
+    "tokens": {
+      "default": "a9b7c6",
+      "error": "ff6b68:Bold",
+      "bracket": "a9b7c6",
+      "command": "e0c46c",
+      "eolcomment": "808080:Italic",
+      "keyword": "cc7832:Bold",
+      "identifier": "9876aa",
+      "symbol": "c77dbb",
+      "charvector": "6a8759",
+      "boolean": "56a8f5",
+      "byte": "6897bb",
+      "short": "6897bb",
+      "long": "6897bb",
+      "real": "6897bb",
+      "integer": "6897bb",
+      "float": "6897bb",
+      "timestamp": "d5b778",
+      "timespan": "d5b778",
+      "datetime": "d5b778",
+      "date": "d5b778",
+      "month": "d5b778",
+      "minute": "d5b778",
+      "second": "d5b778",
+      "time": "d5b778"
+    },
+    "gridColors": {
+      "foreground": {
+        "null": "e06c75",
+        "key": "dddddd",
+        "odd": "dddddd",
+        "even": "dddddd",
+        "mark": "dddddd",
+        "selected": "ffffff",
+        "mark_selected": "ffffff"
+      },
+      "background": {
+        "key": "2e3b31",
+        "odd": "2b2b2b",
+        "even": "31343c",
+        "mark": "4f4430",
+        "selected": "2f5c9e",
+        "mark_selected": "6b5c3c"
+      }
+    }
+  }
+}

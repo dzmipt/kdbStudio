@@ -7,6 +7,8 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import studio.kdb.config.ColorMap;
 import studio.kdb.config.EditorColorToken;
+import studio.kdb.config.StyleSchema;
+import studio.kdb.config.StyleSchemas;
 import studio.kdb.config.WorkspaceToJsonConverter;
 import studio.ui.action.WorkspaceSaver;
 import studio.utils.LineEnding;
@@ -33,9 +35,13 @@ public class WorkspaceFromFileTest {
     @BeforeAll
     public static void initConfig() throws IOException {
         MockConfig.mock();
-        ColorMap colorMap = new ColorMap(Config.getInstance().getEditorColors());
+        Config config = Config.getInstance();
+        ColorMap colorMap = new ColorMap(config.getEditorColors());
         colorMap.put(EditorColorToken.BACKGROUND, bgColor);
-        Config.getInstance().setEditorColors(colorMap);
+        StyleSchemas schemas = config.getStyleSchemas();
+        StyleSchema schema = schemas.get(StyleSchemas.LIGHT).newEditorColors(colorMap);
+        schemas = schemas.set("Test", schema).select(config.getString(Config.LOOK_AND_FEEL), "Test");
+        config.setStyleSchemas(schemas);
 
         ServerTreeNode root = Config.getInstance().getServerTree();;
 
@@ -134,8 +140,9 @@ public class WorkspaceFromFileTest {
         assertSame(server3, actualWorkspace.getWindows()[0].getRight().getLeft().getAllTabs()[0].getServer());
         assertSame(server5, actualWorkspace.getWindows()[1].getAllTabs()[0].getServer());
 
-        assertEquals(bgColor,
-                actualWorkspace.getWindows()[0].getRight().getRight().getAllTabs()[0].getServer().getBackgroundColor());
+        Server server = actualWorkspace.getWindows()[0].getRight().getRight().getAllTabs()[0].getServer();
+        assertNull(server.getBackgroundColor());
+        assertEquals(bgColor, Config.getInstance().getServerBgColor(server));
     }
 
     @Test

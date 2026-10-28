@@ -1,6 +1,6 @@
 # Style schemas
 
-Status: agreed, not yet implemented.
+Status: implemented.
 
 ## Goal
 
@@ -39,6 +39,7 @@ The UI calls the feature "Style schema", to avoid confusion with the chart "Colo
 - Names of predefined schemas are reserved; a user schema can't use them.
 - A unit test checks that every schema in `resources/styleSchemas.json` defines every
   editor colour, token and grid colour.
+- The Dark colours shipped initially are placeholders, to be replaced with the final palette.
 - The current Java defaults (`ColorToken` defaults, `ColorMap.DEFAULT_EDITOR_COLORS`,
   grid colours derived from the L&F) are no longer used, except by the migration,
   which needs them to rebuild the user's old look exactly.
@@ -87,7 +88,8 @@ Colors for result grid: …          (disabled for predefined schemas)
   unsaved edits in memory.
 - The existing "Reset to default" buttons are removed (predefined schemas can't be
   changed, so there is nothing to reset to).
-- **OK** saves all schema changes and remembers the selected schema for the selected L&F.
+- Choosing a schema in the combo remembers it for the L&F currently selected in the dialog.
+- **OK** (or **Apply**) saves all schema changes and the remembered schemas.
 - **Cancel** restores everything to how it was before the dialog was opened: edits,
   new, renamed and deleted schemas, and L&F mappings.
 
@@ -121,7 +123,8 @@ Colors for result grid: …          (disabled for predefined schemas)
 - `styleSchemas` is an object keyed by schema name (not an array), so it merges with
   the plugin-folder default studio.json per name.
 - `editorColors`, `tokens` and `gridColors` use the same JSON format as today's
-  top-level keys.
+  top-level keys. An empty `gridColors` object (`{}`) means grid colours derived from the
+  L&F (the behaviour before 2.4); only a migrated `Custom` schema uses it.
 - There is no `selectedSchema` key; the active schema follows from `lookandfeel` and
   `lookAndFeelSchemas`.
 - The top-level `editorColors`, `tokens` and `gridColors` keys are removed.
@@ -135,7 +138,9 @@ Runs in `ConfigConverter` (`convertTo24`) when the user's studio.json version is
    rewriting them. No `*.bak` files.
 2. If the user's studio.json has any of `editorColors`, `tokens`, `gridColors`:
    - create user schema `Custom` with the user's values; missing parts are filled
-     from the old Java defaults so the look doesn't change;
+     from the old Java defaults so the look doesn't change (grid colours that were never
+     customised stay derived from the L&F);
+   - values equal to the old defaults don't count as changes;
    - `basedOn`: `Light`;
    - map the current `lookandfeel` to `Custom` in `lookAndFeelSchemas` (only the
      current L&F);

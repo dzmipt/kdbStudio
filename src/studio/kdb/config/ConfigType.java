@@ -12,6 +12,8 @@ import studio.ui.Util;
 
 import java.awt.*;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.TreeMap;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -423,6 +425,38 @@ public enum ConfigType {
         @Override
         public Object clone(Object value) {
             return ((BgColorRules)value).copy();
+        }
+    },
+    STYLE_SCHEMAS {
+        @Override
+        public Object fromJson(JsonElement jsonElement, Object defaultValue) {
+            return StyleSchemas.fromJson(jsonElement.getAsJsonObject());
+        }
+
+        @Override
+        public JsonElement toJson(Object value) {
+            return StyleSchemas.toJson((Map<String, StyleSchema>) value);
+        }
+    },
+    STRING_MAP {
+        @Override
+        public Object fromJson(JsonElement jsonElement, Object defaultValue) {
+            JsonObject json = jsonElement.getAsJsonObject();
+            Map<String, String> map = new TreeMap<>();
+            for (String key: json.keySet()) {
+                map.put(key, json.get(key).getAsString());
+            }
+            return Collections.unmodifiableMap(map);
+        }
+
+        @Override
+        public JsonElement toJson(Object value) {
+            Map<String, String> map = (Map<String, String>) value;
+            JsonObject json = new JsonObject();
+            for (String key: new TreeMap<>(map).keySet()) {
+                json.addProperty(key, map.get(key));
+            }
+            return json;
         }
     },
     STRING_ARRAY(STRING),

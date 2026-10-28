@@ -208,7 +208,7 @@ public class ConfigToJsonConverter {
 
             jsonTokens.addProperty(token.name().toLowerCase(), tokenStyle.toString());
         }
-        json.add(Config.TOKEN_STYLE_CONFIG, jsonTokens);
+        json.add(ConfigConverter.LEGACY_TOKENS, jsonTokens);
     }
 
     private void convertBgColor() {

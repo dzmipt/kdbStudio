@@ -29,6 +29,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Properties;
 import java.util.regex.Pattern;
@@ -85,9 +86,8 @@ public class Config  {
     public static final String TABLE_CONN_EXTRACTOR = configDefault("tableExtractorConfig", ConfigType.TABLE_CONN_EXTRACTOR, TableConnExtractor.DEFAULT);
     public static final String SERVER_FROM_RESULT_IN_CURRENT = configDefault("gridOpenServersInCurrentTab", ConfigType.BOOLEAN, true);
     public static final String INSPECT_RESULT_IN_CURRENT = configDefault("inspectResultInCurrentTab", ConfigType.BOOLEAN, true);
-    public static final String EDITOR_COLOR_CONFIG = configDefault("editorColors", ConfigType.COLOR_MAP, ColorMap.DEFAULT_EDITOR_COLORS);
-    public static final String TOKEN_STYLE_CONFIG = configDefault("tokens", ConfigType.TOKEN_STYLE_MAP, TokenStyleMap.DEFAULT);
-    public static final String GRID_COLOR_CONFIG = configDefault("gridColors", ConfigType.GRID_COLOR_CONFIG, GridColorConfig.DEFAULT);
+    public static final String STYLE_SCHEMAS = configDefault("styleSchemas", ConfigType.STYLE_SCHEMAS, Map.of());
+    public static final String LOOK_AND_FEEL_SCHEMAS = configDefault("lookAndFeelSchemas", ConfigType.STRING_MAP, Map.of());
     public static final String SERVER_HISTORY = configDefault("serverHistory", ConfigType.SERVER_HISTORY, new ServerHistoryConfig(20, List.of()));
     public static final String CHART_COLORSETS = configDefault("chartColorSets", ConfigType.CHART_COLOR_SETS, ColorSets.DEFAULT);
     public static final String CHART_STROKE_STYLES = configDefault("chartStrokeStyles", ConfigType.STRING_ARRAY,
@@ -120,6 +120,8 @@ public class Config  {
     private FileConfig workspaceConfig;
 
     private Gson gson;
+
+    private Map<String, StyleSchema> pluginStyleSchemas = Map.of();
 
     private final Path basePath;
     // Can be overridden in test cases
@@ -245,7 +247,12 @@ public class Config  {
 
         FileConfig defaultFileConfig = new FileConfig(EnvConfig.getPluginFolder().resolve(CONFIG_FILENAME));
         FileConfig fileConfig = new FileConfig(basePath.resolve(CONFIG_FILENAME));
-        studioConfig = createStudioConfig(configTypeRegistry, fileConfig, defaultFileConfig, new ConfigConverter());
+        ConfigConverter configConverter = new ConfigConverter();
+        studioConfig = createStudioConfig(configTypeRegistry, fileConfig, defaultFileConfig, configConverter);
+        pluginStyleSchemas = (Map<String, StyleSchema>) studioConfig.getDefaultWithDefaultFile(STYLE_SCHEMAS);
+        if (configConverter.isConvertedTo24()) {
+            convertTo24(configConverter);
+        }
 
         initServerHistory();
 
@@ -255,6 +262,15 @@ public class Config  {
 
         workspaceConfig = new FileConfig(basePath.resolve(WORKSPACE_FILENAME));
         initWorkspace();
+    }
+
+    private void convertTo24(ConfigConverter configConverter) {
+        if (configConverter.isCustomStyleSchemaCreated()) {
+            String lookAndFeel = getString(LOOK_AND_FEEL);
+            log.info("Style schema {} is selected for {}", ConfigConverter.CUSTOM_STYLE_SCHEMA, lookAndFeel);
+            setStyleSchemas(getStyleSchemas().select(lookAndFeel, ConfigConverter.CUSTOM_STYLE_SCHEMA));
+        }
+        serverConfig.convertBgColorToDefault(configConverter.getLegacyBackgroundColor());
     }
 
     protected StudioConfig createStudioConfig(ConfigTypeRegistry configTypeRegistry,
@@ -407,32 +423,41 @@ public class Config  {
         setDefaultAuthConfig(newConfig);
     }
 
-    public TokenStyleMap getTokenStyleConfig() {
-        return (TokenStyleMap) studioConfig.get(Config.TOKEN_STYLE_CONFIG);
+    public StyleSchemas getStyleSchemas() {
+        return new StyleSchemas(pluginStyleSchemas,
+                (Map<String, StyleSchema>) studioConfig.get(Config.STYLE_SCHEMAS),
+                (Map<String, String>) studioConfig.get(Config.LOOK_AND_FEEL_SCHEMAS));
     }
 
-    public boolean setTokenStyleConfig(TokenStyleMap tokenStyleMap) {
-        return studioConfig.set(Config.TOKEN_STYLE_CONFIG, tokenStyleMap);
+    public boolean setStyleSchemas(StyleSchemas schemas) {
+        boolean changed = studioConfig.set(Config.STYLE_SCHEMAS, schemas.getUserSchemas());
+        changed |= studioConfig.set(Config.LOOK_AND_FEEL_SCHEMAS, schemas.getLookAndFeelSchemas());
+        return changed;
+    }
+
+    public String getStyleSchemaName() {
+        return getStyleSchemas().getSchemaName(getString(Config.LOOK_AND_FEEL));
+    }
+
+    // The style schema for the current Look and Feel
+    public StyleSchema getStyleSchema() {
+        return getStyleSchemas().getSchema(getString(Config.LOOK_AND_FEEL));
+    }
+
+    public TokenStyleMap getTokenStyleConfig() {
+        return getStyleSchema().getTokens();
     }
 
     public Color getBackgroundColor() {
-        return getEditorColors().get(EditorColorToken.BACKGROUND);
+        return getStyleSchema().getBackgroundColor();
     }
 
     public ColorMap getEditorColors() {
-        return (ColorMap) studioConfig.get(Config.EDITOR_COLOR_CONFIG);
-    }
-
-    public boolean setEditorColors(ColorMap editorColors) {
-        return studioConfig.set(Config.EDITOR_COLOR_CONFIG, editorColors);
+        return getStyleSchema().getEditorColors();
     }
 
     public GridColorConfig getGridColorConfig() {
-        return (GridColorConfig) studioConfig.get(Config.GRID_COLOR_CONFIG);
-    }
-
-    public boolean setGridColorConfig(GridColorConfig gridColorConfig) {
-        return studioConfig.set(Config.GRID_COLOR_CONFIG, gridColorConfig);
+        return getStyleSchema().getGridColors();
     }
 
     public ServerTreeNode getServerTree() {
@@ -574,7 +599,9 @@ public class Config  {
     public Color getServerBgColor(Server server) {
         Color color = getServerBgColorRules().overrideColor(server);
         if (color != null) return color;
-        return server.getBackgroundColor();
+        color = server.getBackgroundColor();
+        if (color != null) return color;
+        return getBackgroundColor();
     }
 
 }

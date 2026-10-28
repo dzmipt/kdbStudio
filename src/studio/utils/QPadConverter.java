@@ -52,7 +52,7 @@ public class QPadConverter {
                 }
             }
 
-            return new Server("", conn, auth, Config.getInstance().getBackgroundColor(), (ServerTreeNode) null);
+            return new Server("", conn, auth, null, (ServerTreeNode) null);
         } catch (IllegalArgumentException e) {
             return Server.NO_SERVER;
         }

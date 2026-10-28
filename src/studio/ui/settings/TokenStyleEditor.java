@@ -23,6 +23,7 @@ public class TokenStyleEditor extends JPanel {
     private ColorMap editorColors;
     private TokenStyleMap tokenStyleMap;
     private boolean muteEvents = true;
+    private boolean editable = true;
 
     private final List<ChangeListener> listeners = new ArrayList<>();
 
@@ -71,6 +72,7 @@ public class TokenStyleEditor extends JPanel {
                 lblToken.addMouseListener(new MouseAdapter() {
                     @Override
                     public void mousePressed(MouseEvent e) {
+                        if (!editable) return;
                         JPopupMenu popupMenu = new JPopupMenu();
                         popupMenu.add(getStylePopupMenuItem(token, FontStyle.Bold));
                         popupMenu.add(getStylePopupMenuItem(token, FontStyle.Italic));
@@ -158,6 +160,20 @@ public class TokenStyleEditor extends JPanel {
         Font defaultFont = new JLabel().getFont();
         tokenColorLabels.get(token).setColor(tokenStyle.getColor());
         mapTokenTitle.get(token).setFont(tokenStyle.getStyle().applyStyle(defaultFont));
+    }
+
+    public void setEditable(boolean editable) {
+        this.editable = editable;
+        for (ColorLabel label: editorColorLabels.values()) {
+            label.setEditable(editable);
+        }
+        for (ColorLabel label: tokenColorLabels.values()) {
+            label.setEditable(editable);
+        }
+        Cursor cursor = editable ? handCursor : Cursor.getDefaultCursor();
+        for (JLabel label: mapTokenTitle.values()) {
+            label.setCursor(cursor);
+        }
     }
 
     public TokenStyleMap getTokenStyleMap() {
