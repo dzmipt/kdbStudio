@@ -1,6 +1,6 @@
 [versions]
 log4j = "2.26.1"
-poi = "5.5.1"
+poi = "6.0.0"
 flatlaf = "3.7.2"
 
 [libraries]
