@@ -427,15 +427,20 @@ public enum ConfigType {
             return ((BgColorRules)value).copy();
         }
     },
-    STYLE_SCHEMAS {
+    JSON_OBJECT {
         @Override
         public Object fromJson(JsonElement jsonElement, Object defaultValue) {
-            return StyleSchemas.fromJson(jsonElement.getAsJsonObject());
+            return jsonElement.getAsJsonObject().deepCopy();
         }
 
         @Override
         public JsonElement toJson(Object value) {
-            return StyleSchemas.toJson((Map<String, StyleSchema>) value);
+            return ((JsonObject) value).deepCopy();
+        }
+
+        @Override
+        public Object clone(Object value) {
+            return ((JsonObject) value).deepCopy();
         }
     },
     STRING_MAP {

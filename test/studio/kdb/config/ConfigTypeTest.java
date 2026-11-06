@@ -334,11 +334,8 @@ public class ConfigTypeTest {
         check(ConfigType.STRING_MAP, java.util.Map.of());
         check(ConfigType.STRING_MAP, java.util.Map.of("a", "b", "c", "d"));
 
+        check(ConfigType.JSON_OBJECT, new com.google.gson.JsonObject());
         StyleSchema light = StyleSchemas.getBuiltIn().get(StyleSchemas.LIGHT);
-        StyleSchema dark = StyleSchemas.getBuiltIn().get(StyleSchemas.DARK);
-        check(ConfigType.STYLE_SCHEMAS, java.util.Map.of());
-        check(ConfigType.STYLE_SCHEMAS, java.util.Map.of(
-                "a", light.newBasedOn(StyleSchemas.LIGHT),
-                "b", dark.newBasedOn(StyleSchemas.DARK).newGridColors(GridColorConfig.DEFAULT)));
+        check(ConfigType.JSON_OBJECT, StyleSchemas.toJson(java.util.Map.of("a", light.newBasedOn(StyleSchemas.LIGHT))));
     }
 }

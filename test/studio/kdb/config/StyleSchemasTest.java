@@ -69,7 +69,7 @@ public class StyleSchemasTest {
 
     @Test
     public void testDuplicate() {
-        StyleSchemas schemas = newSchemas().duplicate(StyleSchemas.DARK, "My dark");
+        StyleSchemas schemas = newSchemas().duplicate(StyleSchemas.DARK, "My dark", LIGHT_LAF);
         assertEquals(List.of(StyleSchemas.LIGHT, StyleSchemas.DARK, "My dark"), schemas.getNames());
         assertFalse(schemas.isPredefined("My dark"));
         StyleSchema schema = schemas.get("My dark");
@@ -77,17 +77,17 @@ public class StyleSchemasTest {
         assertEquals(schemas.get(StyleSchemas.DARK).getEditorColors(), schema.getEditorColors());
 
         // basedOn is kept when a user schema is duplicated
-        schemas = schemas.duplicate("My dark", "Another");
+        schemas = schemas.duplicate("My dark", "Another", LIGHT_LAF);
         assertEquals(StyleSchemas.DARK, schemas.get("Another").getBasedOn());
 
         StyleSchemas finalSchemas = schemas;
-        assertThrows(IllegalArgumentException.class, () -> finalSchemas.duplicate(StyleSchemas.LIGHT, "Another"));
+        assertThrows(IllegalArgumentException.class, () -> finalSchemas.duplicate(StyleSchemas.LIGHT, "Another", LIGHT_LAF));
     }
 
     @Test
     public void testRenameUpdatesLookAndFeels() {
         StyleSchemas schemas = newSchemas()
-                .duplicate(StyleSchemas.LIGHT, "A")
+                .duplicate(StyleSchemas.LIGHT, "A", LIGHT_LAF)
                 .select(LIGHT_LAF, "A")
                 .select(NIMBUS_LAF, "A")
                 .select(DARK_LAF, StyleSchemas.DARK);
@@ -103,7 +103,7 @@ public class StyleSchemasTest {
     @Test
     public void testDeleteFallsBackToDefault() {
         StyleSchemas schemas = newSchemas()
-                .duplicate(StyleSchemas.LIGHT, "A")
+                .duplicate(StyleSchemas.LIGHT, "A", LIGHT_LAF)
                 .select(DARK_LAF, "A")
                 .select(LIGHT_LAF, "A");
 
@@ -116,7 +116,7 @@ public class StyleSchemasTest {
 
     @Test
     public void testValidateNewName() {
-        StyleSchemas schemas = newSchemas().duplicate(StyleSchemas.LIGHT, "A");
+        StyleSchemas schemas = newSchemas().duplicate(StyleSchemas.LIGHT, "A", LIGHT_LAF);
         assertNotNull(schemas.validateNewName(""));
         assertNotNull(schemas.validateNewName("  "));
         assertNotNull(schemas.validateNewName(null));
@@ -148,7 +148,7 @@ public class StyleSchemasTest {
                 "'NoBase': {'tokens': {'keyword': '040506'}}" +
                 "}").getAsJsonObject();
 
-        Map<String, StyleSchema> map = StyleSchemas.fromJson(json);
+        Map<String, StyleSchema> map = StyleSchemas.fromJson(json, LIGHT_LAF);
         StyleSchema dark = StyleSchemas.getBuiltIn().get(StyleSchemas.DARK);
 
         StyleSchema partial = map.get("Partial");
@@ -158,9 +158,27 @@ public class StyleSchemasTest {
         assertEquals(dark.getTokens().get(ColorToken.SYMBOL), partial.getTokens().get(ColorToken.SYMBOL));
         assertEquals(dark.getGridColors(), partial.getGridColors());
 
+        // without basedOn, missing values depend on the Look and Feel
         StyleSchema noBase = map.get("NoBase");
         assertEquals(light().getEditorColors(), noBase.getEditorColors());
         assertEquals(light().getGridColors(), noBase.getGridColors());
+
+        noBase = StyleSchemas.fromJson(json, DARK_LAF).get("NoBase");
+        assertEquals(dark.getEditorColors(), noBase.getEditorColors());
+        assertEquals(dark.getGridColors(), noBase.getGridColors());
+        assertEquals(new TokenStyle(new Color(0x040506), FontStyle.Plain), noBase.getTokens().get(ColorToken.KEYWORD));
+    }
+
+    @Test
+    public void testDuplicateWithoutBasedOn() {
+        StyleSchema corp = light(); // basedOn is null
+        StyleSchemas schemas = new StyleSchemas(Map.of("Corp", corp), Map.of(), Map.of());
+
+        assertEquals(StyleSchemas.LIGHT, schemas.duplicate("Corp", "A", LIGHT_LAF).get("A").getBasedOn());
+        assertEquals(StyleSchemas.LIGHT, schemas.duplicate("Corp", "A", NIMBUS_LAF).get("A").getBasedOn());
+        assertEquals(StyleSchemas.DARK, schemas.duplicate("Corp", "A", DARK_LAF).get("A").getBasedOn());
+        // a copy of a built-in schema is based on it, whatever the Look and Feel
+        assertEquals(StyleSchemas.LIGHT, schemas.duplicate(StyleSchemas.LIGHT, "A", DARK_LAF).get("A").getBasedOn());
     }
 
     @Test

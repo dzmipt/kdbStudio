@@ -92,20 +92,25 @@ public class StyleSchemas {
 
     /**
      * The schema used to fill values missing in the json of a schema based on the given one.
+     * If basedOn is missing or unknown, it is Dark for a dark Look and Feel and Light otherwise.
      */
-    public static StyleSchema getFallback(String basedOn) {
+    public static StyleSchema getFallback(String basedOn, String lookAndFeelClassName) {
         StyleSchema schema = basedOn == null ? null : getBuiltIn().get(basedOn);
-        if (schema == null) schema = getBuiltIn().get(LIGHT);
+        if (schema == null) schema = getBuiltIn().get(getDefaultSchemaName(lookAndFeelClassName));
         return schema;
     }
 
-    public static Map<String, StyleSchema> fromJson(JsonObject json) {
+    /**
+     * Parses schemas. Values missing in a schema are taken from the schema in its basedOn,
+     * or (if basedOn is missing) from the default schema for the given Look and Feel.
+     */
+    public static Map<String, StyleSchema> fromJson(JsonObject json, String lookAndFeelClassName) {
         Map<String, StyleSchema> map = new LinkedHashMap<>();
         for (String name: json.keySet()) {
             try {
                 JsonObject jsonSchema = json.getAsJsonObject(name);
                 JsonElement basedOn = jsonSchema.get(StyleSchema.BASED_ON);
-                StyleSchema fallback = getFallback(basedOn == null ? null : basedOn.getAsString());
+                StyleSchema fallback = getFallback(basedOn == null ? null : basedOn.getAsString(), lookAndFeelClassName);
                 map.put(name, StyleSchema.fromJson(jsonSchema, fallback));
             } catch (Exception e) {
                 log.error("Error parsing style schema {}. Skipping...", name, e);
@@ -195,14 +200,19 @@ public class StyleSchemas {
         return schemas;
     }
 
-    public StyleSchemas duplicate(String name, String newName) {
+    /**
+     * Creates a new user schema as a copy of the given one. The copy is based on the same built-in schema as the
+     * original; a copy of a built-in schema is based on it. If that is not known (a schema from the plugin folder
+     * without basedOn), the copy is based on the default schema for the given Look and Feel.
+     */
+    public StyleSchemas duplicate(String name, String newName, String lookAndFeelClassName) {
         StyleSchema schema = get(name);
         if (schema == null) throw new IllegalArgumentException("Unknown style schema: " + name);
         if (contains(newName)) throw new IllegalArgumentException("Style schema already exists: " + newName);
 
         String basedOn = schema.getBasedOn();
-        if (basedOn == null) {
-            basedOn = getBuiltIn().containsKey(name) ? name : LIGHT;
+        if (basedOn == null || !getBuiltIn().containsKey(basedOn)) {
+            basedOn = getBuiltIn().containsKey(name) ? name : getDefaultSchemaName(lookAndFeelClassName);
         }
         return set(newName, schema.newBasedOn(basedOn));
     }

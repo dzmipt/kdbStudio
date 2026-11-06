@@ -269,7 +269,7 @@ public class SettingsStyleTab extends SettingsTab {
         newName = askName("Duplicate Style Schema", newName, null);
         if (newName == null) return;
 
-        schemas = schemas.duplicate(name, newName)
+        schemas = schemas.duplicate(name, newName, getSelectedLookAndFeel())
                         .select(getSelectedLookAndFeel(), newName);
         refreshSchemas(newName);
     }

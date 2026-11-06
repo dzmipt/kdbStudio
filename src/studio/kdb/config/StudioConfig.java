@@ -113,16 +113,16 @@ public class StudioConfig {
                 json.remove(COMMENT);
             }
 
+            JsonObject jConfig = Util.deepMerge(getJsonFromRegistry(), getJson(defaultFileConfig));
+
             if (jsonConverter != null) {
-                boolean changed = jsonConverter.convert(json);
+                boolean changed = jsonConverter.convert(json, jConfig);
                 if (changed) {
                     log.info("The config has been converted");
                     backup();
                     save(json);
                 }
             }
-
-            JsonObject jConfig = Util.deepMerge(getJsonFromRegistry(), getJson(defaultFileConfig));
 
             json = Util.deepMerge(jConfig, json);
             map = parseConfig(json);

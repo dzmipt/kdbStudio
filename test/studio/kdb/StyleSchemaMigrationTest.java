@@ -23,6 +23,8 @@ public class StyleSchemaMigrationTest {
 
     private final static String DARCULA_LAF = "com.formdev.flatlaf.FlatDarculaLaf";
     private final static String DARK_LAF = "com.formdev.flatlaf.FlatDarkLaf";
+    private final static String LIGHT_LAF = "com.formdev.flatlaf.FlatLightLaf";
+    private final static String NIMBUS_LAF = "javax.swing.plaf.nimbus.NimbusLookAndFeel";
 
     private final static String SERVERS = ("{'name': '', 'children': [" +
             "{'name': 'same', 'handle': '`:host:1', 'bgColor': 'fefefe', 'authMethod': 'Plain'}," +
@@ -79,7 +81,8 @@ public class StyleSchemaMigrationTest {
         assertEquals(StyleSchemas.DARK, schemas.getSchemaName(DARK_LAF));
 
         StyleSchema custom = schemas.get(ConfigConverter.CUSTOM_STYLE_SCHEMA);
-        assertEquals(StyleSchemas.LIGHT, custom.getBasedOn());
+        // Darcula is a dark Look and Feel
+        assertEquals(StyleSchemas.DARK, custom.getBasedOn());
         assertEquals(new Color(0xfefefe), custom.getBackgroundColor());
         assertEquals(ColorMap.DEFAULT_EDITOR_COLORS.get(EditorColorToken.SELECTED), custom.getEditorColors().get(EditorColorToken.SELECTED));
         assertEquals(new TokenStyle(new Color(0x0000fe), FontStyle.Bold), custom.getTokens().get(ColorToken.KEYWORD));
@@ -106,6 +109,7 @@ public class StyleSchemaMigrationTest {
         String servers = Files.readString(basePath.resolve(Config.SERVERCONFIG_FILENAME));
         assertFalse(servers.contains("fefefe"));
         assertTrue(servers.contains("123456"));
+        assertEquals(ServerConfig.VERSION, ServerTreeNodeSerializer.getVersion(servers));
 
         // loading once again doesn't change anything
         Config config2 = load();
@@ -113,8 +117,20 @@ public class StyleSchemaMigrationTest {
     }
 
     @Test
+    public void testCustomizedStyleLightLookAndFeel() throws IOException {
+        writeStudioConfig("{'version': 'V2_3', 'lookandfeel': '" + NIMBUS_LAF + "'," +
+                "'editorColors': {'background': 'fefefe'}" +
+                "}");
+
+        Config config = load();
+        StyleSchemas schemas = config.getStyleSchemas();
+        assertEquals(Map.of(NIMBUS_LAF, ConfigConverter.CUSTOM_STYLE_SCHEMA), schemas.getLookAndFeelSchemas());
+        assertEquals(StyleSchemas.LIGHT, schemas.get(ConfigConverter.CUSTOM_STYLE_SCHEMA).getBasedOn());
+    }
+
+    @Test
     public void testNotCustomizedStyle() throws IOException {
-        writeStudioConfig("{'version': 'V2_3', 'lookandfeel': '" + DARK_LAF + "'," +
+        writeStudioConfig("{'version': 'V2_3', 'lookandfeel': '" + LIGHT_LAF + "'," +
                 "'editorColors': {'background': 'ffffff'}," +
                 "'tokens': {}" +
                 "}");
@@ -123,13 +139,33 @@ public class StyleSchemaMigrationTest {
         StyleSchemas schemas = config.getStyleSchemas();
         assertEquals(List.of(StyleSchemas.LIGHT, StyleSchemas.DARK), schemas.getNames());
         assertTrue(schemas.getLookAndFeelSchemas().isEmpty());
-        assertEquals(StyleSchemas.DARK, config.getStyleSchemaName());
-        assertEquals(StyleSchemas.getBuiltIn().get(StyleSchemas.DARK), config.getStyleSchema());
+        assertEquals(StyleSchemas.LIGHT, config.getStyleSchemaName());
+        assertEquals(StyleSchemas.getBuiltIn().get(StyleSchemas.LIGHT), config.getStyleSchema());
 
+        // servers with the background of the Light schema use the default background
         ServerConfig serverConfig = config.getServerConfig();
         assertNull(serverConfig.getServer("white").getBackgroundColor());
         assertEquals(new Color(0xfefefe), serverConfig.getServer("same").getBackgroundColor());
         assertEquals(config.getBackgroundColor(), config.getServerBgColor(serverConfig.getServer("white")));
+    }
+
+    @Test
+    public void testNotCustomizedStyleDarkLookAndFeel() throws IOException {
+        writeStudioConfig("{'version': 'V2_3', 'lookandfeel': '" + DARK_LAF + "'}");
+
+        Config config = load();
+        assertEquals(StyleSchemas.DARK, config.getStyleSchemaName());
+        assertEquals(StyleSchemas.getBuiltIn().get(StyleSchemas.DARK), config.getStyleSchema());
+    }
+
+    @Test
+    public void testVersionedServersAreNotConverted() throws IOException {
+        Files.writeString(basePath.resolve(Config.SERVERCONFIG_FILENAME), SERVERS.replace("{\"name\": \"\",",
+                "{\"version\": " + ServerConfig.VERSION + ", \"name\": \"\","));
+        writeStudioConfig("{'version': 'V2_4', 'lookandfeel': '" + LIGHT_LAF + "'}");
+
+        Config config = load();
+        assertEquals(Color.WHITE, config.getServerConfig().getServer("white").getBackgroundColor());
     }
 
     @Test
@@ -155,7 +191,7 @@ public class StyleSchemaMigrationTest {
         // old style keys in the plugin config are ignored
         assertEquals(new Color(0x000002), config.getBackgroundColor());
 
-        schemas = schemas.duplicate("Corp", "Corp copy").select(DARK_LAF, "Corp copy");
+        schemas = schemas.duplicate("Corp", "Corp copy", DARK_LAF).select(DARK_LAF, "Corp copy");
         config.setStyleSchemas(schemas);
         FileConfig.saveAllOnDisk();
 

@@ -50,14 +50,17 @@ The UI calls the feature "Style schema", to avoid confusion with the chart "Colo
   - Tooltip: says it creates a new schema from the selected one.
   - Asks for the name (suggests e.g. "Dark copy"). Name must be non-empty and unique,
     and not a predefined name.
-  - The new schema stores `basedOn`: the name of the predefined schema it ultimately
-    comes from (duplicating a user schema copies its `basedOn`).
+  - The new schema stores `basedOn`: the name of the built-in schema it ultimately
+    comes from (duplicating a user schema copies its `basedOn`). If that is not known
+    (a plugin-folder schema without `basedOn`), it is `Dark` when the L&F selected in the
+    dialog is dark, otherwise `Light`.
 - Editable, can be renamed and deleted.
 - **Rename** changes the name and updates every L&F mapped to the old name.
 - **Delete** removes the schema; L&Fs mapped to it go back to the default rule below.
 - Stored with full values. If a later release adds a new token or colour that a user
-  schema doesn't have, the value is taken from its `basedOn` schema
-  (or `Light` if `basedOn` is missing or unknown).
+  schema doesn't have, the value is taken from its `basedOn` schema. If `basedOn` is
+  missing or unknown, it is taken from `Dark` when the current L&F is dark, otherwise
+  from `Light`.
 
 ## Which schema is active
 
@@ -100,6 +103,8 @@ Colors for result grid: …          (disabled for predefined schemas)
 - The server editor and the multiple-server editor get a "Default" option.
 - New servers are created with "Default".
 - In servers.json, a server with "Default" has no `bgColor`.
+- servers.json gets a top-level `"version": 1`. A file without a version is in the old
+  format, where every server has an explicit `bgColor`.
 - The dialog "Background color is changed. Do you want to update background for all
   servers with old background color?" is removed.
 
@@ -141,15 +146,18 @@ Runs in `ConfigConverter` (`convertTo24`) when the user's studio.json version is
      from the old Java defaults so the look doesn't change (grid colours that were never
      customised stay derived from the L&F);
    - values equal to the old defaults don't count as changes;
-   - `basedOn`: `Light`;
+   - `basedOn`: `Dark` if the current L&F is dark, otherwise `Light`. The current L&F is
+     `lookandfeel` from the user's studio.json, or from the plugin folder's default
+     studio.json, or the built-in default;
    - map the current `lookandfeel` to `Custom` in `lookAndFeelSchemas` (only the
      current L&F);
    - remove the old top-level keys.
 3. If none of those keys are present: nothing to convert; the default rule applies
    (Light or Dark depending on the L&F).
-4. servers.json (has no version field; it is converted as part of the studio.json 2.4
-   step): servers whose `bgColor` equals the old editor background (the user's
-   `editorColors.background`, or white if not set) become "Default". Other servers keep
-   their colour.
+4. servers.json is converted when it is read without a version (independently of the
+   studio.json conversion): servers whose `bgColor` equals the background colour of the
+   active schema (the schema for the current L&F, after studio.json is converted) become
+   "Default". Other servers keep their colour. The file is saved with `"version": 1`.
+   Servers converted from the very old `studio.properties` are converted the same way.
 5. Old keys (`editorColors`, `tokens`, `gridColors`) found in the plugin folder's default
    studio.json are ignored with a warning in the log.

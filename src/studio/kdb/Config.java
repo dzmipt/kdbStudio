@@ -86,7 +86,7 @@ public class Config  {
     public static final String TABLE_CONN_EXTRACTOR = configDefault("tableExtractorConfig", ConfigType.TABLE_CONN_EXTRACTOR, TableConnExtractor.DEFAULT);
     public static final String SERVER_FROM_RESULT_IN_CURRENT = configDefault("gridOpenServersInCurrentTab", ConfigType.BOOLEAN, true);
     public static final String INSPECT_RESULT_IN_CURRENT = configDefault("inspectResultInCurrentTab", ConfigType.BOOLEAN, true);
-    public static final String STYLE_SCHEMAS = configDefault("styleSchemas", ConfigType.STYLE_SCHEMAS, Map.of());
+    public static final String STYLE_SCHEMAS = configDefault("styleSchemas", ConfigType.JSON_OBJECT, new JsonObject());
     public static final String LOOK_AND_FEEL_SCHEMAS = configDefault("lookAndFeelSchemas", ConfigType.STRING_MAP, Map.of());
     public static final String SERVER_HISTORY = configDefault("serverHistory", ConfigType.SERVER_HISTORY, new ServerHistoryConfig(20, List.of()));
     public static final String CHART_COLORSETS = configDefault("chartColorSets", ConfigType.CHART_COLOR_SETS, ColorSets.DEFAULT);
@@ -121,7 +121,8 @@ public class Config  {
 
     private Gson gson;
 
-    private Map<String, StyleSchema> pluginStyleSchemas = Map.of();
+    // Style schemas from the default config in the plugin folder. They are read-only, and are not saved in the user's config
+    private JsonObject pluginStyleSchemas = new JsonObject();
 
     private final Path basePath;
     // Can be overridden in test cases
@@ -247,12 +248,11 @@ public class Config  {
 
         FileConfig defaultFileConfig = new FileConfig(EnvConfig.getPluginFolder().resolve(CONFIG_FILENAME));
         FileConfig fileConfig = new FileConfig(basePath.resolve(CONFIG_FILENAME));
-        ConfigConverter configConverter = new ConfigConverter();
-        studioConfig = createStudioConfig(configTypeRegistry, fileConfig, defaultFileConfig, configConverter);
-        pluginStyleSchemas = (Map<String, StyleSchema>) studioConfig.getDefaultWithDefaultFile(STYLE_SCHEMAS);
-        if (configConverter.isConvertedTo24()) {
-            convertTo24(configConverter);
-        }
+        studioConfig = createStudioConfig(configTypeRegistry, fileConfig, defaultFileConfig, new ConfigConverter());
+        pluginStyleSchemas = (JsonObject) studioConfig.getDefaultWithDefaultFile(STYLE_SCHEMAS);
+
+        // the style schema for the current Look and Feel is known only after studio config is loaded
+        serverConfig.upgrade(getBackgroundColor());
 
         initServerHistory();
 
@@ -262,15 +262,6 @@ public class Config  {
 
         workspaceConfig = new FileConfig(basePath.resolve(WORKSPACE_FILENAME));
         initWorkspace();
-    }
-
-    private void convertTo24(ConfigConverter configConverter) {
-        if (configConverter.isCustomStyleSchemaCreated()) {
-            String lookAndFeel = getString(LOOK_AND_FEEL);
-            log.info("Style schema {} is selected for {}", ConfigConverter.CUSTOM_STYLE_SCHEMA, lookAndFeel);
-            setStyleSchemas(getStyleSchemas().select(lookAndFeel, ConfigConverter.CUSTOM_STYLE_SCHEMA));
-        }
-        serverConfig.convertBgColorToDefault(configConverter.getLegacyBackgroundColor());
     }
 
     protected StudioConfig createStudioConfig(ConfigTypeRegistry configTypeRegistry,
@@ -424,13 +415,22 @@ public class Config  {
     }
 
     public StyleSchemas getStyleSchemas() {
-        return new StyleSchemas(pluginStyleSchemas,
-                (Map<String, StyleSchema>) studioConfig.get(Config.STYLE_SCHEMAS),
+        String lookAndFeel = getString(Config.LOOK_AND_FEEL);
+        Map<String, StyleSchema> pluginSchemas = StyleSchemas.fromJson(pluginStyleSchemas, lookAndFeel);
+
+        // after loading, the value contains schemas from the plugin folder as well (it is merged with the default config)
+        JsonObject json = (JsonObject) studioConfig.get(Config.STYLE_SCHEMAS);
+        for (String name: pluginStyleSchemas.keySet()) {
+            json.remove(name);
+        }
+        Map<String, StyleSchema> userSchemas = StyleSchemas.fromJson(json, lookAndFeel);
+
+        return new StyleSchemas(pluginSchemas, userSchemas,
                 (Map<String, String>) studioConfig.get(Config.LOOK_AND_FEEL_SCHEMAS));
     }
 
     public boolean setStyleSchemas(StyleSchemas schemas) {
-        boolean changed = studioConfig.set(Config.STYLE_SCHEMAS, schemas.getUserSchemas());
+        boolean changed = studioConfig.set(Config.STYLE_SCHEMAS, StyleSchemas.toJson(schemas.getUserSchemas()));
         changed |= studioConfig.set(Config.LOOK_AND_FEEL_SCHEMAS, schemas.getLookAndFeelSchemas());
         return changed;
     }
@@ -590,10 +590,6 @@ public class Config  {
 
     public boolean setServerBgColorRules(BgColorRules rules) {
         return studioConfig.set(Config.BG_COLOR_RULES, rules);
-    }
-
-    public boolean overrideServerBgColor(Server server) {
-        return getServerBgColorRules().overrideColor(server) != null;
     }
 
     public Color getServerBgColor(Server server) {

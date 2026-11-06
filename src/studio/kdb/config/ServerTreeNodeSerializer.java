@@ -26,8 +26,27 @@ public class ServerTreeNodeSerializer implements JsonSerializer<ServerTreeNode>,
             .create();
 
 
+    public final static String VERSION = "version";
+
     public static String toJson(ServerTreeNode serverTree) {
         return gson.toJson(serverTree);
+    }
+
+    // version <= 0 means no version (the format before versioning was introduced)
+    public static String toJson(ServerTreeNode serverTree, int version) {
+        JsonElement json = gson.toJsonTree(serverTree);
+        if (version > 0 && json.isJsonObject()) {
+            json.getAsJsonObject().addProperty(VERSION, version);
+        }
+        return gson.toJson(json);
+    }
+
+    // returns 0 if the version is not specified
+    public static int getVersion(String content) {
+        JsonElement json = JsonParser.parseString(content);
+        if (! json.isJsonObject()) return 0;
+        JsonElement version = json.getAsJsonObject().get(VERSION);
+        return version == null ? 0 : version.getAsInt();
     }
 
     public static ServerTreeNode fromJson(String content) {

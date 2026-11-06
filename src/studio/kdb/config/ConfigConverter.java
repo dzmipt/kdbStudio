@@ -17,27 +17,8 @@ public class ConfigConverter implements JsonConverter{
 
     public final static String CUSTOM_STYLE_SCHEMA = "Custom";
 
-    private boolean convertedTo24 = false;
-    private boolean customStyleSchemaCreated = false;
-    private Color legacyBackgroundColor = Color.WHITE;
-
-    // true if the config was converted from a version before 2.4 (style schemas)
-    public boolean isConvertedTo24() {
-        return convertedTo24;
-    }
-
-    // true if the "Custom" style schema was created from the user's style settings
-    public boolean isCustomStyleSchemaCreated() {
-        return customStyleSchemaCreated;
-    }
-
-    // The editor background color before the conversion to 2.4
-    public Color getLegacyBackgroundColor() {
-        return legacyBackgroundColor;
-    }
-
     @Override
-    public boolean convert(JsonObject json) {
+    public boolean convert(JsonObject json, JsonObject defaults) {
         ConfigVersion version = getVersion(json);
         if (version == ConfigVersion.LAST) return false;
 
@@ -46,7 +27,7 @@ public class ConfigConverter implements JsonConverter{
             convertTo21(json);
             convertTo22(json);
             convertTo23(json);
-            convertTo24(json);
+            convertTo24(json, defaults);
             log.info("Successfully converted to version: {}", ConfigVersion.LAST);
         } catch (Exception e) {
             log.error("Error during conversion", e);
@@ -131,10 +112,10 @@ public class ConfigConverter implements JsonConverter{
     public final static String LEGACY_TOKENS = "tokens";
     public final static String LEGACY_GRID_COLORS = "gridColors";
 
-    // Style settings (editorColors, tokens, gridColors) are moved into the "Custom" style schema
-    private void convertTo24(JsonObject json) {
+    // Style settings (editorColors, tokens, gridColors) are moved into the "Custom" style schema,
+    // which is selected for the current Look and Feel
+    private void convertTo24(JsonObject json, JsonObject defaults) {
         if (ConfigVersion.V2_4.compareTo(getVersion(json))<=0 ) return;
-        convertedTo24 = true;
 
         StyleSchema legacyDefault = new StyleSchema(null,
                 ColorMap.DEFAULT_EDITOR_COLORS, TokenStyleMap.DEFAULT, GridColorConfig.DEFAULT);
@@ -169,23 +150,35 @@ public class ConfigConverter implements JsonConverter{
             }
         }
 
-        legacyBackgroundColor = editorColors.get(EditorColorToken.BACKGROUND);
-
         StyleSchema schema = new StyleSchema(null, editorColors, tokens, gridColors);
         if (schema.equals(legacyDefault)) {
             log.info("Style settings were not customized");
             return;
         }
 
-        schema = schema.newBasedOn(StyleSchemas.LIGHT);
-        JsonObject jsonSchemas = json.getAsJsonObject(Config.STYLE_SCHEMAS);
-        if (jsonSchemas == null) {
-            jsonSchemas = new JsonObject();
-            json.add(Config.STYLE_SCHEMAS, jsonSchemas);
+        String lookAndFeel = getString(json, defaults, Config.LOOK_AND_FEEL);
+        schema = schema.newBasedOn(StyleSchemas.getDefaultSchemaName(lookAndFeel));
+        getOrAddObject(json, Config.STYLE_SCHEMAS).add(CUSTOM_STYLE_SCHEMA, schema.toJson());
+        if (lookAndFeel != null) {
+            getOrAddObject(json, Config.LOOK_AND_FEEL_SCHEMAS).addProperty(lookAndFeel, CUSTOM_STYLE_SCHEMA);
         }
-        jsonSchemas.add(CUSTOM_STYLE_SCHEMA, schema.toJson());
-        customStyleSchemaCreated = true;
-        log.info("Style settings are converted to the style schema {}", CUSTOM_STYLE_SCHEMA);
+        log.info("Style settings are converted to the style schema {} based on {} and selected for {}",
+                CUSTOM_STYLE_SCHEMA, schema.getBasedOn(), lookAndFeel);
+    }
+
+    private static String getString(JsonObject json, JsonObject defaults, String key) {
+        JsonElement element = json.get(key);
+        if (element == null && defaults != null) element = defaults.get(key);
+        return element == null ? null : element.getAsString();
+    }
+
+    private static JsonObject getOrAddObject(JsonObject json, String key) {
+        JsonObject result = json.getAsJsonObject(key);
+        if (result == null) {
+            result = new JsonObject();
+            json.add(key, result);
+        }
+        return result;
     }
 
 }
