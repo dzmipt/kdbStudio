@@ -16,6 +16,7 @@ public class ColorLabel extends JLabel {
 
     private boolean singleClick = true;
     private boolean editable;
+    private String readOnlyReason = null;
 
     public ColorLabel(Color color, int size) {
         super(new SquareIcon(color, size));
@@ -34,7 +35,12 @@ public class ColorLabel extends JLabel {
 
             @Override
             public void mousePressed(MouseEvent e) {
-                if (!editable) return;
+                if (!editable) {
+                    if (readOnlyReason != null) {
+                        UIManager.getLookAndFeel().provideErrorFeedback(ColorLabel.this);
+                    }
+                    return;
+                }
 
                 if (singleClick) {
                     selectColor();
@@ -59,6 +65,21 @@ public class ColorLabel extends JLabel {
         } else {
             setCursor(Cursor.getDefaultCursor());
         }
+        refreshReadOnlyToolTip();
+    }
+
+    /**
+     * If the reason is set, a click on the not editable label gives an error feedback (a beep),
+     * and the reason is shown as a tooltip.
+     */
+    public void setReadOnlyReason(String readOnlyReason) {
+        this.readOnlyReason = readOnlyReason;
+        refreshReadOnlyToolTip();
+    }
+
+    private void refreshReadOnlyToolTip() {
+        if (readOnlyReason == null) return;
+        setToolTipText(editable ? null : readOnlyReason);
     }
 
     public boolean isSingleClick() {

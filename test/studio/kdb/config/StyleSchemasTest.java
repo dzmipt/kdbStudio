@@ -39,7 +39,7 @@ public class StyleSchemasTest {
 
             for (String name: json.keySet()) {
                 // without a fallback, parsing fails if any value is missing
-                StyleSchema schema = StyleSchema.fromJson(json.getAsJsonObject(name), null);
+                StyleSchema schema = StyleSchemaDefinition.fromJson(json.getAsJsonObject(name)).resolve(null);
                 assertNull(schema.getBasedOn(), name);
                 assertFalse(schema.getGridColors().isDefaultConfig(), name + " should have explicit grid colors");
                 assertEquals(schema, StyleSchemas.getBuiltIn().get(name));
@@ -148,7 +148,9 @@ public class StyleSchemasTest {
                 "'NoBase': {'tokens': {'keyword': '040506'}}" +
                 "}").getAsJsonObject();
 
-        Map<String, StyleSchema> map = StyleSchemas.fromJson(json, LIGHT_LAF);
+        Map<String, StyleSchemaDefinition> definitions = (Map<String, StyleSchemaDefinition>)
+                ConfigType.STYLE_SCHEMA_DEFINITIONS.fromJson(json, null);
+        Map<String, StyleSchema> map = StyleSchemas.resolve(definitions, LIGHT_LAF);
         StyleSchema dark = StyleSchemas.getBuiltIn().get(StyleSchemas.DARK);
 
         StyleSchema partial = map.get("Partial");
@@ -163,7 +165,7 @@ public class StyleSchemasTest {
         assertEquals(light().getEditorColors(), noBase.getEditorColors());
         assertEquals(light().getGridColors(), noBase.getGridColors());
 
-        noBase = StyleSchemas.fromJson(json, DARK_LAF).get("NoBase");
+        noBase = StyleSchemas.resolve(definitions, DARK_LAF).get("NoBase");
         assertEquals(dark.getEditorColors(), noBase.getEditorColors());
         assertEquals(dark.getGridColors(), noBase.getGridColors());
         assertEquals(new TokenStyle(new Color(0x040506), FontStyle.Plain), noBase.getTokens().get(ColorToken.KEYWORD));
@@ -184,12 +186,28 @@ public class StyleSchemasTest {
     @Test
     public void testJsonRoundTrip() {
         StyleSchema schema = light().newBasedOn(StyleSchemas.DARK);
-        assertEquals(schema, StyleSchema.fromJson(schema.toJson(), null));
+        StyleSchemaDefinition definition = StyleSchemaDefinition.of(schema);
+        assertEquals(definition, StyleSchemaDefinition.fromJson(definition.toJson()));
+        assertEquals(schema, StyleSchemaDefinition.fromJson(definition.toJson()).resolve(null));
 
         // empty gridColors means colors derived from Look and Feel
         StyleSchema auto = schema.newGridColors(GridColorConfig.DEFAULT);
-        JsonObject json = auto.toJson();
-        assertTrue(json.getAsJsonObject(StyleSchema.GRID_COLORS).isEmpty());
-        assertTrue(StyleSchema.fromJson(json, null).getGridColors().isDefaultConfig());
+        JsonObject json = StyleSchemaDefinition.of(auto).toJson();
+        assertTrue(json.getAsJsonObject("gridColors").isEmpty());
+        assertTrue(StyleSchemaDefinition.fromJson(json).resolve(null).getGridColors().isDefaultConfig());
+    }
+
+    @Test
+    public void testPartialDefinitionKeepsOnlyDefinedValues() {
+        JsonObject json = JsonParser.parseString("{'basedOn': 'Dark', 'tokens': {'keyword': '040506:Italic'}, " +
+                "'gridColors': {'background': {'odd': '010101'}}}").getAsJsonObject();
+        StyleSchemaDefinition definition = StyleSchemaDefinition.fromJson(json);
+        assertEquals(json, definition.toJson());
+
+        StyleSchema dark = StyleSchemas.getBuiltIn().get(StyleSchemas.DARK);
+        StyleSchema schema = definition.resolve(dark);
+        assertEquals(new Color(0x010101), schema.getGridColors().getColor(GridColorToken.ODD, false));
+        assertEquals(dark.getGridColors().getColor(GridColorToken.EVEN, false), schema.getGridColors().getColor(GridColorToken.EVEN, false));
+        assertThrows(IllegalArgumentException.class, () -> definition.resolve(null));
     }
 }

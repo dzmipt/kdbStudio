@@ -198,7 +198,7 @@ public class StyleSchemaMigrationTest {
         JsonObject json = readStudioJson().getAsJsonObject(Config.STYLE_SCHEMAS);
         assertFalse(json.has("Corp"));
         assertTrue(json.has("Mine"));
-        assertEquals("Dark", json.getAsJsonObject("Corp copy").get(StyleSchema.BASED_ON).getAsString());
+        assertEquals("Dark", json.getAsJsonObject("Corp copy").get("basedOn").getAsString());
 
         Config config2 = load();
         assertEquals("Corp copy", config2.getStyleSchemaName());

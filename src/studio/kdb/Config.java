@@ -28,8 +28,11 @@ import java.io.Writer;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.Objects;
 import java.util.Properties;
 import java.util.regex.Pattern;
@@ -86,7 +89,7 @@ public class Config  {
     public static final String TABLE_CONN_EXTRACTOR = configDefault("tableExtractorConfig", ConfigType.TABLE_CONN_EXTRACTOR, TableConnExtractor.DEFAULT);
     public static final String SERVER_FROM_RESULT_IN_CURRENT = configDefault("gridOpenServersInCurrentTab", ConfigType.BOOLEAN, true);
     public static final String INSPECT_RESULT_IN_CURRENT = configDefault("inspectResultInCurrentTab", ConfigType.BOOLEAN, true);
-    public static final String STYLE_SCHEMAS = configDefault("styleSchemas", ConfigType.JSON_OBJECT, new JsonObject());
+    public static final String STYLE_SCHEMAS = configDefault("styleSchemas", ConfigType.STYLE_SCHEMA_DEFINITIONS, Map.of());
     public static final String LOOK_AND_FEEL_SCHEMAS = configDefault("lookAndFeelSchemas", ConfigType.STRING_MAP, Map.of());
     public static final String SERVER_HISTORY = configDefault("serverHistory", ConfigType.SERVER_HISTORY, new ServerHistoryConfig(20, List.of()));
     public static final String CHART_COLORSETS = configDefault("chartColorSets", ConfigType.CHART_COLOR_SETS, ColorSets.DEFAULT);
@@ -121,8 +124,8 @@ public class Config  {
 
     private Gson gson;
 
-    // Style schemas from the default config in the plugin folder. They are read-only, and are not saved in the user's config
-    private JsonObject pluginStyleSchemas = new JsonObject();
+    // Names of style schemas from the default config in the plugin folder. They are predefined (read-only).
+    private Set<String> pluginStyleSchemaNames = Set.of();
 
     private final Path basePath;
     // Can be overridden in test cases
@@ -249,7 +252,8 @@ public class Config  {
         FileConfig defaultFileConfig = new FileConfig(EnvConfig.getPluginFolder().resolve(CONFIG_FILENAME));
         FileConfig fileConfig = new FileConfig(basePath.resolve(CONFIG_FILENAME));
         studioConfig = createStudioConfig(configTypeRegistry, fileConfig, defaultFileConfig, new ConfigConverter());
-        pluginStyleSchemas = (JsonObject) studioConfig.getDefaultWithDefaultFile(STYLE_SCHEMAS);
+        pluginStyleSchemaNames = Set.copyOf(
+                ((Map<String, StyleSchemaDefinition>) studioConfig.getDefaultWithDefaultFile(STYLE_SCHEMAS)).keySet() );
 
         // the style schema for the current Look and Feel is known only after studio config is loaded
         serverConfig.upgrade(getBackgroundColor());
@@ -414,23 +418,33 @@ public class Config  {
         setDefaultAuthConfig(newConfig);
     }
 
-    public StyleSchemas getStyleSchemas() {
-        String lookAndFeel = getString(Config.LOOK_AND_FEEL);
-        Map<String, StyleSchema> pluginSchemas = StyleSchemas.fromJson(pluginStyleSchemas, lookAndFeel);
+    private Map<String, StyleSchemaDefinition> getStyleSchemaDefinitions() {
+        return (Map<String, StyleSchemaDefinition>) studioConfig.get(Config.STYLE_SCHEMAS);
+    }
 
-        // after loading, the value contains schemas from the plugin folder as well (it is merged with the default config)
-        JsonObject json = (JsonObject) studioConfig.get(Config.STYLE_SCHEMAS);
-        for (String name: pluginStyleSchemas.keySet()) {
-            json.remove(name);
-        }
-        Map<String, StyleSchema> userSchemas = StyleSchemas.fromJson(json, lookAndFeel);
+    public StyleSchemas getStyleSchemas() {
+        Map<String, StyleSchema> schemas = StyleSchemas.resolve(getStyleSchemaDefinitions(), getString(Config.LOOK_AND_FEEL));
+
+        Map<String, StyleSchema> pluginSchemas = new LinkedHashMap<>();
+        Map<String, StyleSchema> userSchemas = new LinkedHashMap<>();
+        schemas.forEach( (name, schema) -> {
+            if (pluginStyleSchemaNames.contains(name)) pluginSchemas.put(name, schema);
+            else userSchemas.put(name, schema);
+        });
 
         return new StyleSchemas(pluginSchemas, userSchemas,
                 (Map<String, String>) studioConfig.get(Config.LOOK_AND_FEEL_SCHEMAS));
     }
 
     public boolean setStyleSchemas(StyleSchemas schemas) {
-        boolean changed = studioConfig.set(Config.STYLE_SCHEMAS, StyleSchemas.toJson(schemas.getUserSchemas()));
+        Map<String, StyleSchemaDefinition> definitions = new LinkedHashMap<>();
+        // schemas from the plugin folder are kept as they were defined
+        getStyleSchemaDefinitions().forEach( (name, definition) -> {
+            if (pluginStyleSchemaNames.contains(name)) definitions.put(name, definition);
+        });
+        definitions.putAll(StyleSchemas.toDefinitions(schemas.getUserSchemas()));
+
+        boolean changed = studioConfig.set(Config.STYLE_SCHEMAS, Collections.unmodifiableMap(definitions));
         changed |= studioConfig.set(Config.LOOK_AND_FEEL_SCHEMAS, schemas.getLookAndFeelSchemas());
         return changed;
     }

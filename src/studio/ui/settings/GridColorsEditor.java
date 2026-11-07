@@ -92,12 +92,16 @@ public class GridColorsEditor extends JPanel {
         return label;
     }
 
-    public void setEditable(boolean editable) {
-        nullLabel.setEditable(editable);
-        for (ColorLabel label: fgLabels.values()) {
-            label.setEditable(editable);
-        }
-        for (ColorLabel label: bgLabels.values()) {
+    /**
+     * @param readOnlyReason the tooltip for not editable colors; a click on them gives a beep
+     */
+    public void setEditable(boolean editable, String readOnlyReason) {
+        List<ColorLabel> labels = new ArrayList<>();
+        labels.add(nullLabel);
+        labels.addAll(fgLabels.values());
+        labels.addAll(bgLabels.values());
+        for (ColorLabel label: labels) {
+            label.setReadOnlyReason(readOnlyReason);
             label.setEditable(editable);
         }
     }

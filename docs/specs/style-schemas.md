@@ -36,6 +36,11 @@ The UI calls the feature "Style schema", to avoid confusion with the chart "Colo
   treated as predefined.
 - Predefined schemas are read-only: their colour editors are disabled, Rename and Delete
   are disabled. To change one the user clicks Duplicate.
+- To make this obvious:
+  - a highlighted banner with a lock icon under the first separator line says the
+    schema is predefined and can't be changed, and points to Duplicate;
+  - a click on a colour or on a token name (the font style menu) gives the L&F's
+    error feedback (a beep), and their tooltip says the schema is read-only.
 - Names of predefined schemas are reserved; a user schema can't use them.
 - A unit test checks that every schema in `resources/styleSchemas.json` defines every
   editor colour, token and grid colour.
@@ -76,6 +81,7 @@ The UI calls the feature "Style schema", to avoid confusion with the chart "Colo
 Look and Feel: [FlatLaf Dark   ▼]
 Style schema:  [Dark           ▼] [Duplicate…] [Rename…] [Delete]
 ──────────
+[🔒 "Dark" is a predefined schema and can't be changed. Use Duplicate… …]  (predefined only)
 Editor font …                      (global)
 Colors for tokens:   …             (disabled for predefined schemas)
 Preview
@@ -132,6 +138,14 @@ Colors for result grid: …          (disabled for predefined schemas)
   L&F (the behaviour before 2.4); only a migrated `Custom` schema uses it.
 - There is no `selectedSchema` key; the active schema follows from `lookandfeel` and
   `lookAndFeelSchemas`.
+- In the code, the value of `styleSchemas` is a map of `StyleSchemaDefinition`: a schema as
+  it is defined in the config, where values may be missing. Definitions are resolved into
+  complete `StyleSchema` objects (missing values taken from `basedOn`, or from Light/Dark
+  depending on the current L&F) when the schemas are read.
+- The plugin folder's config is only used when the config is loaded: it is merged with
+  studio.json, and the names of its schemas are remembered as predefined. When saving,
+  values equal to the merged defaults are left out, so plugin schemas are not written to
+  the user's studio.json.
 - The top-level `editorColors`, `tokens` and `gridColors` keys are removed.
 
 ## Migration (config version 2.4)

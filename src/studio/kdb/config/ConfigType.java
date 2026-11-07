@@ -13,6 +13,7 @@ import studio.ui.Util;
 import java.awt.*;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.LinkedHashMap;
 import java.util.TreeMap;
 import java.util.HashMap;
 import java.util.List;
@@ -427,20 +428,28 @@ public enum ConfigType {
             return ((BgColorRules)value).copy();
         }
     },
-    JSON_OBJECT {
+    STYLE_SCHEMA_DEFINITIONS {
         @Override
         public Object fromJson(JsonElement jsonElement, Object defaultValue) {
-            return jsonElement.getAsJsonObject().deepCopy();
+            JsonObject json = jsonElement.getAsJsonObject();
+            Map<String, StyleSchemaDefinition> map = new LinkedHashMap<>();
+            for (String name: json.keySet()) {
+                try {
+                    map.put(name, StyleSchemaDefinition.fromJson(json.getAsJsonObject(name)));
+                } catch (RuntimeException e) {
+                    org.apache.logging.log4j.LogManager.getLogger(ConfigType.class)
+                            .error("Error parsing style schema {}. Skipping...", name, e);
+                }
+            }
+            return Collections.unmodifiableMap(map);
         }
 
         @Override
         public JsonElement toJson(Object value) {
-            return ((JsonObject) value).deepCopy();
-        }
-
-        @Override
-        public Object clone(Object value) {
-            return ((JsonObject) value).deepCopy();
+            Map<String, StyleSchemaDefinition> map = (Map<String, StyleSchemaDefinition>) value;
+            JsonObject json = new JsonObject();
+            map.forEach( (name, definition) -> json.add(name, definition.toJson()) );
+            return json;
         }
     },
     STRING_MAP {

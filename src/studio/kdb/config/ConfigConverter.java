@@ -158,7 +158,7 @@ public class ConfigConverter implements JsonConverter{
 
         String lookAndFeel = getString(json, defaults, Config.LOOK_AND_FEEL);
         schema = schema.newBasedOn(StyleSchemas.getDefaultSchemaName(lookAndFeel));
-        getOrAddObject(json, Config.STYLE_SCHEMAS).add(CUSTOM_STYLE_SCHEMA, schema.toJson());
+        getOrAddObject(json, Config.STYLE_SCHEMAS).add(CUSTOM_STYLE_SCHEMA, StyleSchemaDefinition.of(schema).toJson());
         if (lookAndFeel != null) {
             getOrAddObject(json, Config.LOOK_AND_FEEL_SCHEMAS).addProperty(lookAndFeel, CUSTOM_STYLE_SCHEMA);
         }

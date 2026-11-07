@@ -72,7 +72,10 @@ public class TokenStyleEditor extends JPanel {
                 lblToken.addMouseListener(new MouseAdapter() {
                     @Override
                     public void mousePressed(MouseEvent e) {
-                        if (!editable) return;
+                        if (!editable) {
+                            UIManager.getLookAndFeel().provideErrorFeedback(lblToken);
+                            return;
+                        }
                         JPopupMenu popupMenu = new JPopupMenu();
                         popupMenu.add(getStylePopupMenuItem(token, FontStyle.Bold));
                         popupMenu.add(getStylePopupMenuItem(token, FontStyle.Italic));
@@ -162,17 +165,24 @@ public class TokenStyleEditor extends JPanel {
         mapTokenTitle.get(token).setFont(tokenStyle.getStyle().applyStyle(defaultFont));
     }
 
-    public void setEditable(boolean editable) {
+    /**
+     * @param readOnlyReason the tooltip for not editable colors and font styles; a click on them gives a beep
+     */
+    public void setEditable(boolean editable, String readOnlyReason) {
         this.editable = editable;
         for (ColorLabel label: editorColorLabels.values()) {
+            label.setReadOnlyReason(readOnlyReason);
             label.setEditable(editable);
         }
         for (ColorLabel label: tokenColorLabels.values()) {
+            label.setReadOnlyReason(readOnlyReason);
             label.setEditable(editable);
         }
         Cursor cursor = editable ? handCursor : Cursor.getDefaultCursor();
+        String toolTip = editable ? null : readOnlyReason;
         for (JLabel label: mapTokenTitle.values()) {
             label.setCursor(cursor);
+            label.setToolTipText(toolTip);
         }
     }
 

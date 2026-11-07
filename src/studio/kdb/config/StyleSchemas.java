@@ -1,7 +1,6 @@
 package studio.kdb.config;
 
 import com.formdev.flatlaf.FlatLaf;
-import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import org.apache.logging.log4j.LogManager;
@@ -74,7 +73,8 @@ public class StyleSchemas {
             try (Reader reader = new InputStreamReader(inputStream, StandardCharsets.UTF_8)) {
                 JsonObject json = JsonParser.parseReader(reader).getAsJsonObject();
                 for (String name : json.keySet()) {
-                    map.put(name, StyleSchema.fromJson(json.getAsJsonObject(name), null));
+                    // built-in schemas have to define all values
+                    map.put(name, StyleSchemaDefinition.fromJson(json.getAsJsonObject(name)).resolve(null));
                 }
             }
         } catch (Exception e) {
@@ -91,7 +91,7 @@ public class StyleSchemas {
     }
 
     /**
-     * The schema used to fill values missing in the json of a schema based on the given one.
+     * The schema used to fill values missing in the definition of a schema based on the given one.
      * If basedOn is missing or unknown, it is Dark for a dark Look and Feel and Light otherwise.
      */
     public static StyleSchema getFallback(String basedOn, String lookAndFeelClassName) {
@@ -101,30 +101,24 @@ public class StyleSchemas {
     }
 
     /**
-     * Parses schemas. Values missing in a schema are taken from the schema in its basedOn,
+     * Builds schemas from their definitions. Values missing in a definition are taken from the schema in its basedOn,
      * or (if basedOn is missing) from the default schema for the given Look and Feel.
      */
-    public static Map<String, StyleSchema> fromJson(JsonObject json, String lookAndFeelClassName) {
+    public static Map<String, StyleSchema> resolve(Map<String, StyleSchemaDefinition> definitions, String lookAndFeelClassName) {
         Map<String, StyleSchema> map = new LinkedHashMap<>();
-        for (String name: json.keySet()) {
-            try {
-                JsonObject jsonSchema = json.getAsJsonObject(name);
-                JsonElement basedOn = jsonSchema.get(StyleSchema.BASED_ON);
-                StyleSchema fallback = getFallback(basedOn == null ? null : basedOn.getAsString(), lookAndFeelClassName);
-                map.put(name, StyleSchema.fromJson(jsonSchema, fallback));
-            } catch (Exception e) {
-                log.error("Error parsing style schema {}. Skipping...", name, e);
-            }
+        for (String name: definitions.keySet()) {
+            StyleSchemaDefinition definition = definitions.get(name);
+            map.put(name, definition.resolve(getFallback(definition.getBasedOn(), lookAndFeelClassName)));
         }
         return Collections.unmodifiableMap(map);
     }
 
-    public static JsonObject toJson(Map<String, StyleSchema> schemas) {
-        JsonObject json = new JsonObject();
+    public static Map<String, StyleSchemaDefinition> toDefinitions(Map<String, StyleSchema> schemas) {
+        Map<String, StyleSchemaDefinition> map = new LinkedHashMap<>();
         for (String name: schemas.keySet()) {
-            json.add(name, schemas.get(name).toJson());
+            map.put(name, StyleSchemaDefinition.of(schemas.get(name)));
         }
-        return json;
+        return Collections.unmodifiableMap(map);
     }
 
     public static boolean isDarkLookAndFeel(String className) {

@@ -30,7 +30,10 @@ public class SettingsStyleTab extends SettingsTab {
 
     private final JComboBox<String> comboBoxSchema;
     private final JButton btnDuplicate, btnRename, btnDelete;
-    private final JLabel lblReadOnly;
+    private final ReadOnlyBanner lblReadOnly;
+
+    private final static String READ_ONLY_REASON =
+            "The predefined style schema is read-only. Use Duplicate to create a schema you can change.";
 
     private StyleSchemas schemas;
     private boolean muteEvents = false;
@@ -77,7 +80,7 @@ public class SettingsStyleTab extends SettingsTab {
         btnRename.setToolTipText("Rename the selected style schema");
         btnDelete = new JButton("Delete");
         btnDelete.setToolTipText("Delete the selected style schema");
-        lblReadOnly = new JLabel("<html><i>Predefined schemas are read-only. Use Duplicate to create a schema you can change.</i></html>");
+        lblReadOnly = new ReadOnlyBanner();
 
         editorFontSelection = new FontSelectionPanel(parentDialog, "Editor font: ", CONFIG.getFont(Config.FONT_EDITOR));
         gridFontSelection = new FontSelectionPanel(parentDialog, "Result table font: ", CONFIG.getFont(Config.FONT_TABLE));
@@ -137,8 +140,8 @@ public class SettingsStyleTab extends SettingsTab {
                 new GroupLayoutSimple.Stack()
                         .addLineAndGlue(lblLookAndFeel, comboBoxLookAndFeel)
                         .addLineAndGlue(lblSchema, comboBoxSchema, btnDuplicate, btnRename, btnDelete)
-                        .addLineAndGlue(lblReadOnly)
                         .addLine(Util.getLineInViewPort())
+                        .addLineAndGlue(lblReadOnly)
                         .addLineAndGlue(editorFontSelection)
                         .addLineAndGlue(new JLabel("<html><b><i>Colors for tokens:</i></b></html>"))
                         .addLineAndGlue(colorTokenEditor)
@@ -215,10 +218,11 @@ public class SettingsStyleTab extends SettingsTab {
             muteEvents = oldMuteEvents;
         }
 
-        colorTokenEditor.setEditable(editable);
-        gridColorsEditor.setEditable(editable);
+        colorTokenEditor.setEditable(editable, READ_ONLY_REASON);
+        gridColorsEditor.setEditable(editable, READ_ONLY_REASON);
         btnRename.setEnabled(editable);
         btnDelete.setEnabled(editable);
+        lblReadOnly.setSchemaName(name);
         lblReadOnly.setVisible(!editable);
     }
 
@@ -365,6 +369,43 @@ public class SettingsStyleTab extends SettingsTab {
         @Override
         public String toString() {
             return getName();
+        }
+    }
+
+
+    // A highlighted notice that the selected schema is predefined and can't be changed
+    private static class ReadOnlyBanner extends JLabel {
+
+        ReadOnlyBanner() {
+            super(Util.LOCK_ICON);
+            setOpaque(true);
+            setIconTextGap(8);
+            updateColors();
+        }
+
+        void setSchemaName(String name) {
+            String escaped = name.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;");
+            setText(String.format("<html><b>\"%s\" is a predefined schema and can't be changed.</b> " +
+                    "Use <b>Duplicate...</b> to create a copy you can change.</html>", escaped));
+        }
+
+        @Override
+        public void updateUI() {
+            super.updateUI();
+            updateColors();
+        }
+
+        private void updateColors() {
+            Color accent = UIManager.getColor("Component.warning.focusedBorderColor");
+            if (accent == null) accent = new Color(0xe2a53a);
+            Color background = UIManager.getColor("Panel.background");
+            if (background == null) background = getBackground();
+            if (background == null) background = Color.WHITE;
+
+            setBackground(Util.blendColors(accent, background, background));
+            setBorder(BorderFactory.createCompoundBorder(
+                    BorderFactory.createLineBorder(accent),
+                    BorderFactory.createEmptyBorder(4, 8, 4, 8)));
         }
     }
 
