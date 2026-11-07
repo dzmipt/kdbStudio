@@ -101,7 +101,8 @@ public class StyleSchemaMigrationTest {
         ServerConfig serverConfig = config.getServerConfig();
         assertNull(serverConfig.getServer("same").getBackgroundColor());
         assertNull(serverConfig.getServer("folder/inner").getBackgroundColor());
-        assertEquals(Color.WHITE, serverConfig.getServer("white").getBackgroundColor());
+        // white was the default background before style schemas
+        assertNull(serverConfig.getServer("white").getBackgroundColor());
         assertEquals(new Color(0x123456), serverConfig.getServer("custom").getBackgroundColor());
 
         assertEquals(new Color(0xfefefe), config.getServerBgColor(serverConfig.getServer("same")));
@@ -156,6 +157,13 @@ public class StyleSchemaMigrationTest {
         Config config = load();
         assertEquals(StyleSchemas.DARK, config.getStyleSchemaName());
         assertEquals(StyleSchemas.getBuiltIn().get(StyleSchemas.DARK), config.getStyleSchema());
+
+        // servers with white (the old default) follow the Dark schema
+        ServerConfig serverConfig = config.getServerConfig();
+        assertNull(serverConfig.getServer("white").getBackgroundColor());
+        assertEquals(config.getBackgroundColor(), config.getServerBgColor(serverConfig.getServer("white")));
+        assertEquals(new Color(0xfefefe), serverConfig.getServer("same").getBackgroundColor());
+        assertEquals(new Color(0x123456), serverConfig.getServer("custom").getBackgroundColor());
     }
 
     @Test

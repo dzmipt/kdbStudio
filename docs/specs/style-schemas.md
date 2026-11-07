@@ -169,8 +169,8 @@ Runs in `ConfigConverter` (`convertTo24`) when the user's studio.json version is
    (Light or Dark depending on the L&F).
 4. servers.json is converted when it is read without a version (independently of the
    studio.json conversion): servers whose `bgColor` equals the background colour of the
-   active schema (the schema for the current L&F, after studio.json is converted) become
-   "Default". Other servers keep their colour. The file is saved with `"version": 1`.
+   active schema (the schema for the current L&F, after studio.json is converted), or is
+   `ffffff` (the default background before style schemas), become "Default". Other servers keep their colour. The file is saved with `"version": 1`.
    Servers converted from the very old `studio.properties` are converted the same way.
 5. Old keys (`editorColors`, `tokens`, `gridColors`) found in the plugin folder's default
    studio.json are ignored with a warning in the log.

@@ -17,6 +17,7 @@ import java.io.IOException;
 import java.io.Writer;
 import java.util.*;
 import java.util.List;
+import java.util.stream.Collectors;
 
 
 public class ServerConfig {
@@ -32,6 +33,9 @@ public class ServerConfig {
     //   no version - the original format
     //   1 - bgColor is optional: a server without bgColor uses the background color from the style schema
     public final static int VERSION = 1;
+
+    // the editor background color before style schemas (the default for all servers)
+    private final static Color LEGACY_DEFAULT_BG_COLOR = Color.WHITE;
 
     // the version of the loaded servers; it is written back to the file until upgrade() is called
     private int version = VERSION;
@@ -85,14 +89,14 @@ public class ServerConfig {
         }
     }
 
-    private ServerTreeNode convertBgColorToDefault(ServerTreeNode serverTreeNode, Color color) {
+    private ServerTreeNode convertBgColorToDefault(ServerTreeNode serverTreeNode, Set<Color> colors) {
         ServerTreeNode result = new ServerTreeNode(serverTreeNode.getFolder());
         for (ServerTreeNode child: serverTreeNode.childNodes()) {
             if (child.isFolder()) {
-                result.add(convertBgColorToDefault(child, color));
+                result.add(convertBgColorToDefault(child, colors));
             } else {
                 Server server = child.getServer();
-                if (color.equals(server.getBackgroundColor())) {
+                if (colors.contains(server.getBackgroundColor())) {
                     server = server.newBackgroundColor(null);
                 }
                 result.add(server);
@@ -104,7 +108,8 @@ public class ServerConfig {
     /**
      * Upgrades servers loaded in an old format to the latest version.
      * @param defaultBgColor the editor background color from the style schema for the current Look and Feel.
-     *                       Servers with this background color are switched to the default background.
+     *                       Servers with this background color, or with white (the default background
+     *                       before style schemas), are switched to the default background.
      */
     public void upgrade(Color defaultBgColor) {
         if (version >= VERSION) return;
@@ -118,9 +123,11 @@ public class ServerConfig {
             }
         }
 
-        log.info("Servers with background color {} are switched to the default background", Util.colorToString(defaultBgColor));
+        Set<Color> colors = new LinkedHashSet<>(List.of(defaultBgColor, LEGACY_DEFAULT_BG_COLOR));
+        log.info("Servers with background colors {} are switched to the default background",
+                colors.stream().map(Util::colorToString).collect(Collectors.toList()));
         version = VERSION;
-        setRoot(convertBgColorToDefault(serverTree, defaultBgColor));
+        setRoot(convertBgColorToDefault(serverTree, colors));
     }
 
     public void setRoot(ServerTreeNode root) {
