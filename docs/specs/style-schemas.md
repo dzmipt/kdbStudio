@@ -79,14 +79,14 @@ The UI calls the feature "Style schema", to avoid confusion with the chart "Colo
 
 ```
 Look and Feel: [FlatLaf Dark   ▼]
+Editor font …                      (global)
+Result table font …                (global)
 Style schema:  [Dark           ▼] [Duplicate…] [Rename…] [Delete]
 ──────────
 [🔒 "Dark" is a predefined schema and can't be changed. Use Duplicate… …]  (predefined only)
-Editor font …                      (global)
 Colors for tokens:   …             (disabled for predefined schemas)
 Preview
 ──────────
-Result table font …                (global)
 Colors for result grid: …          (disabled for predefined schemas)
 ```
 
