@@ -16,8 +16,10 @@ import studio.ui.rstextarea.StudioRSyntaxTextArea;
 
 import javax.swing.*;
 import java.awt.*;
+import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.TreeMap;
 
 public class SettingsStyleTab extends SettingsTab {
 
@@ -36,6 +38,8 @@ public class SettingsStyleTab extends SettingsTab {
             "The predefined style schema is read-only. Use Duplicate to create a schema you can change.";
 
     private StyleSchemas schemas;
+    // Look and Feel class name -> the name of the schema chosen for it
+    private Map<String, String> lookAndFeelSchemas;
     private boolean muteEvents = false;
 
     private static final Config CONFIG = Config.getInstance();
@@ -62,7 +66,8 @@ public class SettingsStyleTab extends SettingsTab {
 
 
         schemas = CONFIG.getStyleSchemas();
-        StyleSchema schema = schemas.getSchema(getSelectedLookAndFeel());
+        lookAndFeelSchemas = CONFIG.getLookAndFeelSchemas();
+        StyleSchema schema = schemas.get(getSchemaNameForSelectedLookAndFeel(), getSelectedLookAndFeel());
 
         JLabel lblSchema = new JLabel("Style schema:");
         comboBoxSchema = new JComboBox<>();
@@ -133,7 +138,7 @@ public class SettingsStyleTab extends SettingsTab {
         btnRename.addActionListener(e -> renameSchema());
         btnDelete.addActionListener(e -> deleteSchema());
 
-        refreshSchemas(schemas.getSchemaName(getSelectedLookAndFeel()));
+        refreshSchemas(getSchemaNameForSelectedLookAndFeel());
 
         GroupLayoutSimple layout = new GroupLayoutSimple(this);
         layout.setStacks(
@@ -182,7 +187,17 @@ public class SettingsStyleTab extends SettingsTab {
     }
 
     private StyleSchema getSelectedSchema() {
-        return schemas.get(getSelectedSchemaName());
+        return schemas.get(getSelectedSchemaName(), getSelectedLookAndFeel());
+    }
+
+    private String getSchemaNameForSelectedLookAndFeel() {
+        return schemas.getSchemaName(lookAndFeelSchemas, getSelectedLookAndFeel());
+    }
+
+    private void selectSchemaForLookAndFeel(String name) {
+        Map<String, String> map = new TreeMap<>(lookAndFeelSchemas);
+        map.put(getSelectedLookAndFeel(), name);
+        lookAndFeelSchemas = Collections.unmodifiableMap(map);
     }
 
     private void updateSelectedSchema(StyleSchema schema) {
@@ -205,7 +220,7 @@ public class SettingsStyleTab extends SettingsTab {
 
     private void loadSelectedSchema() {
         String name = getSelectedSchemaName();
-        StyleSchema schema = schemas.get(name);
+        StyleSchema schema = schemas.get(name, getSelectedLookAndFeel());
         boolean editable = !schemas.isPredefined(name);
 
         boolean oldMuteEvents = muteEvents;
@@ -227,7 +242,7 @@ public class SettingsStyleTab extends SettingsTab {
 
     private void lookAndFeelSelected() {
         if (muteEvents) return;
-        String name = schemas.getSchemaName(getSelectedLookAndFeel());
+        String name = getSchemaNameForSelectedLookAndFeel();
         boolean oldMuteEvents = muteEvents;
         muteEvents = true;
         try {
@@ -242,7 +257,7 @@ public class SettingsStyleTab extends SettingsTab {
         if (muteEvents) return;
         String name = getSelectedSchemaName();
         if (name == null) return;
-        schemas = schemas.select(getSelectedLookAndFeel(), name);
+        selectSchemaForLookAndFeel(name);
         loadSelectedSchema();
     }
 
@@ -272,8 +287,8 @@ public class SettingsStyleTab extends SettingsTab {
         newName = askName("Duplicate Style Schema", newName, null);
         if (newName == null) return;
 
-        schemas = schemas.duplicate(name, newName, getSelectedLookAndFeel())
-                        .select(getSelectedLookAndFeel(), newName);
+        schemas = schemas.duplicate(name, newName, getSelectedLookAndFeel());
+        selectSchemaForLookAndFeel(newName);
         refreshSchemas(newName);
     }
 
@@ -285,6 +300,7 @@ public class SettingsStyleTab extends SettingsTab {
         if (newName == null) return;
 
         schemas = schemas.rename(name, newName);
+        lookAndFeelSchemas = StyleSchemas.renameInLookAndFeelSchemas(lookAndFeelSchemas, name, newName);
         refreshSchemas(newName);
     }
 
@@ -297,7 +313,8 @@ public class SettingsStyleTab extends SettingsTab {
         if (result != JOptionPane.YES_OPTION) return;
 
         schemas = schemas.delete(name);
-        refreshSchemas(schemas.getSchemaName(getSelectedLookAndFeel()));
+        lookAndFeelSchemas = StyleSchemas.deleteFromLookAndFeelSchemas(lookAndFeelSchemas, name);
+        refreshSchemas(getSchemaNameForSelectedLookAndFeel());
     }
 
     private QGridPanel getGrid(StyleSchema schema) {
@@ -336,6 +353,7 @@ public class SettingsStyleTab extends SettingsTab {
         result.setChangedLF(changed);
 
         CONFIG.setStyleSchemas(schemas);
+        CONFIG.setLookAndFeelSchemas(lookAndFeelSchemas);
 
         changed = ! oldSchema.equals(CONFIG.getStyleSchema());
         result.setRefreshEditorsSettings(changed);

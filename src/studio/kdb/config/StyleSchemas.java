@@ -14,8 +14,11 @@ import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
- * All style schemas available to the user: predefined (built-in and from the plugin folder; read-only) and user-defined,
- * together with the schema chosen for every Look and Feel. Immutable.
+ * All style schemas: predefined (built-in and from the plugin folder; read-only) and user-defined. Immutable.
+ * <p>
+ * Schemas are kept as they are defined in the config. A schema is resolved (values missing in its definition are
+ * taken from its basedOn schema, or from Light/Dark depending on the Look and Feel) when it is requested;
+ * the result is cached.
  */
 public class StyleSchemas {
 
@@ -27,36 +30,54 @@ public class StyleSchemas {
     public final static String BUILT_IN_RESOURCE = "styleSchemas.json";
 
     private static Map<String, StyleSchema> builtIn = null;
+    private static StyleSchemas builtInSchemas = null;
     private final static Map<String, Boolean> darkLookAndFeels = new ConcurrentHashMap<>();
 
-    private final Map<String, StyleSchema> predefined;
-    private final Map<String, StyleSchema> user;
-    private final Map<String, String> lookAndFeelSchemas;
+    // predefined schemas go first
+    private final Map<String, StyleSchemaDefinition> definitions;
+    private final Set<String> predefined;
+    private final Map<String, StyleSchema> resolved = new ConcurrentHashMap<>();
 
-    public StyleSchemas(Map<String, StyleSchema> pluginSchemas, Map<String, StyleSchema> userSchemas,
-                        Map<String, String> lookAndFeelSchemas) {
-        predefined = new LinkedHashMap<>(getBuiltIn());
-        for (String name: pluginSchemas.keySet()) {
-            if (predefined.containsKey(name)) {
-                log.warn("Style schema {} from the plugin folder is ignored, as the name is reserved", name);
-                continue;
-            }
-            predefined.put(name, pluginSchemas.get(name));
-        }
-
-        user = new LinkedHashMap<>();
-        for (String name: userSchemas.keySet()) {
-            if (predefined.containsKey(name)) continue;
-            user.put(name, userSchemas.get(name));
-        }
-
-        this.lookAndFeelSchemas = new TreeMap<>(lookAndFeelSchemas);
+    private StyleSchemas(Map<String, StyleSchemaDefinition> definitions, Set<String> predefined) {
+        this.definitions = Collections.unmodifiableMap(new LinkedHashMap<>(definitions));
+        this.predefined = Collections.unmodifiableSet(new LinkedHashSet<>(predefined));
     }
 
-    private StyleSchemas(StyleSchemas schemas) {
-        this.predefined = schemas.predefined;
-        this.user = new LinkedHashMap<>(schemas.user);
-        this.lookAndFeelSchemas = new TreeMap<>(schemas.lookAndFeelSchemas);
+    /**
+     * Only built-in schemas
+     */
+    public static synchronized StyleSchemas builtIn() {
+        if (builtInSchemas == null) {
+            Map<String, StyleSchemaDefinition> definitions = new LinkedHashMap<>();
+            getBuiltIn().forEach( (name, schema) -> definitions.put(name, StyleSchemaDefinition.of(schema)) );
+            builtInSchemas = new StyleSchemas(definitions, definitions.keySet());
+        }
+        return builtInSchemas;
+    }
+
+    /**
+     * @param definitions schemas as they are defined in the config. Built-in schemas are added if missing.
+     * @param predefined names of predefined schemas (from the plugin folder). Built-in schemas are always predefined.
+     */
+    public static StyleSchemas of(Map<String, StyleSchemaDefinition> definitions, Collection<String> predefined) {
+        StyleSchemas builtInSchemas = builtIn();
+        Map<String, StyleSchemaDefinition> map = new LinkedHashMap<>(builtInSchemas.definitions);
+        Set<String> predefinedNames = new LinkedHashSet<>(builtInSchemas.predefined);
+
+        Map<String, StyleSchemaDefinition> userDefinitions = new LinkedHashMap<>();
+        for (String name: definitions.keySet()) {
+            if (builtInSchemas.contains(name)) {
+                log.warn("Style schema {} is ignored, as the name is used by a built-in schema", name);
+            } else if (predefined.contains(name)) {
+                map.put(name, definitions.get(name));
+                predefinedNames.add(name);
+            } else {
+                userDefinitions.put(name, definitions.get(name));
+            }
+        }
+        // predefined schemas go first
+        map.putAll(userDefinitions);
+        return new StyleSchemas(map, predefinedNames);
     }
 
     public static synchronized Map<String, StyleSchema> getBuiltIn() {
@@ -90,37 +111,6 @@ public class StyleSchemas {
         return map;
     }
 
-    /**
-     * The schema used to fill values missing in the definition of a schema based on the given one.
-     * If basedOn is missing or unknown, it is Dark for a dark Look and Feel and Light otherwise.
-     */
-    public static StyleSchema getFallback(String basedOn, String lookAndFeelClassName) {
-        StyleSchema schema = basedOn == null ? null : getBuiltIn().get(basedOn);
-        if (schema == null) schema = getBuiltIn().get(getDefaultSchemaName(lookAndFeelClassName));
-        return schema;
-    }
-
-    /**
-     * Builds schemas from their definitions. Values missing in a definition are taken from the schema in its basedOn,
-     * or (if basedOn is missing) from the default schema for the given Look and Feel.
-     */
-    public static Map<String, StyleSchema> resolve(Map<String, StyleSchemaDefinition> definitions, String lookAndFeelClassName) {
-        Map<String, StyleSchema> map = new LinkedHashMap<>();
-        for (String name: definitions.keySet()) {
-            StyleSchemaDefinition definition = definitions.get(name);
-            map.put(name, definition.resolve(getFallback(definition.getBasedOn(), lookAndFeelClassName)));
-        }
-        return Collections.unmodifiableMap(map);
-    }
-
-    public static Map<String, StyleSchemaDefinition> toDefinitions(Map<String, StyleSchema> schemas) {
-        Map<String, StyleSchemaDefinition> map = new LinkedHashMap<>();
-        for (String name: schemas.keySet()) {
-            map.put(name, StyleSchemaDefinition.of(schemas.get(name)));
-        }
-        return Collections.unmodifiableMap(map);
-    }
-
     public static boolean isDarkLookAndFeel(String className) {
         if (className == null) return false;
         return darkLookAndFeels.computeIfAbsent(className, name -> {
@@ -139,59 +129,65 @@ public class StyleSchemas {
     }
 
     public List<String> getNames() {
-        List<String> names = new ArrayList<>(predefined.keySet());
-        names.addAll(user.keySet());
-        return names;
+        return new ArrayList<>(definitions.keySet());
     }
 
     public boolean contains(String name) {
-        return predefined.containsKey(name) || user.containsKey(name);
+        return definitions.containsKey(name);
     }
 
     public boolean isPredefined(String name) {
-        return predefined.containsKey(name);
+        return predefined.contains(name);
     }
 
-    public StyleSchema get(String name) {
-        StyleSchema schema = predefined.get(name);
-        if (schema != null) return schema;
-        return user.get(name);
+    public Map<String, StyleSchemaDefinition> getDefinitions() {
+        return definitions;
     }
 
-    public Map<String, StyleSchema> getUserSchemas() {
-        return Collections.unmodifiableMap(user);
+    /**
+     * Definitions of user schemas, which are saved in the user's config
+     */
+    public Map<String, StyleSchemaDefinition> getUserDefinitions() {
+        Map<String, StyleSchemaDefinition> map = new LinkedHashMap<>();
+        definitions.forEach( (name, definition) -> {
+            if (! predefined.contains(name)) map.put(name, definition);
+        });
+        return map;
     }
 
-    public Map<String, String> getLookAndFeelSchemas() {
-        return Collections.unmodifiableMap(lookAndFeelSchemas);
+    /**
+     * The schema with values missing in its definition taken from its basedOn schema.
+     * If basedOn is not defined, they are taken from Dark for a dark Look and Feel and from Light otherwise.
+     * @return null if there is no schema with the name
+     */
+    public StyleSchema get(String name, String lookAndFeelClassName) {
+        StyleSchemaDefinition definition = definitions.get(name);
+        if (definition == null) return null;
+
+        String fallbackName = definition.getBasedOn();
+        if (fallbackName == null || ! getBuiltIn().containsKey(fallbackName)) {
+            fallbackName = getDefaultSchemaName(lookAndFeelClassName);
+        }
+        String fallback = fallbackName;
+        return resolved.computeIfAbsent(name + "\n" + fallback,
+                key -> definition.resolve(getBuiltIn().get(fallback)));
     }
 
     /**
      * The schema name used for the given Look and Feel: the remembered one if it still exists,
      * otherwise Dark for dark Look and Feels and Light for the others.
      */
-    public String getSchemaName(String lookAndFeelClassName) {
+    public String getSchemaName(Map<String, String> lookAndFeelSchemas, String lookAndFeelClassName) {
         String name = lookAndFeelSchemas.get(lookAndFeelClassName);
         if (name != null && contains(name)) return name;
         return getDefaultSchemaName(lookAndFeelClassName);
     }
 
-    public StyleSchema getSchema(String lookAndFeelClassName) {
-        return get(getSchemaName(lookAndFeelClassName));
-    }
-
-    public StyleSchemas select(String lookAndFeelClassName, String name) {
-        if (!contains(name)) throw new IllegalArgumentException("Unknown style schema: " + name);
-        StyleSchemas schemas = new StyleSchemas(this);
-        schemas.lookAndFeelSchemas.put(lookAndFeelClassName, name);
-        return schemas;
-    }
-
     public StyleSchemas set(String name, StyleSchema schema) {
         if (isPredefined(name)) throw new IllegalArgumentException("Predefined style schema can't be changed: " + name);
-        StyleSchemas schemas = new StyleSchemas(this);
-        schemas.user.put(name, schema);
-        return schemas;
+        Map<String, StyleSchemaDefinition> map = new LinkedHashMap<>(definitions);
+        map.put(name, StyleSchemaDefinition.of(schema));
+        return new StyleSchemas(map, predefined);
     }
 
     /**
@@ -200,7 +196,7 @@ public class StyleSchemas {
      * without basedOn), the copy is based on the default schema for the given Look and Feel.
      */
     public StyleSchemas duplicate(String name, String newName, String lookAndFeelClassName) {
-        StyleSchema schema = get(name);
+        StyleSchema schema = get(name, lookAndFeelClassName);
         if (schema == null) throw new IllegalArgumentException("Unknown style schema: " + name);
         if (contains(newName)) throw new IllegalArgumentException("Style schema already exists: " + newName);
 
@@ -213,24 +209,37 @@ public class StyleSchemas {
 
     public StyleSchemas rename(String name, String newName) {
         if (isPredefined(name)) throw new IllegalArgumentException("Predefined style schema can't be renamed: " + name);
-        if (!user.containsKey(name)) throw new IllegalArgumentException("Unknown style schema: " + name);
+        if (!contains(name)) throw new IllegalArgumentException("Unknown style schema: " + name);
         if (contains(newName)) throw new IllegalArgumentException("Style schema already exists: " + newName);
 
-        StyleSchemas schemas = new StyleSchemas(this);
-        schemas.user.clear();
-        for (String key: user.keySet()) {
-            schemas.user.put(key.equals(name) ? newName : key, user.get(key));
-        }
-        schemas.lookAndFeelSchemas.replaceAll((lf, schemaName) -> schemaName.equals(name) ? newName : schemaName);
-        return schemas;
+        Map<String, StyleSchemaDefinition> map = new LinkedHashMap<>();
+        definitions.forEach( (key, definition) -> map.put(key.equals(name) ? newName : key, definition) );
+        return new StyleSchemas(map, predefined);
     }
 
     public StyleSchemas delete(String name) {
         if (isPredefined(name)) throw new IllegalArgumentException("Predefined style schema can't be deleted: " + name);
-        StyleSchemas schemas = new StyleSchemas(this);
-        schemas.user.remove(name);
-        schemas.lookAndFeelSchemas.values().removeIf(schemaName -> schemaName.equals(name));
-        return schemas;
+        Map<String, StyleSchemaDefinition> map = new LinkedHashMap<>(definitions);
+        map.remove(name);
+        return new StyleSchemas(map, predefined);
+    }
+
+    /**
+     * The mapping with references to the renamed schema updated
+     */
+    public static Map<String, String> renameInLookAndFeelSchemas(Map<String, String> lookAndFeelSchemas, String name, String newName) {
+        Map<String, String> map = new TreeMap<>(lookAndFeelSchemas);
+        map.replaceAll( (lf, schemaName) -> schemaName.equals(name) ? newName : schemaName);
+        return Collections.unmodifiableMap(map);
+    }
+
+    /**
+     * The mapping without references to the deleted schema
+     */
+    public static Map<String, String> deleteFromLookAndFeelSchemas(Map<String, String> lookAndFeelSchemas, String name) {
+        Map<String, String> map = new TreeMap<>(lookAndFeelSchemas);
+        map.values().removeIf(schemaName -> schemaName.equals(name));
+        return Collections.unmodifiableMap(map);
     }
 
     /**
@@ -247,12 +256,11 @@ public class StyleSchemas {
     public boolean equals(Object o) {
         if (!(o instanceof StyleSchemas)) return false;
         StyleSchemas that = (StyleSchemas) o;
-        return predefined.equals(that.predefined) && user.equals(that.user) &&
-                lookAndFeelSchemas.equals(that.lookAndFeelSchemas);
+        return definitions.equals(that.definitions) && predefined.equals(that.predefined);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(predefined, user, lookAndFeelSchemas);
+        return Objects.hash(definitions, predefined);
     }
 }

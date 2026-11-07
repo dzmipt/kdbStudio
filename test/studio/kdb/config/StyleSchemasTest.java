@@ -9,6 +9,7 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.Reader;
 import java.nio.charset.StandardCharsets;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -26,7 +27,20 @@ public class StyleSchemasTest {
     }
 
     private StyleSchemas newSchemas() {
-        return new StyleSchemas(Map.of(), Map.of(), Map.of());
+        return StyleSchemas.builtIn();
+    }
+
+    private static StyleSchemaDefinition def(StyleSchema schema) {
+        return StyleSchemaDefinition.of(schema);
+    }
+
+    // a map keeping the order of the keys
+    private static <V> Map<String, V> map(Object... keyValues) {
+        Map<String, V> map = new LinkedHashMap<>();
+        for (int i = 0; i < keyValues.length; i += 2) {
+            map.put((String) keyValues[i], (V) keyValues[i + 1]);
+        }
+        return map;
     }
 
     @Test
@@ -50,11 +64,20 @@ public class StyleSchemasTest {
     @Test
     public void testDefaultSchemaForLookAndFeel() {
         StyleSchemas schemas = newSchemas();
-        assertEquals(StyleSchemas.LIGHT, schemas.getSchemaName(LIGHT_LAF));
-        assertEquals(StyleSchemas.LIGHT, schemas.getSchemaName(NIMBUS_LAF));
-        assertEquals(StyleSchemas.LIGHT, schemas.getSchemaName("not.existing.Laf"));
-        assertEquals(StyleSchemas.DARK, schemas.getSchemaName(DARK_LAF));
-        assertEquals(StyleSchemas.DARK, schemas.getSchemaName(DARCULA_LAF));
+        assertEquals(StyleSchemas.LIGHT, schemas.getSchemaName(Map.of(), LIGHT_LAF));
+        assertEquals(StyleSchemas.LIGHT, schemas.getSchemaName(Map.of(), NIMBUS_LAF));
+        assertEquals(StyleSchemas.LIGHT, schemas.getSchemaName(Map.of(), "not.existing.Laf"));
+        assertEquals(StyleSchemas.DARK, schemas.getSchemaName(Map.of(), DARK_LAF));
+        assertEquals(StyleSchemas.DARK, schemas.getSchemaName(Map.of(), DARCULA_LAF));
+    }
+
+    @Test
+    public void testRememberedSchemaForLookAndFeel() {
+        StyleSchemas schemas = newSchemas().duplicate(StyleSchemas.LIGHT, "A", LIGHT_LAF);
+        assertEquals("A", schemas.getSchemaName(Map.of(DARK_LAF, "A"), DARK_LAF));
+        assertEquals(StyleSchemas.LIGHT, schemas.getSchemaName(Map.of(DARK_LAF, StyleSchemas.LIGHT), DARK_LAF));
+        // the remembered schema doesn't exist
+        assertEquals(StyleSchemas.DARK, schemas.getSchemaName(Map.of(DARK_LAF, "B"), DARK_LAF));
     }
 
     @Test
@@ -72,46 +95,43 @@ public class StyleSchemasTest {
         StyleSchemas schemas = newSchemas().duplicate(StyleSchemas.DARK, "My dark", LIGHT_LAF);
         assertEquals(List.of(StyleSchemas.LIGHT, StyleSchemas.DARK, "My dark"), schemas.getNames());
         assertFalse(schemas.isPredefined("My dark"));
-        StyleSchema schema = schemas.get("My dark");
+        StyleSchema schema = schemas.get("My dark", LIGHT_LAF);
         assertEquals(StyleSchemas.DARK, schema.getBasedOn());
-        assertEquals(schemas.get(StyleSchemas.DARK).getEditorColors(), schema.getEditorColors());
+        assertEquals(schemas.get(StyleSchemas.DARK, LIGHT_LAF).getEditorColors(), schema.getEditorColors());
 
         // basedOn is kept when a user schema is duplicated
         schemas = schemas.duplicate("My dark", "Another", LIGHT_LAF);
-        assertEquals(StyleSchemas.DARK, schemas.get("Another").getBasedOn());
+        assertEquals(StyleSchemas.DARK, schemas.get("Another", LIGHT_LAF).getBasedOn());
 
         StyleSchemas finalSchemas = schemas;
         assertThrows(IllegalArgumentException.class, () -> finalSchemas.duplicate(StyleSchemas.LIGHT, "Another", LIGHT_LAF));
     }
 
     @Test
-    public void testRenameUpdatesLookAndFeels() {
+    public void testRename() {
         StyleSchemas schemas = newSchemas()
                 .duplicate(StyleSchemas.LIGHT, "A", LIGHT_LAF)
-                .select(LIGHT_LAF, "A")
-                .select(NIMBUS_LAF, "A")
-                .select(DARK_LAF, StyleSchemas.DARK);
+                .duplicate(StyleSchemas.LIGHT, "C", LIGHT_LAF);
 
         schemas = schemas.rename("A", "B");
-        assertFalse(schemas.contains("A"));
-        assertTrue(schemas.contains("B"));
-        assertEquals("B", schemas.getSchemaName(LIGHT_LAF));
-        assertEquals("B", schemas.getSchemaName(NIMBUS_LAF));
-        assertEquals(StyleSchemas.DARK, schemas.getSchemaName(DARK_LAF));
+        // the order is kept
+        assertEquals(List.of(StyleSchemas.LIGHT, StyleSchemas.DARK, "B", "C"), schemas.getNames());
+
+        Map<String, String> lookAndFeelSchemas = Map.of(LIGHT_LAF, "A", NIMBUS_LAF, "A", DARK_LAF, StyleSchemas.DARK);
+        assertEquals(Map.of(LIGHT_LAF, "B", NIMBUS_LAF, "B", DARK_LAF, StyleSchemas.DARK),
+                StyleSchemas.renameInLookAndFeelSchemas(lookAndFeelSchemas, "A", "B"));
     }
 
     @Test
     public void testDeleteFallsBackToDefault() {
-        StyleSchemas schemas = newSchemas()
-                .duplicate(StyleSchemas.LIGHT, "A", LIGHT_LAF)
-                .select(DARK_LAF, "A")
-                .select(LIGHT_LAF, "A");
+        StyleSchemas schemas = newSchemas().duplicate(StyleSchemas.LIGHT, "A", LIGHT_LAF);
+        Map<String, String> lookAndFeelSchemas = Map.of(DARK_LAF, "A", LIGHT_LAF, "A");
 
         schemas = schemas.delete("A");
         assertFalse(schemas.contains("A"));
-        assertEquals(StyleSchemas.DARK, schemas.getSchemaName(DARK_LAF));
-        assertEquals(StyleSchemas.LIGHT, schemas.getSchemaName(LIGHT_LAF));
-        assertTrue(schemas.getLookAndFeelSchemas().isEmpty());
+        assertEquals(StyleSchemas.DARK, schemas.getSchemaName(lookAndFeelSchemas, DARK_LAF));
+        assertEquals(StyleSchemas.LIGHT, schemas.getSchemaName(lookAndFeelSchemas, LIGHT_LAF));
+        assertTrue(StyleSchemas.deleteFromLookAndFeelSchemas(lookAndFeelSchemas, "A").isEmpty());
     }
 
     @Test
@@ -126,19 +146,33 @@ public class StyleSchemasTest {
     }
 
     @Test
-    public void testPluginSchemasArePredefined() {
-        StyleSchema corp = light().newBasedOn(StyleSchemas.LIGHT);
-        StyleSchemas schemas = new StyleSchemas(
-                Map.of("Corp", corp, StyleSchemas.LIGHT, corp),
-                Map.of("Corp", corp, "Mine", corp),
-                Map.of());
+    public void testPredefinedSchemas() {
+        StyleSchemaDefinition corp = def(light().newBasedOn(StyleSchemas.LIGHT));
+        StyleSchemas schemas = StyleSchemas.of(
+                map("Mine", corp, "Corp", corp, StyleSchemas.LIGHT, corp),
+                List.of("Corp"));
 
+        // predefined schemas go first
         assertEquals(List.of(StyleSchemas.LIGHT, StyleSchemas.DARK, "Corp", "Mine"), schemas.getNames());
         assertTrue(schemas.isPredefined("Corp"));
         assertFalse(schemas.isPredefined("Mine"));
-        // the plugin can't override built-in schemas
-        assertEquals(light(), schemas.get(StyleSchemas.LIGHT));
-        assertEquals(Map.of("Mine", corp), schemas.getUserSchemas());
+        // built-in schemas can't be overridden
+        assertEquals(light(), schemas.get(StyleSchemas.LIGHT, LIGHT_LAF));
+        assertEquals(Map.of("Mine", corp), schemas.getUserDefinitions());
+    }
+
+    @Test
+    public void testConfigTypeKeepsPredefinedFromDefaults() {
+        JsonObject jsonDefaults = JsonParser.parseString("{'Corp': {'basedOn': 'Dark'}}").getAsJsonObject();
+        StyleSchemas defaults = (StyleSchemas) ConfigType.STYLE_SCHEMAS.fromJson(jsonDefaults, StyleSchemas.builtIn());
+
+        JsonObject json = JsonParser.parseString("{'Corp': {'basedOn': 'Dark'}, 'Mine': {'basedOn': 'Light'}}").getAsJsonObject();
+        StyleSchemas schemas = (StyleSchemas) ConfigType.STYLE_SCHEMAS.fromJson(json, defaults);
+
+        assertTrue(schemas.isPredefined("Corp"));
+        assertFalse(schemas.isPredefined("Mine"));
+        // only user schemas are saved
+        assertEquals(JsonParser.parseString("{'Mine': {'basedOn': 'Light'}}"), ConfigType.STYLE_SCHEMAS.toJson(schemas));
     }
 
     @Test
@@ -148,12 +182,10 @@ public class StyleSchemasTest {
                 "'NoBase': {'tokens': {'keyword': '040506'}}" +
                 "}").getAsJsonObject();
 
-        Map<String, StyleSchemaDefinition> definitions = (Map<String, StyleSchemaDefinition>)
-                ConfigType.STYLE_SCHEMA_DEFINITIONS.fromJson(json, null);
-        Map<String, StyleSchema> map = StyleSchemas.resolve(definitions, LIGHT_LAF);
+        StyleSchemas schemas = (StyleSchemas) ConfigType.STYLE_SCHEMAS.fromJson(json, null);
         StyleSchema dark = StyleSchemas.getBuiltIn().get(StyleSchemas.DARK);
 
-        StyleSchema partial = map.get("Partial");
+        StyleSchema partial = schemas.get("Partial", LIGHT_LAF);
         assertEquals(new Color(0x010203), partial.getBackgroundColor());
         assertEquals(dark.getEditorColors().get(EditorColorToken.SELECTED), partial.getEditorColors().get(EditorColorToken.SELECTED));
         assertEquals(new TokenStyle(new Color(0x040506), FontStyle.Italic), partial.getTokens().get(ColorToken.KEYWORD));
@@ -161,26 +193,29 @@ public class StyleSchemasTest {
         assertEquals(dark.getGridColors(), partial.getGridColors());
 
         // without basedOn, missing values depend on the Look and Feel
-        StyleSchema noBase = map.get("NoBase");
+        StyleSchema noBase = schemas.get("NoBase", LIGHT_LAF);
         assertEquals(light().getEditorColors(), noBase.getEditorColors());
         assertEquals(light().getGridColors(), noBase.getGridColors());
 
-        noBase = StyleSchemas.resolve(definitions, DARK_LAF).get("NoBase");
+        noBase = schemas.get("NoBase", DARK_LAF);
         assertEquals(dark.getEditorColors(), noBase.getEditorColors());
         assertEquals(dark.getGridColors(), noBase.getGridColors());
         assertEquals(new TokenStyle(new Color(0x040506), FontStyle.Plain), noBase.getTokens().get(ColorToken.KEYWORD));
+
+        // resolved schemas are cached
+        assertSame(noBase, schemas.get("NoBase", DARK_LAF));
     }
 
     @Test
     public void testDuplicateWithoutBasedOn() {
-        StyleSchema corp = light(); // basedOn is null
-        StyleSchemas schemas = new StyleSchemas(Map.of("Corp", corp), Map.of(), Map.of());
+        StyleSchemaDefinition corp = def(light()); // basedOn is null
+        StyleSchemas schemas = StyleSchemas.of(Map.of("Corp", corp), List.of("Corp"));
 
-        assertEquals(StyleSchemas.LIGHT, schemas.duplicate("Corp", "A", LIGHT_LAF).get("A").getBasedOn());
-        assertEquals(StyleSchemas.LIGHT, schemas.duplicate("Corp", "A", NIMBUS_LAF).get("A").getBasedOn());
-        assertEquals(StyleSchemas.DARK, schemas.duplicate("Corp", "A", DARK_LAF).get("A").getBasedOn());
+        assertEquals(StyleSchemas.LIGHT, schemas.duplicate("Corp", "A", LIGHT_LAF).get("A", LIGHT_LAF).getBasedOn());
+        assertEquals(StyleSchemas.LIGHT, schemas.duplicate("Corp", "A", NIMBUS_LAF).get("A", LIGHT_LAF).getBasedOn());
+        assertEquals(StyleSchemas.DARK, schemas.duplicate("Corp", "A", DARK_LAF).get("A", LIGHT_LAF).getBasedOn());
         // a copy of a built-in schema is based on it, whatever the Look and Feel
-        assertEquals(StyleSchemas.LIGHT, schemas.duplicate(StyleSchemas.LIGHT, "A", DARK_LAF).get("A").getBasedOn());
+        assertEquals(StyleSchemas.LIGHT, schemas.duplicate(StyleSchemas.LIGHT, "A", DARK_LAF).get("A", LIGHT_LAF).getBasedOn());
     }
 
     @Test

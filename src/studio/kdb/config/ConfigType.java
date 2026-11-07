@@ -428,9 +428,11 @@ public enum ConfigType {
             return ((BgColorRules)value).copy();
         }
     },
-    STYLE_SCHEMA_DEFINITIONS {
+    STYLE_SCHEMAS {
+        // defaultValue is the default StyleSchemas (built-in and from the plugin folder): its schemas are predefined
         @Override
         public Object fromJson(JsonElement jsonElement, Object defaultValue) {
+            StyleSchemas defaults = defaultValue instanceof StyleSchemas ? (StyleSchemas) defaultValue : StyleSchemas.builtIn();
             JsonObject json = jsonElement.getAsJsonObject();
             Map<String, StyleSchemaDefinition> map = new LinkedHashMap<>();
             for (String name: json.keySet()) {
@@ -441,14 +443,14 @@ public enum ConfigType {
                             .error("Error parsing style schema {}. Skipping...", name, e);
                 }
             }
-            return Collections.unmodifiableMap(map);
+            return StyleSchemas.of(map, defaults.getNames());
         }
 
+        // only user schemas are saved: predefined ones come from the defaults
         @Override
         public JsonElement toJson(Object value) {
-            Map<String, StyleSchemaDefinition> map = (Map<String, StyleSchemaDefinition>) value;
             JsonObject json = new JsonObject();
-            map.forEach( (name, definition) -> json.add(name, definition.toJson()) );
+            ((StyleSchemas) value).getUserDefinitions().forEach( (name, definition) -> json.add(name, definition.toJson()) );
             return json;
         }
     },

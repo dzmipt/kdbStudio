@@ -137,14 +137,17 @@ Colors for result grid: …          (disabled for predefined schemas)
   L&F (the behaviour before 2.4); only a migrated `Custom` schema uses it.
 - There is no `selectedSchema` key; the active schema follows from `lookandfeel` and
   `lookAndFeelSchemas`.
-- In the code, the value of `styleSchemas` is a map of `StyleSchemaDefinition`: a schema as
-  it is defined in the config, where values may be missing. Definitions are resolved into
-  complete `StyleSchema` objects (missing values taken from `basedOn`, or from Light/Dark
-  depending on the current L&F) when the schemas are read.
-- The plugin folder's config is only used when the config is loaded: it is merged with
-  studio.json, and the names of its schemas are remembered as predefined. When saving,
-  values equal to the merged defaults are left out, so plugin schemas are not written to
-  the user's studio.json.
+- In the code, the value of `styleSchemas` is a `StyleSchemas` object, read and written
+  like any other setting (`studioConfig.get/set`). It keeps every schema as a
+  `StyleSchemaDefinition` (as defined in the config, values may be missing) and marks which
+  schemas are predefined. A schema is resolved into a complete `StyleSchema` (missing values
+  taken from `basedOn`, or from Light/Dark depending on the L&F) when it is requested, and
+  the result is cached.
+- `lookAndFeelSchemas` is a separate setting (L&F class name → schema name).
+- The plugin folder's config is only used when the config is loaded: defaults (built-in +
+  plugin folder) are parsed first and passed as the default value when parsing the merged
+  config, so schemas from the defaults are marked as predefined. Only user schemas are
+  written when saving.
 - The top-level `editorColors`, `tokens` and `gridColors` keys are removed.
 
 ## Migration (config version 2.4)

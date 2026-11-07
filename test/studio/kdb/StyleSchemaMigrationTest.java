@@ -76,11 +76,11 @@ public class StyleSchemaMigrationTest {
         StyleSchemas schemas = config.getStyleSchemas();
         assertEquals(List.of(StyleSchemas.LIGHT, StyleSchemas.DARK, ConfigConverter.CUSTOM_STYLE_SCHEMA), schemas.getNames());
         assertEquals(ConfigConverter.CUSTOM_STYLE_SCHEMA, config.getStyleSchemaName());
-        assertEquals(Map.of(DARCULA_LAF, ConfigConverter.CUSTOM_STYLE_SCHEMA), schemas.getLookAndFeelSchemas());
+        assertEquals(Map.of(DARCULA_LAF, ConfigConverter.CUSTOM_STYLE_SCHEMA), config.getLookAndFeelSchemas());
         // other dark Look and Feels use the predefined Dark schema
-        assertEquals(StyleSchemas.DARK, schemas.getSchemaName(DARK_LAF));
+        assertEquals(StyleSchemas.DARK, schemas.getSchemaName(config.getLookAndFeelSchemas(), DARK_LAF));
 
-        StyleSchema custom = schemas.get(ConfigConverter.CUSTOM_STYLE_SCHEMA);
+        StyleSchema custom = schemas.get(ConfigConverter.CUSTOM_STYLE_SCHEMA, DARCULA_LAF);
         // Darcula is a dark Look and Feel
         assertEquals(StyleSchemas.DARK, custom.getBasedOn());
         assertEquals(new Color(0xfefefe), custom.getBackgroundColor());
@@ -125,8 +125,8 @@ public class StyleSchemaMigrationTest {
 
         Config config = load();
         StyleSchemas schemas = config.getStyleSchemas();
-        assertEquals(Map.of(NIMBUS_LAF, ConfigConverter.CUSTOM_STYLE_SCHEMA), schemas.getLookAndFeelSchemas());
-        assertEquals(StyleSchemas.LIGHT, schemas.get(ConfigConverter.CUSTOM_STYLE_SCHEMA).getBasedOn());
+        assertEquals(Map.of(NIMBUS_LAF, ConfigConverter.CUSTOM_STYLE_SCHEMA), config.getLookAndFeelSchemas());
+        assertEquals(StyleSchemas.LIGHT, schemas.get(ConfigConverter.CUSTOM_STYLE_SCHEMA, NIMBUS_LAF).getBasedOn());
     }
 
     @Test
@@ -139,7 +139,7 @@ public class StyleSchemaMigrationTest {
         Config config = load();
         StyleSchemas schemas = config.getStyleSchemas();
         assertEquals(List.of(StyleSchemas.LIGHT, StyleSchemas.DARK), schemas.getNames());
-        assertTrue(schemas.getLookAndFeelSchemas().isEmpty());
+        assertTrue(config.getLookAndFeelSchemas().isEmpty());
         assertEquals(StyleSchemas.LIGHT, config.getStyleSchemaName());
         assertEquals(StyleSchemas.getBuiltIn().get(StyleSchemas.LIGHT), config.getStyleSchema());
 
@@ -199,8 +199,9 @@ public class StyleSchemaMigrationTest {
         // old style keys in the plugin config are ignored
         assertEquals(new Color(0x000002), config.getBackgroundColor());
 
-        schemas = schemas.duplicate("Corp", "Corp copy", DARK_LAF).select(DARK_LAF, "Corp copy");
+        schemas = schemas.duplicate("Corp", "Corp copy", DARK_LAF);
         config.setStyleSchemas(schemas);
+        config.setLookAndFeelSchemas(Map.of(DARK_LAF, "Corp copy"));
         FileConfig.saveAllOnDisk();
 
         JsonObject json = readStudioJson().getAsJsonObject(Config.STYLE_SCHEMAS);

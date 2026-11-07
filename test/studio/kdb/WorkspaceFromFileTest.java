@@ -39,9 +39,9 @@ public class WorkspaceFromFileTest {
         ColorMap colorMap = new ColorMap(config.getEditorColors());
         colorMap.put(EditorColorToken.BACKGROUND, bgColor);
         StyleSchemas schemas = config.getStyleSchemas();
-        StyleSchema schema = schemas.get(StyleSchemas.LIGHT).newEditorColors(colorMap);
-        schemas = schemas.set("Test", schema).select(config.getString(Config.LOOK_AND_FEEL), "Test");
-        config.setStyleSchemas(schemas);
+        StyleSchema schema = StyleSchemas.getBuiltIn().get(StyleSchemas.LIGHT).newEditorColors(colorMap);
+        config.setStyleSchemas(schemas.set("Test", schema));
+        config.setLookAndFeelSchemas(java.util.Map.of(config.getString(Config.LOOK_AND_FEEL), "Test"));
 
         ServerTreeNode root = Config.getInstance().getServerTree();;
 
