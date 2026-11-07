@@ -5,6 +5,8 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonPrimitive;
 import org.apache.commons.collections4.list.UnmodifiableList;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import studio.core.Credentials;
 import studio.kdb.FileChooserConfig;
 import studio.kdb.config.server.BgColorRules;
@@ -439,8 +441,7 @@ public enum ConfigType {
                 try {
                     map.put(name, StyleSchemaDefinition.fromJson(json.getAsJsonObject(name)));
                 } catch (RuntimeException e) {
-                    org.apache.logging.log4j.LogManager.getLogger(ConfigType.class)
-                            .error("Error parsing style schema {}. Skipping...", name, e);
+                    log.error("Error parsing style schema {}. Skipping...", name, e);
                 }
             }
             return StyleSchemas.of(map, defaults.getNames());
@@ -480,6 +481,8 @@ public enum ConfigType {
     DOUBLE_ARRAY(DOUBLE),
     COLOR_ARRAY(COLOR),
     ENUM_ARRAY(ENUM);
+
+    private static final Logger log = LogManager.getLogger();
 
     private static Rectangle clone(Rectangle r) {
         return new Rectangle(r.x, r.y, r.width, r.height);
