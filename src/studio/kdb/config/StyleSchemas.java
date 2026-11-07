@@ -1,10 +1,10 @@
 package studio.kdb.config;
 
-import com.formdev.flatlaf.FlatLaf;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import studio.ui.StudioLookAndFeels;
 
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -31,7 +31,6 @@ public class StyleSchemas {
 
     private static Map<String, StyleSchema> builtIn = null;
     private static StyleSchemas builtInSchemas = null;
-    private final static Map<String, Boolean> darkLookAndFeels = new ConcurrentHashMap<>();
 
     // predefined schemas go first
     private final Map<String, StyleSchemaDefinition> definitions;
@@ -111,21 +110,8 @@ public class StyleSchemas {
         return map;
     }
 
-    public static boolean isDarkLookAndFeel(String className) {
-        if (className == null) return false;
-        return darkLookAndFeels.computeIfAbsent(className, name -> {
-            try {
-                Object lf = Class.forName(name).getDeclaredConstructor().newInstance();
-                return (lf instanceof FlatLaf) && ((FlatLaf) lf).isDark();
-            } catch (Throwable e) {
-                log.debug("Can't check if Look and Feel {} is dark", name, e);
-                return false;
-            }
-        });
-    }
-
     public static String getDefaultSchemaName(String lookAndFeelClassName) {
-        return isDarkLookAndFeel(lookAndFeelClassName) ? DARK : LIGHT;
+        return StudioLookAndFeels.isDark(lookAndFeelClassName) ? DARK : LIGHT;
     }
 
     public List<String> getNames() {

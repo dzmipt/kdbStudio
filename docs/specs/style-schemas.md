@@ -71,7 +71,9 @@ The UI calls the feature "Style schema", to avoid confusion with the chart "Colo
 
 - Every L&F (by class name) can have a remembered schema.
 - The active schema = the remembered schema for the current L&F; if none (or it no
-  longer exists): `Dark` for a FlatLaf dark theme (`isDark()`), otherwise `Light`.
+  longer exists): `Dark` for a dark L&F, otherwise `Light`. The dark L&Fs are the FlatLaf dark themes
+  Studio installs (FlatLaf Dark, Darcula, macOS Dark), listed in `StudioLookAndFeels`; this also
+  works for an L&F that is not installed yet (at start-up, or selected in the Settings dialog).
   Non-FlatLaf L&Fs (Metal, Nimbus, Windows, GTK, …) count as light.
 - There is no light/dark marker on user schemas. Any schema can be chosen for any L&F.
 
