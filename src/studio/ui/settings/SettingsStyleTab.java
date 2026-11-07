@@ -139,8 +139,7 @@ public class SettingsStyleTab extends SettingsTab {
         layout.setStacks(
                 new GroupLayoutSimple.Stack()
                         .addLineAndGlue(lblLookAndFeel, comboBoxLookAndFeel)
-                        .addLineAndGlue(editorFontSelection)
-                        .addLineAndGlue(gridFontSelection)
+                        .addLineAndGlue(editorFontSelection, Box.createHorizontalStrut(16), gridFontSelection)
                         .addLineAndGlue(lblSchema, comboBoxSchema, btnDuplicate, btnRename, btnDelete)
                         .addLine(Util.getLineInViewPort())
                         .addLineAndGlue(lblReadOnly)
