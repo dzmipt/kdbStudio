@@ -1,7 +1,7 @@
 [versions]
 log4j = "2.26.1"
 poi = "6.0.0"
-flatlaf = "3.7.2"
+flatlaf = "3.8"
 
 [libraries]
 txtmark = "com.github.rjeschke:txtmark:0.13"
