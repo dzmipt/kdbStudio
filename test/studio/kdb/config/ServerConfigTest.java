@@ -97,7 +97,7 @@ public class ServerConfigTest {
         assertTrue(aServer.getUseTLS());
         assertEquals("auth", aServer.getAuthenticationMechanism());
         assertEquals("", aServer.getName());
-        assertEquals(Color.WHITE, aServer.getBackgroundColor());
+        assertNull(aServer.getBackgroundColor()); // default background
 
 
         Config.getInstance().setBoolean(Config.TRY_TLS_CONNECTION_FIRST, false);

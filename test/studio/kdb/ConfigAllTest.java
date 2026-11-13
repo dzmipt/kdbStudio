@@ -34,6 +34,8 @@ import static org.junit.jupiter.api.Assertions.*;
 
 public class ConfigAllTest {
 
+    private final static String NIMBUS_LAF = "javax.swing.plaf.nimbus.NimbusLookAndFeel";
+
     private static InstrumentedMockConfig lastConfig;
     private static Path lastStudioConfigPath;
 
@@ -80,6 +82,20 @@ public class ConfigAllTest {
         Config config = getConfig("studio21.json");
         testAll_1_4(config);
         testAlL_2_1(config);
+    }
+
+    @Test
+    public void test23() throws IOException {
+        Config config = getConfig("studio23.json");
+        testAll_1_4(config);
+        testAlL_2_1(config);
+        testAlL_2_2(config);
+
+        StyleSchemas schemas = config.getStyleSchemas();
+        assertEquals(List.of(StyleSchemas.LIGHT, StyleSchemas.DARK, ConfigConverter.CUSTOM_STYLE_SCHEMA), schemas.getNames());
+        assertEquals(Map.of("javax.swing.plaf.nimbus.NimbusLookAndFeel", ConfigConverter.CUSTOM_STYLE_SCHEMA),
+                config.getLookAndFeelSchemas());
+        assertEquals(ConfigVersion.LAST, config.getEnum(Config.CONFIG_VERSION));
     }
 
     @Test
@@ -130,6 +146,27 @@ public class ConfigAllTest {
         testAll_1_4(config);
         testAlL_2_1(config);
         testAlL_2_2(config);
+        testAlL_2_4(config);
+    }
+
+    private void testAlL_2_4(Config config) {
+        StyleSchemas schemas = config.getStyleSchemas();
+        assertEquals(List.of(StyleSchemas.LIGHT, StyleSchemas.DARK, "Custom", "My dark"), schemas.getNames());
+        assertEquals(Map.of(
+                    "com.formdev.flatlaf.FlatDarkLaf", "My dark",
+                    "javax.swing.plaf.nimbus.NimbusLookAndFeel", "Custom"),
+                config.getLookAndFeelSchemas());
+        assertEquals("Custom", config.getStyleSchemaName());
+        assertEquals(StyleSchemas.LIGHT, schemas.get("Custom", NIMBUS_LAF).getBasedOn());
+
+        StyleSchema dark = StyleSchemas.getBuiltIn().get(StyleSchemas.DARK);
+        StyleSchema myDark = schemas.get("My dark", NIMBUS_LAF);
+        assertEquals(StyleSchemas.DARK, myDark.getBasedOn());
+        assertEquals(new Color(0x101010), myDark.getBackgroundColor());
+        assertEquals(dark.getEditorColors().get(EditorColorToken.SELECTED), myDark.getEditorColors().get(EditorColorToken.SELECTED));
+        assertEquals(new TokenStyle(new Color(0xff8800), FontStyle.Bold), myDark.getTokens().get(ColorToken.KEYWORD));
+        assertEquals(dark.getTokens().get(ColorToken.SYMBOL), myDark.getTokens().get(ColorToken.SYMBOL));
+        assertEquals(dark.getGridColors(), myDark.getGridColors());
     }
 
     private void testAlL_2_2(Config config) {

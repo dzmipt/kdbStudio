@@ -23,6 +23,7 @@ public class TokenStyleEditor extends JPanel {
     private ColorMap editorColors;
     private TokenStyleMap tokenStyleMap;
     private boolean muteEvents = true;
+    private boolean editable = true;
 
     private final List<ChangeListener> listeners = new ArrayList<>();
 
@@ -71,6 +72,10 @@ public class TokenStyleEditor extends JPanel {
                 lblToken.addMouseListener(new MouseAdapter() {
                     @Override
                     public void mousePressed(MouseEvent e) {
+                        if (!editable) {
+                            UIManager.getLookAndFeel().provideErrorFeedback(lblToken);
+                            return;
+                        }
                         JPopupMenu popupMenu = new JPopupMenu();
                         popupMenu.add(getStylePopupMenuItem(token, FontStyle.Bold));
                         popupMenu.add(getStylePopupMenuItem(token, FontStyle.Italic));
@@ -158,6 +163,27 @@ public class TokenStyleEditor extends JPanel {
         Font defaultFont = new JLabel().getFont();
         tokenColorLabels.get(token).setColor(tokenStyle.getColor());
         mapTokenTitle.get(token).setFont(tokenStyle.getStyle().applyStyle(defaultFont));
+    }
+
+    /**
+     * @param readOnlyReason the tooltip for not editable colors and font styles; a click on them gives a beep
+     */
+    public void setEditable(boolean editable, String readOnlyReason) {
+        this.editable = editable;
+        for (ColorLabel label: editorColorLabels.values()) {
+            label.setReadOnlyReason(readOnlyReason);
+            label.setEditable(editable);
+        }
+        for (ColorLabel label: tokenColorLabels.values()) {
+            label.setReadOnlyReason(readOnlyReason);
+            label.setEditable(editable);
+        }
+        Cursor cursor = editable ? handCursor : Cursor.getDefaultCursor();
+        String toolTip = editable ? null : readOnlyReason;
+        for (JLabel label: mapTokenTitle.values()) {
+            label.setCursor(cursor);
+            label.setToolTipText(toolTip);
+        }
     }
 
     public TokenStyleMap getTokenStyleMap() {

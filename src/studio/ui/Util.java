@@ -330,7 +330,12 @@ public class Util {
                 JsonElement elBase = jBase.get(key);
                 JsonElement elMinus = jMinus.get(key);
                 if (elBase.isJsonObject() && elMinus.isJsonObject()) {
-                    json.add(key, deepExclude(elBase.getAsJsonObject(), elMinus.getAsJsonObject()));
+                    JsonObject jExcluded = deepExclude(elBase.getAsJsonObject(), elMinus.getAsJsonObject());
+                    // A non-empty object which is the same as in jMinus is excluded:
+                    // deepMerge with jMinus restores it. An empty object is kept as it is.
+                    if (! jExcluded.isEmpty() || elBase.getAsJsonObject().isEmpty()) {
+                        json.add(key, jExcluded);
+                    }
                 } else {
                     if (! elBase.equals(elMinus)) {
                         json.add(key, elBase);

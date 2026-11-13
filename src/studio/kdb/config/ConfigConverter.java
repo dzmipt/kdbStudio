@@ -15,8 +15,10 @@ public class ConfigConverter implements JsonConverter{
 
     private final static Logger log = LogManager.getLogger();
 
+    public final static String CUSTOM_STYLE_SCHEMA = "Custom";
+
     @Override
-    public boolean convert(JsonObject json) {
+    public boolean convert(JsonObject json, JsonObject defaults) {
         ConfigVersion version = getVersion(json);
         if (version == ConfigVersion.LAST) return false;
 
@@ -25,6 +27,7 @@ public class ConfigConverter implements JsonConverter{
             convertTo21(json);
             convertTo22(json);
             convertTo23(json);
+            convertTo24(json, defaults);
             log.info("Successfully converted to version: {}", ConfigVersion.LAST);
         } catch (Exception e) {
             log.error("Error during conversion", e);
@@ -101,8 +104,81 @@ public class ConfigConverter implements JsonConverter{
             jsonTokens.addProperty(name, token.getDefaultStyle().derive(color).toString());
         }
 
-        json.add(Config.TOKEN_STYLE_CONFIG, jsonTokens);
+        json.add(LEGACY_TOKENS, jsonTokens);
         json.remove("tokenColors");
+    }
+
+    public final static String LEGACY_EDITOR_COLORS = "editorColors";
+    public final static String LEGACY_TOKENS = "tokens";
+    public final static String LEGACY_GRID_COLORS = "gridColors";
+
+    // Style settings (editorColors, tokens, gridColors) are moved into the "Custom" style schema,
+    // which is selected for the current Look and Feel
+    private void convertTo24(JsonObject json, JsonObject defaults) {
+        if (ConfigVersion.V2_4.compareTo(getVersion(json))<=0 ) return;
+
+        StyleSchema legacyDefault = new StyleSchema(null,
+                ColorMap.DEFAULT_EDITOR_COLORS, TokenStyleMap.DEFAULT, GridColorConfig.DEFAULT);
+
+        ColorMap editorColors = legacyDefault.getEditorColors();
+        JsonElement jsonEditorColors = json.remove(LEGACY_EDITOR_COLORS);
+        if (jsonEditorColors != null) {
+            try {
+                editorColors = (ColorMap) ConfigType.COLOR_MAP.fromJson(jsonEditorColors, ColorMap.DEFAULT_EDITOR_COLORS);
+            } catch (Exception e) {
+                log.error("Error parsing old editorColors", e);
+            }
+        }
+
+        TokenStyleMap tokens = legacyDefault.getTokens();
+        JsonElement jsonTokens = json.remove(LEGACY_TOKENS);
+        if (jsonTokens != null) {
+            try {
+                tokens = (TokenStyleMap) ConfigType.TOKEN_STYLE_MAP.fromJson(jsonTokens, TokenStyleMap.DEFAULT);
+            } catch (Exception e) {
+                log.error("Error parsing old tokens", e);
+            }
+        }
+
+        GridColorConfig gridColors = legacyDefault.getGridColors();
+        JsonElement jsonGridColors = json.remove(LEGACY_GRID_COLORS);
+        if (jsonGridColors != null) {
+            try {
+                gridColors = (GridColorConfig) ConfigType.GRID_COLOR_CONFIG.fromJson(jsonGridColors, GridColorConfig.DEFAULT);
+            } catch (Exception e) {
+                log.error("Error parsing old gridColors", e);
+            }
+        }
+
+        StyleSchema schema = new StyleSchema(null, editorColors, tokens, gridColors);
+        if (schema.equals(legacyDefault)) {
+            log.info("Style settings were not customized");
+            return;
+        }
+
+        String lookAndFeel = getString(json, defaults, Config.LOOK_AND_FEEL);
+        schema = schema.newBasedOn(StyleSchemas.getDefaultSchemaName(lookAndFeel));
+        getOrAddObject(json, Config.STYLE_SCHEMAS).add(CUSTOM_STYLE_SCHEMA, StyleSchemaDefinition.of(schema).toJson());
+        if (lookAndFeel != null) {
+            getOrAddObject(json, Config.LOOK_AND_FEEL_SCHEMAS).addProperty(lookAndFeel, CUSTOM_STYLE_SCHEMA);
+        }
+        log.info("Style settings are converted to the style schema {} based on {} and selected for {}",
+                CUSTOM_STYLE_SCHEMA, schema.getBasedOn(), lookAndFeel);
+    }
+
+    private static String getString(JsonObject json, JsonObject defaults, String key) {
+        JsonElement element = json.get(key);
+        if (element == null && defaults != null) element = defaults.get(key);
+        return element == null ? null : element.getAsString();
+    }
+
+    private static JsonObject getOrAddObject(JsonObject json, String key) {
+        JsonObject result = json.getAsJsonObject(key);
+        if (result == null) {
+            result = new JsonObject();
+            json.add(key, result);
+        }
+        return result;
     }
 
 }

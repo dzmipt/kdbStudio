@@ -115,33 +115,6 @@
     ]
   },
 
-  "tokens": {
-    "default": "030303",
-    "error": "fe0101:Bold",
-    "bracket": "040404",
-    "command": "0000ee",
-    "eolcomment": "ffff00:Italic",
-    "keyword": "0000ef:Bold",
-    "identifier": "eeee00",
-    "symbol": "0000f0",
-    "charvector": "00ff00",
-    "boolean": "0000ff",
-    "byte": "0000fe",
-    "short": "0000fd",
-    "long": "0000fc",
-    "real": "0000fb",
-    "integer": "0000fa",
-    "float": "0000f9",
-    "timestamp": "0000f8",
-    "timespan": "0000f7",
-    "datetime": "0000f6",
-    "date": "0000f5",
-    "month": "0000f4",
-    "minute": "0000f3",
-    "second": "0000f2",
-    "time": "0000f1"
-  },
-
   "kdbMessageSizeLimitAction": "BLOCK",
   "sessionsReuse": false,
   "isAutoSave": true,
@@ -166,32 +139,6 @@
       },
       "Default": {}
     }
-  },
-
-  "gridColors": {
-    "foreground": {
-      "null": "000001",
-      "key": "000002",
-      "odd": "000003",
-      "even": "000004",
-      "mark": "000005",
-      "selected": "000006",
-      "mark_selected": "000007"
-    },
-    "background": {
-      "key": "000008",
-      "odd": "000009",
-      "even": "000010",
-      "mark": "000011",
-      "selected": "000012",
-      "mark_selected": "000013"
-    }
-  },
-
-  "editorColors" : {
-      "background": "fefefe",
-      "selected": "abcdef",
-      "current_line_highlight": "987654"
   },
 
   "alignNumbersInResult" : false,
@@ -220,5 +167,75 @@
     }
   ],
 
-  "version": "V2_3"
+  "styleSchemas": {
+    "Custom": {
+      "basedOn": "Light",
+      "editorColors": {
+          "background": "fefefe",
+          "selected": "abcdef",
+          "current_line_highlight": "987654"
+      },
+      "tokens": {
+        "default": "030303",
+        "error": "fe0101:Bold",
+        "bracket": "040404",
+        "command": "0000ee",
+        "eolcomment": "ffff00:Italic",
+        "keyword": "0000ef:Bold",
+        "identifier": "eeee00",
+        "symbol": "0000f0",
+        "charvector": "00ff00",
+        "boolean": "0000ff",
+        "byte": "0000fe",
+        "short": "0000fd",
+        "long": "0000fc",
+        "real": "0000fb",
+        "integer": "0000fa",
+        "float": "0000f9",
+        "timestamp": "0000f8",
+        "timespan": "0000f7",
+        "datetime": "0000f6",
+        "date": "0000f5",
+        "month": "0000f4",
+        "minute": "0000f3",
+        "second": "0000f2",
+        "time": "0000f1"
+      },
+      "gridColors": {
+        "foreground": {
+          "null": "000001",
+          "key": "000002",
+          "odd": "000003",
+          "even": "000004",
+          "mark": "000005",
+          "selected": "000006",
+          "mark_selected": "000007"
+        },
+        "background": {
+          "key": "000008",
+          "odd": "000009",
+          "even": "000010",
+          "mark": "000011",
+          "selected": "000012",
+          "mark_selected": "000013"
+        }
+      }
+    },
+    "My dark": {
+      "basedOn": "Dark",
+      "editorColors": {
+        "background": "101010"
+      },
+      "tokens": {
+        "keyword": "ff8800:Bold"
+      }
+    }
+  },
+
+  "lookAndFeelSchemas": {
+    "com.formdev.flatlaf.FlatDarkLaf": "My dark",
+    "javax.swing.plaf.nimbus.NimbusLookAndFeel": "Custom"
+  },
+
+  "version": "V2_4"
 }

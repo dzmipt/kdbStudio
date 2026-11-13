@@ -1,13 +1,7 @@
 package studio.core;
 
-import com.formdev.flatlaf.FlatDarculaLaf;
-import com.formdev.flatlaf.FlatDarkLaf;
-import com.formdev.flatlaf.FlatIntelliJLaf;
-import com.formdev.flatlaf.FlatLightLaf;
 import com.formdev.flatlaf.extras.FlatInspector;
 import com.formdev.flatlaf.extras.FlatUIDefaultsInspector;
-import com.formdev.flatlaf.themes.FlatMacDarkLaf;
-import com.formdev.flatlaf.themes.FlatMacLightLaf;
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -18,6 +12,7 @@ import studio.kdb.Lm;
 import studio.kdb.Server;
 import studio.kdb.Workspace;
 import studio.ui.StudioIcon;
+import studio.ui.StudioLookAndFeels;
 import studio.ui.StudioWindow;
 import studio.ui.Util;
 import studio.ui.WindowFactory;
@@ -73,12 +68,7 @@ public class Studio {
             System.setProperty("flatlaf.useWindowDecorations", "true");
         }
 
-        FlatLightLaf.installLafInfo();
-        FlatMacLightLaf.installLafInfo();
-        FlatIntelliJLaf.installLafInfo();
-        FlatDarkLaf.installLafInfo();
-        FlatDarculaLaf.installLafInfo();
-        FlatMacDarkLaf.installLafInfo();
+        StudioLookAndFeels.install();
         System.setProperty("apple.awt.application.appearance", "system");
         System.setProperty("awt.useSystemAAFontSettings","on");
         System.setProperty("swing.aatext", "true");

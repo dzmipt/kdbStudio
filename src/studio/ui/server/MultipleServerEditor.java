@@ -235,6 +235,7 @@ public class MultipleServerEditor extends JPanel {
 
     private static class ServerField<E> implements ChangeListener {
         private boolean amended = false;
+        private boolean same = false;
         private E commonValue;
         private final Editor<E> editor;
         private final FieldGetter<E> fieldGetter;
@@ -253,8 +254,14 @@ public class MultipleServerEditor extends JPanel {
 
         @Override
         public void stateChanged(ChangeEvent e) {
-            amended = ! Objects.equals(commonValue, getValue());
+            amended = isAmended();
             stateChanged();
+        }
+
+        private boolean isAmended() {
+            if (same) return ! Objects.equals(commonValue, getValue());
+            if (editor.supportsMixed()) return ! editor.isMixed();
+            return getValue() != null;
         }
 
         private void stateChanged() {
@@ -271,22 +278,25 @@ public class MultipleServerEditor extends JPanel {
 
         void initServers(List<Server> servers) {
             commonValue = null;
+            same = false;
 
             boolean isFirstServer = true;
             for (Server server: servers) {
                 if (isFirstServer) {
                     commonValue = fieldGetter.getValue(server);
+                    same = true;
                     isFirstServer = false;
-                } else if (commonValue != null) {
+                } else if (same) {
                     E value = fieldGetter.getValue(server);
-                    if (!commonValue.equals(value)) {
+                    if (!Objects.equals(commonValue, value)) {
                         commonValue = null;
+                        same = false;
                     }
                 }
 
             }
 
-            editor.setValue(commonValue);
+            setEditorToCommonValue();
             amended = false;
             stateChanged();
         }
@@ -305,14 +315,19 @@ public class MultipleServerEditor extends JPanel {
         }
 
         boolean theSame() {
-            return commonValue != null;
+            return same;
+        }
+
+        private void setEditorToCommonValue() {
+            if (same) editor.setValue(commonValue);
+            else editor.setMixed();
         }
         E getValueForServer(Server server) {
             return amended() ? getValue() : fieldGetter.getValue(server);
         }
 
         void resetToCommonValue() {
-            editor.setValue(commonValue);
+            setEditorToCommonValue();
             amended = false;
             stateChanged();
         }
