@@ -20,7 +20,7 @@ public class Server {
     private final boolean defaultAuthMethod;
     private final boolean defaultCredentials;
 
-    public static final Server NO_SERVER = new Server("", "", 0, "", "", Color.WHITE, DefaultAuthenticationMechanism.NAME, false);
+    public static final Server NO_SERVER = new Server("", "", 0, "", "", null, DefaultAuthenticationMechanism.NAME, false);
 
     /**
      * Effective auth. method: from the Settings if the server uses default auth.method
@@ -49,8 +49,14 @@ public class Server {
         return defaultAuthMethod || defaultCredentials;
     }
 
+    // null means the default background color from the style schema
     public Color getBackgroundColor() {
         return backgroundColor;
+    }
+
+    public Server newBackgroundColor(Color backgroundColor) {
+        if (Objects.equals(this.backgroundColor, backgroundColor)) return this;
+        return new Server(name, conn, authenticationMechanism, backgroundColor, parent, flipTLS, defaultAuthMethod, defaultCredentials);
     }
 
     public String getPassword() {
@@ -71,13 +77,6 @@ public class Server {
 
     public boolean isFlipTLS() {
         return  flipTLS;
-    }
-
-    public static Server newServer() {
-        String authMethod = Config.getInstance().getDefaultAuthMechanism();
-        Credentials credentials = Config.getInstance().getDefaultCredentials(authMethod);
-        QConnection conn = new QConnection("", 0, credentials.getUsername(), credentials.getPassword(), false);
-        return new Server("", conn, authMethod, Config.getInstance().getBackgroundColor(), null, false, true, true);
     }
 
     @Override
@@ -153,12 +152,6 @@ public class Server {
         if (this.flipTLS == flipTLS) return this;
 
         return new Server(name, conn, authenticationMechanism, backgroundColor, parent, flipTLS, defaultAuthMethod, defaultCredentials);
-    }
-
-    public Server newBgColor(Color bgColor) {
-        if (this.backgroundColor.equals(bgColor)) return this;
-
-        return new Server(name, conn, authenticationMechanism, bgColor, parent, flipTLS, defaultAuthMethod, defaultCredentials);
     }
 
     public String getName() {

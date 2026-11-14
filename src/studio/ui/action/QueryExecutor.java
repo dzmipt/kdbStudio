@@ -42,9 +42,11 @@ public class QueryExecutor implements ProgressCallback {
     public void cancel() {
         if (worker == null) return;
         if (worker.isDone()) return;
-        worker.closeConnection();
-        worker.cancel(true);
+        Worker w = worker;
         worker = null;
+        // cancel first, so the worker knows that the failure is caused by the closed connection
+        w.cancel(true);
+        w.closeConnection();
     }
 
     public boolean running() {
@@ -110,8 +112,10 @@ public class QueryExecutor implements ProgressCallback {
         }
 
         void closeConnection() {
-            if (session != null) {
-                session.close();
+            // The session can be not yet assigned if the query is cancelled right after the start
+            Session s = session != null ? session : editor.getSession();
+            if (s != null) {
+                s.close();
             }
         }
 
@@ -130,6 +134,10 @@ public class QueryExecutor implements ProgressCallback {
                 KMessage response = queryTask.execute(session, QueryExecutor.this);
                 result.setResult(response);
             } catch (Throwable e) {
+                if (isCancelled()) {
+                    queryLog.info("#{}: interrupted by cancel: {}", queryIndex, e.getMessage());
+                    return result;
+                }
                 if (! (e instanceof K4Exception)) {
                     log.error("Error occurred during query execution",e);
                     closeConnection();

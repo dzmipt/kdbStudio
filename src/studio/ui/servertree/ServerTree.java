@@ -21,9 +21,7 @@ import java.awt.event.KeyEvent;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.util.Enumeration;
-import java.util.ArrayList;
 import java.util.HashSet;
-import java.util.List;
 
 public class ServerTree extends JTree implements TreeExpansionListener {
 
@@ -224,19 +222,18 @@ public class ServerTree extends JTree implements TreeExpansionListener {
         ServerTreeNode serverTree = Config.getInstance().getServerTree();
         intoFolder = serverTree.findPath(intoFolder.getPath());
 
-        List<ServerTreeNode> importNodes = new ArrayList<>();
-        for (ServerTreeNode importNode: importTree.childNodes()) {
-            String importName = importNode.isFolder() ? importNode.getFolder() : importNode.getServer().getName();
-            if (intoFolder.getChildWithName(importName) != null) {
+        String importName = importTree.isFolder() ? importTree.getFolder() : importTree.getServer().getName();
+
+        for (ServerTreeNode child: intoFolder.childNodes()) {
+            String childName = child.isFolder() ? child.getFolder() : child.getServer().getName();
+
+            if (childName.equals(importName)) {
                 StudioOptionPane.showError(this, "Can't import as the folder already contains node with name " + importName, "Import Error");
                 return;
             }
-            importNodes.add(importNode);
         }
 
-        for (ServerTreeNode importNode: importNodes) {
-            intoFolder.add(importNode);
-        }
+        intoFolder.add(importTree);
         Config.getInstance().getServerConfig().setRoot(serverTree);
         refreshServers();
 
@@ -249,12 +246,7 @@ public class ServerTree extends JTree implements TreeExpansionListener {
         ServerTreeNode selNode  = (ServerTreeNode) getLastSelectedPathComponent();
         if (selNode == null) return;
 
-        ServerTreeNode exportRoot = selNode;
-        if (! selNode.isRoot()) {
-            exportRoot = new ServerTreeNode();
-            exportRoot.add(selNode.deepCopy());
-        }
-        ServerTreeNodeSerializer.openExportDialog(this, exportRoot);
+        ServerTreeNodeSerializer.openExportDialog(this, selNode);
     }
 
     private void exportRootConfig(ActionEvent evt) {
@@ -329,7 +321,7 @@ public class ServerTree extends JTree implements TreeExpansionListener {
             if (name == null || name.trim().length() == 0) return;
             newNode = new ServerTreeNode(name);
         } else {
-            Server server = Server.newServer();
+            Server server = Config.getInstance().newServer();
             server = server.newParent(parent);
 
             server = ServerEditor.selectServer(true, this, server);

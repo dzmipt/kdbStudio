@@ -38,12 +38,12 @@ public class MultiLineCrosshairOverlay extends CrosshairOverlay {
                     Size2D size = text.calculateDimensions(g2);
 
                     RectangleAnchor anchor = crosshair.getLabelAnchor();
-                    Point2D pt = calculateLabelPoint(line, anchor, crosshair.getLabelXOffset(), crosshair.getLabelYOffset());
+                    Point2D pt = calculateLabelPoint(line, anchor, crosshair.getLabelXOffset(), crosshair.getLabelYOffset(), crosshair.getLabelPadding());
                     Rectangle2D hotspot = RectangleAnchor.createRectangle(size, pt.getX(), pt.getY(), flipAnchorV(anchor));
 
                     if (!dataArea.contains(hotspot.getBounds2D())) {
                         anchor = flipAnchorV(anchor);
-                        pt = calculateLabelPoint(line, anchor, crosshair.getLabelXOffset(), crosshair.getLabelYOffset());
+                        pt = calculateLabelPoint(line, anchor, crosshair.getLabelXOffset(), crosshair.getLabelYOffset(), crosshair.getLabelPadding());
                         hotspot = RectangleAnchor.createRectangle(size, pt.getX(), pt.getY(), flipAnchorV(anchor));
                     }
 
@@ -85,12 +85,12 @@ public class MultiLineCrosshairOverlay extends CrosshairOverlay {
                     Size2D size = text.calculateDimensions(g2);
 
                     RectangleAnchor anchor = crosshair.getLabelAnchor();
-                    Point2D pt = calculateLabelPoint(line, anchor, crosshair.getLabelXOffset(), crosshair.getLabelYOffset());
+                    Point2D pt = calculateLabelPoint(line, anchor, crosshair.getLabelXOffset(), crosshair.getLabelYOffset(), crosshair.getLabelPadding());
                     Rectangle2D hotspot = RectangleAnchor.createRectangle(size, pt.getX(), pt.getY(), flipAnchorH(anchor));
 
                     if (!dataArea.contains(hotspot.getBounds2D())) {
                         anchor = flipAnchorH(anchor);
-                        pt = calculateLabelPoint(line, anchor, crosshair.getLabelXOffset(), crosshair.getLabelYOffset());
+                        pt = calculateLabelPoint(line, anchor, crosshair.getLabelXOffset(), crosshair.getLabelYOffset(), crosshair.getLabelPadding());
                         hotspot = RectangleAnchor.createRectangle(size, pt.getX(), pt.getY(), flipAnchorH(anchor));
                     }
 

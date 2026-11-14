@@ -5,6 +5,8 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonPrimitive;
 import org.apache.commons.collections4.list.UnmodifiableList;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import studio.core.Credentials;
 import studio.kdb.FileChooserConfig;
 import studio.kdb.config.server.BgColorRules;
@@ -12,6 +14,9 @@ import studio.ui.Util;
 
 import java.awt.*;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.LinkedHashMap;
+import java.util.TreeMap;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -425,11 +430,59 @@ public enum ConfigType {
             return ((BgColorRules)value).copy();
         }
     },
+    STYLE_SCHEMAS {
+        // defaultValue is the default StyleSchemas (built-in and from the plugin folder): its schemas are predefined
+        @Override
+        public Object fromJson(JsonElement jsonElement, Object defaultValue) {
+            StyleSchemas defaults = defaultValue instanceof StyleSchemas ? (StyleSchemas) defaultValue : StyleSchemas.builtIn();
+            JsonObject json = jsonElement.getAsJsonObject();
+            Map<String, StyleSchemaDefinition> map = new LinkedHashMap<>();
+            for (String name: json.keySet()) {
+                try {
+                    map.put(name, StyleSchemaDefinition.fromJson(json.getAsJsonObject(name)));
+                } catch (RuntimeException e) {
+                    log.error("Error parsing style schema {}. Skipping...", name, e);
+                }
+            }
+            return StyleSchemas.of(map, defaults.getNames());
+        }
+
+        // only user schemas are saved: predefined ones come from the defaults
+        @Override
+        public JsonElement toJson(Object value) {
+            JsonObject json = new JsonObject();
+            ((StyleSchemas) value).getUserDefinitions().forEach( (name, definition) -> json.add(name, definition.toJson()) );
+            return json;
+        }
+    },
+    STRING_MAP {
+        @Override
+        public Object fromJson(JsonElement jsonElement, Object defaultValue) {
+            JsonObject json = jsonElement.getAsJsonObject();
+            Map<String, String> map = new TreeMap<>();
+            for (String key: json.keySet()) {
+                map.put(key, json.get(key).getAsString());
+            }
+            return Collections.unmodifiableMap(map);
+        }
+
+        @Override
+        public JsonElement toJson(Object value) {
+            Map<String, String> map = (Map<String, String>) value;
+            JsonObject json = new JsonObject();
+            for (String key: new TreeMap<>(map).keySet()) {
+                json.addProperty(key, map.get(key));
+            }
+            return json;
+        }
+    },
     STRING_ARRAY(STRING),
     INT_ARRAY(INT),
     DOUBLE_ARRAY(DOUBLE),
     COLOR_ARRAY(COLOR),
     ENUM_ARRAY(ENUM);
+
+    private static final Logger log = LogManager.getLogger();
 
     private static Rectangle clone(Rectangle r) {
         return new Rectangle(r.x, r.y, r.width, r.height);

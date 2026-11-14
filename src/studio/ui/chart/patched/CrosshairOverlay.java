@@ -1,15 +1,16 @@
 /*
-This version is taken from jfreechart:1.5.3 without any change.
-This is needed to extract and patch ChartPanel.
+This version is taken from jfreechart:1.5.6 with changing some private methods to protected
+to be able to extend behaviour of the class (see studio.ui.chart.MultiLineCrosshairOverlay).
+Apart from the package name and imports, there are no other changes.
  */
 
-/* ===========================================================
- * JFreeChart : a free chart library for the Java(tm) platform
- * ===========================================================
+/* ======================================================
+ * JFreeChart : a chart library for the Java(tm) platform
+ * ======================================================
  *
- * (C) Copyright 2000-2021, by Object Refinery Limited and Contributors.
+ * (C) Copyright 2000-present, by David Gilbert and Contributors.
  *
- * Project Info:  http://www.jfree.org/jfreechart/index.html
+ * Project Info:  https://www.jfree.org/jfreechart/index.html
  *
  * This library is free software; you can redistribute it and/or modify it
  * under the terms of the GNU Lesser General Public License as published by
@@ -26,21 +27,35 @@ This is needed to extract and patch ChartPanel.
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301,
  * USA.
  *
- * [Oracle and Java are registered trademarks of Oracle and/or its affiliates.
+ * [Oracle and Java are registered trademarks of Oracle and/or its affiliates. 
  * Other names may be trademarks of their respective owners.]
  *
  * ---------------------
  * CrosshairOverlay.java
  * ---------------------
- * (C) Copyright 2011-2021, by Object Refinery Limited.
+ * (C) Copyright 2011-present, by David Gilbert.
  *
- * Original Author:  David Gilbert (for Object Refinery Limited);
+ * Original Author:  David Gilbert;
  * Contributor(s):   John Matthews, Michal Wozniak;
  *
  */
 
 package studio.ui.chart.patched;
 
+import java.awt.Font;
+import java.awt.Graphics2D;
+import java.awt.Paint;
+import java.awt.Rectangle;
+import java.awt.Shape;
+import java.awt.Stroke;
+import java.awt.geom.Line2D;
+import java.awt.geom.Point2D;
+import java.awt.geom.Rectangle2D;
+import java.beans.PropertyChangeEvent;
+import java.beans.PropertyChangeListener;
+import java.io.Serializable;
+import java.util.ArrayList;
+import java.util.List;
 import org.jfree.chart.JFreeChart;
 import org.jfree.chart.axis.ValueAxis;
 import org.jfree.chart.event.OverlayChangeEvent;
@@ -50,23 +65,14 @@ import org.jfree.chart.plot.XYPlot;
 import org.jfree.chart.text.TextUtils;
 import org.jfree.chart.ui.RectangleAnchor;
 import org.jfree.chart.ui.RectangleEdge;
+import org.jfree.chart.ui.RectangleInsets;
 import org.jfree.chart.ui.TextAnchor;
-import org.jfree.chart.util.Args;
 import org.jfree.chart.util.ObjectUtils;
+import org.jfree.chart.util.Args;
 import org.jfree.chart.util.PublicCloneable;
 
-import java.awt.*;
-import java.awt.geom.Line2D;
-import java.awt.geom.Point2D;
-import java.awt.geom.Rectangle2D;
-import java.beans.PropertyChangeEvent;
-import java.beans.PropertyChangeListener;
-import java.io.Serializable;
-import java.util.ArrayList;
-import java.util.List;
-
 /**
- * An overlay for a {@link ChartPanel} that draws crosshairs on a chart.  If
+ * An overlay for a {@link ChartPanel} that draws crosshairs on a chart.  If 
  * you are using the JavaFX extensions for JFreeChart, then you should use
  * the {@code CrosshairOverlayFX} class.
  */
@@ -264,7 +270,7 @@ public class CrosshairOverlay extends AbstractOverlay implements Overlay,
      * @param crosshair  the crosshair.
      */
     protected void drawHorizontalCrosshair(Graphics2D g2, Rectangle2D dataArea,
-                                           double y, Crosshair crosshair) {
+            double y, Crosshair crosshair) {
 
         if (y >= dataArea.getMinY() && y <= dataArea.getMaxY()) {
             Line2D line = new Line2D.Double(dataArea.getMinX(), y,
@@ -281,20 +287,33 @@ public class CrosshairOverlay extends AbstractOverlay implements Overlay,
                     Font savedFont = g2.getFont();
                     g2.setFont(crosshair.getLabelFont());
                     RectangleAnchor anchor = crosshair.getLabelAnchor();
-                    Point2D pt = calculateLabelPoint(line, anchor, crosshair.getLabelXOffset(), crosshair.getLabelYOffset());
+                    RectangleInsets padding = crosshair.getLabelPadding();
+                    Point2D pt = calculateLabelPoint(line, anchor, crosshair.getLabelXOffset(), crosshair.getLabelYOffset(), padding);
                     float xx = (float) pt.getX();
                     float yy = (float) pt.getY();
                     TextAnchor alignPt = textAlignPtForLabelAnchorH(anchor);
                     Shape hotspot = TextUtils.calculateRotatedStringBounds(
                             label, g2, xx, yy, alignPt, 0.0, TextAnchor.CENTER);
+                    hotspot = padding.createOutsetRectangle(hotspot.getBounds2D());
                     if (!dataArea.contains(hotspot.getBounds2D())) {
                         anchor = flipAnchorV(anchor);
-                        pt = calculateLabelPoint(line, anchor, crosshair.getLabelXOffset(), crosshair.getLabelYOffset());
+                        pt = calculateLabelPoint(line, anchor, crosshair.getLabelXOffset(), crosshair.getLabelYOffset(), padding);
                         xx = (float) pt.getX();
                         yy = (float) pt.getY();
+                        if (anchor == RectangleAnchor.CENTER || alignPt.isHalfAscent()) {
+                            double labelHeight = hotspot.getBounds2D().getHeight();
+                            double minY = dataArea.getY() + (labelHeight + padding.getTop() - padding.getBottom()) / 2.0;
+                            double maxY = dataArea.getY() + dataArea.getHeight() - (labelHeight + padding.getBottom() - padding.getTop()) / 2.0;
+                            if (yy < minY) {
+                                yy = (float) (minY);
+                            } else if (yy > maxY) {
+                                yy = (float) (maxY);
+                            }
+                        }
                         alignPt = textAlignPtForLabelAnchorH(anchor);
                         hotspot = TextUtils.calculateRotatedStringBounds(
-                                label, g2, xx, yy, alignPt, 0.0, TextAnchor.CENTER);
+                               label, g2, xx, yy, alignPt, 0.0, TextAnchor.CENTER);
+                        hotspot = padding.createOutsetRectangle(hotspot.getBounds2D());
                     }
 
                     g2.setPaint(crosshair.getLabelBackgroundPaint());
@@ -323,7 +342,7 @@ public class CrosshairOverlay extends AbstractOverlay implements Overlay,
      * @param crosshair  the crosshair.
      */
     protected void drawVerticalCrosshair(Graphics2D g2, Rectangle2D dataArea,
-                                         double x, Crosshair crosshair) {
+            double x, Crosshair crosshair) {
 
         if (x >= dataArea.getMinX() && x <= dataArea.getMaxX()) {
             Line2D line = new Line2D.Double(x, dataArea.getMinY(), x,
@@ -340,20 +359,33 @@ public class CrosshairOverlay extends AbstractOverlay implements Overlay,
                     Font savedFont = g2.getFont();
                     g2.setFont(crosshair.getLabelFont());
                     RectangleAnchor anchor = crosshair.getLabelAnchor();
-                    Point2D pt = calculateLabelPoint(line, anchor, crosshair.getLabelXOffset(), crosshair.getLabelYOffset());
+                    RectangleInsets padding = crosshair.getLabelPadding();
+                    Point2D pt = calculateLabelPoint(line, anchor, crosshair.getLabelXOffset(), crosshair.getLabelYOffset(), padding);
                     float xx = (float) pt.getX();
                     float yy = (float) pt.getY();
                     TextAnchor alignPt = textAlignPtForLabelAnchorV(anchor);
                     Shape hotspot = TextUtils.calculateRotatedStringBounds(
                             label, g2, xx, yy, alignPt, 0.0, TextAnchor.CENTER);
+                    hotspot = padding.createOutsetRectangle(hotspot.getBounds2D());
                     if (!dataArea.contains(hotspot.getBounds2D())) {
                         anchor = flipAnchorH(anchor);
-                        pt = calculateLabelPoint(line, anchor, crosshair.getLabelXOffset(), crosshair.getLabelYOffset());
+                        pt = calculateLabelPoint(line, anchor, crosshair.getLabelXOffset(), crosshair.getLabelYOffset(), padding);
                         xx = (float) pt.getX();
                         yy = (float) pt.getY();
+                        if (alignPt.isHorizontalCenter()) {
+                            double labelWidth = hotspot.getBounds2D().getWidth();
+                            double minX = dataArea.getX() + (labelWidth + padding.getLeft() - padding.getRight()) / 2.0;
+                            double maxX = dataArea.getX() + dataArea.getWidth() - (labelWidth + padding.getRight() - padding.getLeft()) / 2.0;
+                            if (xx < minX) {
+                                xx = (float) (minX);
+                            } else if (xx > maxX) {
+                                xx = (float) (maxX);
+                            }
+                        }
                         alignPt = textAlignPtForLabelAnchorV(anchor);
                         hotspot = TextUtils.calculateRotatedStringBounds(
-                                label, g2, xx, yy, alignPt, 0.0, TextAnchor.CENTER);
+                               label, g2, xx, yy, alignPt, 0.0, TextAnchor.CENTER);
+                        hotspot = padding.createOutsetRectangle(hotspot.getBounds2D());
                     }
                     g2.setPaint(crosshair.getLabelBackgroundPaint());
                     g2.fill(hotspot);
@@ -379,68 +411,73 @@ public class CrosshairOverlay extends AbstractOverlay implements Overlay,
      * @param anchor  the anchor point.
      * @param deltaX  the x-offset.
      * @param deltaY  the y-offset.
+     * @param padding the label padding
      *
      * @return The anchor point.
      */
     protected Point2D calculateLabelPoint(Line2D line, RectangleAnchor anchor,
-                                        double deltaX, double deltaY) {
+            double deltaX, double deltaY, RectangleInsets padding) {
         double x, y;
-        boolean left = (anchor == RectangleAnchor.BOTTOM_LEFT
-                || anchor == RectangleAnchor.LEFT
+        boolean left = (anchor == RectangleAnchor.BOTTOM_LEFT 
+                || anchor == RectangleAnchor.LEFT 
                 || anchor == RectangleAnchor.TOP_LEFT);
-        boolean right = (anchor == RectangleAnchor.BOTTOM_RIGHT
-                || anchor == RectangleAnchor.RIGHT
+        boolean right = (anchor == RectangleAnchor.BOTTOM_RIGHT 
+                || anchor == RectangleAnchor.RIGHT 
                 || anchor == RectangleAnchor.TOP_RIGHT);
-        boolean top = (anchor == RectangleAnchor.TOP_LEFT
-                || anchor == RectangleAnchor.TOP
+        boolean top = (anchor == RectangleAnchor.TOP_LEFT 
+                || anchor == RectangleAnchor.TOP 
                 || anchor == RectangleAnchor.TOP_RIGHT);
         boolean bottom = (anchor == RectangleAnchor.BOTTOM_LEFT
                 || anchor == RectangleAnchor.BOTTOM
                 || anchor == RectangleAnchor.BOTTOM_RIGHT);
         Rectangle rect = line.getBounds();
-
+        
         // we expect the line to be vertical or horizontal
         if (line.getX1() == line.getX2()) {  // vertical
             x = line.getX1();
             y = (line.getY1() + line.getY2()) / 2.0;
             if (left) {
-                x = x - deltaX;
-            }
-            if (right) {
-                x = x + deltaX;
+                x = x - deltaX - padding.getRight();
+            } else if (right) {
+                x = x + deltaX + padding.getLeft();
+            } else {
+                x = x + (padding.getLeft() - padding.getRight()) / 2.0;
             }
             if (top) {
-                y = Math.min(line.getY1(), line.getY2()) + deltaY;
-            }
-            if (bottom) {
-                y = Math.max(line.getY1(), line.getY2()) - deltaY;
+                y = Math.min(line.getY1(), line.getY2()) + deltaY + padding.getTop();
+            } else if (bottom) {
+                y = Math.max(line.getY1(), line.getY2()) - deltaY - padding.getBottom();
+            } else {
+                y = y + (padding.getTop() - padding.getBottom()) / 2.0;
             }
         }
         else {  // horizontal
             x = (line.getX1() + line.getX2()) / 2.0;
             y = line.getY1();
             if (left) {
-                x = Math.min(line.getX1(), line.getX2()) + deltaX;
-            }
-            if (right) {
-                x = Math.max(line.getX1(), line.getX2()) - deltaX;
+                x = Math.min(line.getX1(), line.getX2()) + deltaX + padding.getLeft();
+            } else if (right) {
+                x = Math.max(line.getX1(), line.getX2()) - deltaX - padding.getRight();
+            } else {
+                x = x + (padding.getLeft() - padding.getRight()) / 2.0;
             }
             if (top) {
-                y = y - deltaY;
-            }
-            if (bottom) {
-                y = y + deltaY;
+                y = y - deltaY - padding.getBottom();
+            } else if (bottom) {
+                y = y + deltaY + padding.getTop();
+            } else {
+                y = y + (padding.getTop() - padding.getBottom()) / 2.0;
             }
         }
         return new Point2D.Double(x, y);
     }
 
     /**
-     * Returns the text anchor that is used to align a label to its anchor
+     * Returns the text anchor that is used to align a label to its anchor 
      * point.
-     *
+     * 
      * @param anchor  the anchor.
-     *
+     * 
      * @return The text alignment point.
      */
     protected TextAnchor textAlignPtForLabelAnchorV(RectangleAnchor anchor) {
@@ -591,8 +628,8 @@ public class CrosshairOverlay extends AbstractOverlay implements Overlay,
     @Override
     public Object clone() throws CloneNotSupportedException {
         CrosshairOverlay clone = (CrosshairOverlay) super.clone();
-        clone.xCrosshairs = (List) ObjectUtils.deepClone(this.xCrosshairs);
-        clone.yCrosshairs = (List) ObjectUtils.deepClone(this.yCrosshairs);
+        clone.xCrosshairs = (List<Crosshair>) ObjectUtils.deepClone(this.xCrosshairs);
+        clone.yCrosshairs = (List<Crosshair>) ObjectUtils.deepClone(this.yCrosshairs);
         return clone;
     }
 

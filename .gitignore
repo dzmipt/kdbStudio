@@ -1,5 +1,6 @@
 /*
 !.github
+!docs
 !git-hooks
 !gradle
 !images
@@ -25,5 +26,6 @@
 
 resources/build.txt
 resources/notes.html
+resources/META-INF/native-image/
 Log4j2Plugins.dat
 .*

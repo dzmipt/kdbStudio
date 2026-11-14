@@ -6,6 +6,7 @@ import org.apache.logging.log4j.Logger;
 import studio.kdb.FileChooserConfig;
 import studio.ui.Util;
 import studio.utils.FileConfig;
+import studio.utils.FilesBackup;
 
 import java.awt.*;
 import java.io.IOException;
@@ -85,7 +86,10 @@ public class StudioConfig {
         return json;
     }
 
-    private Map<String, Object> parseConfig(JsonObject json) {
+    /**
+     * @param defaults default values passed to the parsers; if a key is missing, the default from the registry is used
+     */
+    private Map<String, Object> parseConfig(JsonObject json, Map<String, Object> defaults) {
         Map<String, Object> map = new TreeMap<>();
         for (String key: json.keySet()) {
             try {
@@ -94,7 +98,8 @@ public class StudioConfig {
                     log.warn("Unknown config key {}. Skipping...", key);
                     continue;
                 }
-                Object value = type.fromJson(json.get(key), registry.getDefault(key));
+                Object defaultValue = defaults.containsKey(key) ? defaults.get(key) : registry.getDefault(key);
+                Object value = type.fromJson(json.get(key), defaultValue);
                 map.put(key, value);
             } catch (Exception e) {
                 log.warn("Error parsing key {}. Skipping...", key, e);
@@ -112,18 +117,21 @@ public class StudioConfig {
                 json.remove(COMMENT);
             }
 
+            JsonObject jConfig = Util.deepMerge(getJsonFromRegistry(), getJson(defaultFileConfig));
+
             if (jsonConverter != null) {
-                boolean changed = jsonConverter.convert(json);
+                boolean changed = jsonConverter.convert(json, jConfig);
                 if (changed) {
                     log.info("The config has been converted");
+                    backup();
                     save(json);
                 }
             }
 
-            JsonObject jConfig = Util.deepMerge(getJsonFromRegistry(), getJson(defaultFileConfig));
-
+            // defaults include the default config from the plugin folder
+            Map<String, Object> defaults = parseConfig(jConfig, Map.of());
             json = Util.deepMerge(jConfig, json);
-            map = parseConfig(json);
+            map = parseConfig(json, defaults);
         } catch (Exception e) {
             log.error("Error on parsing json {}", fileConfig == null ? "<null>" : fileConfig.getPath(), e);
         }
@@ -156,6 +164,15 @@ public class StudioConfig {
             gson.toJson(json, writer);
         } catch (IOException e) {
             log.error("Error on saving json {}", fileConfig.getPath(), e);
+        }
+    }
+
+    private void backup() {
+        if (fileConfig == null || ! fileConfig.fileExists()) return;
+        try {
+            FilesBackup.getInstance().backup(fileConfig.getPath());
+        } catch (IOException e) {
+            log.error("Error on backup of {}", fileConfig.getPath(), e);
         }
     }
 

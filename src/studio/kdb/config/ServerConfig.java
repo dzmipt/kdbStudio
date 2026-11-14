@@ -7,7 +7,9 @@ import studio.core.DefaultAuthenticationMechanism;
 import studio.kdb.Config;
 import studio.kdb.Server;
 import studio.kdb.ServerTreeNode;
+import studio.ui.Util;
 import studio.utils.FileConfig;
+import studio.utils.FilesBackup;
 import studio.utils.QConnection;
 
 import java.awt.*;
@@ -15,6 +17,7 @@ import java.io.IOException;
 import java.io.Writer;
 import java.util.*;
 import java.util.List;
+import java.util.stream.Collectors;
 
 
 public class ServerConfig {
@@ -25,6 +28,17 @@ public class ServerConfig {
     private Map<String, Server> servers;
     private List<String> serverNames;
     private ServerTreeNode serverTree;
+
+    // Version history:
+    //   no version - the original format
+    //   1 - bgColor is optional: a server without bgColor uses the background color from the style schema
+    public final static int VERSION = 1;
+
+    // the editor background color before style schemas (the default for all servers)
+    private final static Color LEGACY_DEFAULT_BG_COLOR = Color.WHITE;
+
+    // the version of the loaded servers; it is written back to the file until upgrade() is called
+    private int version = VERSION;
 
     public ServerConfig(FileConfig fileConfig) {
         this.fileConfig = fileConfig;
@@ -51,7 +65,14 @@ public class ServerConfig {
         }
         try {
             String content = fileConfig.getContent();
-            return ServerTreeNodeSerializer.fromJson(content);
+            version = ServerTreeNodeSerializer.getVersion(content);
+            ServerTreeNode node = ServerTreeNodeSerializer.fromJson(content);
+            if (node == null) node = new ServerTreeNode();
+            if (node.isFolder()) return node;
+
+            ServerTreeNode root = new ServerTreeNode();
+            root.add(node.getServer());
+            return root;
         } catch (IOException e) {
             log.error("Error in reading server config from {}", fileConfig, e);
         } catch (Exception e) {
@@ -62,21 +83,21 @@ public class ServerConfig {
 
     private void save() {
         try (Writer writer = fileConfig.getWriter()) {
-            writer.append(ServerTreeNodeSerializer.toJson(serverTree));
+            writer.append(ServerTreeNodeSerializer.toJson(serverTree, version));
         } catch (IOException e) {
             log.error("Error in writing server config to {}", fileConfig, e);
         }
     }
 
-    private ServerTreeNode updateBgColor(ServerTreeNode serverTreeNode, Color oldColor, Color newColor) {
+    private ServerTreeNode convertBgColorToDefault(ServerTreeNode serverTreeNode, Set<Color> colors) {
         ServerTreeNode result = new ServerTreeNode(serverTreeNode.getFolder());
         for (ServerTreeNode child: serverTreeNode.childNodes()) {
             if (child.isFolder()) {
-                result.add(updateBgColor(child, oldColor, newColor));
+                result.add(convertBgColorToDefault(child, colors));
             } else {
                 Server server = child.getServer();
-                if (server.getBackgroundColor().equals(oldColor)) {
-                    server = server.newBgColor(newColor).newParent(result);
+                if (colors.contains(server.getBackgroundColor())) {
+                    server = server.newBackgroundColor(null);
                 }
                 result.add(server);
             }
@@ -84,8 +105,29 @@ public class ServerConfig {
         return result;
     }
 
-    public void updateBgColor(Color oldColor, Color newColor) {
-        setRoot(updateBgColor(serverTree, oldColor, newColor));
+    /**
+     * Upgrades servers loaded in an old format to the latest version.
+     * @param defaultBgColor the editor background color from the style schema for the current Look and Feel.
+     *                       Servers with this background color, or with white (the default background
+     *                       before style schemas), are switched to the default background.
+     */
+    public void upgrade(Color defaultBgColor) {
+        if (version >= VERSION) return;
+
+        log.info("Upgrading servers config from version {} to {}", version, VERSION);
+        if (fileConfig.fileExists()) {
+            try {
+                FilesBackup.getInstance().backup(fileConfig.getPath());
+            } catch (IOException e) {
+                log.error("Error on backup of {}", fileConfig.getPath(), e);
+            }
+        }
+
+        Set<Color> colors = new LinkedHashSet<>(List.of(defaultBgColor, LEGACY_DEFAULT_BG_COLOR));
+        log.info("Servers with background colors {} are switched to the default background",
+                colors.stream().map(Util::colorToString).collect(Collectors.toList()));
+        version = VERSION;
+        setRoot(convertBgColorToDefault(serverTree, colors));
     }
 
     public void setRoot(ServerTreeNode root) {
@@ -306,7 +348,7 @@ public class ServerConfig {
         if (list.size() == 1) return list.keySet().iterator().next();
 
         if (list.isEmpty()) {
-            Color bgColor = Config.getInstance().getBackgroundColor();
+            Color bgColor = null; // default background
             if (auth == null) {
                 if (parser.isSpecifiedUser()) {
                     auth = DefaultAuthenticationMechanism.NAME;
@@ -358,6 +400,7 @@ public class ServerConfig {
                 }
             }
 
+            version = 0; // servers from the old config have explicit background colors
             String[] results = addServers(true, list.toArray(new Server[0]));
             boolean error = false;
             for (String result : results) {

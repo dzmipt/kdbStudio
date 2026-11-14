@@ -1,0 +1,181 @@
+# Style schemas
+
+Status: implemented.
+
+## Goal
+
+Let the user switch the editor and result grid colours as a whole ("style schema"),
+with predefined Light and Dark schemas, user-defined schemas, and a remembered
+choice per Look and Feel (L&F).
+
+## What a schema contains
+
+A schema holds everything the Style tab edits today except the L&F and fonts:
+
+| Part           | Today's studio.json key | Content                                         |
+|----------------|-------------------------|-------------------------------------------------|
+| `editorColors` | `editorColors`          | background, selected, current line highlight    |
+| `tokens`       | `tokens`                | colour and font style (plain/bold/italic) per syntax token |
+| `gridColors`   | `gridColors`            | foreground/background for null, key, even, odd, marked, selected, marked and selected |
+
+Out of scope (stay global / unchanged):
+
+- L&F and fonts (editor and result table).
+- Chart colours (`chartColorSets`).
+- Server background colour rules (`serverBgColorRules`) keep their explicit colours
+  and know nothing about light or dark schemas.
+
+The UI calls the feature "Style schema", to avoid confusion with the chart "Color schema".
+
+## Predefined schemas
+
+- Shipped in the jar as `resources/styleSchemas.json`, containing `Light` and `Dark`.
+  The format is the same as a user schema in studio.json (see below), so duplicating
+  is a plain copy.
+- Schemas from the plugin folder's default `studio.json` (`styleSchemas` key) are also
+  treated as predefined.
+- Predefined schemas are read-only: their colour editors are disabled, Rename and Delete
+  are disabled. To change one the user clicks Duplicate.
+- To make this obvious:
+  - a highlighted banner with a lock icon under the first separator line says the
+    schema is predefined and can't be changed, and points to Duplicate;
+  - a click on a colour or on a token name (the font style menu) gives the L&F's
+    error feedback (a beep), and their tooltip says the schema is read-only.
+- Names of predefined schemas are reserved; a user schema can't use them.
+- A unit test checks that every schema in `resources/styleSchemas.json` defines every
+  editor colour, token and grid colour.
+- The Dark colours shipped initially are placeholders, to be replaced with the final palette.
+- The current Java defaults (`ColorToken` defaults, `ColorMap.DEFAULT_EDITOR_COLORS`,
+  grid colours derived from the L&F) are no longer used, except by the migration,
+  which needs them to rebuild the user's old look exactly.
+
+## User schemas
+
+- Created only with **Duplicate…** from any schema (predefined or user).
+  - Tooltip: says it creates a new schema from the selected one.
+  - Asks for the name (suggests e.g. "Dark copy"). Name must be non-empty and unique,
+    and not a predefined name.
+  - The new schema stores `basedOn`: the name of the built-in schema it ultimately
+    comes from (duplicating a user schema copies its `basedOn`). If that is not known
+    (a plugin-folder schema without `basedOn`), it is `Dark` when the L&F selected in the
+    dialog is dark, otherwise `Light`.
+- Editable, can be renamed and deleted.
+- **Rename** changes the name and updates every L&F mapped to the old name.
+- **Delete** removes the schema; L&Fs mapped to it go back to the default rule below.
+- Stored with full values. If a later release adds a new token or colour that a user
+  schema doesn't have, the value is taken from its `basedOn` schema. If `basedOn` is
+  missing or unknown, it is taken from `Dark` when the current L&F is dark, otherwise
+  from `Light`.
+
+## Which schema is active
+
+- Every L&F (by class name) can have a remembered schema.
+- The active schema = the remembered schema for the current L&F; if none (or it no
+  longer exists): `Dark` for a dark L&F, otherwise `Light`. The dark L&Fs are the FlatLaf dark themes
+  Studio installs (FlatLaf Dark, Darcula, macOS Dark), listed in `StudioLookAndFeels`; this also
+  works for an L&F that is not installed yet (at start-up, or selected in the Settings dialog).
+  Non-FlatLaf L&Fs (Metal, Nimbus, Windows, GTK, …) count as light.
+- There is no light/dark marker on user schemas. Any schema can be chosen for any L&F.
+
+## Style tab behaviour
+
+```
+Look and Feel: [FlatLaf Dark   ▼]
+Editor font …   Result table font …   (global)
+Style schema:  [Dark           ▼] [Duplicate…] [Rename…] [Delete]
+──────────
+[🔒 "Dark" is a predefined schema and can't be changed. Use Duplicate… …]  (predefined only)
+Colors for tokens:   …             (disabled for predefined schemas)
+Preview
+──────────
+Colors for result grid: …          (disabled for predefined schemas)
+```
+
+- Changing the L&F in the dialog immediately switches the schema combo to the
+  schema that L&F would use (remembered or default rule); previews update.
+- Choosing a schema in the combo updates the previews.
+- Colour edits apply to the selected user schema. Switching between schemas keeps
+  unsaved edits in memory.
+- The existing "Reset to default" buttons are removed (predefined schemas can't be
+  changed, so there is nothing to reset to).
+- Choosing a schema in the combo remembers it for the L&F currently selected in the dialog.
+- **OK** (or **Apply**) saves all schema changes and the remembered schemas.
+- **Cancel** restores everything to how it was before the dialog was opened: edits,
+  new, renamed and deleted schemas, and L&F mappings.
+
+## Server background colour
+
+- A server's background colour becomes optional: "Default" means "use the active
+  schema's editor background".
+- The server editor and the multiple-server editor get a "Default" option.
+- New servers are created with "Default".
+- In servers.json, a server with "Default" has no `bgColor`.
+- servers.json gets a top-level `"version": 1`. A file without a version is in the old
+  format, where every server has an explicit `bgColor`.
+- The dialog "Background color is changed. Do you want to update background for all
+  servers with old background color?" is removed.
+
+## studio.json format
+
+```json
+"styleSchemas": {
+  "Custom": {
+    "basedOn": "Light",
+    "editorColors": { … },
+    "tokens": { … },
+    "gridColors": { … }
+  },
+  "My dark": { "basedOn": "Dark", … }
+},
+"lookAndFeelSchemas": {
+  "com.formdev.flatlaf.FlatDarculaLaf": "My dark"
+}
+```
+
+- `styleSchemas` is an object keyed by schema name (not an array), so it merges with
+  the plugin-folder default studio.json per name.
+- `editorColors`, `tokens` and `gridColors` use the same JSON format as today's
+  top-level keys. An empty `gridColors` object (`{}`) means grid colours derived from the
+  L&F (the behaviour before 2.4); only a migrated `Custom` schema uses it.
+- There is no `selectedSchema` key; the active schema follows from `lookandfeel` and
+  `lookAndFeelSchemas`.
+- In the code, the value of `styleSchemas` is a `StyleSchemas` object, read and written
+  like any other setting (`studioConfig.get/set`). It keeps every schema as a
+  `StyleSchemaDefinition` (as defined in the config, values may be missing) and marks which
+  schemas are predefined. A schema is resolved into a complete `StyleSchema` (missing values
+  taken from `basedOn`, or from Light/Dark depending on the L&F) when it is requested, and
+  the result is cached.
+- `lookAndFeelSchemas` is a separate setting (L&F class name → schema name).
+- The plugin folder's config is only used when the config is loaded: defaults (built-in +
+  plugin folder) are parsed first and passed as the default value when parsing the merged
+  config, so schemas from the defaults are marked as predefined. Only user schemas are
+  written when saving.
+- The top-level `editorColors`, `tokens` and `gridColors` keys are removed.
+
+## Migration (config version 2.4)
+
+Runs in `ConfigConverter` (`convertTo24`) when the user's studio.json version is below 2.4.
+
+1. Back up studio.json and servers.json with the existing
+   `FilesBackup.getInstance().backup(path)` (copies into the `backup` folder) before
+   rewriting them. No `*.bak` files.
+2. If the user's studio.json has any of `editorColors`, `tokens`, `gridColors`:
+   - create user schema `Custom` with the user's values; missing parts are filled
+     from the old Java defaults so the look doesn't change (grid colours that were never
+     customised stay derived from the L&F);
+   - values equal to the old defaults don't count as changes;
+   - `basedOn`: `Dark` if the current L&F is dark, otherwise `Light`. The current L&F is
+     `lookandfeel` from the user's studio.json, or from the plugin folder's default
+     studio.json, or the built-in default;
+   - map the current `lookandfeel` to `Custom` in `lookAndFeelSchemas` (only the
+     current L&F);
+   - remove the old top-level keys.
+3. If none of those keys are present: nothing to convert; the default rule applies
+   (Light or Dark depending on the L&F).
+4. servers.json is converted when it is read without a version (independently of the
+   studio.json conversion): servers whose `bgColor` equals the background colour of the
+   active schema (the schema for the current L&F, after studio.json is converted), or is
+   `ffffff` (the default background before style schemas), become "Default". Other servers keep their colour. The file is saved with `"version": 1`.
+   Servers converted from the very old `studio.properties` are converted the same way.
+5. Old keys (`editorColors`, `tokens`, `gridColors`) found in the plugin folder's default
+   studio.json are ignored with a warning in the log.

@@ -26,34 +26,31 @@ public class ServerTreeNodeSerializer implements JsonSerializer<ServerTreeNode>,
             .create();
 
 
-    // Serialize children of the root as a json list
-    public static String toJson(ServerTreeNode root) {
-        JsonArray json = new JsonArray();
-        for (ServerTreeNode child: root.childNodes()) {
-            json.add(gson.toJsonTree(child, ServerTreeNode.class));
+    public final static String VERSION = "version";
+
+    public static String toJson(ServerTreeNode serverTree) {
+        return gson.toJson(serverTree);
+    }
+
+    // version <= 0 means no version (the format before versioning was introduced)
+    public static String toJson(ServerTreeNode serverTree, int version) {
+        JsonElement json = gson.toJsonTree(serverTree);
+        if (version > 0 && json.isJsonObject()) {
+            json.getAsJsonObject().addProperty(VERSION, version);
         }
         return gson.toJson(json);
     }
 
-    // Returns the root folder with deserialized nodes from the json list as children
-    public static ServerTreeNode fromJson(String content) {
-        ServerTreeNode root = new ServerTreeNode();
+    // returns 0 if the version is not specified
+    public static int getVersion(String content) {
         JsonElement json = JsonParser.parseString(content);
-        if (json == null || json.isJsonNull()) return root;
+        if (! json.isJsonObject()) return 0;
+        JsonElement version = json.getAsJsonObject().get(VERSION);
+        return version == null ? 0 : version.getAsInt();
+    }
 
-        if (json.isJsonArray()) {
-            for (JsonElement child: json.getAsJsonArray()) {
-                root.add(gson.fromJson(child, ServerTreeNode.class));
-            }
-            return root;
-        }
-
-        // previous format: the root folder or a single node
-        ServerTreeNode node = gson.fromJson(json, ServerTreeNode.class);
-        if (node.isFolder() && node.getFolder().isEmpty()) return node;
-
-        root.add(node);
-        return root;
+    public static ServerTreeNode fromJson(String content) {
+        return gson.fromJson(content, ServerTreeNode.class);
     }
 
     public static ServerTreeNode openImportDialog(Component parent) {
@@ -102,14 +99,15 @@ public class ServerTreeNodeSerializer implements JsonSerializer<ServerTreeNode>,
         } else {
             String handle = json.get("handle").getAsString();
 
-            String colorValue = json.get("bgColor").getAsString();
-            Color bgColor = Color.WHITE;
-            try {
-                if (colorValue != null) {
+            Color bgColor = null; // default background color
+            JsonElement jsonColor = json.get("bgColor");
+            if (jsonColor != null) {
+                String colorValue = jsonColor.getAsString();
+                try {
                     bgColor = new Color(Integer.parseInt(colorValue, 16));
+                } catch (NumberFormatException e) {
+                    log.error("Can't parse color {}", colorValue);
                 }
-            } catch (NumberFormatException e) {
-                log.error("Can't parse color {}", colorValue);
             }
 
             String authMethod = json.get("authMethod").getAsString();
@@ -139,7 +137,10 @@ public class ServerTreeNodeSerializer implements JsonSerializer<ServerTreeNode>,
             Server server = node.getServer();
             json.addProperty("name", server.getName());
             json.addProperty("handle", server.getServerConnection().toString());
-            json.addProperty("bgColor", Integer.toHexString(server.getBackgroundColor().getRGB()).substring(2));
+            Color bgColor = server.getBackgroundColor();
+            if (bgColor != null) {
+                json.addProperty("bgColor", Integer.toHexString(bgColor.getRGB()).substring(2));
+            }
             json.addProperty("authMethod", server.getServerAuthenticationMechanism());
             if (server.isDefaultAuthMethod()) json.addProperty("defaultAuthMethod", true);
             if (server.isDefaultCredentials()) json.addProperty("defaultCredentials", true);

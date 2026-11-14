@@ -23,10 +23,11 @@ import static org.junit.Assert.assertEquals;
 
 public class ServerTest extends StudioTest {
 
-    private static Server server1, server2;
+    private static Server server1, server2, server3;
 
     private final static String NAME1 = "bgServerTest1";
     private final static String NAME2 = "bgServerTest2";
+    private final static String NAME3 = "bgServerTest3";
 
     @Before
     public void initServers() {
@@ -40,7 +41,9 @@ public class ServerTest extends StudioTest {
                 DefaultAuthenticationMechanism.NAME, false);
         server2 = new Server(NAME2, "testHost", 1111, "user", "password", color2,
                 DefaultAuthenticationMechanism.NAME, false);
-        serverConfig.addServers(false, server1, server2);
+        server3 = new Server(NAME3, "testHost", 1111, "user", "password", null, // default background
+                DefaultAuthenticationMechanism.NAME, false);
+        serverConfig.addServers(false, server1, server2, server3);
 
         GuiActionRunner.execute(StudioWindow::refreshAll);
     }
@@ -80,6 +83,17 @@ public class ServerTest extends StudioTest {
 
         Color bgColor = execute(() -> editor.target().getBackground());
         assertEquals(server1.getBackgroundColor(), bgColor);
+    }
+
+    @Test
+    public void testDefaultBackgroundColor() {
+        JComboBoxFixture serverComboBox = frameFixture.comboBox("serverDropDown");
+        serverComboBox.selectItem(server3.getName());
+
+        JTextComponentFixture editor = frameFixture.textBox("editor1");
+
+        Color bgColor = execute(() -> editor.target().getBackground());
+        assertEquals(StudioWindow.CONFIG.getBackgroundColor(), bgColor);
     }
 
     @Test

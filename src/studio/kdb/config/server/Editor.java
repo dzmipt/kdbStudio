@@ -7,7 +7,6 @@ import studio.kdb.Config;
 import studio.kdb.Server;
 import studio.kdb.ServerTreeNode;
 import studio.kdb.Workspace;
-import studio.kdb.config.ColorMap;
 import studio.kdb.config.ColorToken;
 import studio.ui.ColorChooser;
 import studio.ui.ColorLabel;
@@ -43,6 +42,19 @@ public abstract class Editor<E> {
     public abstract JComponent getComponent();
     public abstract void setValue(E value);
     public abstract E getValue();
+
+    // Editors which can show "different values" for several servers override the methods below
+    public boolean supportsMixed() {
+        return false;
+    }
+
+    public void setMixed() {
+        setValue(null);
+    }
+
+    public boolean isMixed() {
+        return false;
+    }
 
 
     public static class TextEditor extends Editor<String> {
@@ -174,17 +186,26 @@ public abstract class Editor<E> {
         }
     }
 
+    // null value means the default background color from the style schema
     public static class BgColorEditor extends Editor<Color> {
-        private final JTextField txtField = new JTextField("Sample text on background");
+        private final JCheckBox chkDefault = new JCheckBox("Default");
+        private final JTextField txtField = new JTextField();
         private final JPanel pnlOverride;
         private final ColorLabel colorOverride;
         private final JPanel panel;
 
+        private Color color = null;
+        private boolean mixed = false;
+
         public BgColorEditor() {
-            ColorMap colorMap = Config.getInstance().getEditorColors();
+            chkDefault.setToolTipText("Use the editor background color from the style schema");
+            chkDefault.addActionListener(e -> {
+                if (chkDefault.isSelected()) setValue(null);
+                else setValue(getDisplayedColor());
+            });
+
             txtField.setEditable(false);
-            txtField.setForeground(colorMap.get(ColorToken.DEFAULT));
-            txtField.setBackground(getDefaultBgColor());
+            txtField.setForeground(Config.getInstance().getTokenStyleConfig().getColor(ColorToken.DEFAULT));
 
             txtField.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
             txtField.addMouseListener(new MouseAdapter() {
@@ -204,13 +225,16 @@ public abstract class Editor<E> {
             setColorOverride(null);
 
             panel = new JPanel(new BorderLayout());
+            panel.add(chkDefault, BorderLayout.WEST);
             panel.add(txtField, BorderLayout.CENTER);
             panel.add(pnlOverride, BorderLayout.EAST);
+
+            refresh();
         }
 
         private void onColorChange() {
             Color result = ColorChooser.chooseColor(txtField, "Select background color for editor",
-                    getValue());
+                    getDisplayedColor());
 
             if (result != null) {
                 setValue(result);
@@ -235,16 +259,47 @@ public abstract class Editor<E> {
             return Config.getInstance().getBackgroundColor();
         }
 
+        private Color getDisplayedColor() {
+            return color == null ? getDefaultBgColor() : color;
+        }
+
+        private void refresh() {
+            chkDefault.setSelected(!mixed && color == null);
+            txtField.setBackground(getDisplayedColor());
+            if (mixed) txtField.setText("Different colors");
+            else if (color == null) txtField.setText("Default background");
+            else txtField.setText("Sample text on background");
+        }
+
         @Override
         public void setValue(Color value) {
-            if (value == null) value = getDefaultBgColor();
-            txtField.setBackground(value);
+            mixed = false;
+            color = value;
+            refresh();
             valueChanged();
         }
 
         @Override
         public Color getValue() {
-            return txtField.getBackground();
+            return color;
+        }
+
+        @Override
+        public boolean supportsMixed() {
+            return true;
+        }
+
+        @Override
+        public void setMixed() {
+            mixed = true;
+            color = null;
+            refresh();
+            valueChanged();
+        }
+
+        @Override
+        public boolean isMixed() {
+            return mixed;
         }
     }
 

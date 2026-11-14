@@ -17,7 +17,9 @@ import java.util.regex.PatternSyntaxException;
 /** A modeless, live-search dialog for all editors belonging to one Studio window. */
 public class OpenTabsSearchDialog extends EscapeDialog {
 
-    private final List<EditorTab> editors;
+    private static OpenTabsSearchDialog instance = null;
+
+    private List<EditorTab> editors;
     private final JTextField searchField = new JTextField();
     private final JCheckBox caseSensitive = new JCheckBox("Case sensitive");
     private final JCheckBox wholeWord = new JCheckBox("Whole word");
@@ -25,6 +27,9 @@ public class OpenTabsSearchDialog extends EscapeDialog {
     private final JLabel status = new JLabel(" ");
     private final MatchesTableModel model = new MatchesTableModel();
     private final JTable table = new JTable(model);
+
+    private Window pendingWindow = null;
+    private WindowFocusListener pendingListener = null;
 
     private OpenTabsSearchDialog(StudioWindow owner, List<EditorTab> editors) {
         super(null, "Find in Open Tabs", ModalityType.MODELESS);
@@ -98,11 +103,21 @@ public class OpenTabsSearchDialog extends EscapeDialog {
         });
     }
 
+    // Only one dialog exists at a time. If it is already open, it is refreshed with the current tabs
+    // and brought to front.
     public static void show(StudioWindow owner, List<EditorTab> editors) {
-        OpenTabsSearchDialog dialog = new OpenTabsSearchDialog(owner, editors);
-        dialog.align();
-        dialog.setVisible(true);
-        dialog.searchField.requestFocusInWindow();
+        if (instance != null) {
+            instance.editors = editors;
+            instance.search();
+            instance.toFront();
+            instance.searchField.requestFocusInWindow();
+            return;
+        }
+
+        instance = new OpenTabsSearchDialog(owner, editors);
+        instance.align();
+        instance.setVisible(true);
+        instance.searchField.requestFocusInWindow();
     }
 
     private void search() {
@@ -169,22 +184,14 @@ public class OpenTabsSearchDialog extends EscapeDialog {
             return;
         }
 
+        StudioWindow studioWindow = match.editor.getStudioWindow();
         if (closeDialog) {
             accept();
         } else {
-            StudioWindow studioWindow = match.editor.getStudioWindow();
-            // We need to bring the studioWindow toFront; and only after that the dialog toFront
-            WindowListener windowListener = new WindowAdapter() {
-                @Override
-                public void windowActivated(WindowEvent e) {
-                    studioWindow.removeWindowListener(this);
-                    OpenTabsSearchDialog.this.toFront();
-                }
-            };
-            studioWindow.addWindowListener(windowListener);
+            keepOnTopOf(studioWindow);
         }
 
-        match.editor.getStudioWindow().toFront();
+        studioWindow.toFront();
 
         match.editor.selectEditor();
         JTextArea textArea = match.editor.getTextArea();
@@ -196,6 +203,44 @@ public class OpenTabsSearchDialog extends EscapeDialog {
             // The document may have changed since the result was created.
         }
         textArea.requestFocusInWindow();
+    }
+
+    // We need to bring the studioWindow to front and only after that the dialog.
+    // The dialog is brought to front after the studioWindow has fully got focus
+    // (including the focus transfer to the text area). Calling toFront() earlier, e.g. from
+    // windowActivated(), doesn't work on Windows: the subsequent focus transfer to the text area
+    // re-activates the studioWindow natively, and it ends up above the dialog.
+    private void keepOnTopOf(Window window) {
+        clearPendingListener();
+        if (window.isFocused()) {
+            SwingUtilities.invokeLater(this::toFront);
+            return;
+        }
+
+        pendingWindow = window;
+        pendingListener = new WindowAdapter() {
+            @Override
+            public void windowGainedFocus(WindowEvent e) {
+                clearPendingListener();
+                SwingUtilities.invokeLater(() -> {
+                    if (isVisible()) toFront();
+                });
+            }
+        };
+        window.addWindowFocusListener(pendingListener);
+    }
+
+    private void clearPendingListener() {
+        if (pendingWindow != null) pendingWindow.removeWindowFocusListener(pendingListener);
+        pendingWindow = null;
+        pendingListener = null;
+    }
+
+    @Override
+    public void dispose() {
+        if (instance == this) instance = null;
+        clearPendingListener();
+        super.dispose();
     }
 
     private static class Match {

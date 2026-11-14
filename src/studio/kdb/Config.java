@@ -13,10 +13,7 @@ import studio.kdb.config.server.BgColorRules;
 import studio.ui.Util;
 import studio.ui.action.WorkspaceSaver;
 import studio.ui.settings.StrokeStyleEditor;
-import studio.utils.FileConfig;
-import studio.utils.FilesBackup;
-import studio.utils.HistoricalList;
-import studio.utils.LineEnding;
+import studio.utils.*;
 import studio.utils.log4j.EnvConfig;
 
 import javax.swing.*;
@@ -27,10 +24,8 @@ import java.io.Reader;
 import java.io.Writer;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.ArrayList;
+import java.util.*;
 import java.util.List;
-import java.util.Objects;
-import java.util.Properties;
 import java.util.regex.Pattern;
 
 import static studio.kdb.config.ConfigVersion.*;
@@ -85,9 +80,8 @@ public class Config  {
     public static final String TABLE_CONN_EXTRACTOR = configDefault("tableExtractorConfig", ConfigType.TABLE_CONN_EXTRACTOR, TableConnExtractor.DEFAULT);
     public static final String SERVER_FROM_RESULT_IN_CURRENT = configDefault("gridOpenServersInCurrentTab", ConfigType.BOOLEAN, true);
     public static final String INSPECT_RESULT_IN_CURRENT = configDefault("inspectResultInCurrentTab", ConfigType.BOOLEAN, true);
-    public static final String EDITOR_COLOR_CONFIG = configDefault("editorColors", ConfigType.COLOR_MAP, ColorMap.DEFAULT_EDITOR_COLORS);
-    public static final String TOKEN_STYLE_CONFIG = configDefault("tokens", ConfigType.TOKEN_STYLE_MAP, TokenStyleMap.DEFAULT);
-    public static final String GRID_COLOR_CONFIG = configDefault("gridColors", ConfigType.GRID_COLOR_CONFIG, GridColorConfig.DEFAULT);
+    public static final String STYLE_SCHEMAS = configDefault("styleSchemas", ConfigType.STYLE_SCHEMAS, StyleSchemas.builtIn());
+    public static final String LOOK_AND_FEEL_SCHEMAS = configDefault("lookAndFeelSchemas", ConfigType.STRING_MAP, Map.of());
     public static final String SERVER_HISTORY = configDefault("serverHistory", ConfigType.SERVER_HISTORY, new ServerHistoryConfig(20, List.of()));
     public static final String CHART_COLORSETS = configDefault("chartColorSets", ConfigType.CHART_COLOR_SETS, ColorSets.DEFAULT);
     public static final String CHART_STROKE_STYLES = configDefault("chartStrokeStyles", ConfigType.STRING_ARRAY,
@@ -120,6 +114,7 @@ public class Config  {
     private FileConfig workspaceConfig;
 
     private Gson gson;
+
 
     private final Path basePath;
     // Can be overridden in test cases
@@ -246,6 +241,9 @@ public class Config  {
         FileConfig defaultFileConfig = new FileConfig(EnvConfig.getPluginFolder().resolve(CONFIG_FILENAME));
         FileConfig fileConfig = new FileConfig(basePath.resolve(CONFIG_FILENAME));
         studioConfig = createStudioConfig(configTypeRegistry, fileConfig, defaultFileConfig, new ConfigConverter());
+
+        // the style schema for the current Look and Feel is known only after studio config is loaded
+        serverConfig.upgrade(getBackgroundColor());
 
         initServerHistory();
 
@@ -401,38 +399,61 @@ public class Config  {
         return getDefaultAuthConfig().getDefaultAuth();
     }
 
+    // A new empty server pre-filled with the default authentication method and credentials
+    public Server newServer() {
+        String authMethod = getDefaultAuthMechanism();
+        Credentials credentials = getDefaultCredentials(authMethod);
+        QConnection conn = new QConnection("", 0, credentials.getUsername(), credentials.getPassword(), false);
+        return new Server("", conn, authMethod, null, null);
+    }
+
     public void setDefaultAuthMechanism(String authMechanism) {
         DefaultAuthConfig config = getDefaultAuthConfig();
         DefaultAuthConfig newConfig = new DefaultAuthConfig(config, authMechanism);
         setDefaultAuthConfig(newConfig);
     }
 
-    public TokenStyleMap getTokenStyleConfig() {
-        return (TokenStyleMap) studioConfig.get(Config.TOKEN_STYLE_CONFIG);
+    public StyleSchemas getStyleSchemas() {
+        return (StyleSchemas) studioConfig.get(Config.STYLE_SCHEMAS);
     }
 
-    public boolean setTokenStyleConfig(TokenStyleMap tokenStyleMap) {
-        return studioConfig.set(Config.TOKEN_STYLE_CONFIG, tokenStyleMap);
+    public boolean setStyleSchemas(StyleSchemas schemas) {
+        return studioConfig.set(Config.STYLE_SCHEMAS, schemas);
+    }
+
+    // Look and Feel class name -> the name of the style schema chosen for it
+    public Map<String, String> getLookAndFeelSchemas() {
+        return (Map<String, String>) studioConfig.get(Config.LOOK_AND_FEEL_SCHEMAS);
+    }
+
+    public boolean setLookAndFeelSchemas(Map<String, String> lookAndFeelSchemas) {
+        return studioConfig.set(Config.LOOK_AND_FEEL_SCHEMAS, lookAndFeelSchemas);
+    }
+
+    // The name of the style schema for the current Look and Feel
+    public String getStyleSchemaName() {
+        return getStyleSchemas().getSchemaName(getLookAndFeelSchemas(), getString(Config.LOOK_AND_FEEL));
+    }
+
+    // The style schema for the current Look and Feel
+    public StyleSchema getStyleSchema() {
+        return getStyleSchemas().get(getStyleSchemaName(), getString(Config.LOOK_AND_FEEL));
+    }
+
+    public TokenStyleMap getTokenStyleConfig() {
+        return getStyleSchema().getTokens();
     }
 
     public Color getBackgroundColor() {
-        return getEditorColors().get(EditorColorToken.BACKGROUND);
+        return getStyleSchema().getBackgroundColor();
     }
 
     public ColorMap getEditorColors() {
-        return (ColorMap) studioConfig.get(Config.EDITOR_COLOR_CONFIG);
-    }
-
-    public boolean setEditorColors(ColorMap editorColors) {
-        return studioConfig.set(Config.EDITOR_COLOR_CONFIG, editorColors);
+        return getStyleSchema().getEditorColors();
     }
 
     public GridColorConfig getGridColorConfig() {
-        return (GridColorConfig) studioConfig.get(Config.GRID_COLOR_CONFIG);
-    }
-
-    public boolean setGridColorConfig(GridColorConfig gridColorConfig) {
-        return studioConfig.set(Config.GRID_COLOR_CONFIG, gridColorConfig);
+        return getStyleSchema().getGridColors();
     }
 
     public ServerTreeNode getServerTree() {
@@ -567,14 +588,12 @@ public class Config  {
         return studioConfig.set(Config.BG_COLOR_RULES, rules);
     }
 
-    public boolean overrideServerBgColor(Server server) {
-        return getServerBgColorRules().overrideColor(server) != null;
-    }
-
     public Color getServerBgColor(Server server) {
         Color color = getServerBgColorRules().overrideColor(server);
         if (color != null) return color;
-        return server.getBackgroundColor();
+        color = server.getBackgroundColor();
+        if (color != null) return color;
+        return getBackgroundColor();
     }
 
 }
