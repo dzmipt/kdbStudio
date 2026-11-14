@@ -136,8 +136,9 @@ public class Session implements ConnectionStateListener, KAuthentication {
         return server;
     }
 
+    // Connection with the default credentials resolved from the Settings
     public QConnection getConnection() {
-        QConnection connection = server.getConnection();
+        QConnection connection = Config.getInstance().resolveAuth(server).getConnection();
         if (kConn.getConnectionContext().isConnected()) {
             boolean isTLS = kConn.getConnectionContext().isSecure();
             return connection.changeTLS(isTLS);
@@ -174,6 +175,7 @@ public class Session implements ConnectionStateListener, KAuthentication {
     @Override
     public String getUserPassword(ConnectionContext context) throws IOException {
         try {
+            Server server = Config.getInstance().resolveAuth(this.server);
             String authMethod = server.getAuthenticationMechanism();
             log.info("Getting authentication credential for {} with auth.method {}",
                     server.getDescription(true), authMethod);

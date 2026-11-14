@@ -1,5 +1,6 @@
 * Style schemas: predefined Light and Dark schemas, user-defined schemas, and a remembered schema for every Look and Feel
 * Server background color can be "Default" to follow the style schema
+* Server connection can use default auth.method and default user/password from the Settings
 * Adding search in all opened tabs dialog
 * Update Export to Excel for numeric, boolean and temporal to use numeric in the output (and formatting for temporal types) 
 

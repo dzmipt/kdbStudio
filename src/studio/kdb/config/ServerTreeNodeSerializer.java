@@ -3,7 +3,6 @@ package studio.kdb.config;
 import com.google.gson.*;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import studio.core.DefaultAuthenticationMechanism;
 import studio.kdb.Server;
 import studio.kdb.ServerTreeNode;
 import studio.ui.FileChooser;
@@ -110,11 +109,16 @@ public class ServerTreeNodeSerializer implements JsonSerializer<ServerTreeNode>,
                 }
             }
 
-            String authMethod = json.get("authMethod").getAsString();
-            if (authMethod == null) authMethod = DefaultAuthenticationMechanism.NAME;
+            // authMethod is absent for the default auth.method
+            JsonElement jsonAuthMethod = json.get("authMethod");
+            String authMethod = jsonAuthMethod == null || jsonAuthMethod.isJsonNull() ? null : jsonAuthMethod.getAsString();
 
-            return new ServerTreeNode(
-                    QConnection.get(handle).toServer(name, authMethod, bgColor));
+            QConnection conn = QConnection.get(handle);
+            if (getBoolean(json, "defaultCredentials")) {
+                conn = conn.changeUserPassword(null, null);
+            }
+
+            return new ServerTreeNode(conn.toServer(name, authMethod, bgColor));
         }
     }
 
@@ -138,8 +142,17 @@ public class ServerTreeNodeSerializer implements JsonSerializer<ServerTreeNode>,
             if (bgColor != null) {
                 json.addProperty("bgColor", Integer.toHexString(bgColor.getRGB()).substring(2));
             }
-            json.addProperty("authMethod", server.getAuthenticationMechanism());
+            if (! server.isDefaultAuthMethod()) {
+                json.addProperty("authMethod", server.getAuthenticationMechanism());
+                if (server.isDefaultCredentials()) json.addProperty("defaultCredentials", true);
+            }
         }
         return json;
+    }
+
+    private static boolean getBoolean(JsonObject json, String key) {
+        JsonElement element = json.get(key);
+        if (element == null || element.isJsonNull()) return false;
+        return element.getAsBoolean();
     }
 }

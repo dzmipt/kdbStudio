@@ -2,6 +2,7 @@ package studio.kdb.config;
 
 import studio.core.Credentials;
 import studio.core.DefaultAuthenticationMechanism;
+import studio.kdb.Server;
 
 import java.util.*;
 
@@ -47,6 +48,18 @@ public class DefaultAuthConfig {
 
     public Set<String> getAuthMethods() {
         return credentials.keySet();
+    }
+
+    /**
+     * Returns the server with the default auth.method and default credentials (null values in the server)
+     * replaced by the values from this config. The returned server can be used to connect.
+     */
+    public Server resolve(Server server) {
+        if (! server.isDefaultCredentials()) return server;
+
+        String authMethod = server.isDefaultAuthMethod() ? defaultAuth : server.getAuthenticationMechanism();
+        return server.newAuthMethod(authMethod)
+                     .newCredentials(getCredential(authMethod));
     }
 
     public Credentials getCredential(String authMethod) {

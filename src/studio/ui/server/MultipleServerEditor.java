@@ -2,6 +2,7 @@ package studio.ui.server;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import studio.core.Credentials;
 import studio.kdb.Config;
 import studio.kdb.Server;
 import studio.kdb.ServerTreeNode;
@@ -32,15 +33,19 @@ public class MultipleServerEditor extends JPanel {
     private final ServerField<String> hostField = new ServerField<>(new Editor.TextEditor(), FieldGetter.HOST);
     private final ServerField<Integer> portField = new ServerField<>(new Editor.PortEditor(), FieldGetter.PORT);
     private final ServerField<Boolean> tlsField = new ServerField<>(new Editor.BooleanEditor(), FieldGetter.TLS);
-    private final ServerField<String> userField = new ServerField<>(new Editor.TextEditor(), FieldGetter.USER);
-    private final ServerField<String> passwordField = new ServerField<>(new Editor.PasswordEditor(), FieldGetter.PASSWORD);
-    private final ServerField<String> authMethodField = new ServerField<>(new Editor.AuthMethodEditor(), FieldGetter.AUTH);
+    private final ServerField<Boolean> defaultAuthField = new ServerField<>(new Editor.BooleanEditor(), FieldGetter.DEFAULT_AUTH);
+    private final ServerField<String> authMethodField = new ServerField<>(new Editor.AuthMethodEditor(), FieldGetter.SERVER_AUTH);
+    private final ServerField<Boolean> defaultCredentialsField = new ServerField<>(new Editor.BooleanEditor(), FieldGetter.DEFAULT_CREDENTIALS);
+    private final ServerField<String> userField = new ServerField<>(new Editor.TextEditor(), FieldGetter.SERVER_USER);
+    private final ServerField<String> passwordField = new ServerField<>(new Editor.PasswordEditor(), FieldGetter.SERVER_PASSWORD);
     private final ServerField<Color> bgColorField = new ServerField<>(bgColorEditor, FieldGetter.COLOR);
 
     private final ServerField<?>[] initFields =
-            {nameField, folderField, null, hostField, portField, tlsField, null, userField, passwordField, authMethodField, null, bgColorField};
+            {nameField, folderField, null, hostField, portField, tlsField, null,
+                    defaultAuthField, authMethodField, defaultCredentialsField, userField, passwordField, null, bgColorField};
 
     private final List<ServerField<?>> fields = new ArrayList<>();
+    private boolean refreshingAuthFields = false;
     private final boolean editName;
 
     private ChangeListener changeListener = null;
@@ -87,6 +92,7 @@ public class MultipleServerEditor extends JPanel {
             f.setChangeListener( e-> {
                 undoButton.setEnabled(f.amended());
                 updateLabelText(label, f);
+                refreshAuthFields();
                 if (changeListener != null) changeListener.stateChanged(e);
                 refreshColorOverride();
             } );
@@ -96,6 +102,7 @@ public class MultipleServerEditor extends JPanel {
 
             refreshColorOverride();
         }
+        refreshAuthFields();
 
         int width = 0, height = 0;
         for(JLabel label: labels) {
@@ -128,10 +135,11 @@ public class MultipleServerEditor extends JPanel {
         Set<FieldGetter.Names> knownFields = new HashSet<>();
 
         for (ServerField<?> f: fields) {
-            if (f.theSame() || f.amended) {
+            if (isKnown(f)) {
                 knownFields.add(f.fieldGetter.getName());
             }
         }
+        refreshKnownAuthFields(knownFields);
 
         ruleFields.removeAll(knownFields);
         if (knownFields.contains(FieldGetter.Names.folderPath)) {
@@ -150,6 +158,74 @@ public class MultipleServerEditor extends JPanel {
         Server amendedServer = amendServer(servers.get(0));
         bgColorEditor.setColorOverride(rules.overrideColor(amendedServer) );
 
+    }
+
+    private boolean isKnown(ServerField<?> field) {
+        return field.theSame() || field.amended();
+    }
+
+    // Auth. method, user and password are known (the same for all servers) only together with default flags
+    private void refreshKnownAuthFields(Set<FieldGetter.Names> knownFields) {
+        Server server = servers.get(0);
+        boolean knownAuth = false, knownCredentials = false;
+        if (isKnown(defaultAuthField)) {
+            if (defaultAuthField.getValueForServer(server)) {
+                knownAuth = knownCredentials = true;
+            } else {
+                knownAuth = isKnown(authMethodField);
+                if (isKnown(defaultCredentialsField)) {
+                    knownCredentials = defaultCredentialsField.getValueForServer(server) ?
+                            knownAuth : isKnown(userField) && isKnown(passwordField);
+                }
+            }
+        }
+
+        if (knownAuth) knownFields.add(FieldGetter.Names.auth);
+        else knownFields.remove(FieldGetter.Names.auth);
+
+        if (knownCredentials) {
+            knownFields.add(FieldGetter.Names.user);
+            knownFields.add(FieldGetter.Names.password);
+        } else {
+            knownFields.remove(FieldGetter.Names.user);
+            knownFields.remove(FieldGetter.Names.password);
+        }
+    }
+
+    // If default auth.method or default credentials are selected, the corresponding fields are disabled
+    // and show values from the Settings
+    private void refreshAuthFields() {
+        if (refreshingAuthFields) return;
+        try {
+            refreshingAuthFields = true;
+            refreshAuthFieldsImpl();
+        } finally {
+            refreshingAuthFields = false;
+        }
+    }
+
+    private void refreshAuthFieldsImpl() {
+        Config config = Config.getInstance();
+        if (defaultAuthField.getValue()) {
+            String auth = config.getDefaultAuthMechanism();
+            Credentials credentials = config.getDefaultCredentials(auth);
+            authMethodField.override(auth);
+            defaultCredentialsField.override(true);
+            userField.override(credentials.getUsername());
+            passwordField.override(credentials.getPassword());
+        } else {
+            authMethodField.release();
+            defaultCredentialsField.release();
+            if (defaultCredentialsField.getValue()) {
+                String auth = authMethodField.getValue();
+                Credentials credentials = auth == null ? Credentials.DEFAULT : config.getDefaultCredentials(auth);
+                userField.override(credentials.getUsername());
+                passwordField.override(credentials.getPassword());
+            } else {
+                userField.release();
+                passwordField.release();
+            }
+        }
     }
 
     private void updateLabelText(JLabel label, ServerField<?> field) {
@@ -191,9 +267,12 @@ public class MultipleServerEditor extends JPanel {
         String host = hostField.getValueForServer(server);
         int port = portField.getValueForServer(server);
         boolean useTLS = tlsField.getValueForServer(server);
-        String username = userField.getValueForServer(server);
-        String password = passwordField.getValueForServer(server);
-        String authMethod = authMethodField.getValueForServer(server);
+        // null auth.method or null user and password mean the defaults from the Settings
+        boolean defaultAuth = defaultAuthField.getValueForServer(server);
+        boolean defaultCredentials = defaultAuth || defaultCredentialsField.getValueForServer(server);
+        String authMethod = defaultAuth ? null : authMethodField.getValueForServer(server);
+        String username = defaultCredentials ? null : userField.getValueForServer(server);
+        String password = defaultCredentials ? null : passwordField.getValueForServer(server);
         Color bgColor = bgColorField.getValueForServer(server);
 
         QConnection conn = new QConnection(host, port, username, password, useTLS);
@@ -240,6 +319,10 @@ public class MultipleServerEditor extends JPanel {
         private final Editor<E> editor;
         private final FieldGetter<E> fieldGetter;
         private ChangeListener changeListener;
+        // when overridden, the editor is disabled and shows a value which is not the field value
+        private boolean overridden = false;
+        private E overriddenValue;
+        private boolean ignoreEditorChanges = false;
 
         ServerField(Editor<E> editor, FieldGetter<E> fieldGetter) {
             this.editor = editor;
@@ -254,6 +337,7 @@ public class MultipleServerEditor extends JPanel {
 
         @Override
         public void stateChanged(ChangeEvent e) {
+            if (ignoreEditorChanges) return;
             amended = isAmended();
             stateChanged();
         }
@@ -301,7 +385,47 @@ public class MultipleServerEditor extends JPanel {
             stateChanged();
         }
 
+
+        private void setEditorValueSilently(E value) {
+            ignoreEditorChanges = true;
+            try {
+                editor.setValue(value);
+            } finally {
+                ignoreEditorChanges = false;
+            }
+        }
+
+        void override(E value) {
+            if (! overridden) {
+                overriddenValue = getValue();
+                overridden = true;
+                editor.getComponent().setEnabled(false);
+            }
+            setEditorValueSilently(value);
+        }
+
+        void release() {
+            if (! overridden) return;
+            overridden = false;
+            editor.getComponent().setEnabled(true);
+            if (amended || (same && commonValue != null)) {
+                setEditorValueSilently(overriddenValue);
+            } else if (! same) {
+                ignoreEditorChanges = true;
+                try {
+                    editor.setMixed();
+                } finally {
+                    ignoreEditorChanges = false;
+                }
+            }
+            // otherwise the server uses the default (null) value: the editor keeps the value from the Settings
+            // as a starting point, and the field becomes amended
+            amended = isAmended();
+            stateChanged();
+        }
+
         E getValue() {
+            if (overridden) return overriddenValue;
             try {
                 return editor.getValue();
             } catch (RuntimeException e) {
@@ -319,8 +443,13 @@ public class MultipleServerEditor extends JPanel {
         }
 
         private void setEditorToCommonValue() {
-            if (same) editor.setValue(commonValue);
-            else editor.setMixed();
+            if (overridden) {
+                overriddenValue = same ? commonValue : null;
+            } else if (same) {
+                editor.setValue(commonValue);
+            } else {
+                editor.setMixed();
+            }
         }
         E getValueForServer(Server server) {
             return amended() ? getValue() : fieldGetter.getValue(server);

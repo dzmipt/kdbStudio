@@ -242,8 +242,9 @@ public class Config  {
         FileConfig fileConfig = new FileConfig(basePath.resolve(CONFIG_FILENAME));
         studioConfig = createStudioConfig(configTypeRegistry, fileConfig, defaultFileConfig, new ConfigConverter());
 
-        // the style schema for the current Look and Feel is known only after studio config is loaded
-        serverConfig.upgrade(getBackgroundColor());
+        // the style schema for the current Look and Feel and the default auth. config
+        // are known only after studio config is loaded
+        serverConfig.upgrade(getBackgroundColor(), getDefaultAuthConfig());
 
         initServerHistory();
 
@@ -399,12 +400,15 @@ public class Config  {
         return getDefaultAuthConfig().getDefaultAuth();
     }
 
-    // A new empty server pre-filled with the default authentication method and credentials
+    // A new empty server which uses the default authentication method and credentials
     public Server newServer() {
-        String authMethod = getDefaultAuthMechanism();
-        Credentials credentials = getDefaultCredentials(authMethod);
-        QConnection conn = new QConnection("", 0, credentials.getUsername(), credentials.getPassword(), false);
-        return new Server("", conn, authMethod, null, null);
+        QConnection conn = new QConnection("", 0, null, null, false);
+        return new Server("", conn, null, null, null);
+    }
+
+    // The server with the default auth.method and credentials replaced by values from the Settings
+    public Server resolveAuth(Server server) {
+        return getDefaultAuthConfig().resolve(server);
     }
 
     public void setDefaultAuthMechanism(String authMechanism) {
