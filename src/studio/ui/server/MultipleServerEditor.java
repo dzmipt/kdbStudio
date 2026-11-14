@@ -45,6 +45,7 @@ public class MultipleServerEditor extends JPanel {
                     defaultAuthField, authMethodField, defaultCredentialsField, userField, passwordField, null, bgColorField};
 
     private final List<ServerField<?>> fields = new ArrayList<>();
+    private boolean refreshingAuthFields = false;
     private final boolean editName;
 
     private ChangeListener changeListener = null;
@@ -194,6 +195,16 @@ public class MultipleServerEditor extends JPanel {
     // If default auth.method or default credentials are selected, the corresponding fields are disabled
     // and show values from the Settings
     private void refreshAuthFields() {
+        if (refreshingAuthFields) return;
+        try {
+            refreshingAuthFields = true;
+            refreshAuthFieldsImpl();
+        } finally {
+            refreshingAuthFields = false;
+        }
+    }
+
+    private void refreshAuthFieldsImpl() {
         Config config = Config.getInstance();
         if (defaultAuthField.getValue()) {
             String auth = config.getDefaultAuthMechanism();
@@ -256,15 +267,16 @@ public class MultipleServerEditor extends JPanel {
         String host = hostField.getValueForServer(server);
         int port = portField.getValueForServer(server);
         boolean useTLS = tlsField.getValueForServer(server);
-        String username = userField.getValueForServer(server);
-        String password = passwordField.getValueForServer(server);
-        String authMethod = authMethodField.getValueForServer(server);
+        // null auth.method or null user and password mean the defaults from the Settings
         boolean defaultAuth = defaultAuthField.getValueForServer(server);
-        boolean defaultCredentials = defaultCredentialsField.getValueForServer(server);
+        boolean defaultCredentials = defaultAuth || defaultCredentialsField.getValueForServer(server);
+        String authMethod = defaultAuth ? null : authMethodField.getValueForServer(server);
+        String username = defaultCredentials ? null : userField.getValueForServer(server);
+        String password = defaultCredentials ? null : passwordField.getValueForServer(server);
         Color bgColor = bgColorField.getValueForServer(server);
 
         QConnection conn = new QConnection(host, port, username, password, useTLS);
-        return new Server(name, conn, authMethod, bgColor, parent, false, defaultAuth, defaultCredentials);
+        return new Server(name, conn, authMethod, bgColor, parent);
     }
 
     public List<Server> getAmendedServers() {
@@ -395,8 +407,21 @@ public class MultipleServerEditor extends JPanel {
         void release() {
             if (! overridden) return;
             overridden = false;
-            setEditorValueSilently(overriddenValue);
             editor.getComponent().setEnabled(true);
+            if (amended || (same && commonValue != null)) {
+                setEditorValueSilently(overriddenValue);
+            } else if (! same) {
+                ignoreEditorChanges = true;
+                try {
+                    editor.setMixed();
+                } finally {
+                    ignoreEditorChanges = false;
+                }
+            }
+            // otherwise the server uses the default (null) value: the editor keeps the value from the Settings
+            // as a starting point, and the field becomes amended
+            amended = isAmended();
+            stateChanged();
         }
 
         E getValue() {

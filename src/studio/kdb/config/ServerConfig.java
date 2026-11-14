@@ -331,7 +331,10 @@ public class ServerConfig {
         boolean defaultUseTLS = Config.getInstance().getBoolean(Config.TRY_TLS_CONNECTION_FIRST);
 
         Map<Server, Integer> list = new LinkedHashMap<>();
-        for (Server s: servers.values()) {
+        DefaultAuthConfig defaultAuthConfig = Config.getInstance().getDefaultAuthConfig();
+        for (Server server: servers.values()) {
+            // compare with auth.method and credentials which the server actually uses
+            Server s = defaultAuthConfig.resolve(server);
             if (s.getHost().equals(host) && s.getPort() == port) {
                 if (parser.isSpecifiedProtocol() && s.getUseTLS() != useTLS) continue;
                 if (parser.isSpecifiedUser() && !s.getUsername().equals(user)) continue;
@@ -341,7 +344,7 @@ public class ServerConfig {
                 int weight = 0;
                 if (s.getAuthenticationMechanism().equals(defaultAuthMechanism)) weight = 2;
                 if (s.getUseTLS() == defaultUseTLS) weight += 1;
-                list.put(s, weight);
+                list.put(server, weight);
             }
         }
 

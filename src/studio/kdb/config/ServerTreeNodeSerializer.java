@@ -3,7 +3,6 @@ package studio.kdb.config;
 import com.google.gson.*;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import studio.core.DefaultAuthenticationMechanism;
 import studio.kdb.Server;
 import studio.kdb.ServerTreeNode;
 import studio.ui.FileChooser;
@@ -110,14 +109,16 @@ public class ServerTreeNodeSerializer implements JsonSerializer<ServerTreeNode>,
                 }
             }
 
-            String authMethod = json.get("authMethod").getAsString();
-            if (authMethod == null) authMethod = DefaultAuthenticationMechanism.NAME;
+            // authMethod is absent for the default auth.method
+            JsonElement jsonAuthMethod = json.get("authMethod");
+            String authMethod = jsonAuthMethod == null || jsonAuthMethod.isJsonNull() ? null : jsonAuthMethod.getAsString();
 
-            boolean defaultAuthMethod = getBoolean(json, "defaultAuthMethod");
-            boolean defaultCredentials = getBoolean(json, "defaultCredentials");
+            QConnection conn = QConnection.get(handle);
+            if (getBoolean(json, "defaultCredentials")) {
+                conn = conn.changeUserPassword(null, null);
+            }
 
-            return new ServerTreeNode(
-                    new Server(name, QConnection.get(handle), authMethod, bgColor, null, false, defaultAuthMethod, defaultCredentials));
+            return new ServerTreeNode(conn.toServer(name, authMethod, bgColor));
         }
     }
 
@@ -136,14 +137,15 @@ public class ServerTreeNodeSerializer implements JsonSerializer<ServerTreeNode>,
         } else {
             Server server = node.getServer();
             json.addProperty("name", server.getName());
-            json.addProperty("handle", server.getServerConnection().toString());
+            json.addProperty("handle", server.getConnectionStringWithPwd());
             Color bgColor = server.getBackgroundColor();
             if (bgColor != null) {
                 json.addProperty("bgColor", Integer.toHexString(bgColor.getRGB()).substring(2));
             }
-            json.addProperty("authMethod", server.getServerAuthenticationMechanism());
-            if (server.isDefaultAuthMethod()) json.addProperty("defaultAuthMethod", true);
-            if (server.isDefaultCredentials()) json.addProperty("defaultCredentials", true);
+            if (! server.isDefaultAuthMethod()) {
+                json.addProperty("authMethod", server.getAuthenticationMechanism());
+                if (server.isDefaultCredentials()) json.addProperty("defaultCredentials", true);
+            }
         }
         return json;
     }

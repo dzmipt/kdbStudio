@@ -1,5 +1,8 @@
 package studio.kdb.config;
 
+import com.google.gson.JsonArray;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import studio.core.Credentials;
@@ -16,6 +19,7 @@ import java.io.IOException;
 import java.net.URISyntaxException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -83,55 +87,98 @@ public class ServerConfigTest {
     @Test
     public void testDefaultAuthServers() throws IOException {
         QConnection conn = new QConnection("host", 1234, "uuser", "pwd", false);
-        Server defaultAuth = new Server("defaultAuth", conn, "auth", Color.WHITE, null, false, true, true);
-        Server defaultCredentials = new Server("defaultCredentials", conn, "auth2", Color.WHITE, null, false, false, true);
+        Server defaultAuth = new Server("defaultAuth", conn, null, Color.WHITE);
+        Server defaultCredentials = new Server("defaultCredentials", conn.changeUserPassword(null, null), "auth2", Color.WHITE);
+        Server emptyCredentials = new Server("emptyCredentials", conn.changeUserPassword("", ""), "auth2", Color.WHITE);
 
         ServerTreeNode root = new ServerTreeNode();
         root.add(server);
         root.add(defaultAuth);
         root.add(defaultCredentials);
+        root.add(emptyCredentials);
         testWriteRead(root);
     }
 
     @Test
-    public void testDefaultAuthEffectiveValues() {
-        Config config = Config.getInstance();
-        String prevAuth = config.getDefaultAuthMechanism();
-        try {
-            config.setDefaultAuthMechanism("defAuth");
-            config.setDefaultCredentials("defAuth", new Credentials("defUser", "defPwd"));
-            config.setDefaultCredentials("auth2", new Credentials("auth2User", "auth2Pwd"));
+    public void testDefaultAuthJson() {
+        QConnection conn = new QConnection("host", 1234, "uuser", "pwd", false);
+        ServerTreeNode root = new ServerTreeNode();
+        root.add(new Server("defaultAuth", conn, null, null));
+        root.add(new Server("defaultCredentials", conn.changeUserPassword(null, null), "auth2", null));
 
-            QConnection conn = new QConnection("host", 1234, "uuser", "pwd", false);
-            Server s = new Server("s", conn, "auth2", Color.WHITE, null, false, true, false);
-            assertEquals("defAuth", s.getAuthenticationMechanism());
-            assertEquals("defUser", s.getUsername());
-            assertEquals("defPwd", s.getPassword());
-            assertEquals("auth2", s.getServerAuthenticationMechanism());
-            assertEquals("uuser", s.getServerUsername());
-            assertEquals("pwd", s.getServerPassword());
-            assertEquals(conn, s.getServerConnection());
+        JsonArray children = JsonParser.parseString(ServerTreeNodeSerializer.toJson(root))
+                                .getAsJsonObject().getAsJsonArray("children");
+        JsonObject json = children.get(0).getAsJsonObject();
+        assertFalse(json.has("authMethod"));
+        assertFalse(json.has("defaultCredentials"));
+        assertEquals("`:host:1234", json.get("handle").getAsString());
 
-            s = new Server("s", conn, "auth2", Color.WHITE, null, false, false, true);
-            assertEquals("auth2", s.getAuthenticationMechanism());
-            assertEquals("auth2User", s.getUsername());
-            assertEquals("auth2Pwd", s.getPassword());
+        json = children.get(1).getAsJsonObject();
+        assertEquals("auth2", json.get("authMethod").getAsString());
+        assertTrue(json.get("defaultCredentials").getAsBoolean());
+        assertEquals("`:host:1234", json.get("handle").getAsString());
+    }
 
-            s = new Server("s", conn, "auth2", Color.WHITE, null, false, false, false);
-            assertEquals("auth2", s.getAuthenticationMechanism());
-            assertEquals("uuser", s.getUsername());
-            assertEquals("pwd", s.getPassword());
+    @Test
+    public void testDefaultAuthValues() {
+        QConnection conn = new QConnection("host", 1234, "uuser", "pwd", false);
 
-            s = new Server("s", conn, "auth2", Color.WHITE, null, false, true, true);
-            Server s2 = s.newAuthMethod("auth2");
-            assertFalse(s2.isDefaultAuthMethod());
-            assertTrue(s2.isDefaultCredentials());
-            assertEquals("auth2", s2.getAuthenticationMechanism());
-            assertTrue(s.newName("other").isDefaultAuthMethod());
-            assertTrue(s.newBackgroundColor(Color.RED).isDefaultAuthMethod());
-        } finally {
-            config.setDefaultAuthMechanism(prevAuth);
-        }
+        // default auth.method implies default credentials
+        Server s = new Server("s", conn, null, Color.WHITE);
+        assertTrue(s.isDefaultAuthMethod());
+        assertTrue(s.isDefaultCredentials());
+        assertNull(s.getAuthenticationMechanism());
+        assertNull(s.getUsername());
+        assertNull(s.getPassword());
+        assertEquals("`:host:1234", s.getConnectionStringWithPwd());
+
+        s = new Server("s", conn.changeUserPassword(null, null), "auth2", Color.WHITE);
+        assertFalse(s.isDefaultAuthMethod());
+        assertTrue(s.isDefaultCredentials());
+        assertEquals("auth2", s.getAuthenticationMechanism());
+
+        s = new Server("s", conn.changeUserPassword("user", null), "auth2", Color.WHITE);
+        assertFalse(s.isDefaultCredentials());
+        assertEquals("", s.getPassword());
+
+        s = new Server("s", conn, "auth2", Color.WHITE);
+        assertFalse(s.isDefaultCredentials());
+        assertTrue(s.newCredentials(null).isDefaultCredentials());
+        assertEquals("other", s.newCredentials(new Credentials("other", "p")).getUsername());
+
+        s = new Server("s", conn, null, Color.WHITE);
+        Server s2 = s.newAuthMethod("auth2");
+        assertFalse(s2.isDefaultAuthMethod());
+        assertTrue(s2.isDefaultCredentials());
+        assertTrue(s.newName("other").isDefaultAuthMethod());
+        assertTrue(s.newBackgroundColor(Color.RED).isDefaultAuthMethod());
+    }
+
+    @Test
+    public void testResolveDefaultAuth() {
+        DefaultAuthConfig config = new DefaultAuthConfig("defAuth",
+                Map.of("defAuth", new Credentials("defUser", "defPwd"),
+                       "auth2", new Credentials("auth2User", "auth2Pwd")));
+        QConnection conn = new QConnection("host", 1234, "uuser", "pwd", false);
+
+        Server s = config.resolve(new Server("s", conn, null, Color.WHITE));
+        assertEquals("defAuth", s.getAuthenticationMechanism());
+        assertEquals("defUser", s.getUsername());
+        assertEquals("defPwd", s.getPassword());
+        assertEquals("host", s.getHost());
+
+        s = config.resolve(new Server("s", conn.changeUserPassword(null, null), "auth2", Color.WHITE));
+        assertEquals("auth2", s.getAuthenticationMechanism());
+        assertEquals("auth2User", s.getUsername());
+        assertEquals("auth2Pwd", s.getPassword());
+
+        // no default credentials configured: empty credentials
+        s = config.resolve(new Server("s", conn.changeUserPassword(null, null), "auth3", Color.WHITE));
+        assertEquals("", s.getUsername());
+        assertEquals("", s.getPassword());
+
+        Server own = new Server("s", conn, "auth2", Color.WHITE);
+        assertSame(own, config.resolve(own));
     }
 
     @Test
