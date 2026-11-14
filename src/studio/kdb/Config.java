@@ -242,8 +242,9 @@ public class Config  {
         FileConfig fileConfig = new FileConfig(basePath.resolve(CONFIG_FILENAME));
         studioConfig = createStudioConfig(configTypeRegistry, fileConfig, defaultFileConfig, new ConfigConverter());
 
-        // the style schema for the current Look and Feel is known only after studio config is loaded
-        serverConfig.upgrade(getBackgroundColor());
+        // the style schema for the current Look and Feel and the default auth. config
+        // are known only after studio config is loaded
+        serverConfig.upgrade(getBackgroundColor(), getDefaultAuthConfig());
 
         initServerHistory();
 
