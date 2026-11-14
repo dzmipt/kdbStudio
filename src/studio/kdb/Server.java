@@ -1,6 +1,5 @@
 package studio.kdb;
 
-import studio.core.Credentials;
 import studio.core.DefaultAuthenticationMechanism;
 import studio.utils.QConnection;
 
@@ -44,13 +43,6 @@ public class Server {
 
     public boolean isFlipTLS() {
         return  flipTLS;
-    }
-
-    public static Server newServer() {
-        String authMethod = Config.getInstance().getDefaultAuthMechanism();
-        Credentials credentials = Config.getInstance().getDefaultCredentials(authMethod);
-        QConnection conn = new QConnection("", 0, credentials.getUsername(), credentials.getPassword(), false);
-        return new Server("", conn, authMethod, null, null);
     }
 
     @Override

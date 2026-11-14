@@ -321,7 +321,7 @@ public class ServerTree extends JTree implements TreeExpansionListener {
             if (name == null || name.trim().length() == 0) return;
             newNode = new ServerTreeNode(name);
         } else {
-            Server server = Server.newServer();
+            Server server = Config.getInstance().newServer();
             server = server.newParent(parent);
 
             server = ServerEditor.selectServer(true, this, server);

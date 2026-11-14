@@ -13,10 +13,7 @@ import studio.kdb.config.server.BgColorRules;
 import studio.ui.Util;
 import studio.ui.action.WorkspaceSaver;
 import studio.ui.settings.StrokeStyleEditor;
-import studio.utils.FileConfig;
-import studio.utils.FilesBackup;
-import studio.utils.HistoricalList;
-import studio.utils.LineEnding;
+import studio.utils.*;
 import studio.utils.log4j.EnvConfig;
 
 import javax.swing.*;
@@ -27,11 +24,8 @@ import java.io.Reader;
 import java.io.Writer;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.ArrayList;
+import java.util.*;
 import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Properties;
 import java.util.regex.Pattern;
 
 import static studio.kdb.config.ConfigVersion.*;
@@ -403,6 +397,14 @@ public class Config  {
 
     public String getDefaultAuthMechanism() {
         return getDefaultAuthConfig().getDefaultAuth();
+    }
+
+    // A new empty server pre-filled with the default authentication method and credentials
+    public Server newServer() {
+        String authMethod = getDefaultAuthMechanism();
+        Credentials credentials = getDefaultCredentials(authMethod);
+        QConnection conn = new QConnection("", 0, credentials.getUsername(), credentials.getPassword(), false);
+        return new Server("", conn, authMethod, null, null);
     }
 
     public void setDefaultAuthMechanism(String authMechanism) {
