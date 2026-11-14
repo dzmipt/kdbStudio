@@ -1,5 +1,6 @@
 package studio.kdb.config;
 
+import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import studio.kdb.Config;
@@ -24,8 +25,11 @@ public class ChartColorSetPluginTest {
             "'grid':'ffffff' }}" +
             "}}".replace('\'','"');
 
+    private static Path pluginFolder;
+
     @BeforeAll
     public static void prepare() throws IOException {
+        pluginFolder = EnvConfig.getPluginFolder();
         Path basePath = MockConfig.createTempDir();
         try (InputStream inputStream = ChartColorSetPluginTest.class.getClassLoader().getResourceAsStream("studio14.properties") ) {
             Files.copy(inputStream, basePath.resolve(Config.OLD_CONFIG_FILENAME));
@@ -36,6 +40,12 @@ public class ChartColorSetPluginTest {
         Files.writeString(pluginPath.resolve(Config.CONFIG_FILENAME), pluginConfig);
 
         MockConfig.mock(basePath);
+    }
+
+    // the plugin folder is global: restore it, otherwise the plugin config affects other tests
+    @AfterAll
+    public static void restore() {
+        EnvConfig.setPluginFolder(pluginFolder);
     }
 
     @Test
