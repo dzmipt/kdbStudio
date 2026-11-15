@@ -59,7 +59,7 @@ public class SettingsMcpTab extends SettingsTab {
 
         comboTokenMode = new JComboBox<>(McpTokenMode.values());
         comboTokenMode.setSelectedItem(CONFIG.getEnum(Config.MCP_TOKEN_MODE));
-        txtToken = new JTextField(McpService.getToken(), 28);
+        txtToken = new JTextField(McpService.getToken(), 24);
         txtToken.setEditable(false);
         JButton btnCopyToken = new JButton("Copy");
         btnCopyToken.addActionListener(e -> Util.copyTextToClipboard(txtToken.getText()));
@@ -89,7 +89,8 @@ public class SettingsMcpTab extends SettingsTab {
         setBorder(new EmptyBorder(5, 5, 5, 5));
         add(line(chkEnabled));
         add(line(new JLabel("Port:"), txtPort, new JLabel("   Accept connections from:"), comboAccess));
-        add(line(new JLabel("Access token:"), comboTokenMode, txtToken, btnCopyToken, btnRegenerate));
+        add(line(new JLabel("Access token:"), comboTokenMode));
+        add(line(new JLabel("Token:"), txtToken, btnCopyToken, btnRegenerate));
         add(line(chkAllowAdHoc));
         add(line(new JLabel("Max rows returned:"), txtMaxRows, new JLabel("   Max characters returned:"), txtMaxChars));
         add(line(new JLabel("Query confirmation timeout:"), txtTimeout, new JLabel("seconds (unanswered queries are denied)")));

@@ -2,6 +2,7 @@
 * Server background color can be "Default" to follow the style schema
 * Adding search in all opened tabs dialog
 * Update Export to Excel for numeric, boolean and temporal to use numeric in the output (and formatting for temporal types) 
+* MCP server for AI agents (Claude Code, GitHub Copilot, Cursor, etc.): agents can read and edit tabs, read results and run queries on permitted servers after confirmation in Studio. See Settings, AI Agent (MCP) tab
 
 `dz8.0` 2026.08.03
 -----

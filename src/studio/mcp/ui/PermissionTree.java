@@ -75,7 +75,7 @@ public class PermissionTree extends JPanel {
 
         add(pnlFilter, BorderLayout.NORTH);
         JScrollPane scroll = new JScrollPane(tree);
-        scroll.setPreferredSize(new Dimension(500, 260));
+        scroll.setPreferredSize(new Dimension(450, 260));
         add(scroll, BorderLayout.CENTER);
         add(lblSummary, BorderLayout.SOUTH);
 

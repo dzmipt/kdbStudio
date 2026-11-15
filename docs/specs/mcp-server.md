@@ -1,6 +1,6 @@
 # MCP server in Studio
 
-Status: **draft for review**
+Status: **implemented**
 
 ## Goal
 
@@ -77,6 +77,9 @@ Tab and result ids are short strings (e.g. `t3`, `r12`) assigned by Studio, vali
 | `execute_query` | `query`; and either `tab` **or** `server` **or** ad-hoc `connection`; optional `format` (`text`/`json`), `maxRows` | Result (see below) |
 | `list_results` | optional `window` | Result tabs: id, window, title, server, query, execution time, type, row count, error flag |
 | `get_result` | `result`, optional `format`, `maxRows` | Result |
+
+`edit_tab` modes: only `text` replaces the whole text; `find` + `text` replaces the single exact occurrence of
+`find`; `start` (+ optional `end`) + `text` replaces a character range or inserts at `start`.
 
 Not available to agents: loading files from disk, saving tabs, closing tabs, closing windows.
 
@@ -164,6 +167,17 @@ Separate file `mcp.log` next to `query.log` (logger `MCP`, rolling 10 MB x 10). 
 
 Queries run by agents are also written into the existing `query.log` as usual.
 
+## Code map
+
+* `studio.mcp.McpServer` - HTTP transport and JSON-RPC; `McpSessions` - connected agents; `McpTool` - tool model.
+* `studio.mcp.StudioTools` - tool implementations (Swing access on the EDT), query confirmation and background connections.
+* `studio.mcp.McpPermissions` - permitted servers/folders; `McpGrants` - time-limited grants.
+* `studio.mcp.McpService` - lifecycle (applies settings), permissions cleanup on server tree changes.
+* `studio.mcp.ResultRenderer` - text/JSON rendering of results.
+* `studio.mcp.ui` - confirmation dialog, grants window, connect-agent dialog, permission tree, status bar widget.
+* `studio.ui.settings.SettingsMcpTab` - the settings tab.
+* Tests: `test/studio/mcp/*` (unit), `test-integration/studio/ui/McpTest` (GUI, with a mocked kdb connection).
+
 ## Connecting agents
 
 The *Connect an agent...* dialog has a client selector and shows a generated snippet (actual URL, port and
@@ -186,7 +200,9 @@ token filled in) with a *Copy* button. Templates live in one class so they're ea
 * **Generic / stdio-only clients** (e.g. Claude Desktop) - via the `mcp-remote` bridge:
   `{"mcpServers": {"kdbstudio": {"command": "npx", "args": ["mcp-remote", "http://127.0.0.1:7878/mcp", "--header", "Authorization: Bearer <token>"]}}}`
 
-Exact formats are to be verified against each client's current documentation during implementation.
+Templates are in `studio.mcp.AgentConfigTemplates`. Also covered: Windsurf (`serverUrl`).
+The formats were written from the clients' documentation as known at the time of implementation and should be
+re-checked when a client changes its configuration format.
 
 ## Security notes
 
