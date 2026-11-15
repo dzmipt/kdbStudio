@@ -35,6 +35,7 @@ public class SettingsDialog extends EscapeDialog {
         pages.put("Result", new SettingsResultTab());
         pages.put("Style", new SettingsStyleTab(this));
         pages.put("Chart", new SettingsChartTab());
+        pages.put("AI Agent (MCP)", new SettingsMcpTab());
 
         JTabbedPane tabs = new JTabbedPane();
         for (String title: pages.keySet()) {

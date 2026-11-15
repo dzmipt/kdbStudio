@@ -1,6 +1,7 @@
 package studio.ui.statusbar;
 
 import org.fife.ui.rsyntaxtextarea.RSyntaxTextArea;
+import studio.mcp.ui.McpStatusWidget;
 import studio.ui.MinSizeLabel;
 import studio.ui.search.Position;
 
@@ -26,6 +27,7 @@ public class MainStatusBar extends StatusBar {
         lblRowCol.setMinimumWidth("9999:9999");
         addComponent(lblRowCol);
 
+        addComponent(new McpStatusWidget());
         addComponent(new JVMMemory());
     }
 
