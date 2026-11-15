@@ -7,6 +7,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.core.config.Configurator;
 import org.apache.logging.log4j.io.IoBuilder;
+import studio.mcp.McpService;
 import studio.kdb.Config;
 import studio.kdb.Lm;
 import studio.kdb.Server;
@@ -304,6 +305,7 @@ public class Studio {
         }
 
         WorkspaceSaver.init();
+        McpService.getInstance().init();
 
         String hash = Lm.getNotesHash();
         if (! Config.getInstance().getString(Config.NOTES_HASH).equals(hash) ) {

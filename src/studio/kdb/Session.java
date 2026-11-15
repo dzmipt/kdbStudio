@@ -51,6 +51,11 @@ public class Session implements ConnectionStateListener, KAuthentication {
         return session;
     }
 
+    // A session which is not attached to any editor (used for queries from AI agents)
+    public static Session newDetachedSession(Server server) {
+        return new Session(server);
+    }
+
     public void removeTab(EditorTab editor) {
         editors.remove(editor);
         if (editors.isEmpty()) {

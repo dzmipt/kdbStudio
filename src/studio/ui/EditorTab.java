@@ -126,6 +126,19 @@ public class EditorTab implements FileWatcher.Listener, EditorStatusBarCallback 
         textArea.requestFocusInWindow();
     }
 
+    // Notified once when the query started by executeQuery(queryTask, listener) completes
+    public interface QueryCompletionListener {
+        // resultTab is null if the query was cancelled or no result tab was created
+        void completed(QueryResult queryResult, ResultTab resultTab);
+    }
+
+    private QueryCompletionListener completionListener = null;
+
+    public void executeQuery(QueryTask queryTask, QueryCompletionListener listener) {
+        completionListener = listener;
+        executeQuery(queryTask);
+    }
+
     public void executeQuery(QueryTask queryTask) {
         if (getServer() == Server.NO_SERVER) {
             log.info("Server is not set. Can't execute the query");
@@ -140,6 +153,24 @@ public class EditorTab implements FileWatcher.Listener, EditorStatusBarCallback 
 
     // if the query is cancelled execTime=-1, result and error are null's
     public void queryExecutionComplete(QueryResult queryResult) {
+        QueryCompletionListener listener = completionListener;
+        completionListener = null;
+        ResultTab resultTab = null;
+        try {
+            resultTab = queryExecutionCompleteInternal(queryResult);
+        } finally {
+            if (listener != null) {
+                try {
+                    listener.completed(queryResult, resultTab);
+                } catch (Throwable e) {
+                    log.error("Error in query completion listener", e);
+                }
+            }
+        }
+    }
+
+    private ResultTab queryExecutionCompleteInternal(QueryResult queryResult) {
+        ResultTab resultTab = null;
         editorPane.stopClock();
         JTextComponent textArea = getTextArea();
         textArea.setCursor(textCursor);
@@ -152,7 +183,7 @@ public class EditorTab implements FileWatcher.Listener, EditorStatusBarCallback 
 
         try {
             if (queryResult.hasResultObject()) {
-                studioWindow.addResultTab(queryResult, "Executed at server: " + queryResult.getServer().getDescription(true) );
+                resultTab = studioWindow.addResultTab(queryResult, "Executed at server: " + queryResult.getServer().getDescription(true) );
                 if (queryResult.isChartAfter()) {
                     studioWindow.chart();
                 }
@@ -171,6 +202,7 @@ public class EditorTab implements FileWatcher.Listener, EditorStatusBarCallback 
         }
 
         studioWindow.refreshActionState();
+        return resultTab;
     }
 
     @Override

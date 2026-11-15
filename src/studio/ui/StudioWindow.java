@@ -1400,9 +1400,10 @@ public class StudioWindow extends StudioFrame {
         return (ResultTab) resultsPane.getSelectedComponent();
     }
 
-    public void addResultTab(QueryResult queryResult, String tooltip) {
+    public ResultTab addResultTab(QueryResult queryResult, String tooltip) {
         ResultTab tab = new ResultTab(this, queryResult);
         tab.addInto(resultsPane, getTooltipText(tooltip, queryResult.getKMessage()));
+        return tab;
     }
 
     private static String getTooltipText(String tooltip, KMessage message) {

@@ -26,7 +26,13 @@
             <SizeBasedTriggeringPolicy size="10 MB"/>
             <DefaultRolloverStrategy max="10" fileIndex="min"/>
         </RollingFile>
-
+        <RollingFile name="McpLog" fileName="${baseFolder}/mcp.log"
+                     filePattern="${baseFolder}/mcp-%i.log"
+                     createOnDemand="true">
+            <PatternLayout pattern="%d{yyyy.MM.dd HH:mm:ss.SSS} %-5level %msg%n"/>
+            <SizeBasedTriggeringPolicy size="10 MB"/>
+            <DefaultRolloverStrategy max="10" fileIndex="min"/>
+        </RollingFile>
     </Appenders>
     <Loggers>
         <Root level="info">
@@ -35,6 +41,9 @@
         </Root>
         <Logger name="Query" level="info" additivity="false">
             <AppenderRef ref="QueryLog"/>
+        </Logger>
+        <Logger name="MCP" level="info" additivity="false">
+            <AppenderRef ref="McpLog"/>
         </Logger>
     </Loggers>
 </Configuration>
