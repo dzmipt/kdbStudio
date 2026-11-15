@@ -147,6 +147,21 @@ public class ConfigAllTest {
         testAlL_2_1(config);
         testAlL_2_2(config);
         testAlL_2_4(config);
+        testMcp(config);
+    }
+
+    private void testMcp(Config config) {
+        assertTrue(config.getBoolean(Config.MCP_ENABLED));
+        assertEquals(7900, config.getInt(Config.MCP_PORT));
+        assertEquals(McpAccess.REMOTE, config.getEnum(Config.MCP_ACCESS));
+        assertEquals(McpTokenMode.ALL, config.getEnum(Config.MCP_TOKEN_MODE));
+        assertEquals("secret-token", config.getString(Config.MCP_TOKEN));
+        assertEquals(List.of("folder:a/b", "server:top"), config.getStringArray(Config.MCP_ALLOWED_SERVERS));
+        assertTrue(config.getBoolean(Config.MCP_ALLOW_ADHOC));
+        assertEquals(50, config.getInt(Config.MCP_MAX_ROWS));
+        assertEquals(1000, config.getInt(Config.MCP_MAX_CHARS));
+        assertEquals(60, config.getInt(Config.MCP_CONFIRMATION_TIMEOUT_SEC));
+        assertEquals(McpGrantInterval.HOUR_1, config.getEnum(Config.MCP_GRANT_INTERVAL));
     }
 
     private void testAlL_2_4(Config config) {

@@ -17,6 +17,8 @@ import java.io.IOException;
 import java.io.Writer;
 import java.util.*;
 import java.util.List;
+import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
 
@@ -28,6 +30,7 @@ public class ServerConfig {
     private Map<String, Server> servers;
     private List<String> serverNames;
     private ServerTreeNode serverTree;
+    private final List<Consumer<ServerTreeNode>> treeListeners = new CopyOnWriteArrayList<>();
 
     // Version history:
     //   no version - the original format
@@ -149,6 +152,18 @@ public class ServerConfig {
 
         serverNames = Collections.unmodifiableList(serverNames);
         save();
+        for (Consumer<ServerTreeNode> listener: treeListeners) {
+            listener.accept(serverTree);
+        }
+    }
+
+    // The listener is notified after every modification of the server tree
+    public void addTreeListener(Consumer<ServerTreeNode> listener) {
+        treeListeners.add(listener);
+    }
+
+    public void removeTreeListener(Consumer<ServerTreeNode> listener) {
+        treeListeners.remove(listener);
     }
 
 

@@ -144,6 +144,17 @@
   "alignNumbersInResult" : false,
   "excelExportTemporalAsDateTime" : false,
   "tryTLSConnectionFirst" : false,
+  "mcpEnabled" : true,
+  "mcpPort" : 7900,
+  "mcpAccess" : "REMOTE",
+  "mcpTokenMode" : "ALL",
+  "mcpToken" : "secret-token",
+  "mcpAllowedServers" : ["folder:a/b", "server:top"],
+  "mcpAllowAdHoc" : true,
+  "mcpMaxRows" : 50,
+  "mcpMaxChars" : 1000,
+  "mcpConfirmationTimeoutSec" : 60,
+  "mcpGrantInterval" : "HOUR_1",
   "failoverBetweenTLSandTCPConnections" : false,
 
   "serverBgColorRules": [

@@ -98,6 +98,19 @@ public class Config  {
 
     public static final String BG_COLOR_RULES = configDefault("serverBgColorRules", ConfigType.BG_COLOR_RULES, new BgColorRules());
 
+    public static final String MCP_ENABLED = configDefault("mcpEnabled", ConfigType.BOOLEAN, false);
+    public static final String MCP_PORT = configDefault("mcpPort", ConfigType.INT, 7878);
+    public static final String MCP_ACCESS = configDefault("mcpAccess", ConfigType.ENUM, McpAccess.LOCAL);
+    public static final String MCP_TOKEN_MODE = configDefault("mcpTokenMode", ConfigType.ENUM, McpTokenMode.REMOTE_ONLY);
+    public static final String MCP_TOKEN = configDefault("mcpToken", ConfigType.STRING, "");
+    // Permitted servers and folders: "folder:<path>" or "server:<full name>"; the root folder is "folder:"
+    public static final String MCP_ALLOWED_SERVERS = configDefault("mcpAllowedServers", ConfigType.STRING_ARRAY, List.of());
+    public static final String MCP_ALLOW_ADHOC = configDefault("mcpAllowAdHoc", ConfigType.BOOLEAN, false);
+    public static final String MCP_MAX_ROWS = configDefault("mcpMaxRows", ConfigType.INT, 100);
+    public static final String MCP_MAX_CHARS = configDefault("mcpMaxChars", ConfigType.INT, 20000);
+    public static final String MCP_CONFIRMATION_TIMEOUT_SEC = configDefault("mcpConfirmationTimeoutSec", ConfigType.INT, 300);
+    public static final String MCP_GRANT_INTERVAL = configDefault("mcpGrantInterval", ConfigType.ENUM, McpGrantInterval.MIN_15);
+
     public static final String CONFIG_VERSION = configDefault("version", ConfigType.ENUM, ConfigVersion.V_NO); // to force version to save
 
     public static final String OLD_CONFIG_FILENAME = "studio.properties";
