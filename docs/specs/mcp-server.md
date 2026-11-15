@@ -52,8 +52,11 @@ New Settings tab **"AI Agent (MCP)"**, stored in `studio.json`:
 
 * The user selects servers and/or folders. Stored as a list of paths: folder paths (e.g. `/Prod/EU`) and
   server full names (e.g. `/Dev/hdb1`).
-* A server is permitted if its full name is selected, or **any of its ancestor folders** is selected.
-  Therefore new servers added into a selected folder (or any of its sub-folders) are permitted automatically.
+* A server is permitted if its full name is selected, or **any of its ancestor folders** is selected
+  (direct or indirect parent, up to the root `/`). Therefore servers added into a selected folder (or any of
+  its sub-folders) after the permission was given are permitted automatically.
+* Example: `/a/b` is selected. `/a/b/Server` and `/a/b/x/y/Other` are permitted. If `/a/b/Server` is moved to
+  `/a/c/Server`, it is no longer permitted unless `/a/c`, `/a` or `/` is selected.
 * Editing a server's connection details, auth method, colour etc. keeps the permission (the full name is
   unchanged). Renaming or moving a server/folder changes its path and drops the permission (by design).
 * Cleanup: whenever the server tree changes (`ServerConfig.setRoot`), stored paths that no longer exist in
@@ -117,9 +120,23 @@ Every `execute_query` pops up a modal dialog (the Studio window is brought to fr
 * **Allow for** - runs this query and auto-approves further queries **on the same server** (ad-hoc: same
   `host:port`) for the selected interval: 5 min / 15 min / 1 hour / 4 hours / until Studio exits.
   The last chosen interval is remembered.
-* Active grants are visible in the status bar widget and can be revoked there. All grants are revoked
-  when the MCP server is stopped or settings change.
-* Unanswered for the confirmation timeout = denied.
+* Active grants are visible from the status bar widget and can be revoked there (see *Grants window*).
+  All grants are revoked when the MCP server is stopped or settings change.
+* The dialog shows a countdown (`Auto-deny in 4:37`); when it reaches zero the query is denied
+  (confirmation timeout, default 5 min) and the dialog closes.
+
+### Grants window
+
+Opened from the status bar widget popup (*Active grants...*), and also via a marker on the widget while
+any grant is active. A non-modal window listing the time-limited grants:
+
+| Server | Granted at | Expires | Remaining | Queries run | |
+|---|---|---|---|---|---|
+| /Dev/hdb1 | 14:02 | 14:17 | 9:41 | 3 | [Revoke] |
+| hdb2.dev:5010 (ad-hoc) | 13:50 | until exit | - | 12 | [Revoke] |
+
+* Remaining time updates live; expired grants disappear.
+* *Revoke* removes a single grant; *Revoke all* removes every grant. Revocations are logged.
 
 ## Status bar widget
 
@@ -130,8 +147,8 @@ Shown in every window's status bar while MCP is enabled:
   Several agents: `MCP: 2 agents`.
 * Badge/marker when time-limited grants are active.
 * `MCP: error` (red) - failed to start (e.g. port busy); tooltip shows the reason.
-* Click - popup: connected agents (name, version, address, last activity), active grants with *Revoke*,
-  *Open MCP log*, *Settings...*.
+* Click - popup: connected agents (name, version, address, last activity), *Active grants...* (opens the
+  Grants window), *Revoke all grants*, *Open MCP log*, *Settings...*.
 
 ## Activity log
 
@@ -153,7 +170,16 @@ The *Connect an agent...* dialog has a client selector and shows a generated sni
 token filled in) with a *Copy* button. Templates live in one class so they're easy to update as clients change:
 
 * **Claude Code** - `claude mcp add --transport http kdbstudio http://127.0.0.1:7878/mcp --header "Authorization: Bearer <token>"`
-* **VS Code (Copilot)** - `.vscode/mcp.json`: `{"servers": {"kdbstudio": {"type": "http", "url": "...", "headers": {...}}}}`
+* **GitHub Copilot** - one entry per Copilot surface (agent mode is required to use MCP tools; for Copilot
+  Business/Enterprise the organization policy *MCP servers in Copilot* must be enabled):
+  * *VS Code* - workspace `.vscode/mcp.json` or user configuration (command *MCP: Add Server...* / *MCP: Open User
+    Configuration*): `{"servers": {"kdbstudio": {"type": "http", "url": "...", "headers": {...}}}}`
+  * *JetBrains IDEs* (Copilot plugin) - Copilot Chat, agent mode, *Configure tools* / *Edit config*: `mcp.json`
+    with the same `{"servers": {...}}` shape
+  * *Visual Studio* - `.mcp.json` in the solution folder or `%USERPROFILE%\.mcp.json`, same `{"servers": {...}}` shape
+  * *Copilot CLI* - `/mcp add` interactively, or `~/.copilot/mcp-config.json`:
+    `{"mcpServers": {"kdbstudio": {"type": "http", "url": "...", "headers": {...}, "tools": ["*"]}}}`
+  * Not supported: Copilot coding agent on github.com (runs in the cloud and can't reach Studio on the user's machine)
 * **Cursor** - `~/.cursor/mcp.json`: `{"mcpServers": {"kdbstudio": {"url": "...", "headers": {...}}}}`
 * **Gemini CLI** - `settings.json`: `{"mcpServers": {"kdbstudio": {"httpUrl": "...", "headers": {...}}}}`
 * **Codex CLI** - `~/.codex/config.toml`: `[mcp_servers.kdbstudio]` with `url` and the bearer token setting
