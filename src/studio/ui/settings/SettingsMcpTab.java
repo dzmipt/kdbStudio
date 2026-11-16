@@ -23,6 +23,7 @@ public class SettingsMcpTab extends SettingsTab {
     private final JComboBox<McpAccess> comboAccess;
     private final JComboBox<McpTokenMode> comboTokenMode;
     private final JTextField txtToken;
+    private final JLabel lblTokenNote = new JLabel();
     private final JCheckBox chkAllowAdHoc;
     private final JFormattedTextField txtMaxRows;
     private final JFormattedTextField txtMaxChars;
@@ -64,7 +65,12 @@ public class SettingsMcpTab extends SettingsTab {
         JButton btnCopyToken = new JButton("Copy");
         btnCopyToken.addActionListener(e -> Util.copyTextToClipboard(txtToken.getText()));
         JButton btnRegenerate = new JButton("Regenerate");
-        btnRegenerate.addActionListener(e -> txtToken.setText(McpService.generateToken()));
+        btnRegenerate.addActionListener(e -> {
+            txtToken.setText(McpService.generateToken());
+            lblTokenNote.setText("New token - press Apply, then update the configuration of your AI clients");
+        });
+
+        lblTokenNote.setForeground(new Color(200, 0, 0));
 
         chkAllowAdHoc = new JCheckBox("Allow ad-hoc connections (any host:port with credentials provided by the agent)");
         chkAllowAdHoc.setSelected(CONFIG.getBoolean(Config.MCP_ALLOW_ADHOC));
@@ -76,7 +82,10 @@ public class SettingsMcpTab extends SettingsTab {
         JButton btnConnect = new JButton("Connect an agent...");
         btnConnect.addActionListener(e -> new ConnectAgentDialog(this, getPort(),
                 comboAccess.getSelectedItem() == McpAccess.REMOTE,
-                (McpTokenMode) comboTokenMode.getSelectedItem(), txtToken.getText()).alignAndShow());
+                (McpTokenMode) comboTokenMode.getSelectedItem(), txtToken.getText(),
+                isServerSettingsModified() ? "MCP settings are changed but not applied yet. " +
+                        "Press Apply or OK in the Settings, otherwise the running server will reject this configuration." : null
+        ).alignAndShow());
 
         permissionTree = new PermissionTree(CONFIG.getServerTree(), McpService.getPermissions());
         permissionTree.setAlignmentX(LEFT_ALIGNMENT);
@@ -91,6 +100,7 @@ public class SettingsMcpTab extends SettingsTab {
         add(line(new JLabel("Port:"), txtPort, new JLabel("   Accept connections from:"), comboAccess));
         add(line(new JLabel("Access token:"), comboTokenMode));
         add(line(new JLabel("Token:"), txtToken, btnCopyToken, btnRegenerate));
+        add(line(lblTokenNote));
         add(line(chkAllowAdHoc));
         add(line(new JLabel("Max rows returned:"), txtMaxRows, new JLabel("   Max characters returned:"), txtMaxChars));
         add(line(new JLabel("Query confirmation timeout:"), txtTimeout, new JLabel("seconds (unanswered queries are denied)")));
@@ -112,6 +122,15 @@ public class SettingsMcpTab extends SettingsTab {
         return value(txtPort);
     }
 
+    // Are settings affecting how agents connect different from the saved (running) ones
+    private boolean isServerSettingsModified() {
+        return chkEnabled.isSelected() != CONFIG.getBoolean(Config.MCP_ENABLED)
+                || getPort() != CONFIG.getInt(Config.MCP_PORT)
+                || comboAccess.getSelectedItem() != CONFIG.getEnum(Config.MCP_ACCESS)
+                || comboTokenMode.getSelectedItem() != CONFIG.getEnum(Config.MCP_TOKEN_MODE)
+                || !txtToken.getText().equals(CONFIG.getString(Config.MCP_TOKEN));
+    }
+
     @Override
     public void saveSettings(SettingsSaveResult result) {
         CONFIG.setBoolean(Config.MCP_ENABLED, chkEnabled.isSelected());
@@ -125,5 +144,6 @@ public class SettingsMcpTab extends SettingsTab {
         CONFIG.setInt(Config.MCP_CONFIRMATION_TIMEOUT_SEC, value(txtTimeout));
         McpService.setPermissions(permissionTree.getPermissions());
         McpService.getInstance().applyConfig();
+        lblTokenNote.setText("");
     }
 }

@@ -38,6 +38,14 @@ public class ConnectAgentDialog extends EscapeDialog {
     }
 
     public ConnectAgentDialog(Component owner, int port, boolean remoteAccess, McpTokenMode tokenMode, String token) {
+        this(owner, port, remoteAccess, tokenMode, token, null);
+    }
+
+    /**
+     * @param warning shown at the top of the dialog (e.g. about unsaved settings); can be null
+     */
+    public ConnectAgentDialog(Component owner, int port, boolean remoteAccess, McpTokenMode tokenMode, String token,
+                              String warning) {
         super(owner, "Connect an AI Agent");
         this.port = port;
         this.remoteAccess = remoteAccess;
@@ -99,6 +107,15 @@ public class ConnectAgentDialog extends EscapeDialog {
 
         JPanel root = new JPanel(new BorderLayout(0, 5));
         root.setBorder(new EmptyBorder(10, 10, 5, 10));
+        if (warning != null) {
+            JLabel lblWarning = new JLabel("<html>" + warning + "</html>");
+            lblWarning.setForeground(new Color(200, 0, 0));
+            lblWarning.setBorder(new EmptyBorder(0, 0, 8, 0));
+            JPanel pnlNorth = new JPanel(new BorderLayout());
+            pnlNorth.add(lblWarning, BorderLayout.NORTH);
+            pnlNorth.add(pnlTop, BorderLayout.CENTER);
+            pnlTop = pnlNorth;
+        }
         root.add(pnlTop, BorderLayout.NORTH);
         root.add(new JScrollPane(txtSnippet), BorderLayout.CENTER);
         root.add(pnlBottom, BorderLayout.SOUTH);

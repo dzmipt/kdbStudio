@@ -160,15 +160,17 @@ public class McpServer {
         }
     }
 
-    private boolean checkToken(HttpExchange exchange) {
+    // null if the token is valid; otherwise the reason of the failure
+    private String checkToken(HttpExchange exchange) {
         String header = exchange.getRequestHeaders().getFirst("Authorization");
-        if (header == null) return false;
+        if (header == null) return "no Authorization header";
         String prefix = "Bearer ";
-        if (!header.regionMatches(true, 0, prefix, 0, prefix.length())) return false;
+        if (!header.regionMatches(true, 0, prefix, 0, prefix.length())) return "Authorization header is not 'Bearer <token>'";
         String token = header.substring(prefix.length()).trim();
-        if (settings.getToken().isEmpty()) return false;
-        return MessageDigest.isEqual(token.getBytes(StandardCharsets.UTF_8),
+        if (settings.getToken().isEmpty()) return "the access token is not configured";
+        boolean valid = MessageDigest.isEqual(token.getBytes(StandardCharsets.UTF_8),
                 settings.getToken().getBytes(StandardCharsets.UTF_8));
+        return valid ? null : "wrong token (was the token regenerated after the client was configured?)";
     }
 
     private void handle(HttpExchange exchange) throws IOException {
@@ -201,11 +203,19 @@ public class McpServer {
             return;
         }
 
-        if (settings.getTokenMode().isRequired(remote) && !checkToken(exchange)) {
-            McpLog.warn("Authentication failed for request from {}", remoteAddress);
-            exchange.getResponseHeaders().add("WWW-Authenticate", "Bearer");
-            sendText(exchange, 401, "Unauthorized");
-            return;
+        if (settings.getTokenMode().isRequired(remote)) {
+            String failure = checkToken(exchange);
+            if (failure != null) {
+                McpLog.warn("Authentication failed for {} request from {}{}: {}. Token mode: {}; request headers: {}",
+                        exchange.getRequestMethod(), remoteAddress, remote ? " (remote)" : " (local)", failure,
+                        settings.getTokenMode(), exchange.getRequestHeaders().keySet());
+                String description = "Studio MCP server: " + failure +
+                        ". Send the access token from Studio Settings, AI Agent (MCP) tab as 'Authorization: Bearer <token>'.";
+                exchange.getResponseHeaders().add("WWW-Authenticate",
+                        "Bearer error=\"invalid_token\", error_description=\"" + description.replace("\"", "'") + "\"");
+                sendText(exchange, 401, description);
+                return;
+            }
         }
 
         String method = exchange.getRequestMethod();

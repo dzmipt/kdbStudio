@@ -134,8 +134,13 @@ public class McpServerTest {
     @Test
     public void tokenRequired() throws Exception {
         start(McpTokenMode.ALL);
-        assertEquals(401, post(INIT, null, null).statusCode());
-        assertEquals(401, post(INIT, null, "wrong").statusCode());
+        HttpResponse<String> response = post(INIT, null, null);
+        assertEquals(401, response.statusCode());
+        assertTrue(response.body().contains("no Authorization header"), response.body());
+        response = post(INIT, null, "wrong");
+        assertEquals(401, response.statusCode());
+        assertTrue(response.body().contains("wrong token"), response.body());
+        assertTrue(response.headers().firstValue("WWW-Authenticate").orElse("").startsWith("Bearer error=\"invalid_token\""));
         initialize("tok");
     }
 
