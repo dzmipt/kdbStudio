@@ -52,7 +52,7 @@ public class PermissionTree extends JPanel {
                 if (path == null) return;
                 Rectangle bounds = tree.getPathBounds(path);
                 // toggle when clicking on the check box area
-                if (bounds != null && e.getX() < bounds.x + 22) toggle((ServerTreeNode) path.getLastPathComponent());
+                if (bounds != null && e.getX() < bounds.x + checkBoxWidth()) toggle((ServerTreeNode) path.getLastPathComponent());
             }
         });
         tree.addKeyListener(new KeyAdapter() {
@@ -85,6 +85,11 @@ public class PermissionTree extends JPanel {
 
     public McpPermissions getPermissions() {
         return new McpPermissions(entries);
+    }
+
+    private static int checkBoxWidth() {
+        Icon icon = UIManager.getIcon("CheckBox.icon");
+        return (icon == null ? 16 : icon.getIconWidth()) + 2;
     }
 
     private McpPermissions current() {
@@ -134,16 +139,35 @@ public class PermissionTree extends JPanel {
                 count + (count == 1 ? " server is" : " servers are") + " permitted. Checked folders also permit servers added later.");
     }
 
+    // A plain label renderer: the check box is painted as a part of the icon, so the label is never squeezed
     private class CheckRenderer extends DefaultTreeCellRenderer {
         private final JCheckBox checkBox = new JCheckBox();
-        private final JPanel panel = new JPanel(new BorderLayout());
+        private boolean checked, enabled;
 
-        CheckRenderer() {
-            checkBox.setOpaque(false);
-            panel.setOpaque(false);
-            panel.add(checkBox, BorderLayout.WEST);
-            panel.add(this, BorderLayout.CENTER);
-        }
+        private final Icon checkIcon = new Icon() {
+            private Icon boxIcon() {
+                Icon icon = UIManager.getIcon("CheckBox.icon");
+                return icon != null ? icon : new javax.swing.plaf.metal.MetalCheckBoxIcon();
+            }
+
+            @Override
+            public void paintIcon(Component c, Graphics g, int x, int y) {
+                checkBox.setSelected(checked);
+                checkBox.setEnabled(enabled);
+                Icon box = boxIcon();
+                box.paintIcon(checkBox, g, x, y + (getIconHeight() - box.getIconHeight()) / 2);
+            }
+
+            @Override
+            public int getIconWidth() {
+                return boxIcon().getIconWidth();
+            }
+
+            @Override
+            public int getIconHeight() {
+                return boxIcon().getIconHeight();
+            }
+        };
 
         @Override
         public Component getTreeCellRendererComponent(JTree tree, Object value, boolean sel, boolean expanded,
@@ -152,11 +176,40 @@ public class PermissionTree extends JPanel {
             ServerTreeNode node = (ServerTreeNode) value;
             McpPermissions permissions = current();
             boolean direct = permissions.contains(node);
-            boolean allowed = permissions.isAllowed(node);
-            checkBox.setSelected(allowed);
-            checkBox.setEnabled(direct || !allowed);
-            panel.setToolTipText(allowed && !direct ? "Permitted via a parent folder" : null);
-            return panel;
+            checked = permissions.isAllowed(node);
+            enabled = direct || !checked;
+            setIcon(new CompositeIcon(checkIcon, getIcon()));
+            setToolTipText(checked && !direct ? "Permitted via a parent folder" : null);
+            return this;
+        }
+    }
+
+    // Two icons side by side
+    private static class CompositeIcon implements Icon {
+        private static final int GAP = 4;
+        private final Icon first, second;
+
+        CompositeIcon(Icon first, Icon second) {
+            this.first = first;
+            this.second = second;
+        }
+
+        @Override
+        public void paintIcon(Component c, Graphics g, int x, int y) {
+            first.paintIcon(c, g, x, y + (getIconHeight() - first.getIconHeight()) / 2);
+            if (second != null) {
+                second.paintIcon(c, g, x + first.getIconWidth() + GAP, y + (getIconHeight() - second.getIconHeight()) / 2);
+            }
+        }
+
+        @Override
+        public int getIconWidth() {
+            return first.getIconWidth() + (second == null ? 0 : GAP + second.getIconWidth());
+        }
+
+        @Override
+        public int getIconHeight() {
+            return Math.max(first.getIconHeight(), second == null ? 0 : second.getIconHeight());
         }
     }
 }
