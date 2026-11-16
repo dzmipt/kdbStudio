@@ -159,6 +159,12 @@ public class StudioFrame extends JFrame {
             macOSTitle.setFont(macOSTitle.getFont().deriveFont(map));
 
             macOSTitlePanel = new JPanel(new BorderLayout());
+            // Since FlatLaf 3.8, in full window content mode on macOS, components in the title bar area
+            // which have mouse listeners are treated as interactive and mouse events are not passed to macOS.
+            // This would make the window not draggable. Mark the panel as the title bar caption,
+            // so FlatLaf lets macOS handle dragging and double-click (zoom) natively.
+            // With other L&Fs the property is ignored, and the mouse listener below handles double-click.
+            macOSTitlePanel.putClientProperty("JComponent.titleBarCaption", true);
             macOSTitlePanel.addMouseListener(new MouseAdapter() {
                 @Override
                 public void mouseClicked(MouseEvent e) {
