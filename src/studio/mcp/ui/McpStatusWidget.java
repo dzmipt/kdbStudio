@@ -1,6 +1,7 @@
 package studio.mcp.ui;
 
 import studio.mcp.McpGrants;
+import studio.mcp.McpRunningQueries;
 import studio.mcp.McpService;
 import studio.mcp.McpSessions;
 import studio.ui.MinSizeLabel;
@@ -25,6 +26,7 @@ public class McpStatusWidget extends MinSizeLabel implements McpService.Listener
 
     private static final Color COLOR_IDLE = Color.GRAY;
     private static final Color COLOR_CONNECTED = new Color(0, 140, 0);
+    private static final Color COLOR_RUNNING = new Color(0, 90, 200);
     private static final Color COLOR_ERROR = new Color(200, 0, 0);
     private static final DateTimeFormatter TIME_FORMAT = DateTimeFormatter.ofPattern("HH:mm:ss");
 
@@ -82,6 +84,7 @@ public class McpStatusWidget extends MinSizeLabel implements McpService.Listener
 
         List<McpSessions.Session> agents = service.getSessions().getActive();
         int grants = service.getGrants().getActive().size();
+        int running = service.getRunningQueries().getAll().size();
         String text;
         if (agents.isEmpty()) {
             text = "MCP :" + service.getPort();
@@ -89,6 +92,10 @@ public class McpStatusWidget extends MinSizeLabel implements McpService.Listener
         } else {
             text = agents.size() == 1 ? "MCP: " + agents.get(0).getClientName() : "MCP: " + agents.size() + " agents";
             setForeground(COLOR_CONNECTED);
+        }
+        if (running > 0) {
+            text += " • " + running + " running";
+            setForeground(COLOR_RUNNING);
         }
         if (grants > 0) {
             text += " • " + grants + (grants == 1 ? " grant" : " grants");
@@ -100,6 +107,7 @@ public class McpStatusWidget extends MinSizeLabel implements McpService.Listener
         for (McpSessions.Session agent: agents) {
             tooltip.append("<br/>Connected: ").append(escape(agent.getDisplayName()));
         }
+        if (running > 0) tooltip.append("<br/>Agent queries running: ").append(running);
         if (grants > 0) tooltip.append("<br/>Queries allowed without confirmation: ").append(grants).append(" server(s)");
         tooltip.append("<br/>Click for details</html>");
         setToolTipText(tooltip.toString());
@@ -133,6 +141,30 @@ public class McpStatusWidget extends MinSizeLabel implements McpService.Listener
                         ", last active at " + formatTime(agent.getLastActivity()));
                 item.setEnabled(false);
                 menu.add(item);
+            }
+        }
+        menu.addSeparator();
+
+        List<McpRunningQueries.RunningQuery> running = service.getRunningQueries().getAll();
+        if (running.isEmpty()) {
+            JMenuItem item = new JMenuItem("No agent queries running");
+            item.setEnabled(false);
+            menu.add(item);
+        } else {
+            for (McpRunningQueries.RunningQuery query: running) {
+                long seconds = java.time.Duration.between(query.getStarted(), java.time.Instant.now()).getSeconds();
+                String text = query.getQuery().replace('\n', ' ');
+                if (text.length() > 60) text = text.substring(0, 60) + "...";
+                JMenuItem item = new JMenuItem("Cancel: " + text + "  (" + query.getServer() + ", " + seconds + " s)");
+                item.setToolTipText("<html>" + escape(query.getAgent()) + " on " + escape(query.getServer()) + ", " +
+                        escape(query.getTarget()) + "<br/><pre>" + escape(query.getQuery()) + "</pre></html>");
+                item.addActionListener(e -> service.getRunningQueries().cancel(query));
+                menu.add(item);
+            }
+            if (running.size() > 1) {
+                JMenuItem cancelAll = new JMenuItem("Cancel all agent queries");
+                cancelAll.addActionListener(e -> service.getRunningQueries().cancelAll());
+                menu.add(cancelAll);
             }
         }
         menu.addSeparator();

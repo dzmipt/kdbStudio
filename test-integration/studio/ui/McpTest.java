@@ -293,4 +293,84 @@ public class McpTest extends StudioTest {
         }
         assertNull(agentWindow());
     }
+
+    private void waitForRunning(int count) throws Exception {
+        long deadline = System.currentTimeMillis() + 10000;
+        while (McpService.getInstance().getRunningQueries().getAll().size() != count) {
+            if (System.currentTimeMillis() > deadline) fail("Expected " + count + " running queries");
+            Thread.sleep(50);
+        }
+    }
+
+    @Test
+    public void testCancelBackgroundQuery() throws Exception {
+        McpService.getInstance().getGrants().grant("server:permitted/srv", "permitted/srv", null);
+        MockQSession.lockResponse(true);
+        try {
+            CompletableFuture<Object[]> future = callAsync("execute_query", "{\"server\":\"permitted/srv\",\"query\":\"long\"}");
+            waitForRunning(1);
+            McpService.getInstance().getRunningQueries().cancelAll();
+            MockQSession.unlockResponse();
+            Object[] result = future.get(10, TimeUnit.SECONDS);
+            assertTrue((Boolean) result[0]);
+            assertTrue((String) result[1], ((String) result[1]).contains("cancelled by the user"));
+            waitForRunning(0);
+        } finally {
+            MockQSession.lockResponse(false);
+            McpService.getInstance().getGrants().revokeAll();
+        }
+    }
+
+    @Test
+    public void testStopInAgentWindow() throws Exception {
+        Config.getInstance().setBoolean(Config.MCP_SHOW_AGENT_WINDOW, true);
+        McpService.getInstance().getGrants().grant("server:permitted/srv", "permitted/srv", null);
+        MockQSession.lockResponse(true);
+        try {
+            CompletableFuture<Object[]> future = callAsync("execute_query", "{\"server\":\"permitted/srv\",\"query\":\"long\"}");
+            waitForRunning(1);
+            robot().waitForIdle();
+            StudioWindow window = agentWindow();
+            assertNotNull(window);
+            assertTrue(org.assertj.swing.edt.GuiActionRunner.execute(() -> window.isQueryRunning()));
+
+            // the Stop action of the agent window
+            org.assertj.swing.edt.GuiActionRunner.execute(() -> window.getActiveEditor().cancelExternalQueries());
+            MockQSession.unlockResponse();
+            Object[] result = future.get(10, TimeUnit.SECONDS);
+            assertTrue((String) result[1], ((String) result[1]).contains("cancelled by the user"));
+            robot().waitForIdle();
+
+            Object[] state = org.assertj.swing.edt.GuiActionRunner.execute(() -> new Object[] {
+                    window.isQueryRunning(), window.getActiveEditor().getTextArea().getText(), window.countResultTabs()});
+            assertEquals(false, state[0]);
+            assertTrue((String) state[1], ((String) state[1]).contains("\nlong\n/ ^ cancelled by the user"));
+            assertEquals(0, state[2]);
+        } finally {
+            MockQSession.lockResponse(false);
+            McpService.getInstance().getGrants().revokeAll();
+            Config.getInstance().setBoolean(Config.MCP_SHOW_AGENT_WINDOW, false);
+            closeAgentWindow();
+        }
+    }
+
+    @Test
+    public void testCancelTabQuery() throws Exception {
+        String id = newTab("");
+        McpService.getInstance().getGrants().grant("server:permitted/srv", "permitted/srv", null);
+        MockQSession.lockResponse(true);
+        try {
+            CompletableFuture<Object[]> future = callAsync("execute_query", "{\"tab\":\"" + id + "\",\"query\":\"long\"}");
+            waitForRunning(1);
+            assertTrue(McpService.getInstance().getRunningQueries().getAll().get(0).getTarget().startsWith("tab " + id));
+            McpService.getInstance().getRunningQueries().cancelAll();
+            Object[] result = future.get(10, TimeUnit.SECONDS);
+            assertTrue((Boolean) result[0]);
+            assertTrue((String) result[1], ((String) result[1]).contains("cancelled by the user"));
+            waitForRunning(0);
+        } finally {
+            MockQSession.lockResponse(false);
+            McpService.getInstance().getGrants().revokeAll();
+        }
+    }
 }

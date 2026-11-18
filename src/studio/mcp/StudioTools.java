@@ -751,6 +751,25 @@ public class StudioTools {
         confirm(context, tabServer, "tab " + tabId + " \"" + info[1] + "\"", query);
 
         CompletableFuture<Object[]> future = new CompletableFuture<>();
+        McpRunningQueries running = service.getRunningQueries();
+        McpRunningQueries.RunningQuery runningQuery = running.start(context.getClientName(), grantLabel(tabServer),
+                "tab " + tabId + " \"" + info[1] + "\"", query,
+                () -> SwingUtilities.invokeLater(() -> {
+                    try {
+                        findEditor(tabId).getQueryExecutor().cancel();
+                    } catch (McpToolException e) {
+                        // the tab is closed
+                    }
+                }));
+        try {
+            return executeInTabStarted(context, tabId, tabServer, query, json, maxRows, future);
+        } finally {
+            running.finish(runningQuery);
+        }
+    }
+
+    private String executeInTabStarted(McpCallContext context, String tabId, Server tabServer, String query,
+                                       boolean json, int maxRows, CompletableFuture<Object[]> future) throws Exception {
         onEdt(() -> {
             EditorTab editor = findEditor(tabId);
             if (!editor.getServer().equals(tabServer)) {
@@ -832,6 +851,11 @@ public class StudioTools {
 
         Session session = getBackgroundSession(server);
         QueryResult result = new QueryResult(server, query, false);
+        McpRunningQueries running = service.getRunningQueries();
+        McpRunningQueries.RunningQuery runningQuery = running.start(agent, grantLabel(server), "background connection", query,
+                session::close);
+        Runnable cancel = () -> running.cancel(runningQuery);
+        SwingUtilities.invokeLater(() -> AgentQueriesWindow.queryStarted(runningQuery, agent, server, query, outcome, cancel));
         synchronized (session) {
             try {
                 session.validate();
@@ -842,10 +866,18 @@ public class StudioTools {
             } catch (Exception e) {
                 session.close();
                 result.setError(e);
+            } finally {
+                running.finish(runningQuery);
             }
         }
+        boolean cancelled = runningQuery.isCancelled();
+        SwingUtilities.invokeLater(() -> AgentQueriesWindow.queryFinished(runningQuery, cancel, agent, server, result, cancelled));
 
-        SwingUtilities.invokeLater(() -> AgentQueriesWindow.queryExecuted(agent, server, query, outcome, result));
+        if (cancelled) {
+            queryLog.info("#mcp-{}: cancelled", index);
+            McpLog.info("[{}] background query on {} was cancelled by the user", agent, grantLabel(server));
+            throw new McpToolException("The query was cancelled by the user");
+        }
 
         if (result.getError() != null) {
             String message = errorMessage(result.getError());

@@ -29,6 +29,7 @@ public class McpService {
 
     private final McpGrants grants = new McpGrants();
     private final McpSessions sessions = new McpSessions();
+    private final McpRunningQueries runningQueries = new McpRunningQueries();
     private final List<Listener> listeners = new CopyOnWriteArrayList<>();
 
     private McpServer server = null;
@@ -44,10 +45,15 @@ public class McpService {
     private McpService() {
         grants.addListener(this::fire);
         sessions.addListener(this::fire);
+        runningQueries.addListener(this::fire);
     }
 
     public McpGrants getGrants() {
         return grants;
+    }
+
+    public McpRunningQueries getRunningQueries() {
+        return runningQueries;
     }
 
     public McpSessions getSessions() {

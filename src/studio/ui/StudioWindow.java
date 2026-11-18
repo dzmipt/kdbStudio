@@ -169,7 +169,7 @@ public class StudioWindow extends StudioFrame {
     }
 
     public boolean isQueryRunning() {
-        return editor.getQueryExecutor().running();
+        return editor.getQueryExecutor().running() || editor.isExternalQueryRunning();
     }
 
     public void refreshActionState() {

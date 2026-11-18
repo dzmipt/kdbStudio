@@ -110,11 +110,13 @@ Background (`server`) and ad-hoc (`connection`) queries can be shown in a separa
 titled `[AI agent queries] ...`. Queries in `tab` mode are not shown there, since they already appear in the user's tab.
 
 * Opened automatically on the first background query when the setting *Show queries which agents run on
-  background connections in a separate window* is on (default off), without taking the focus;
+  background connections in a separate window* is on (default on), without taking the focus;
   or on demand from the status bar widget (*Show agent queries window*), showing queries from then on.
 * One editor tab per server. Every query is appended with a header comment, e.g.
-  `/ 14:02:31 claude-code: confirmed by the user, 12 ms`. Denied queries are added as comments
+  `/ 2026.11.18 14:02:31 claude-code: confirmed by the user`. Denied queries are added as comments
   (`denied by the user (not executed)` / `not confirmed in time`).
+* While a query runs, its tab shows the *Executing* status with the clock, and the toolbar *Stop* cancels it
+  (the background connection is closed). A cancelled query gets the comment `/ ^ cancelled by the user`.
 * Every executed query adds a result tab with the full result (errors as error tabs); the usual result tab
   limit applies. The query is not executed again.
 * The tabs are normal editors: the user can edit and run them (through the user's own connection).
@@ -159,6 +161,13 @@ any grant is active. A non-modal window listing the time-limited grants:
 * Remaining time updates live; expired grants disappear.
 * *Revoke* removes a single grant; *Revoke all* removes every grant. Revocations are logged.
 
+## Running queries and cancellation
+
+All agent queries in progress (tab and background modes) are tracked. The status bar widget shows
+`• N running` and its popup lists them (`Cancel: <query> (<server>, <seconds> s)`) with *Cancel all agent queries*.
+Cancelling a tab query works like the Stop button of the tab; cancelling a background query closes its
+connection. The agent receives "The query was cancelled by the user".
+
 ## Status bar widget
 
 Shown in every window's status bar while MCP is enabled:
@@ -168,7 +177,7 @@ Shown in every window's status bar while MCP is enabled:
   Several agents: `MCP: 2 agents`.
 * Badge/marker when time-limited grants are active.
 * `MCP: error` (red) - failed to start (e.g. port busy); tooltip shows the reason.
-* Click - popup: connected agents (name, version, address, last activity), *Active grants...* (opens the
+* Click - popup: connected agents (name, version, address, last activity), running queries with *Cancel*, *Active grants...* (opens the
   Grants window), *Revoke all grants*, *Open MCP log*, *Settings...*.
 
 ## Activity log

@@ -79,10 +79,17 @@ public class AgentQueriesWindow {
     }
 
     private static void append(EditorTab tab, String text) {
+        append(tab, text, true);
+    }
+
+    // newBlock - separate the text from the previous one with an empty line
+    private static void append(EditorTab tab, String text, boolean newBlock) {
         boolean modified = tab.isModified();
         JTextArea textArea = tab.getTextArea();
         String current = textArea.getText();
-        String prefix = current.isEmpty() || current.endsWith("\n\n") ? "" : current.endsWith("\n") ? "\n" : "\n\n";
+        String prefix;
+        if (newBlock) prefix = current.isEmpty() || current.endsWith("\n\n") ? "" : current.endsWith("\n") ? "\n" : "\n\n";
+        else prefix = current.isEmpty() || current.endsWith("\n") ? "" : "\n";
         textArea.append(prefix + text + "\n");
         textArea.setCaretPosition(textArea.getDocument().getLength());
         // appended by Studio, not changed by the user
@@ -94,15 +101,39 @@ public class AgentQueriesWindow {
         return "/ " + LocalDateTime.now().format(TIME_FORMAT) + " " + agent + ": " + outcome;
     }
 
+    // Tabs where running queries are shown (the window can be opened only after the query has started)
+    private static final Map<Object, EditorTab> runningTabs = new HashMap<>();
+
     /**
-     * A query was executed (successfully or with an error)
+     * A query is started; it is appended to the server's tab and the tab shows it as running
+     * @param handle identifies the query in queryFinished()
+     * @param cancel cancels the query (used by the Stop action of the tab)
      */
-    public static void queryExecuted(String agent, Server server, String query, String outcome, QueryResult result) {
+    public static void queryStarted(Object handle, String agent, Server server, String query, String outcome, Runnable cancel) {
         StudioWindow window = getWindow();
         if (window == null) return;
         EditorTab tab = getTab(window, server);
-        String time = result.getError() == null ? ", " + result.getExecutionTimeInMS() + " ms" : ", error";
-        append(tab, header(agent, outcome + time) + "\n" + query);
+        append(tab, header(agent, outcome) + "\n" + query);
+        tab.externalQueryStarted(cancel, "Executing (AI agent " + agent + "): " + query.replace('\n', ' '));
+        runningTabs.put(handle, tab);
+    }
+
+    /**
+     * The query is completed (successfully, with an error, or cancelled)
+     */
+    public static void queryFinished(Object handle, Runnable cancel, String agent, Server server, QueryResult result,
+                                     boolean cancelled) {
+        EditorTab tab = runningTabs.remove(handle);
+        if (tab != null) {
+            String status = cancelled ? "Last AI agent query was cancelled"
+                    : "Last AI agent query execution time: " + result.getExecutionTimeInMS() + " ms";
+            tab.externalQueryFinished(cancel, status);
+        }
+        if (!isOpen()) return;
+        if (cancelled) {
+            if (tab != null && tab.isAddedToPanel()) append(tab, "/ ^ cancelled by the user", false);
+            return;
+        }
         window.addResultTab(result, "Executed by AI agent " + agent + " at server: " + server.getDescription(true));
     }
 

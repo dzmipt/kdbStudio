@@ -1,3 +1,4 @@
+* Running AI agent queries are shown in the MCP status bar widget and can be cancelled there, or with Stop in the AI agent queries window
 * AI agent queries window: shows queries which agents run on background connections together with their results (Settings, AI Agent (MCP) tab, or the MCP status bar widget)
 * MCP server for AI agents (Claude Code, GitHub Copilot, Cursor, etc.): agents can read and edit tabs, read results and run queries on permitted servers after confirmation in Studio. See Settings, AI Agent (MCP) tab
 * Style schemas: predefined Light and Dark schemas, user-defined schemas, and a remembered schema for every Look and Feel
