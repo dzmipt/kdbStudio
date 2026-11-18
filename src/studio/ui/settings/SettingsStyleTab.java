@@ -8,6 +8,7 @@ import studio.kdb.KTableModel;
 import studio.kdb.config.StyleSchema;
 import studio.kdb.config.StyleSchemas;
 import studio.ui.GroupLayoutSimple;
+import studio.ui.NoticeBanner;
 import studio.ui.StudioOptionPane;
 import studio.ui.Util;
 import studio.ui.grid.QGridPanel;
@@ -391,38 +392,16 @@ public class SettingsStyleTab extends SettingsTab {
 
 
     // A highlighted notice that the selected schema is predefined and can't be changed
-    private static class ReadOnlyBanner extends JLabel {
+    private static class ReadOnlyBanner extends NoticeBanner {
 
         ReadOnlyBanner() {
             super(Util.LOCK_ICON);
-            setOpaque(true);
-            setIconTextGap(8);
-            updateColors();
         }
 
         void setSchemaName(String name) {
             String escaped = name.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;");
             setText(String.format("<html><b>\"%s\" is a predefined schema and can't be changed.</b> " +
                     "Use <b>Duplicate...</b> to create a copy you can change.</html>", escaped));
-        }
-
-        @Override
-        public void updateUI() {
-            super.updateUI();
-            updateColors();
-        }
-
-        private void updateColors() {
-            Color accent = UIManager.getColor("Component.warning.focusedBorderColor");
-            if (accent == null) accent = new Color(0xe2a53a);
-            Color background = UIManager.getColor("Panel.background");
-            if (background == null) background = getBackground();
-            if (background == null) background = Color.WHITE;
-
-            setBackground(Util.blendColors(accent, background, background));
-            setBorder(BorderFactory.createCompoundBorder(
-                    BorderFactory.createLineBorder(accent),
-                    BorderFactory.createEmptyBorder(4, 8, 4, 8)));
         }
     }
 

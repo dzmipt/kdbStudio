@@ -6,6 +6,8 @@ import studio.kdb.config.McpTokenMode;
 import studio.mcp.McpService;
 import studio.mcp.ui.ConnectAgentDialog;
 import studio.mcp.ui.PermissionTree;
+import studio.ui.NoticeBanner;
+import studio.ui.ScaledIcon;
 import studio.ui.Util;
 
 import javax.swing.*;
@@ -100,17 +102,11 @@ public class SettingsMcpTab extends SettingsTab {
 
         setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
         setBorder(new EmptyBorder(5, 5, 5, 5));
-        JLabel lblExperimental = new JLabel("<html><b>Experimental feature.</b> The behaviour and settings may change in future " +
-                "versions. AI agents can make mistakes: review queries before confirming them, and permit only servers " +
-                "where running agent queries is safe.</html>");
-        lblExperimental.setIcon(UIManager.getIcon("OptionPane.warningIcon"));
-        lblExperimental.setIconTextGap(8);
-        lblExperimental.setBorder(new EmptyBorder(2, 5, 8, 5));
-        lblExperimental.setAlignmentX(LEFT_ALIGNMENT);
-        // wrap the text to the width of the settings dialog
-        lblExperimental.setPreferredSize(new Dimension(680, lblExperimental.getPreferredSize().height * 2 + 4));
-        lblExperimental.setMaximumSize(new Dimension(Integer.MAX_VALUE, lblExperimental.getPreferredSize().height));
-        add(lblExperimental);
+        NoticeBanner lblExperimental = new NoticeBanner(new ScaledIcon(Util.WARNING_ICON, 16));
+        lblExperimental.setText("<html><div style='width: 560px'><b>Experimental feature.</b> The behaviour and " +
+                "settings may change in future versions. AI agents can make mistakes: review queries before " +
+                "confirming them, and permit only servers where running agent queries is safe.</div></html>");
+        add(line(lblExperimental));
         add(line(chkEnabled));
         add(line(new JLabel("Port:"), txtPort, new JLabel("   Accept connections from:"), comboAccess));
         add(line(new JLabel("Access token:"), comboTokenMode));
