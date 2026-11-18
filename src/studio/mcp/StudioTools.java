@@ -12,6 +12,7 @@ import studio.kdb.Config;
 import studio.kdb.K;
 import studio.kdb.Server;
 import studio.kdb.Session;
+import studio.mcp.ui.AgentQueriesWindow;
 import studio.mcp.ui.QueryConfirmationDialog;
 import studio.ui.*;
 import studio.ui.action.QueryResult;
@@ -391,11 +392,22 @@ public class StudioTools {
         throw new McpToolException("Window '" + id + "' is not found");
     }
 
+    // The last active window, but not the AI agent queries window if there is another one
+    private static StudioWindow defaultWindow() {
+        StudioWindow window = WindowFactory.getLastActiveWindow();
+        if (window == null || !window.isAgentWindow()) return window;
+        for (StudioWindow w: WindowFactory.allStudioWindows()) {
+            if (!w.isAgentWindow()) return w;
+        }
+        return window;
+    }
+
     private static JsonObject tabInfo(EditorTab editor) {
         StudioWindow window = editor.getStudioWindow();
         JsonObject json = new JsonObject();
         json.addProperty("id", idOf(editor, "t"));
         json.addProperty("window", idOf(window, "w"));
+        if (window.isAgentWindow()) json.addProperty("agentQueriesWindow", true);
         json.addProperty("title", editor.getTitle());
         json.addProperty("file", editor.getFilename());
         json.addProperty("server", describeServer(editor.getServer()));
@@ -487,7 +499,7 @@ public class StudioTools {
         Server server = serverFromArgs(args);
 
         return onEdt(() -> {
-            StudioWindow window = windowId == null ? WindowFactory.getLastActiveWindow() : findWindow(windowId);
+            StudioWindow window = windowId == null ? defaultWindow() : findWindow(windowId);
             if (window == null) throw new McpToolException("No Studio window is open");
             EditorTab active = window.getActiveEditor();
             Server tabServer = server == null ? active.getServer() : server;
@@ -643,16 +655,27 @@ public class StudioTools {
         return server.getHost() + ":" + server.getPort() + " (ad-hoc)";
     }
 
+    // The query is not confirmed by the user
+    private static class QueryDeniedException extends McpToolException {
+        private final String reason;
+
+        QueryDeniedException(String message, String reason) {
+            super(message);
+            this.reason = reason;
+        }
+    }
+
     /**
-     * Asks the user (or uses an active grant). Throws if the query is not confirmed.
+     * Asks the user (or uses an active grant). Throws QueryDeniedException if the query is not confirmed.
+     * @return how the query was confirmed
      */
-    private void confirm(McpCallContext context, Server server, String target, String query) throws Exception {
+    private String confirm(McpCallContext context, Server server, String target, String query) throws Exception {
         String key = grantKey(server);
         String agent = context.getClientName();
         McpGrants grants = service.getGrants();
         if (grants.useGrant(key)) {
             McpLog.info("[{}] query on {} auto-approved by grant", agent, grantLabel(server));
-            return;
+            return "auto-approved by a time-limited permission";
         }
 
         confirmationLock.lockInterruptibly();
@@ -660,7 +683,7 @@ public class StudioTools {
             // a grant could be given while waiting for the previous dialog
             if (grants.useGrant(key)) {
                 McpLog.info("[{}] query on {} auto-approved by grant", agent, grantLabel(server));
-                return;
+                return "auto-approved by a time-limited permission";
             }
             int timeout = Math.max(10, Config.getInstance().getInt(Config.MCP_CONFIRMATION_TIMEOUT_SEC));
             Object[] outcome = onEdt(() -> {
@@ -677,20 +700,21 @@ public class StudioTools {
             switch (decision) {
                 case RUN:
                     McpLog.info("[{}] query on {} confirmed by the user", agent, grantLabel(server));
-                    return;
+                    return "confirmed by the user";
                 case ALLOW_FOR_INTERVAL:
                     Config.getInstance().setEnum(Config.MCP_GRANT_INTERVAL, interval);
                     grants.grant(key, grantLabel(server), interval.getDuration());
                     grants.useGrant(key);
                     McpLog.info("[{}] query on {} confirmed; further queries are allowed for {}",
                             agent, grantLabel(server), interval);
-                    return;
+                    return "confirmed by the user, further queries allowed for " + interval;
                 case TIMEOUT:
                     McpLog.info("[{}] query on {} denied: no answer from the user", agent, grantLabel(server));
-                    throw new McpToolException("The query was not confirmed by the user in time and was denied.");
+                    throw new QueryDeniedException("The query was not confirmed by the user in time and was denied.",
+                            "not confirmed in time");
                 default:
                     McpLog.info("[{}] query on {} denied by the user", agent, grantLabel(server));
-                    throw new McpToolException("The query was denied by the user.");
+                    throw new QueryDeniedException("The query was denied by the user.", "denied by the user");
             }
         } finally {
             confirmationLock.unlock();
@@ -792,7 +816,14 @@ public class StudioTools {
     }
 
     private String executeInBackground(McpCallContext context, Server server, String query, boolean json, int maxRows) throws Exception {
-        confirm(context, server, "background connection", query);
+        String agent = context.getClientName();
+        String outcome;
+        try {
+            outcome = confirm(context, server, "background connection", query);
+        } catch (QueryDeniedException e) {
+            SwingUtilities.invokeLater(() -> AgentQueriesWindow.queryDenied(agent, server, query, e.reason));
+            throw e;
+        }
 
         int index = queryIndex.getAndIncrement();
         queryLog.info("#mcp-{}: query {}({}) from AI agent {}\n{}", index, server.getFullName(), server.getConnectionString(),
@@ -813,6 +844,8 @@ public class StudioTools {
                 result.setError(e);
             }
         }
+
+        SwingUtilities.invokeLater(() -> AgentQueriesWindow.queryExecuted(agent, server, query, outcome, result));
 
         if (result.getError() != null) {
             String message = errorMessage(result.getError());

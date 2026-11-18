@@ -151,6 +151,11 @@ public class McpStatusWidget extends MinSizeLabel implements McpService.Listener
         menu.add(revokeAll);
         menu.addSeparator();
 
+        JMenuItem windowItem = new JMenuItem("Show agent queries window");
+        windowItem.setToolTipText("Queries which agents run on background connections, with their results");
+        windowItem.addActionListener(e -> AgentQueriesWindow.open());
+        menu.add(windowItem);
+
         JMenuItem connectItem = new JMenuItem("Connect an agent...");
         connectItem.addActionListener(e -> ConnectAgentDialog.showDialog(this));
         menu.add(connectItem);

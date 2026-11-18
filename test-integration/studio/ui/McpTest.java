@@ -224,4 +224,72 @@ public class McpTest extends StudioTest {
         config.getServerConfig().removeServer(config.getServerConfig().getServer("temp/x"));
         assertEquals(List.of("folder:permitted"), config.getStringArray(Config.MCP_ALLOWED_SERVERS));
     }
+
+    private StudioWindow agentWindow() {
+        return org.assertj.swing.edt.GuiActionRunner.execute(() -> {
+            for (StudioWindow w: WindowFactory.allStudioWindows()) if (w.isAgentWindow()) return w;
+            return null;
+        });
+    }
+
+    private void closeAgentWindow() {
+        StudioWindow window = agentWindow();
+        if (window != null) org.assertj.swing.edt.GuiActionRunner.execute(() -> window.close());
+    }
+
+    @Test
+    public void testAgentWindowDisabled() throws Exception {
+        Config.getInstance().setBoolean(Config.MCP_SHOW_AGENT_WINDOW, false);
+        McpService.getInstance().getGrants().grant("server:permitted/srv", "permitted/srv", null);
+        callOk("execute_query", "{\"server\":\"permitted/srv\",\"query\":\"1\"}");
+        robot().waitForIdle();
+        assertNull(agentWindow());
+        McpService.getInstance().getGrants().revokeAll();
+    }
+
+    @Test
+    public void testAgentWindow() throws Exception {
+        Config.getInstance().setBoolean(Config.MCP_SHOW_AGENT_WINDOW, true);
+        try {
+            McpService.getInstance().getGrants().grant("server:permitted/srv", "permitted/srv", null);
+            callOk("execute_query", "{\"server\":\"permitted/srv\",\"query\":\"til 3\"}");
+            callOk("execute_query", "{\"server\":\"permitted/srv\",\"query\":\"til 4\"}");
+            McpService.getInstance().getGrants().revokeAll();
+
+            CompletableFuture<Object[]> future = callAsync("execute_query", "{\"server\":\"permitted/srv\",\"query\":\"til 9\"}");
+            clickInDialog("Deny");
+            future.get(10, TimeUnit.SECONDS);
+            robot().waitForIdle();
+
+            StudioWindow window = agentWindow();
+            assertNotNull(window);
+            Object[] state = org.assertj.swing.edt.GuiActionRunner.execute(() -> {
+                List<EditorTab> editors = window.getRootEditorsPanel().getAllEditors(false);
+                return new Object[] {editors.size(), editors.get(0).getTextArea().getText(),
+                        editors.get(0).isModified(), window.countResultTabs(), window.getTitle()};
+            });
+            assertEquals("one tab per server", 1, state[0]);
+            String text = (String) state[1];
+            assertTrue(text, text.contains("test-agent: auto-approved"));
+            assertTrue(text, text.contains("\ntil 3\n"));
+            assertTrue(text, text.contains("\ntil 4\n"));
+            assertTrue(text, text.contains("denied by the user (not executed)\n/ til 9"));
+            assertFalse(text, text.contains("\ntil 9"));
+            assertEquals(false, state[2]);
+            assertEquals(2, state[3]);
+            assertTrue((String) state[4], ((String) state[4]).startsWith("[AI agent queries]"));
+            assertTrue((String) state[4], ((String) state[4]).contains("@ permitted/srv"));
+
+            // the window is not saved in the workspace
+            int saved = org.assertj.swing.edt.GuiActionRunner.execute(() -> StudioWindow.getWorkspace().getWindows().length);
+            assertEquals(WindowFactory.allStudioWindows().size() - 1, saved);
+
+            String tabs = callOk("list_tabs", "{}");
+            assertTrue(tabs, tabs.contains("agentQueriesWindow"));
+        } finally {
+            Config.getInstance().setBoolean(Config.MCP_SHOW_AGENT_WINDOW, false);
+            closeAgentWindow();
+        }
+        assertNull(agentWindow());
+    }
 }

@@ -104,6 +104,24 @@ The existing incoming message size limit (`kdbMessageSizeLimitMB`) applies.
   dictionaries; `{type, value}` for atoms and lists (value rendered as q text).
 * Errors - `isError: true` with the kdb error text (e.g. `'type`).
 
+## AI agent queries window
+
+Background (`server`) and ad-hoc (`connection`) queries can be shown in a separate Studio window,
+titled `[AI agent queries] ...`. Queries in `tab` mode are not shown there, since they already appear in the user's tab.
+
+* Opened automatically on the first background query when the setting *Show queries which agents run on
+  background connections in a separate window* is on (default off), without taking the focus;
+  or on demand from the status bar widget (*Show agent queries window*), showing queries from then on.
+* One editor tab per server. Every query is appended with a header comment, e.g.
+  `/ 14:02:31 claude-code: confirmed by the user, 12 ms`. Denied queries are added as comments
+  (`denied by the user (not executed)` / `not confirmed in time`).
+* Every executed query adds a result tab with the full result (errors as error tabs); the usual result tab
+  limit applies. The query is not executed again.
+* The tabs are normal editors: the user can edit and run them (through the user's own connection).
+  Agents see them in `list_tabs` (flag `agentQueriesWindow`).
+* The window is not saved in the workspace and is not restored after restart. Closing the last regular
+  window exits Studio even if the agent window is open.
+
 ## Query confirmation
 
 Every `execute_query` pops up a modal dialog (the Studio window is brought to front):

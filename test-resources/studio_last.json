@@ -155,6 +155,7 @@
   "mcpMaxChars" : 1000,
   "mcpConfirmationTimeoutSec" : 60,
   "mcpGrantInterval" : "HOUR_1",
+  "mcpShowAgentWindow" : true,
   "failoverBetweenTLSandTCPConnections" : false,
 
   "serverBgColorRules": [

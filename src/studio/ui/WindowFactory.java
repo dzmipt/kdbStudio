@@ -63,6 +63,21 @@ public class WindowFactory {
         return window;
     }
 
+    /**
+     * The window for queries from AI agents. It is not saved in the workspace.
+     * @param focus false - the window doesn't take the focus when it appears
+     */
+    public static StudioWindow newAgentWindow(boolean focus) {
+        StudioWindow window = new StudioWindow();
+        window.setAgentWindow(true);
+        window.setAutoRequestFocus(focus);
+        newFrame(window);
+        studioWindows.add(window);
+        window.init(new Workspace.TopWindow(Server.NO_SERVER, null));
+        window.setAutoRequestFocus(true);
+        return window;
+    }
+
     public static StudioWindow getActiveWindow() {
         return activeWindow;
     }

@@ -101,6 +101,18 @@ public class StudioWindow extends StudioFrame {
     public static final Config CONFIG = Config.getInstance();
     private final List<Server> serverHistory = CONFIG.getServerHistory();
 
+    // The window which shows queries executed by AI agents on background connections
+    private boolean agentWindow = false;
+
+    public boolean isAgentWindow() {
+        return agentWindow;
+    }
+
+    // Should be called before the window is initialized
+    void setAgentWindow(boolean agentWindow) {
+        this.agentWindow = agentWindow;
+    }
+
     public int nextEditorNameIndex() {
         return editorNameIndex++;
     }
@@ -130,7 +142,9 @@ public class StudioWindow extends StudioFrame {
     }
 
     public void refreshFrameTitle() {
-        StringBuilder frameTitleBuilder = new StringBuilder(getCaption());
+        StringBuilder frameTitleBuilder = new StringBuilder();
+        if (agentWindow) frameTitleBuilder.append("[AI agent queries] ");
+        frameTitleBuilder.append(getCaption());
         frameTitleBuilder.append(" ");
 
         frameTitleBuilder.append("Studio for kdb+ ").append(Lm.version);
@@ -627,8 +641,10 @@ public class StudioWindow extends StudioFrame {
     }
 
     public void close() {
-        // If this is the last window, we need to properly persist workspace
-        if (WindowFactory.allStudioWindows().size() == 1) {
+        // If this is the last window (the AI agent window doesn't count), we need to properly persist workspace
+        long regularWindows = WindowFactory.allStudioWindows().stream().filter(w -> !w.isAgentWindow()).count();
+        boolean last = WindowFactory.allStudioWindows().size() == 1 || (!agentWindow && regularWindows == 1);
+        if (last) {
             quit();
         } else {
             boolean result = execute(editorTab -> editorTab.getEditorsPanel().closeTab(editorTab));
@@ -1434,6 +1450,8 @@ public class StudioWindow extends StudioFrame {
         Window activeWindow = KeyboardFocusManager.getCurrentKeyboardFocusManager().getActiveWindow();
 
         WindowFactory.forEach(window -> {
+            // the AI agent window is not restored after restart
+            if (window.isAgentWindow()) return;
             Workspace.TopWindow workspaceWindow = workspace.addWindow(window == activeWindow)
                 .setResultDividerLocation(Util.getDividerLocation(window.splitpane))
                 .setLocation(window.getBounds())
