@@ -21,6 +21,9 @@ public class SettingsDialog extends EscapeDialog {
 
     private final Map<String, SettingsTab> pages = new LinkedHashMap<>();
 
+    public static final String MCP_PAGE = "AI Agent (MCP)";
+
+    private final JTabbedPane tabs;
     private final JButton btnOk;
     private final JButton btnCancel;
     private final JButton btnApply;
@@ -35,9 +38,9 @@ public class SettingsDialog extends EscapeDialog {
         pages.put("Result", new SettingsResultTab());
         pages.put("Style", new SettingsStyleTab(this));
         pages.put("Chart", new SettingsChartTab());
-        pages.put("AI Agent (MCP)", new SettingsMcpTab());
+        pages.put(MCP_PAGE, new SettingsMcpTab());
 
-        JTabbedPane tabs = new JTabbedPane();
+        tabs = new JTabbedPane();
         for (String title: pages.keySet()) {
             tabs.addTab(title, new JScrollPane(pages.get(title)));
         }
@@ -64,6 +67,11 @@ public class SettingsDialog extends EscapeDialog {
         setContentPane(root);
     }
 
+
+    public void selectPage(String title) {
+        int index = tabs.indexOfTab(title);
+        if (index >= 0) tabs.setSelectedIndex(index);
+    }
 
     @Override
     public void align() {

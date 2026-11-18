@@ -9,7 +9,7 @@ import studio.ui.WindowFactory;
 import studio.ui.action.QueryResult;
 
 import javax.swing.*;
-import java.time.LocalTime;
+import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.HashMap;
 import java.util.Map;
@@ -21,7 +21,7 @@ import java.util.Map;
  */
 public class AgentQueriesWindow {
 
-    private static final DateTimeFormatter TIME_FORMAT = DateTimeFormatter.ofPattern("HH:mm:ss");
+    private static final DateTimeFormatter TIME_FORMAT = DateTimeFormatter.ofPattern("yyyy.MM.dd HH:mm:ss");
 
     private static StudioWindow window = null;
     private static final Map<String, EditorTab> tabs = new HashMap<>();
@@ -91,7 +91,7 @@ public class AgentQueriesWindow {
     }
 
     private static String header(String agent, String outcome) {
-        return "/ " + LocalTime.now().format(TIME_FORMAT) + " " + agent + ": " + outcome;
+        return "/ " + LocalDateTime.now().format(TIME_FORMAT) + " " + agent + ": " + outcome;
     }
 
     /**

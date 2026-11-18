@@ -58,6 +58,7 @@ public class McpTest extends StudioTest {
         config.setInt(Config.MCP_PORT, 0);
         config.setEnum(Config.MCP_TOKEN_MODE, McpTokenMode.NONE);
         config.setStringArray(Config.MCP_ALLOWED_SERVERS, List.of("folder:permitted"));
+        config.setBoolean(Config.MCP_SHOW_AGENT_WINDOW, false);
         config.setBoolean(Config.MCP_ENABLED, true);
         McpService.getInstance().init();
         McpService.getInstance().applyConfig();

@@ -165,7 +165,7 @@ public class McpStatusWidget extends MinSizeLabel implements McpService.Listener
         menu.add(logItem);
 
         JMenuItem settingsItem = new JMenuItem("Settings...");
-        settingsItem.addActionListener(e -> StudioWindow.settings());
+        settingsItem.addActionListener(e -> StudioWindow.settings(studio.ui.SettingsDialog.MCP_PAGE));
         menu.add(settingsItem);
 
         Dimension size = menu.getPreferredSize();

@@ -2,6 +2,7 @@ package studio.mcp.ui;
 
 import studio.kdb.ServerTreeNode;
 import studio.mcp.McpPermissions;
+import studio.mcp.PermissionSelection;
 
 import javax.swing.*;
 import javax.swing.tree.DefaultTreeCellRenderer;
@@ -14,8 +15,6 @@ import java.awt.event.KeyEvent;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.util.Enumeration;
-import java.util.LinkedHashSet;
-import java.util.Set;
 
 /**
  * Server tree with check boxes to select servers and folders permitted for AI agents.
@@ -27,12 +26,12 @@ public class PermissionTree extends JPanel {
     private final JTree tree;
     private final JTextField txtFilter;
     private final JLabel lblSummary;
-    private final Set<String> entries = new LinkedHashSet<>();
+    private final PermissionSelection selection;
 
     public PermissionTree(ServerTreeNode root, McpPermissions permissions) {
         super(new BorderLayout(0, 5));
         this.root = root;
-        entries.addAll(permissions.cleanup(root).getEntries());
+        selection = new PermissionSelection(root, permissions);
 
         tree = new JTree(new DefaultTreeModel(root, true)) {
             @Override
@@ -84,7 +83,7 @@ public class PermissionTree extends JPanel {
     }
 
     public McpPermissions getPermissions() {
-        return new McpPermissions(entries);
+        return selection.getPermissions();
     }
 
     private static int checkBoxWidth() {
@@ -93,18 +92,11 @@ public class PermissionTree extends JPanel {
     }
 
     private McpPermissions current() {
-        return new McpPermissions(entries);
+        return selection.getPermissions();
     }
 
     private void toggle(ServerTreeNode node) {
-        String entry = McpPermissions.entry(node);
-        if (entries.contains(entry)) {
-            entries.remove(entry);
-        } else {
-            McpPermissions permissions = current();
-            if (permissions.isAllowed(node)) return; // already permitted by an ancestor folder
-            entries.add(entry);
-        }
+        selection.toggle(node);
         tree.repaint();
         refreshSummary();
     }
@@ -174,12 +166,11 @@ public class PermissionTree extends JPanel {
                                                       boolean leaf, int row, boolean hasFocus) {
             super.getTreeCellRendererComponent(tree, value, sel, expanded, leaf, row, hasFocus);
             ServerTreeNode node = (ServerTreeNode) value;
-            McpPermissions permissions = current();
-            boolean direct = permissions.contains(node);
-            checked = permissions.isAllowed(node);
-            enabled = direct || !checked;
+            checked = selection.isChecked(node);
+            boolean implied = selection.isImplied(node);
+            enabled = !implied;
             setIcon(new CompositeIcon(checkIcon, getIcon()));
-            setToolTipText(checked && !direct ? "Permitted via a parent folder" : null);
+            setToolTipText(implied ? "Permitted via a parent folder" : null);
             return this;
         }
     }

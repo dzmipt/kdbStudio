@@ -580,7 +580,13 @@ public class StudioWindow extends StudioFrame {
     }
 
     public static void settings() {
+        settings(null);
+    }
+
+    // page - the title of the tab to be selected; null for the first one
+    public static void settings(String page) {
         SettingsDialog dialog = new SettingsDialog(WindowFactory.getActiveWindow());
+        if (page != null) dialog.selectPage(page);
         dialog.alignAndShow();
         if (dialog.getResult() == CANCELLED) return;
 
