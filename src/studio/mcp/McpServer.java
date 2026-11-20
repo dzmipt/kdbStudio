@@ -288,7 +288,11 @@ public class McpServer {
         JsonElement id = json.get("id");
         if (!json.has("method")) return null; // a response from the client - ignore
 
-        String method = json.get("method").getAsString();
+        JsonElement methodElement = json.get("method");
+        if (!methodElement.isJsonPrimitive() || !methodElement.getAsJsonPrimitive().isString()) {
+            return error(id == null ? JsonNull.INSTANCE : id, INVALID_REQUEST, "Invalid request: method should be a string");
+        }
+        String method = methodElement.getAsString();
         JsonObject params = json.has("params") && json.get("params").isJsonObject() ?
                 json.getAsJsonObject("params") : new JsonObject();
 

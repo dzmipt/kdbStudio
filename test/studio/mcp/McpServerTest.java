@@ -104,6 +104,11 @@ public class McpServerTest {
         assertEquals(McpServer.METHOD_NOT_FOUND, JsonParser.parseString(response.body()).getAsJsonObject()
                 .getAsJsonObject("error").get("code").getAsInt());
 
+        response = post("{\"jsonrpc\":\"2.0\",\"id\":9,\"method\":{\"x\":1}}", session, null);
+        assertEquals(200, response.statusCode());
+        assertEquals(McpServer.INVALID_REQUEST, JsonParser.parseString(response.body()).getAsJsonObject()
+                .getAsJsonObject("error").get("code").getAsInt());
+
         response = post(rpc(7, "ping", "{}"), session, null);
         assertEquals(200, response.statusCode());
 

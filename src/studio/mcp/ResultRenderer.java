@@ -150,6 +150,8 @@ public class ResultRenderer {
         if (type == KType.Short || type == KType.Int || type == KType.Long || type == KType.Byte) {
             ToDouble d = (ToDouble) value;
             if (d.isPositiveInfinity() || d.isNegativeInfinity()) return new JsonPrimitive(cellText(value));
+            // longs are read directly: values above 2^53 can't be represented exactly as double
+            if (value instanceof K.KLongBase) return new JsonPrimitive(((K.KLongBase) value).toLong());
             return new JsonPrimitive((long) d.toDouble());
         }
         if (type == KType.Float || type == KType.Double) {

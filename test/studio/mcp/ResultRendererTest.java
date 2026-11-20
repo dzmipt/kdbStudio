@@ -80,4 +80,12 @@ public class ResultRendererTest {
         assertTrue(obj.get("truncated").getAsBoolean());
         assertEquals(1000, obj.get("totalRows").getAsInt());
     }
+
+    @Test
+    public void jsonLongIsExact() {
+        long big = 9007199254740993L; // 2^53 + 1
+        K.Flip table = new K.Flip(new K.KSymbolVector("id"), new K.KList(new K.KLongVector(big)));
+        JsonObject json = JsonParser.parseString(ResultRenderer.renderJson(table, 10)).getAsJsonObject();
+        assertEquals(big, json.getAsJsonArray("rows").get(0).getAsJsonArray().get(0).getAsLong());
+    }
 }
