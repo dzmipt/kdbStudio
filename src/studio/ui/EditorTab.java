@@ -160,6 +160,16 @@ public class EditorTab implements FileWatcher.Listener, EditorStatusBarCallback 
         for (Runnable cancel: new ArrayList<>(externalQueries)) cancel.run();
     }
 
+    /**
+     * Cancels the running query only if it was started with the listener
+     * @return true if the query was cancelled
+     */
+    public boolean cancelQuery(QueryCompletionListener listener) {
+        if (completionListener != listener || !getQueryExecutor().running()) return false;
+        getQueryExecutor().cancel();
+        return true;
+    }
+
     public void executeQuery(QueryTask queryTask, QueryCompletionListener listener) {
         completionListener = listener;
         executeQuery(queryTask);

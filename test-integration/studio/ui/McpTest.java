@@ -13,6 +13,7 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 import studio.kdb.*;
 import studio.kdb.config.McpTokenMode;
+import studio.mcp.McpRunningQueries;
 import studio.mcp.McpService;
 import studio.utils.QConnection;
 
@@ -368,6 +369,37 @@ public class McpTest extends StudioTest {
             assertTrue((Boolean) result[0]);
             assertTrue((String) result[1], ((String) result[1]).contains("cancelled by the user"));
             waitForRunning(0);
+        } finally {
+            MockQSession.lockResponse(false);
+            McpService.getInstance().getGrants().revokeAll();
+        }
+    }
+
+    @Test
+    public void testCancelWaitingBackgroundQuery() throws Exception {
+        McpService.getInstance().getGrants().grant("server:permitted/srv", "permitted/srv", null);
+        MockQSession.resetAllQueryCount();
+        MockQSession.lockResponse(true);
+        try {
+            CompletableFuture<Object[]> first = callAsync("execute_query", "{\"server\":\"permitted/srv\",\"query\":\"first\"}");
+            waitForRunning(1);
+            Thread.sleep(300); // the first query is executing (locked in the mock)
+            CompletableFuture<Object[]> second = callAsync("execute_query", "{\"server\":\"permitted/srv\",\"query\":\"second\"}");
+            waitForRunning(2);
+
+            McpRunningQueries.RunningQuery waiting = McpService.getInstance().getRunningQueries().getAll().stream()
+                    .filter(q -> q.getQuery().equals("second")).findFirst().orElseThrow();
+            McpService.getInstance().getRunningQueries().cancel(waiting);
+            MockQSession.unlockResponse();
+
+            Object[] firstResult = first.get(10, TimeUnit.SECONDS);
+            assertFalse("the executing query is not affected: " + firstResult[1], (Boolean) firstResult[0]);
+            Object[] secondResult = second.get(10, TimeUnit.SECONDS);
+            assertTrue((Boolean) secondResult[0]);
+            assertTrue((String) secondResult[1], ((String) secondResult[1]).contains("cancelled by the user"));
+
+            int executed = MockQSession.getAllSessions().stream().mapToInt(MockQSession::getQueryCount).sum();
+            assertEquals("the cancelled query is not executed", 1, executed);
         } finally {
             MockQSession.lockResponse(false);
             McpService.getInstance().getGrants().revokeAll();

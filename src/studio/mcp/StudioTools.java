@@ -55,6 +55,8 @@ public class StudioTools {
     private static class BackgroundSession {
         final Server server;
         final Session session;
+        int users = 0; // queries using or waiting for the connection; guarded by StudioTools
+        boolean retired = false; // replaced by a newer connection or closed
 
         BackgroundSession(Server server, Session session) {
             this.server = server;
@@ -63,6 +65,7 @@ public class StudioTools {
     }
 
     private final Map<String, BackgroundSession> backgroundSessions = new HashMap<>();
+    private boolean closed = false;
 
     public StudioTools(McpService service) {
         this.service = service;
@@ -746,39 +749,49 @@ public class StudioTools {
             return new Object[] {editor.getServer(), editor.getTitle()};
         });
         Server tabServer = (Server) info[0];
-        checkPermitted(tabServer);
+        // the up-to-date server from the server list for labels and grants
+        Server server = checkPermitted(tabServer);
+        String target = "tab " + tabId + " \"" + info[1] + "\"";
 
-        confirm(context, tabServer, "tab " + tabId + " \"" + info[1] + "\"", query);
+        confirm(context, server, target, query);
 
         CompletableFuture<Object[]> future = new CompletableFuture<>();
+        EditorTab.QueryCompletionListener listener =
+                (queryResult, resultTab) -> future.complete(new Object[] {queryResult, resultTab});
         McpRunningQueries running = service.getRunningQueries();
-        McpRunningQueries.RunningQuery runningQuery = running.start(context.getClientName(), grantLabel(tabServer),
-                "tab " + tabId + " \"" + info[1] + "\"", query,
+        // cancels only the query started by this call (not a query the user starts later in the same tab)
+        McpRunningQueries.RunningQuery runningQuery = running.start(context.getClientName(), grantLabel(server),
+                target, query,
                 () -> SwingUtilities.invokeLater(() -> {
                     try {
-                        findEditor(tabId).getQueryExecutor().cancel();
+                        findEditor(tabId).cancelQuery(listener);
                     } catch (McpToolException e) {
                         // the tab is closed
                     }
                 }));
         try {
-            return executeInTabStarted(context, tabId, tabServer, query, json, maxRows, future);
+            return executeInTabStarted(context, tabId, tabServer, server, query, json, maxRows, future, listener, runningQuery);
         } finally {
             running.finish(runningQuery);
         }
     }
 
-    private String executeInTabStarted(McpCallContext context, String tabId, Server tabServer, String query,
-                                       boolean json, int maxRows, CompletableFuture<Object[]> future) throws Exception {
+    private String executeInTabStarted(McpCallContext context, String tabId, Server tabServer, Server server, String query,
+                                       boolean json, int maxRows, CompletableFuture<Object[]> future,
+                                       EditorTab.QueryCompletionListener listener,
+                                       McpRunningQueries.RunningQuery runningQuery) throws Exception {
         onEdt(() -> {
+            // the cancel action is executed on the EDT too, so it is either seen here or cancels the started query
+            if (runningQuery.isCancelled()) {
+                throw new McpToolException("The query was cancelled by the user");
+            }
             EditorTab editor = findEditor(tabId);
             if (!editor.getServer().equals(tabServer)) {
                 throw new McpToolException("The server of the tab was changed; the query is not executed");
             }
             if (editor.getQueryExecutor().running()) throw new McpToolException("A query is already running in the tab");
-            McpLog.info("[{}] executing in tab {} on {}:\n{}", context.getClientName(), tabId, grantLabel(tabServer), query);
-            editor.executeQuery(QueryTask.query(editor.getStudioWindow(), query),
-                    (queryResult, resultTab) -> future.complete(new Object[] {queryResult, resultTab}));
+            McpLog.info("[{}] executing in tab {} on {}:\n{}", context.getClientName(), tabId, grantLabel(server), query);
+            editor.executeQuery(QueryTask.query(editor.getStudioWindow(), query), listener);
             return null;
         });
 
@@ -797,7 +810,7 @@ public class StudioTools {
         String resultId = resultTab == null ? null : onEdt(() -> idOf(resultTab, "r"));
         McpLog.info("[{}] query in tab {} completed: type={}, count={}, time={} ms", context.getClientName(), tabId,
                 ResultRenderer.kind(result.getResult()), ResultRenderer.rowCount(result.getResult()), result.getExecutionTimeInMS());
-        return formatResult(grantLabel(tabServer), query, result, resultId, json, maxRows);
+        return formatResult(grantLabel(server), query, result, resultId, json, maxRows);
     }
 
     private static final ProgressCallback NO_PROGRESS = new ProgressCallback() {
@@ -809,29 +822,55 @@ public class StudioTools {
         public void setCurrentProgress(int total) {}
     };
 
-    // Closes background connections
+    // Closes background connections; no new connections are opened afterwards
     public synchronized void close() {
+        closed = true;
         for (BackgroundSession background: backgroundSessions.values()) {
-            try {
-                background.session.close();
-            } catch (Exception e) {
-                log.error("Error closing background session", e);
-            }
+            background.retired = true;
+            closeSession(background.session);
         }
         backgroundSessions.clear();
     }
 
-    private synchronized Session getBackgroundSession(Server server) {
-        String key = grantKey(server);
-        BackgroundSession background = backgroundSessions.get(key);
-        if (background != null && background.server.equals(server)
-                && Objects.equals(background.server.getPassword(), server.getPassword())) {
-            return background.session;
+    private static void closeSession(Session session) {
+        try {
+            session.close();
+        } catch (Exception e) {
+            log.error("Error closing background session", e);
         }
-        if (background != null) background.session.close();
-        Session session = Session.newDetachedSession(server);
-        backgroundSessions.put(key, new BackgroundSession(server, session));
-        return session;
+    }
+
+    // Background connections are shared by queries with the same server and credentials
+    private static String connectionKey(Server server) {
+        if (server.inServerTree()) return McpGrants.serverKey(server.getFullName());
+        return McpGrants.adHocKey(server.getHost(), server.getPort()) + ":" + server.getUseTLS() + ":" +
+                server.getAuthenticationMechanism() + ":" + server.getUsername();
+    }
+
+    /**
+     * A background connection for the server; it should be released with releaseBackgroundSession()
+     */
+    private synchronized BackgroundSession acquireBackgroundSession(Server server) throws McpToolException {
+        if (closed) throw new McpToolException("The MCP server is stopping");
+        String key = connectionKey(server);
+        BackgroundSession background = backgroundSessions.get(key);
+        if (background == null || !background.server.equals(server)
+                || !Objects.equals(background.server.getPassword(), server.getPassword())) {
+            if (background != null) {
+                // connection details changed (e.g. the server is edited): close it when it is no longer in use
+                background.retired = true;
+                if (background.users == 0) closeSession(background.session);
+            }
+            background = new BackgroundSession(server, Session.newDetachedSession(server));
+            backgroundSessions.put(key, background);
+        }
+        background.users++;
+        return background;
+    }
+
+    private synchronized void releaseBackgroundSession(BackgroundSession background) {
+        background.users--;
+        if (background.retired && background.users == 0) closeSession(background.session);
     }
 
     private String executeInBackground(McpCallContext context, Server server, String query, boolean json, int maxRows) throws Exception {
@@ -844,31 +883,63 @@ public class StudioTools {
             throw e;
         }
 
-        int index = queryIndex.getAndIncrement();
-        queryLog.info("#mcp-{}: query {}({}) from AI agent {}\n{}", index, server.getFullName(), server.getConnectionString(),
-                context.getClientName(), query);
-        McpLog.info("[{}] executing in background on {}:\n{}", context.getClientName(), grantLabel(server), query);
+        BackgroundSession background = acquireBackgroundSession(server);
+        try {
+            return executeInBackground(context, background, server, query, outcome, json, maxRows);
+        } finally {
+            releaseBackgroundSession(background);
+        }
+    }
 
-        Session session = getBackgroundSession(server);
+    private String executeInBackground(McpCallContext context, BackgroundSession background, Server server, String query,
+                                       String outcome, boolean json, int maxRows) throws Exception {
+        String agent = context.getClientName();
+        int index = queryIndex.getAndIncrement();
+        Session session = background.session;
         QueryResult result = new QueryResult(server, query, false);
         McpRunningQueries running = service.getRunningQueries();
+
+        // The connection is shared; it is closed by the cancel action only while this query is executing on it.
+        // A query cancelled while waiting for the connection is not executed.
+        Object state = new Object();
+        boolean[] executing = {false};
         McpRunningQueries.RunningQuery runningQuery = running.start(agent, grantLabel(server), "background connection", query,
-                session::close);
+                () -> {
+                    synchronized (state) {
+                        if (executing[0]) session.close();
+                    }
+                });
         Runnable cancel = () -> running.cancel(runningQuery);
         SwingUtilities.invokeLater(() -> AgentQueriesWindow.queryStarted(runningQuery, agent, server, query, outcome, cancel));
-        synchronized (session) {
-            try {
-                session.validate();
-                KMessage message = session.execute(WindowFactory.getLastActiveWindow(), new K.KString(query), NO_PROGRESS);
-                result.setResult(message);
-            } catch (K4Exception e) {
-                result.setError(e);
-            } catch (Exception e) {
-                session.close();
-                result.setError(e);
-            } finally {
-                running.finish(runningQuery);
+        try {
+            synchronized (background) {
+                boolean execute;
+                synchronized (state) {
+                    execute = !runningQuery.isCancelled();
+                    executing[0] = execute;
+                }
+                if (execute) {
+                    queryLog.info("#mcp-{}: query {}({}) from AI agent {}\n{}", index, server.getFullName(),
+                            server.getConnectionString(), agent, query);
+                    McpLog.info("[{}] executing in background on {}:\n{}", agent, grantLabel(server), query);
+                    try {
+                        session.validate();
+                        KMessage message = session.execute(WindowFactory.getLastActiveWindow(), new K.KString(query), NO_PROGRESS);
+                        result.setResult(message);
+                    } catch (K4Exception e) {
+                        result.setError(e);
+                    } catch (Exception e) {
+                        session.close();
+                        result.setError(e);
+                    } finally {
+                        synchronized (state) {
+                            executing[0] = false;
+                        }
+                    }
+                }
             }
+        } finally {
+            running.finish(runningQuery);
         }
         boolean cancelled = runningQuery.isCancelled();
         SwingUtilities.invokeLater(() -> AgentQueriesWindow.queryFinished(runningQuery, cancel, agent, server, result, cancelled));
@@ -882,12 +953,12 @@ public class StudioTools {
         if (result.getError() != null) {
             String message = errorMessage(result.getError());
             queryLog.info("#mcp-{}: error {}", index, message);
-            McpLog.info("[{}] background query on {} failed: {}", context.getClientName(), grantLabel(server), message);
+            McpLog.info("[{}] background query on {} failed: {}", agent, grantLabel(server), message);
             throw new McpToolException("Error: " + message);
         }
         queryLog.info("#mcp-{}: type={}, count={}, time={}", index, ResultRenderer.kind(result.getResult()),
                 ResultRenderer.rowCount(result.getResult()), result.getExecutionTimeInMS());
-        McpLog.info("[{}] background query on {} completed: type={}, count={}, time={} ms", context.getClientName(),
+        McpLog.info("[{}] background query on {} completed: type={}, count={}, time={} ms", agent,
                 grantLabel(server), ResultRenderer.kind(result.getResult()), ResultRenderer.rowCount(result.getResult()),
                 result.getExecutionTimeInMS());
         return formatResult(grantLabel(server), query, result, null, json, maxRows);
