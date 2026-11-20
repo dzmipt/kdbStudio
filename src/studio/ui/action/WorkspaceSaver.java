@@ -233,7 +233,7 @@ public class WorkspaceSaver {
             json.addProperty(FILENAME, filename);
         }
 
-        Server server = tab.getServer();
+        Server server = Config.getInstance().resolveAuth(tab.getServer());
         json.addProperty(SERVER_FULLNAME, server.getFullName());
         json.addProperty(SERVER_CONNECTION, server.getConnectionStringWithPwd());
         json.addProperty(SERVER_AUTH, server.getAuthenticationMechanism());

@@ -21,6 +21,7 @@ public class QConnection {
         return new Parser(connectionString).getConnection();
     }
 
+    // user and password can be null - which means default credentials (see studio.kdb.Server)
     public QConnection(String host, int port, String user, String password, boolean useTLS) {
         this.host = host;
         this.port = port;
@@ -63,6 +64,8 @@ public class QConnection {
         if (useTLS) str.append(TCPS_PREFIX);
         str.append(host).append(':').append(port);
 
+        String user = this.user == null ? "" : this.user;
+        String password = this.password == null ? "" : this.password;
         if (includeUserPassword &&
                 (!user.isEmpty() || !password.isEmpty()) ) {
             str.append(':').append(user);

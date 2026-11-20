@@ -175,7 +175,7 @@ public class EditorTab implements FileWatcher.Listener, EditorStatusBarCallback 
 
     @Override
     public void connect(String authMethod) {
-        if (! getServer().getAuthenticationMechanism().equals(authMethod)) {
+        if (! Config.getInstance().resolveAuth(getServer()).getAuthenticationMechanism().equals(authMethod)) {
             Server newServer = Config.getInstance().getServerConfig().lookup(session.getConnection(), authMethod);
             studioWindow.setServer(newServer);
         }
@@ -187,8 +187,9 @@ public class EditorTab implements FileWatcher.Listener, EditorStatusBarCallback 
     public void connectTLS(boolean useTLS) {
         Server newServer = getServer();
         if (newServer.getUseTLS() != useTLS) {
-            QConnection conn = newServer.getConnection().changeTLS(useTLS);
-            String auth = newServer.getAuthenticationMechanism();
+            Server resolved = Config.getInstance().resolveAuth(newServer);
+            QConnection conn = resolved.getConnection().changeTLS(useTLS);
+            String auth = resolved.getAuthenticationMechanism();
             QConnection.Parser parser = new QConnection.Parser(conn);
             parser.setSpecifiedProtocol(true);
             newServer = Config.getInstance().getServerConfig().lookup(parser, auth);

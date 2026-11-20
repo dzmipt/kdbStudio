@@ -1,5 +1,6 @@
 package studio.kdb.config.server;
 
+import studio.kdb.Config;
 import studio.kdb.Server;
 
 import java.awt.*;
@@ -18,6 +19,8 @@ public class FieldGetter<E> {
         user("Username"),
         password("Password"),
         auth("Auth. Method"),
+        defaultAuth("Default Auth. Method"),
+        defaultCredentials("Default User/Password"),
         color("Background Color");
 
         private final String text;
@@ -41,11 +44,22 @@ public class FieldGetter<E> {
     public final static FieldGetter<String> HOST = new FieldGetter<>(Names.host, Server::getHost);
     public final static FieldGetter<Integer> PORT = new FieldGetter<>(Names.port, Server::getPort);
     public final static FieldGetter<Boolean> TLS = new FieldGetter<>(Names.tls, Server::getUseTLS);
-    public final static FieldGetter<String> USER = new FieldGetter<>(Names.user, Server::getUsername);
-    public final static FieldGetter<String> PASSWORD = new FieldGetter<>(Names.password, Server::getPassword);
-    public final static FieldGetter<String> AUTH = new FieldGetter<>(Names.auth, Server::getAuthenticationMechanism);
+    // Auth.method and credentials which the server actually uses (defaults are resolved from the Settings)
+    public final static FieldGetter<String> USER = new FieldGetter<>(Names.user, s -> resolveAuth(s).getUsername());
+    public final static FieldGetter<String> PASSWORD = new FieldGetter<>(Names.password, s -> resolveAuth(s).getPassword());
+    public final static FieldGetter<String> AUTH = new FieldGetter<>(Names.auth, s -> resolveAuth(s).getAuthenticationMechanism());
+    public final static FieldGetter<Boolean> DEFAULT_AUTH = new FieldGetter<>(Names.defaultAuth, Server::isDefaultAuthMethod);
+    public final static FieldGetter<Boolean> DEFAULT_CREDENTIALS = new FieldGetter<>(Names.defaultCredentials, Server::isDefaultCredentials);
+    // Values stored with the server: null for default auth.method or default credentials
+    public final static FieldGetter<String> SERVER_USER = new FieldGetter<>(Names.user, Server::getUsername);
+    public final static FieldGetter<String> SERVER_PASSWORD = new FieldGetter<>(Names.password, Server::getPassword);
+    public final static FieldGetter<String> SERVER_AUTH = new FieldGetter<>(Names.auth, Server::getAuthenticationMechanism);
     public final static FieldGetter<Color> COLOR = new FieldGetter<>(Names.color, Server::getBackgroundColor);
 
+
+    private static Server resolveAuth(Server server) {
+        return Config.getInstance().resolveAuth(server);
+    }
 
     private interface Getter<E> {
         E get(Server server);

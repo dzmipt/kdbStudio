@@ -17,6 +17,7 @@ import java.io.IOException;
 import java.io.Writer;
 import java.util.*;
 import java.util.List;
+import java.util.function.UnaryOperator;
 import java.util.stream.Collectors;
 
 
@@ -32,7 +33,9 @@ public class ServerConfig {
     // Version history:
     //   no version - the original format
     //   1 - bgColor is optional: a server without bgColor uses the background color from the style schema
-    public final static int VERSION = 1;
+    //   2 - authMethod is optional: a server without authMethod uses the default auth.method (with the default
+    //       credentials); "defaultCredentials": true - the server uses the default credentials for its auth.method
+    public final static int VERSION = 2;
 
     // the editor background color before style schemas (the default for all servers)
     private final static Color LEGACY_DEFAULT_BG_COLOR = Color.WHITE;
@@ -89,20 +92,37 @@ public class ServerConfig {
         }
     }
 
-    private ServerTreeNode convertBgColorToDefault(ServerTreeNode serverTreeNode, Set<Color> colors) {
+    // Returns a copy of the tree with every server replaced by the mapper result
+    private static ServerTreeNode mapServers(ServerTreeNode serverTreeNode, UnaryOperator<Server> mapper) {
         ServerTreeNode result = new ServerTreeNode(serverTreeNode.getFolder());
         for (ServerTreeNode child: serverTreeNode.childNodes()) {
             if (child.isFolder()) {
-                result.add(convertBgColorToDefault(child, colors));
+                result.add(mapServers(child, mapper));
             } else {
-                Server server = child.getServer();
-                if (colors.contains(server.getBackgroundColor())) {
-                    server = server.newBackgroundColor(null);
-                }
-                result.add(server);
+                result.add(mapper.apply(child.getServer()));
             }
         }
         return result;
+    }
+
+    /**
+     * Converts a server from the format before version 2 to use the default auth.method or default credentials
+     * if its auth.method and credentials are the same as the defaults. The server is connected in the same way after the conversion.
+     * <ul>
+     *     <li>the default auth.method with the default credentials for it -> the default auth.method (null)</li>
+     *     <li>the default credentials for the server's auth.method -> the default credentials (null)</li>
+     *     <li>otherwise (incl. the default auth.method with own credentials) the server is not changed</li>
+     * </ul>
+     */
+    public static Server convertToDefaultAuth(Server server, DefaultAuthConfig defaultAuthConfig) {
+        if (server.isDefaultCredentials()) return server;
+
+        String authMethod = server.getAuthenticationMechanism();
+        Credentials credentials = new Credentials(server.getUsername(), server.getPassword());
+        if (! credentials.equals(defaultAuthConfig.getCredential(authMethod))) return server;
+
+        if (authMethod.equals(defaultAuthConfig.getDefaultAuth())) return server.newAuthMethod(null);
+        return server.newCredentials(null);
     }
 
     /**
@@ -110,8 +130,10 @@ public class ServerConfig {
      * @param defaultBgColor the editor background color from the style schema for the current Look and Feel.
      *                       Servers with this background color, or with white (the default background
      *                       before style schemas), are switched to the default background.
+     * @param defaultAuthConfig the default auth.method and credentials from the Settings. Servers with the same
+     *                          auth.method and credentials are switched to the defaults (see convertToDefaultAuth)
      */
-    public void upgrade(Color defaultBgColor) {
+    public void upgrade(Color defaultBgColor, DefaultAuthConfig defaultAuthConfig) {
         if (version >= VERSION) return;
 
         log.info("Upgrading servers config from version {} to {}", version, VERSION);
@@ -123,11 +145,20 @@ public class ServerConfig {
             }
         }
 
-        Set<Color> colors = new LinkedHashSet<>(List.of(defaultBgColor, LEGACY_DEFAULT_BG_COLOR));
-        log.info("Servers with background colors {} are switched to the default background",
-                colors.stream().map(Util::colorToString).collect(Collectors.toList()));
+        ServerTreeNode root = serverTree;
+        if (version < 1) {
+            Set<Color> colors = new LinkedHashSet<>(List.of(defaultBgColor, LEGACY_DEFAULT_BG_COLOR));
+            log.info("Servers with background colors {} are switched to the default background",
+                    colors.stream().map(Util::colorToString).collect(Collectors.toList()));
+            root = mapServers(root, server -> colors.contains(server.getBackgroundColor()) ?
+                                                    server.newBackgroundColor(null) : server);
+        }
+        if (version < 2) {
+            log.info("Servers with the default auth.method and/or credentials are switched to the defaults");
+            root = mapServers(root, server -> convertToDefaultAuth(server, defaultAuthConfig));
+        }
         version = VERSION;
-        setRoot(convertBgColorToDefault(serverTree, colors));
+        setRoot(root);
     }
 
     public void setRoot(ServerTreeNode root) {
@@ -331,7 +362,10 @@ public class ServerConfig {
         boolean defaultUseTLS = Config.getInstance().getBoolean(Config.TRY_TLS_CONNECTION_FIRST);
 
         Map<Server, Integer> list = new LinkedHashMap<>();
-        for (Server s: servers.values()) {
+        DefaultAuthConfig defaultAuthConfig = Config.getInstance().getDefaultAuthConfig();
+        for (Server server: servers.values()) {
+            // compare with auth.method and credentials which the server actually uses
+            Server s = defaultAuthConfig.resolve(server);
             if (s.getHost().equals(host) && s.getPort() == port) {
                 if (parser.isSpecifiedProtocol() && s.getUseTLS() != useTLS) continue;
                 if (parser.isSpecifiedUser() && !s.getUsername().equals(user)) continue;
@@ -341,7 +375,7 @@ public class ServerConfig {
                 int weight = 0;
                 if (s.getAuthenticationMechanism().equals(defaultAuthMechanism)) weight = 2;
                 if (s.getUseTLS() == defaultUseTLS) weight += 1;
-                list.put(s, weight);
+                list.put(server, weight);
             }
         }
 
