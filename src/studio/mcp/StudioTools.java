@@ -281,7 +281,8 @@ public class StudioTools {
         String filter = getString(args, "filter", false);
         String lowerFilter = filter == null ? null : filter.toLowerCase();
         Config config = Config.getInstance();
-        List<Server> servers = McpService.getPermissions().allowedServers(config.getServerTree());
+        // the server tree is modified on the EDT
+        List<Server> servers = onEdt(() -> McpService.getPermissions().allowedServers(config.getServerTree()));
 
         JsonArray list = new JsonArray();
         for (Server server: servers) {
@@ -306,7 +307,12 @@ public class StudioTools {
     }
 
     // Resolves a server from the server list and checks the permission
-    private static Server resolvePermittedServer(String name) throws McpToolException {
+    private static Server resolvePermittedServer(String name) throws Exception {
+        // the server tree is modified on the EDT
+        return onEdt(() -> resolvePermittedServerOnEdt(name));
+    }
+
+    private static Server resolvePermittedServerOnEdt(String name) throws McpToolException {
         Server server = Config.getInstance().getServerConfig().getServer(name);
         if (server == Server.NO_SERVER) {
             throw new McpToolException("Server '" + name + "' is not found in the Studio server list");
@@ -348,7 +354,7 @@ public class StudioTools {
     /**
      * A permitted server from `server` or `connection` argument; null if none is specified
      */
-    private static Server serverFromArgs(JsonObject args) throws McpToolException {
+    private static Server serverFromArgs(JsonObject args) throws Exception {
         String name = getString(args, "server", false);
         JsonElement connection = args.get("connection");
         boolean hasConnection = connection != null && connection.isJsonObject();
@@ -362,7 +368,7 @@ public class StudioTools {
      * Checks that the server (e.g. of a tab) can be used by agents.
      * @return the up-to-date server from the server list, or the ad-hoc server itself
      */
-    private static Server checkPermitted(Server server) throws McpToolException {
+    private static Server checkPermitted(Server server) throws Exception {
         if (server == null || server == Server.NO_SERVER) {
             throw new McpToolException("No server is set");
         }
@@ -587,7 +593,7 @@ public class StudioTools {
         builder.append("Type: ").append(ResultRenderer.kind(obj));
         if (obj != null) builder.append(", count: ").append(String.format("%,d", ResultRenderer.rowCount(obj)));
         builder.append("\n\n");
-        builder.append(ResultRenderer.renderText(obj, maxRows));
+        builder.append(ResultRenderer.renderText(obj, maxRows, maxChars));
         return ResultRenderer.limit(builder.toString(), maxChars);
     }
 
@@ -705,7 +711,7 @@ public class StudioTools {
                     McpLog.info("[{}] query on {} confirmed by the user", agent, grantLabel(server));
                     return "confirmed by the user";
                 case ALLOW_FOR_INTERVAL:
-                    Config.getInstance().setEnum(Config.MCP_GRANT_INTERVAL, interval);
+                    onEdt(() -> Config.getInstance().setEnum(Config.MCP_GRANT_INTERVAL, interval));
                     grants.grant(key, grantLabel(server), interval.getDuration());
                     grants.useGrant(key);
                     McpLog.info("[{}] query on {} confirmed; further queries are allowed for {}",

@@ -88,4 +88,22 @@ public class ResultRendererTest {
         JsonObject json = JsonParser.parseString(ResultRenderer.renderJson(table, 10)).getAsJsonObject();
         assertEquals(big, json.getAsJsonArray("rows").get(0).getAsJsonArray().get(0).getAsLong());
     }
+
+    @Test
+    public void longVectorsAreCutBeforeFormatting() {
+        long[] values = new long[100_000];
+        for (int i = 0; i < values.length; i++) values[i] = i;
+        String text = ResultRenderer.renderText(new K.KLongVector(values), 5, 10_000);
+        assertEquals("0 1 2 3 4 ...\n... (5 of 100,000 items shown)".replace("\n", System.lineSeparator()), text);
+
+        K.KList list = new K.KList(new K.KLongVector(values), new K.KSymbol("a"), new K.KLong(1));
+        text = ResultRenderer.renderText(list, 2, 10_000);
+        assertTrue(text.startsWith("(0 1 ...;`a;...)"), text);
+
+        String big = "x".repeat(50_000);
+        text = ResultRenderer.renderText(new K.KString(big), 5, 100);
+        assertEquals("\"" + "x".repeat(100) + "...\"", text);
+
+        assertEquals("1 2 3", ResultRenderer.renderText(new K.KLongVector(1, 2, 3), 5, 100));
+    }
 }

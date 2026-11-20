@@ -293,6 +293,12 @@ public class McpTest extends StudioTest {
             closeAgentWindow();
         }
         assertNull(agentWindow());
+        robot().waitForIdle();
+        assertFalse("the closed window is released", org.assertj.swing.edt.GuiActionRunner.execute(
+                () -> studio.mcp.ui.AgentQueriesWindow.isOpen()));
+        java.lang.reflect.Field field = studio.mcp.ui.AgentQueriesWindow.class.getDeclaredField("window");
+        field.setAccessible(true);
+        assertNull(field.get(null));
     }
 
     private void waitForRunning(int count) throws Exception {

@@ -56,7 +56,7 @@ public class ResultRenderer {
 
     public static String render(K.KBase obj, boolean json, int maxRows, int maxChars) {
         if (json) return gson.toJson(renderJsonLimited(obj, maxRows, maxChars));
-        return limit(renderText(obj, maxRows), maxChars);
+        return limit(renderText(obj, maxRows, maxChars), maxChars);
     }
 
     /**
@@ -65,7 +65,7 @@ public class ResultRenderer {
     public static JsonObject renderJsonLimited(K.KBase obj, int maxRows, int maxChars) {
         int rows = maxRows;
         while (true) {
-            JsonObject json = renderJsonObject(obj, rows);
+            JsonObject json = renderJsonObject(obj, rows, maxChars);
             int length = gson.toJson(json).length();
             if (length <= maxChars) return json;
             if (json.has("value")) {
@@ -85,11 +85,72 @@ public class ResultRenderer {
         return text.substring(0, maxChars) + "\n... (truncated: " + maxChars + " of " + text.length() + " characters shown)";
     }
 
+    // Text of non-tabular objects is limited to this number of characters if not specified
+    private static final int DEFAULT_MAX_CHARS = 1_000_000;
+
+    /**
+     * Formats a non-tabular object without formatting more than needed: vectors are cut to maxItems elements,
+     * strings to maxChars characters, and formatting stops when the text exceeds maxChars
+     */
+    public static String formatLimited(K.KBase obj, int maxItems, int maxChars) {
+        StringBuilder builder = new StringBuilder();
+        int count = obj instanceof K.KBaseVector ? obj.count() : 0;
+        formatLimited(builder, obj, maxItems, maxChars, true);
+        if (obj instanceof K.KBaseVector && !(obj instanceof K.KString) && count > maxItems) {
+            builder.append(String.format("%n... (%,d of %,d items shown)", maxItems, count));
+        }
+        return builder.toString();
+    }
+
+    private static void formatLimited(StringBuilder builder, K.KBase obj, int maxItems, int maxChars, boolean showType) {
+        int budget = Math.max(0, maxChars - builder.length());
+        if (obj instanceof K.KString) {
+            String value = ((K.KString) obj).getString();
+            if (value.length() <= budget) {
+                builder.append(obj.toString(showType ? WITH_TYPE : NO_TYPE));
+            } else {
+                builder.append('"').append(value, 0, budget).append("...\"");
+            }
+            return;
+        }
+        if (obj instanceof K.KList) {
+            K.KList list = (K.KList) obj;
+            int n = Math.min(list.count(), maxItems);
+            builder.append('(');
+            for (int i = 0; i < n; i++) {
+                if (builder.length() > maxChars) {
+                    builder.append("...");
+                    break;
+                }
+                if (i > 0) builder.append(';');
+                formatLimited(builder, list.at(i), maxItems, maxChars, true);
+            }
+            if (list.count() > n) builder.append(";...");
+            builder.append(')');
+            return;
+        }
+        if (obj instanceof K.KBaseVector && obj.count() > maxItems) {
+            K.KBaseVector<?> vector = (K.KBaseVector<?>) obj;
+            for (int i = 0; i < maxItems; i++) {
+                if (builder.length() > maxChars) break;
+                if (i > 0) builder.append(' ');
+                builder.append(vector.at(i).toString(NO_TYPE));
+            }
+            builder.append(" ...");
+            return;
+        }
+        builder.append(obj.toString(showType ? WITH_TYPE : NO_TYPE));
+    }
+
     public static String renderText(K.KBase obj, int maxRows) {
+        return renderText(obj, maxRows, DEFAULT_MAX_CHARS);
+    }
+
+    public static String renderText(K.KBase obj, int maxRows, int maxChars) {
         if (obj == null) return "(no result)";
         KTableModel model = tabularModel(obj);
         if (model == null) {
-            return obj.toString(WITH_TYPE);
+            return formatLimited(obj, maxRows, maxChars);
         }
 
         int rows = model.getRowCount();
@@ -167,6 +228,10 @@ public class ResultRenderer {
     }
 
     public static JsonObject renderJsonObject(K.KBase obj, int maxRows) {
+        return renderJsonObject(obj, maxRows, DEFAULT_MAX_CHARS);
+    }
+
+    public static JsonObject renderJsonObject(K.KBase obj, int maxRows, int maxChars) {
         JsonObject json = new JsonObject();
         json.addProperty("type", kind(obj));
         if (obj == null) return json;
@@ -175,7 +240,7 @@ public class ResultRenderer {
         if (model == null) {
             json.addProperty("qtype", obj.getType().getName());
             json.addProperty("count", obj.count());
-            json.addProperty("value", obj.toString(WITH_TYPE));
+            json.addProperty("value", formatLimited(obj, maxRows, maxChars));
             return json;
         }
 

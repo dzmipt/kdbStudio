@@ -17,6 +17,10 @@ public class McpSessions {
 
     // An agent is shown as connected if it was active recently
     public static final Duration ACTIVE_PERIOD = Duration.ofMinutes(5);
+    // Sessions idle for longer are forgotten (a client then gets 404 and initializes a new session)
+    public static final Duration IDLE_TIMEOUT = Duration.ofDays(1);
+    // The maximum number of sessions; the least recently active ones are removed
+    public static final int MAX_SESSIONS = 200;
 
     public static class Session {
         private final String id;
@@ -98,8 +102,24 @@ public class McpSessions {
     public Session create(String clientName, String clientVersion, String remoteAddress) {
         Session session = new Session(UUID.randomUUID().toString(), clientName, clientVersion, remoteAddress, clock.instant());
         sessions.put(session.getId(), session);
+        removeIdle();
         fire();
         return session;
+    }
+
+    // Removes sessions idle for longer than IDLE_TIMEOUT, and the least recently active ones above MAX_SESSIONS
+    private synchronized void removeIdle() {
+        Instant now = clock.instant();
+        sessions.values().removeIf(s -> Duration.between(s.getLastActivity(), now).compareTo(IDLE_TIMEOUT) > 0);
+        int extra = sessions.size() - MAX_SESSIONS;
+        if (extra <= 0) return;
+        List<Session> list = new ArrayList<>(sessions.values());
+        list.sort((s1, s2) -> s1.getLastActivity().compareTo(s2.getLastActivity()));
+        for (int i = 0; i < extra; i++) sessions.remove(list.get(i).getId());
+    }
+
+    public int size() {
+        return sessions.size();
     }
 
     public Session get(String id) {

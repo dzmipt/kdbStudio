@@ -643,6 +643,8 @@ public class StudioWindow extends StudioFrame {
             WorkspaceSaver.setEnabled(true);
         }
         WorkspaceSaver.save(getWorkspace());
+        // close connections of AI agents' background queries
+        studio.mcp.McpService.getInstance().shutdown();
         CONFIG.exit();
     }
 

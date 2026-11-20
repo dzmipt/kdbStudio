@@ -15,6 +15,8 @@ public class QueryConfirmationDialog extends EscapeDialog {
 
     public enum Decision {RUN, DENY, ALLOW_FOR_INTERVAL, TIMEOUT}
 
+    private static final int MAX_ROWS = 20;
+
     private Decision decision = Decision.DENY;
     private final JComboBox<McpGrantInterval> comboInterval;
     private final JLabel lblCountdown;
@@ -46,14 +48,22 @@ public class QueryConfirmationDialog extends EscapeDialog {
         txtQuery.setEditable(false);
         txtQuery.setFont(Config.getInstance().getFont(Config.FONT_EDITOR));
         txtQuery.setCaretPosition(0);
-        int lines = Math.max(3, Math.min(15, query.split("\n", -1).length));
-        txtQuery.setRows(lines);
+        int lineCount = query.split("\n", -1).length;
+        int rows = Math.max(3, Math.min(MAX_ROWS, lineCount));
+        txtQuery.setRows(rows);
         txtQuery.setColumns(60);
         JScrollPane scrollQuery = new JScrollPane(txtQuery);
 
         JPanel pnlTop = new JPanel(new BorderLayout());
         pnlTop.add(lblHeader, BorderLayout.NORTH);
         pnlTop.add(pnlInfo, BorderLayout.CENTER);
+        if (lineCount > rows) {
+            // the dangerous part could be hidden below the visible lines
+            JLabel lblLines = new JLabel(String.format("The query has %,d lines - scroll down to review all of it before running.", lineCount));
+            lblLines.setForeground(new Color(200, 0, 0));
+            lblLines.setBorder(new EmptyBorder(6, 0, 0, 0));
+            pnlTop.add(lblLines, BorderLayout.SOUTH);
+        }
 
         JButton btnRun = new JButton("Run");
         JButton btnDeny = new JButton("Deny");

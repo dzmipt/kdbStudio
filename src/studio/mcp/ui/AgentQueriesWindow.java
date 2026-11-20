@@ -9,6 +9,8 @@ import studio.ui.WindowFactory;
 import studio.ui.action.QueryResult;
 
 import javax.swing.*;
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.HashMap;
@@ -43,7 +45,18 @@ public class AgentQueriesWindow {
 
     private static void create(boolean focus) {
         tabs.clear();
-        window = WindowFactory.newAgentWindow(focus);
+        StudioWindow newWindow = WindowFactory.newAgentWindow(focus);
+        newWindow.addWindowListener(new WindowAdapter() {
+            @Override
+            public void windowClosed(WindowEvent e) {
+                // release the window with its result tabs (they can hold large results)
+                if (window == newWindow) {
+                    window = null;
+                    tabs.clear();
+                }
+            }
+        });
+        window = newWindow;
     }
 
     // Returns the window if it is open or should be opened according to the settings
