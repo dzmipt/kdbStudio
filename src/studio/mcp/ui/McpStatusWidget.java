@@ -114,7 +114,7 @@ public class McpStatusWidget extends MinSizeLabel implements McpService.Listener
     }
 
     private static String escape(String text) {
-        return text.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;");
+        return PlainText.escape(text);
     }
 
     private static String formatTime(java.time.Instant instant) {
@@ -126,7 +126,7 @@ public class McpStatusWidget extends MinSizeLabel implements McpService.Listener
         JPopupMenu menu = new JPopupMenu();
 
         if (service.getState() == McpService.State.FAILED) {
-            JMenuItem item = new JMenuItem(service.getError());
+            JMenuItem item = PlainText.menuItem(service.getError());
             item.setEnabled(false);
             menu.add(item);
         } else {
@@ -137,7 +137,7 @@ public class McpStatusWidget extends MinSizeLabel implements McpService.Listener
                 menu.add(item);
             }
             for (McpSessions.Session agent: agents) {
-                JMenuItem item = new JMenuItem(agent.getDisplayName() + " from " + agent.getRemoteAddress() +
+                JMenuItem item = PlainText.menuItem(agent.getDisplayName() + " from " + agent.getRemoteAddress() +
                         ", last active at " + formatTime(agent.getLastActivity()));
                 item.setEnabled(false);
                 menu.add(item);
@@ -155,7 +155,7 @@ public class McpStatusWidget extends MinSizeLabel implements McpService.Listener
                 long seconds = java.time.Duration.between(query.getStarted(), java.time.Instant.now()).getSeconds();
                 String text = query.getQuery().replace('\n', ' ');
                 if (text.length() > 60) text = text.substring(0, 60) + "...";
-                JMenuItem item = new JMenuItem("Cancel: " + text + "  (" + query.getServer() + ", " + seconds + " s)");
+                JMenuItem item = PlainText.menuItem("Cancel: " + text + "  (" + query.getServer() + ", " + seconds + " s)");
                 item.setToolTipText("<html>" + escape(query.getAgent()) + " on " + escape(query.getServer()) + ", " +
                         escape(query.getTarget()) + "<br/><pre>" + escape(query.getQuery()) + "</pre></html>");
                 item.addActionListener(e -> service.getRunningQueries().cancel(query));

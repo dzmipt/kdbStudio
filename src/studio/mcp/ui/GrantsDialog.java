@@ -117,7 +117,7 @@ public class GrantsDialog extends EscapeDialog implements McpGrants.Listener {
 
         int row = 1;
         for (McpGrants.Grant grant: active) {
-            addCell(new JLabel(grant.getLabel()), row, 0, 1);
+            addCell(PlainText.label(grant.getLabel()), row, 0, 1);
             addCell(new JLabel(formatTime(grant.getGrantedAt())), row, 1, 0);
             Instant expires = grant.getExpiresAt();
             addCell(new JLabel(expires == null ? "until Studio exits" : formatTime(expires)), row, 2, 0);

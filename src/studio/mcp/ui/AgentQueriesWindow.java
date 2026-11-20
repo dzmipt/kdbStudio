@@ -134,7 +134,8 @@ public class AgentQueriesWindow {
             if (tab != null && tab.isAddedToPanel()) append(tab, "/ ^ cancelled by the user", false);
             return;
         }
-        window.addResultTab(result, "Executed by AI agent " + agent + " at server: " + server.getDescription(true));
+        window.addResultTab(result, "Executed by AI agent " + PlainText.escape(agent) + " at server: " +
+                PlainText.escape(server.getDescription(true)));
     }
 
     /**

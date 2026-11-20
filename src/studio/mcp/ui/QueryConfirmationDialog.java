@@ -36,11 +36,11 @@ public class QueryConfirmationDialog extends EscapeDialog {
         c.gridx = 0; c.gridy = 0;
         pnlInfo.add(new JLabel("Server:"), c);
         c.gridx = 1; c.weightx = 1;
-        pnlInfo.add(new JLabel(serverDescription), c);
+        pnlInfo.add(PlainText.label(serverDescription), c);
         c.gridx = 0; c.gridy = 1; c.weightx = 0;
         pnlInfo.add(new JLabel("Run in:"), c);
         c.gridx = 1; c.weightx = 1;
-        pnlInfo.add(new JLabel(target), c);
+        pnlInfo.add(PlainText.label(target), c);
 
         JTextArea txtQuery = new JTextArea(query);
         txtQuery.setEditable(false);
@@ -103,7 +103,7 @@ public class QueryConfirmationDialog extends EscapeDialog {
     }
 
     private static String escape(String text) {
-        return text.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;");
+        return PlainText.escape(text);
     }
 
     private void refreshCountdown() {
