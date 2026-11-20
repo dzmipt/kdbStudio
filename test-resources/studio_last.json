@@ -147,7 +147,7 @@
   "mcpEnabled" : true,
   "mcpPort" : 7900,
   "mcpAccess" : "REMOTE",
-  "mcpTokenMode" : "ALL",
+  "mcpTokenMode" : "NONE",
   "mcpToken" : "secret-token",
   "mcpAllowedServers" : ["folder:a/b", "server:top"],
   "mcpAllowAdHoc" : true,

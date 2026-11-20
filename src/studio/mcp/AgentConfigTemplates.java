@@ -21,8 +21,8 @@ public class AgentConfigTemplates {
         COPILOT_VSCODE("GitHub Copilot - VS Code",
                 "Add to .vscode/mcp.json in the workspace, or to the user configuration " +
                 "(command 'MCP: Open User Configuration'). Use Copilot Chat in Agent mode."),
-        COPILOT_JETBRAINS("GitHub Copilot - JetBrains IDEs",
-                "Copilot Chat > Agent mode > Configure tools (MCP), then add to mcp.json:"),
+        INTELLIJ_IDEA("IntelliJ IDEA",
+                "GitHub Copilot in IntelliJ IDEA: Copilot Chat > Agent mode > Configure tools (MCP), then add to mcp.json:"),
         COPILOT_VISUAL_STUDIO("GitHub Copilot - Visual Studio",
                 "Add to .mcp.json in the solution folder or to %USERPROFILE%\\.mcp.json. Use Copilot Chat in Agent mode."),
         COPILOT_CLI("GitHub Copilot CLI",
@@ -91,13 +91,10 @@ public class AgentConfigTemplates {
                 server.addProperty("url", url);
                 if (token != null) server.add("headers", headers(token));
                 return wrap("servers", server);
-            case COPILOT_JETBRAINS:
+            case INTELLIJ_IDEA:
+                server.addProperty("type", "http");
                 server.addProperty("url", url);
-                if (token != null) {
-                    JsonObject requestInit = new JsonObject();
-                    requestInit.add("headers", headers(token));
-                    server.add("requestInit", requestInit);
-                }
+                if (token != null) server.add("headers", headers(token));
                 return wrap("servers", server);
             case COPILOT_CLI:
                 server.addProperty("type", "http");

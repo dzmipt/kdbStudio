@@ -40,7 +40,7 @@ New Settings tab **"AI Agent (MCP)"**, stored in `studio.json`:
 | Enable MCP server | off | |
 | Port | 7878 | Any free port 1024-65535 |
 | Accept connections from | This machine only | `This machine only` binds to `127.0.0.1`; `Any machine` binds to `0.0.0.0` |
-| Access token | `Required for remote connections` | `Not required` / `Required for remote connections` / `Required for all connections`. Token is generated automatically; buttons *Regenerate*, *Copy*. Sent as `Authorization: Bearer <token>` |
+| Access token | `Required for all connections` | `Not required` / `Required for remote connections` / `Required for all connections`. Token is generated automatically; buttons *Regenerate*, *Copy*. Sent as `Authorization: Bearer <token>` |
 | Allowed servers | none | Tree with checkboxes / multi-selection and a filter, similar to Bulk Edit (see below) |
 | Allow ad-hoc connections | off | Agent may connect to any `host:port` providing user/password and auth method |
 | Max rows returned | 100 | Hard cap; agent can request fewer |
@@ -215,8 +215,8 @@ token filled in) with a *Copy* button. Templates live in one class so they're ea
   Business/Enterprise the organization policy *MCP servers in Copilot* must be enabled):
   * *VS Code* - workspace `.vscode/mcp.json` or user configuration (command *MCP: Add Server...* / *MCP: Open User
     Configuration*): `{"servers": {"kdbstudio": {"type": "http", "url": "...", "headers": {...}}}}`
-  * *JetBrains IDEs* (Copilot plugin) - Copilot Chat, agent mode, *Configure tools* / *Edit config*: `mcp.json`
-    with the same `{"servers": {...}}` shape
+  * *IntelliJ IDEA* (Copilot plugin) - Copilot Chat, agent mode, *Configure tools*: `mcp.json`
+    with the same `{"servers": {...}}` shape (`type`, `url`, `headers`)
   * *Visual Studio* - `.mcp.json` in the solution folder or `%USERPROFILE%\.mcp.json`, same `{"servers": {...}}` shape
   * *Copilot CLI* - `/mcp add` interactively, or `~/.copilot/mcp-config.json`:
     `{"mcpServers": {"kdbstudio": {"type": "http", "url": "...", "headers": {...}, "tools": ["*"]}}}`

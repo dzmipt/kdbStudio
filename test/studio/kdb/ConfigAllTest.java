@@ -154,7 +154,7 @@ public class ConfigAllTest {
         assertTrue(config.getBoolean(Config.MCP_ENABLED));
         assertEquals(7900, config.getInt(Config.MCP_PORT));
         assertEquals(McpAccess.REMOTE, config.getEnum(Config.MCP_ACCESS));
-        assertEquals(McpTokenMode.ALL, config.getEnum(Config.MCP_TOKEN_MODE));
+        assertEquals(McpTokenMode.NONE, config.getEnum(Config.MCP_TOKEN_MODE));
         assertEquals("secret-token", config.getString(Config.MCP_TOKEN));
         assertEquals(List.of("folder:a/b", "server:top"), config.getStringArray(Config.MCP_ALLOWED_SERVERS));
         assertTrue(config.getBoolean(Config.MCP_ALLOW_ADHOC));

@@ -101,7 +101,7 @@ public class Config  {
     public static final String MCP_ENABLED = configDefault("mcpEnabled", ConfigType.BOOLEAN, false);
     public static final String MCP_PORT = configDefault("mcpPort", ConfigType.INT, 7878);
     public static final String MCP_ACCESS = configDefault("mcpAccess", ConfigType.ENUM, McpAccess.LOCAL);
-    public static final String MCP_TOKEN_MODE = configDefault("mcpTokenMode", ConfigType.ENUM, McpTokenMode.REMOTE_ONLY);
+    public static final String MCP_TOKEN_MODE = configDefault("mcpTokenMode", ConfigType.ENUM, McpTokenMode.ALL);
     public static final String MCP_TOKEN = configDefault("mcpToken", ConfigType.STRING, "");
     // Permitted servers and folders: "folder:<path>" or "server:<full name>"; the root folder is "folder:"
     public static final String MCP_ALLOWED_SERVERS = configDefault("mcpAllowedServers", ConfigType.STRING_ARRAY, List.of());
