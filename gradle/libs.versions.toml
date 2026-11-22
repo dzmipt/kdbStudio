@@ -10,7 +10,7 @@ log4j-api = { module = "org.apache.logging.log4j:log4j-api", version.ref = "log4
 log4j-core = { module = "org.apache.logging.log4j:log4j-core", version.ref = "log4j" }
 log4j-iostreams = { module = "org.apache.logging.log4j:log4j-iostreams", version.ref = "log4j" }
 
-rsyntaxtextarea = "com.fifesoft:rsyntaxtextarea:3.6.2"
+rsyntaxtextarea = "com.fifesoft:rsyntaxtextarea:4.0.2"
 # see studio.ui.chart.patched folder for the patch for jfreechart.
 # It will require review during the jfreechart upgrade.
 jfreechart = "org.jfree:jfreechart:1.5.6"
