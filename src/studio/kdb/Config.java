@@ -105,6 +105,8 @@ public class Config  {
     public static final String MCP_TOKEN = configDefault("mcpToken", ConfigType.STRING, "");
     // Permitted servers and folders: "folder:<path>" or "server:<full name>"; the root folder is "folder:"
     public static final String MCP_ALLOWED_SERVERS = configDefault("mcpAllowedServers", ConfigType.STRING_ARRAY, List.of());
+    // The filter applied to MCP_ALLOWED_SERVERS (the same syntax as the filter of the server tree)
+    public static final String MCP_ALLOWED_SERVERS_FILTER = configDefault("mcpAllowedServersFilter", ConfigType.STRING, "");
     public static final String MCP_ALLOW_ADHOC = configDefault("mcpAllowAdHoc", ConfigType.BOOLEAN, false);
     public static final String MCP_MAX_ROWS = configDefault("mcpMaxRows", ConfigType.INT, 100);
     public static final String MCP_MAX_CHARS = configDefault("mcpMaxChars", ConfigType.INT, 20000);

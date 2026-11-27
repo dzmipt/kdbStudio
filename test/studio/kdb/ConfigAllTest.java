@@ -157,6 +157,7 @@ public class ConfigAllTest {
         assertEquals(McpTokenMode.NONE, config.getEnum(Config.MCP_TOKEN_MODE));
         assertEquals("secret-token", config.getString(Config.MCP_TOKEN));
         assertEquals(List.of("folder:a/b", "server:top"), config.getStringArray(Config.MCP_ALLOWED_SERVERS));
+        assertEquals("uat eu", config.getString(Config.MCP_ALLOWED_SERVERS_FILTER));
         assertTrue(config.getBoolean(Config.MCP_ALLOW_ADHOC));
         assertEquals(50, config.getInt(Config.MCP_MAX_ROWS));
         assertEquals(1000, config.getInt(Config.MCP_MAX_CHARS));

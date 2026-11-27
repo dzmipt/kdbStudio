@@ -2,7 +2,6 @@ package studio.mcp.ui;
 
 import studio.kdb.ServerTreeNode;
 import studio.mcp.McpPermissions;
-import studio.mcp.PermissionSelection;
 
 import javax.swing.*;
 import javax.swing.tree.DefaultTreeCellRenderer;
@@ -15,10 +14,13 @@ import java.awt.event.KeyEvent;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.util.Enumeration;
+import java.util.LinkedHashSet;
+import java.util.Set;
 
 /**
- * Server tree with check boxes to select servers and folders permitted for AI agents.
- * A checked folder permits all servers inside it (including servers added later).
+ * Server tree with check boxes to select servers and folders permitted for AI agents, and the filter.
+ * A checked folder permits all servers inside it (including servers added later) which match the filter.
+ * The filter is saved together with the selection.
  */
 public class PermissionTree extends JPanel {
 
@@ -26,12 +28,12 @@ public class PermissionTree extends JPanel {
     private final JTree tree;
     private final JTextField txtFilter;
     private final JLabel lblSummary;
-    private final PermissionSelection selection;
+    private final Set<String> entries = new LinkedHashSet<>();
 
     public PermissionTree(ServerTreeNode root, McpPermissions permissions) {
         super(new BorderLayout(0, 5));
         this.root = root;
-        selection = new PermissionSelection(root, permissions);
+        entries.addAll(permissions.cleanup(root).getEntries());
 
         tree = new JTree(new DefaultTreeModel(root, true)) {
             @Override
@@ -63,11 +65,14 @@ public class PermissionTree extends JPanel {
             }
         });
 
-        txtFilter = new JTextField();
+        txtFilter = new JTextField(permissions.getFilter());
+        txtFilter.setToolTipText("<html>Words separated by spaces; every word should be found in a folder name or " +
+                "in the server name or host:port.<br/>The filter is saved: only servers matching it are permitted, " +
+                "including servers added later.</html>");
         txtFilter.getDocument().addDocumentListener((studio.ui.DocumentChangeListener) e -> applyFilter());
 
         JPanel pnlFilter = new JPanel(new BorderLayout(5, 0));
-        pnlFilter.add(new JLabel("Filter:"), BorderLayout.WEST);
+        pnlFilter.add(new JLabel("Filter (applies to permitted servers):"), BorderLayout.WEST);
         pnlFilter.add(txtFilter, BorderLayout.CENTER);
 
         lblSummary = new JLabel();
@@ -78,12 +83,11 @@ public class PermissionTree extends JPanel {
         add(scroll, BorderLayout.CENTER);
         add(lblSummary, BorderLayout.SOUTH);
 
-        expandChecked();
-        refreshSummary();
+        applyFilter();
     }
 
     public McpPermissions getPermissions() {
-        return selection.getPermissions();
+        return current();
     }
 
     private static int checkBoxWidth() {
@@ -92,11 +96,20 @@ public class PermissionTree extends JPanel {
     }
 
     private McpPermissions current() {
-        return selection.getPermissions();
+        return new McpPermissions(entries, txtFilter.getText());
+    }
+
+    // The node is selected via a checked ancestor folder, so it can't be unchecked by itself
+    private boolean isImplied(ServerTreeNode node) {
+        if (entries.contains(McpPermissions.entry(node))) return false;
+        ServerTreeNode parent = (ServerTreeNode) node.getParent();
+        return parent != null && current().isAllowed(parent);
     }
 
     private void toggle(ServerTreeNode node) {
-        selection.toggle(node);
+        if (isImplied(node)) return;
+        String entry = McpPermissions.entry(node);
+        if (!entries.remove(entry)) entries.add(entry);
         tree.repaint();
         refreshSummary();
     }
@@ -111,6 +124,7 @@ public class PermissionTree extends JPanel {
         } else {
             for (int row = 0; row < tree.getRowCount(); row++) tree.expandRow(row);
         }
+        refreshSummary();
     }
 
     private void expandChecked() {
@@ -127,8 +141,10 @@ public class PermissionTree extends JPanel {
 
     private void refreshSummary() {
         int count = current().allowedServers(root).size();
+        String filterNote = txtFilter.getText().trim().isEmpty() ? "" : " matching the filter";
         lblSummary.setText(count == 0 ? "No servers are permitted" :
-                count + (count == 1 ? " server is" : " servers are") + " permitted. Checked folders also permit servers added later.");
+                count + (count == 1 ? " server is" : " servers are") + " permitted. Checked folders also permit servers " +
+                        "added later" + filterNote + ".");
     }
 
     // A plain label renderer: the check box is painted as a part of the icon, so the label is never squeezed
@@ -166,8 +182,8 @@ public class PermissionTree extends JPanel {
                                                       boolean leaf, int row, boolean hasFocus) {
             super.getTreeCellRendererComponent(tree, value, sel, expanded, leaf, row, hasFocus);
             ServerTreeNode node = (ServerTreeNode) value;
-            checked = selection.isChecked(node);
-            boolean implied = selection.isImplied(node);
+            checked = current().isAllowed(node);
+            boolean implied = isImplied(node);
             enabled = !implied;
             setIcon(new CompositeIcon(checkIcon, getIcon()));
             setToolTipText(implied ? "Permitted via a parent folder" : null);

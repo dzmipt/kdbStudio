@@ -89,11 +89,14 @@ public class McpService {
     }
 
     public static McpPermissions getPermissions() {
-        return new McpPermissions(Config.getInstance().getStringArray(Config.MCP_ALLOWED_SERVERS));
+        Config config = Config.getInstance();
+        return new McpPermissions(config.getStringArray(Config.MCP_ALLOWED_SERVERS),
+                config.getString(Config.MCP_ALLOWED_SERVERS_FILTER));
     }
 
     public static void setPermissions(McpPermissions permissions) {
         Config.getInstance().setStringArray(Config.MCP_ALLOWED_SERVERS, permissions.toList());
+        Config.getInstance().setString(Config.MCP_ALLOWED_SERVERS_FILTER, permissions.getFilter());
     }
 
     public static String generateToken() {

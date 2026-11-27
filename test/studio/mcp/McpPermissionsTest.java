@@ -116,4 +116,57 @@ public class McpPermissionsTest {
         a.remove(ab);
         assertEquals(Set.of("server:a/c/Server"), cleaned.cleanup(root).getEntries());
     }
+
+    @Test
+    public void filterOnRoot() {
+        ServerTreeNode tree = new ServerTreeNode();
+        ServerTreeNode uat = tree.add("UAT");
+        Server inUatFolder = add(uat, server("hdb"));
+        ServerTreeNode prod = tree.add("prod");
+        Server prodServer = add(prod, server("hdb"));
+        Server uatByName = add(prod, new Server("rdb-uat", "h2", 5000, "u", "p", null, "auth", false));
+        Server uatByHost = add(prod, new Server("tp", "uat-host", 5000, "u", "p", null, "auth", false));
+
+        McpPermissions p = new McpPermissions(List.of("folder:"), "UAT");
+        assertTrue(p.isAllowed(inUatFolder), "folder name matches");
+        assertTrue(p.isAllowed(uatByName), "server name matches");
+        assertTrue(p.isAllowed(uatByHost), "host matches");
+        assertFalse(p.isAllowed(prodServer));
+
+        // a server added later
+        Server added = add(prod, server("new-UAT-server"));
+        assertTrue(p.isAllowed(added));
+        assertEquals(4, p.allowedServers(tree).size());
+    }
+
+    @Test
+    public void filterWordsAlongThePath() {
+        ServerTreeNode tree = new ServerTreeNode();
+        Server s = add(tree.add("prod").add("EU"), server("hdb"));
+        assertTrue(new McpPermissions(List.of("folder:"), "prod hdb").isAllowed(s));
+        assertTrue(new McpPermissions(List.of("folder:"), "  eu   PROD ").isAllowed(s));
+        assertFalse(new McpPermissions(List.of("folder:"), "prod rdb").isAllowed(s));
+        assertFalse(new McpPermissions(List.of("folder:prod/EU"), "us").isAllowed(s));
+        assertTrue(new McpPermissions(List.of("server:prod/EU/hdb"), "").isAllowed(s));
+    }
+
+    @Test
+    public void filterMatchesServerTreeFilter() {
+        // the same servers as shown by the filtered server tree
+        for (String filter: List.of("hdb", "a", "b x", "other", "server", "a b")) {
+            McpPermissions p = new McpPermissions(List.of("folder:"), filter);
+            ServerTreeNode filtered = root.filter(filter);
+            List<String> expected = filtered == null ? List.of() :
+                    new McpPermissions(List.of("folder:")).allowedServers(filtered).stream().map(Server::getFullName).toList();
+            List<String> actual = p.allowedServers(root).stream().map(Server::getFullName).toList();
+            assertEquals(expected, actual, filter);
+        }
+    }
+
+    @Test
+    public void cleanupKeepsFilter() {
+        McpPermissions p = new McpPermissions(List.of("folder:a/b", "folder:gone"), "uat");
+        assertEquals("uat", p.cleanup(root).getFilter());
+        assertNotEquals(new McpPermissions(List.of("folder:a/b")), new McpPermissions(List.of("folder:a/b"), "x"));
+    }
 }

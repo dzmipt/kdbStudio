@@ -150,6 +150,7 @@
   "mcpTokenMode" : "NONE",
   "mcpToken" : "secret-token",
   "mcpAllowedServers" : ["folder:a/b", "server:top"],
+  "mcpAllowedServersFilter" : "uat eu",
   "mcpAllowAdHoc" : true,
   "mcpMaxRows" : 50,
   "mcpMaxChars" : 1000,
