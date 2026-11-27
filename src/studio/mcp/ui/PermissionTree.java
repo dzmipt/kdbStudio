@@ -35,6 +35,11 @@ public class PermissionTree extends JPanel {
         this.root = root;
         entries.addAll(permissions.cleanup(root).getEntries());
 
+        // created before the tree: the renderer (which reads the filter) can be called while the tree is set up
+        txtFilter = new JTextField(permissions.getFilter());
+        txtFilter.setToolTipText("<html>Words separated by spaces; every word should be found in a folder name or " +
+                "in the server name or host:port.<br/>The filter is saved: only servers matching it are permitted, " +
+                "including servers added later.</html>");
         tree = new JTree(new DefaultTreeModel(root, true)) {
             @Override
             public String convertValueToText(Object value, boolean selected, boolean expanded, boolean leaf, int row, boolean hasFocus) {
@@ -65,10 +70,6 @@ public class PermissionTree extends JPanel {
             }
         });
 
-        txtFilter = new JTextField(permissions.getFilter());
-        txtFilter.setToolTipText("<html>Words separated by spaces; every word should be found in a folder name or " +
-                "in the server name or host:port.<br/>The filter is saved: only servers matching it are permitted, " +
-                "including servers added later.</html>");
         txtFilter.getDocument().addDocumentListener((studio.ui.DocumentChangeListener) e -> applyFilter());
 
         JPanel pnlFilter = new JPanel(new BorderLayout(5, 0));
