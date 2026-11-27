@@ -46,10 +46,22 @@ public class McpService {
         grants.addListener(this::fire);
         sessions.addListener(this::fire);
         runningQueries.addListener(this::fire);
+        sessions.addRemovalListener(session -> {
+            StudioTools currentTools;
+            synchronized (this) {
+                currentTools = tools;
+            }
+            if (currentTools != null) currentTools.clientDisconnected(session.getId());
+        });
     }
 
     public McpGrants getGrants() {
         return grants;
+    }
+
+    // Background connections of AI agents (when the AI agent queries window is not used)
+    public synchronized java.util.List<studio.kdb.Session> getBackgroundSessions() {
+        return tools == null ? java.util.List.of() : tools.getBackgroundSessions();
     }
 
     public McpRunningQueries getRunningQueries() {

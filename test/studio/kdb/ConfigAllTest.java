@@ -164,6 +164,8 @@ public class ConfigAllTest {
         assertEquals(60, config.getInt(Config.MCP_CONFIRMATION_TIMEOUT_SEC));
         assertEquals(McpGrantInterval.HOUR_1, config.getEnum(Config.MCP_GRANT_INTERVAL));
         assertFalse(config.getBoolean(Config.MCP_SHOW_AGENT_WINDOW));
+        assertFalse(config.getBoolean(Config.MCP_SAVE_AGENT_WINDOW));
+        assertEquals(50, config.getInt(Config.MCP_AGENT_WINDOW_MAX_QUERIES));
     }
 
     private void testAlL_2_4(Config config) {

@@ -282,9 +282,14 @@ public class McpTest extends StudioTest {
             assertTrue((String) state[4], ((String) state[4]).startsWith("[AI agent queries]"));
             assertTrue((String) state[4], ((String) state[4]).contains("@ permitted/srv"));
 
-            // the window is not saved in the workspace
+            // the window is saved in the workspace by default
+            Workspace workspace = org.assertj.swing.edt.GuiActionRunner.execute(() -> StudioWindow.getWorkspace());
+            assertEquals(WindowFactory.allStudioWindows().size(), workspace.getWindows().length);
+            assertEquals(1, java.util.Arrays.stream(workspace.getWindows()).filter(Workspace.TopWindow::isAgentWindow).count());
+            Config.getInstance().setBoolean(Config.MCP_SAVE_AGENT_WINDOW, false);
             int saved = org.assertj.swing.edt.GuiActionRunner.execute(() -> StudioWindow.getWorkspace().getWindows().length);
             assertEquals(WindowFactory.allStudioWindows().size() - 1, saved);
+            Config.getInstance().setBoolean(Config.MCP_SAVE_AGENT_WINDOW, true);
 
             String tabs = callOk("list_tabs", "{}");
             assertTrue(tabs, tabs.contains("agentQueriesWindow"));
@@ -340,9 +345,11 @@ public class McpTest extends StudioTest {
             StudioWindow window = agentWindow();
             assertNotNull(window);
             assertTrue(org.assertj.swing.edt.GuiActionRunner.execute(() -> window.isQueryRunning()));
+            assertEquals("busy cursor", java.awt.Cursor.WAIT_CURSOR, (int) org.assertj.swing.edt.GuiActionRunner.execute(
+                    () -> window.getActiveEditor().getTextArea().getCursor().getType()));
 
             // the Stop action of the agent window
-            org.assertj.swing.edt.GuiActionRunner.execute(() -> window.getActiveEditor().cancelExternalQueries());
+            org.assertj.swing.edt.GuiActionRunner.execute(() -> window.getActiveEditor().getQueryExecutor().cancel());
             MockQSession.unlockResponse();
             Object[] result = future.get(10, TimeUnit.SECONDS);
             assertTrue((String) result[1], ((String) result[1]).contains("cancelled by the user"));
@@ -408,6 +415,69 @@ public class McpTest extends StudioTest {
             assertEquals("the cancelled query is not executed", 1, executed);
         } finally {
             MockQSession.lockResponse(false);
+            McpService.getInstance().getGrants().revokeAll();
+        }
+    }
+
+    @Test
+    public void testAgentWindowReusesServerTabAndTrimsHistory() throws Exception {
+        Config.getInstance().setBoolean(Config.MCP_SHOW_AGENT_WINDOW, true);
+        Config.getInstance().setInt(Config.MCP_AGENT_WINDOW_MAX_QUERIES, 2);
+        McpService.getInstance().getGrants().grant("server:permitted/srv", "permitted/srv", null);
+        try {
+            // the user opens the window and a tab with the server
+            org.assertj.swing.edt.GuiActionRunner.execute(() -> studio.mcp.ui.AgentQueriesWindow.open());
+            StudioWindow window = agentWindow();
+            Server srv = Config.getInstance().getServerConfig().getServer("permitted/srv");
+            org.assertj.swing.edt.GuiActionRunner.execute(() -> {
+                EditorTab tab = window.getActiveEditor().getEditorsPanel().addTab(srv);
+                tab.loadFile(null);
+                tab.getTextArea().setText("/ my notes");
+                // otherwise closing the window asks to save the tab
+                tab.setModified(false);
+            });
+
+            for (int i = 1; i <= 3; i++) {
+                callOk("execute_query", "{\"server\":\"permitted/srv\",\"query\":\"q" + i + "\"}");
+            }
+            robot().waitForIdle();
+            Object[] state = org.assertj.swing.edt.GuiActionRunner.execute(() -> {
+                List<EditorTab> editors = window.getRootEditorsPanel().getAllEditors(false);
+                EditorTab srvTab = editors.stream().filter(e -> e.getServer().getFullName().equals("permitted/srv"))
+                        .findFirst().orElseThrow();
+                long srvTabs = editors.stream().filter(e -> e.getServer().getFullName().equals("permitted/srv")).count();
+                return new Object[] {srvTabs, srvTab.getTextArea().getText()};
+            });
+            assertEquals("the user's tab is reused", 1L, state[0]);
+            String text = (String) state[1];
+            assertFalse(text, text.contains("\nq1\n"));
+            assertTrue(text, text.contains("\nq2\n"));
+            assertTrue(text, text.contains("\nq3\n"));
+            assertTrue(text, text.startsWith("/ 20"));
+        } finally {
+            McpService.getInstance().getGrants().revokeAll();
+            Config.getInstance().setInt(Config.MCP_AGENT_WINDOW_MAX_QUERIES, 200);
+            Config.getInstance().setBoolean(Config.MCP_SHOW_AGENT_WINDOW, false);
+            closeAgentWindow();
+        }
+    }
+
+    @Test
+    public void testBackgroundConnectionClosedOnDisconnect() throws Exception {
+        McpService.getInstance().getGrants().grant("server:permitted/srv", "permitted/srv", null);
+        try {
+            callOk("execute_query", "{\"server\":\"permitted/srv\",\"query\":\"1\"}");
+            List<Session> sessions = McpService.getInstance().getBackgroundSessions();
+            assertEquals(1, sessions.size());
+            assertTrue("connected", sessions.get(0).getConnectionContext().isConnected());
+
+            HttpResponse<String> response = client.send(HttpRequest.newBuilder(
+                            URI.create("http://127.0.0.1:" + McpService.getInstance().getPort() + "/mcp"))
+                    .header("Mcp-Session-Id", sessionId).DELETE().build(), HttpResponse.BodyHandlers.ofString());
+            assertEquals(200, response.statusCode());
+            assertTrue(McpService.getInstance().getBackgroundSessions().isEmpty());
+            assertFalse("closed", sessions.get(0).getConnectionContext().isConnected());
+        } finally {
             McpService.getInstance().getGrants().revokeAll();
         }
     }

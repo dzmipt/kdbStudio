@@ -6,7 +6,10 @@ import studio.kdb.Session;
 import studio.ui.StudioWindow;
 import studio.ui.WindowFactory;
 
+import studio.mcp.McpService;
+
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 public class ConnectionStats {
@@ -29,6 +32,12 @@ public class ConnectionStats {
                 sessionsCount.put(session, count + 1);
             }
         });
+
+        // background connections of AI agents are not attached to any tab
+        List<Session> agentSessions = McpService.getInstance().getBackgroundSessions();
+        for (Session session: agentSessions) {
+            sessionsCount.putIfAbsent(session, 0);
+        }
 
         final int DELTA = 4;
         String[] statsHeaders = KConnectionStats.getStatsHeaders();
@@ -60,7 +69,8 @@ public class ConnectionStats {
 
         int index = 0;
         for (Session session: sessionsCount.keySet()) {
-            serverNames[index] = session.getServer().getFullName();
+            String name = session.getServer().getFullName();
+            serverNames[index] = agentSessions.contains(session) ? (name.isEmpty() ? "" : name + " ") + "[AI agent]" : name;
             servers[index] = session.getConnection().toString(false).substring(1);
             statuses[index] = session.getConnectionContext().isConnected() ? "Connected" : "Disconnected";
             numbers[index] = sessionsCount.get(session);

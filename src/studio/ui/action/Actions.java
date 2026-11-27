@@ -153,10 +153,8 @@ public class Actions {
         add(executeCurrentLineAndChart, studioWindow ->
                 studioWindow.executeQueryCurrentLine(true) );
 
-        addEditorAction(stop, editor -> {
-                editor.getQueryExecutor().cancel();
-                editor.cancelExternalQueries();
-        });
+        addEditorAction(stop, editor ->
+                editor.getQueryExecutor().cancel() );
 
         add(openInExcel, StudioWindow::openInExcel);
 

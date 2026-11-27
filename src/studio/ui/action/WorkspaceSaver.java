@@ -22,6 +22,7 @@ public class WorkspaceSaver {
 
     private final static String WINDOWS = "windows";
     private final static String SELECTED = "selected";
+    private final static String AGENT_WINDOW = "agentWindow";
     private final static String LOCATION = "location";
     private final static String SERVER_LIST_LOCATION = "serverListLocation";
     private final static String RESULT_DIVIDER_LOCATION = "resultDividerLocation";
@@ -97,6 +98,7 @@ public class WorkspaceSaver {
         window.setLocation(location);
         window.setServerListBounds(serverListLocation);
         window.setResultDividerLocation(resultDividerLocation);
+        window.setAgentWindow(json.has(AGENT_WINDOW) && json.get(AGENT_WINDOW).getAsBoolean());
         fromJsonWindow(json, window);
     }
 
@@ -192,6 +194,7 @@ public class WorkspaceSaver {
         json.add(LOCATION, ConfigType.BOUNDS.toJson(window.getLocation()));
         json.add(SERVER_LIST_LOCATION, ConfigType.BOUNDS.toJson(window.getServerListBounds()));
         json.addProperty(RESULT_DIVIDER_LOCATION, window.getResultDividerLocation());
+        if (window.isAgentWindow()) json.addProperty(AGENT_WINDOW, true);
         return json;
     }
 

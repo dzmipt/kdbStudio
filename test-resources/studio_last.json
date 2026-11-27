@@ -157,6 +157,8 @@
   "mcpConfirmationTimeoutSec" : 60,
   "mcpGrantInterval" : "HOUR_1",
   "mcpShowAgentWindow" : false,
+  "mcpSaveAgentWindow" : false,
+  "mcpAgentWindowMaxQueries" : 50,
   "failoverBetweenTLSandTCPConnections" : false,
 
   "serverBgColorRules": [

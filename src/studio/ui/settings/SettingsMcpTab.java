@@ -28,6 +28,8 @@ public class SettingsMcpTab extends SettingsTab {
     private final JLabel lblTokenNote = new JLabel();
     private final JCheckBox chkAllowAdHoc;
     private final JCheckBox chkShowAgentWindow;
+    private final JCheckBox chkSaveAgentWindow;
+    private final JFormattedTextField txtAgentWindowMaxQueries;
     private final JFormattedTextField txtMaxRows;
     private final JFormattedTextField txtMaxChars;
     private final JFormattedTextField txtTimeout;
@@ -78,8 +80,11 @@ public class SettingsMcpTab extends SettingsTab {
         chkAllowAdHoc = new JCheckBox("Allow ad-hoc connections (any host:port with credentials provided by the agent)");
         chkAllowAdHoc.setSelected(CONFIG.getBoolean(Config.MCP_ALLOW_ADHOC));
 
-        chkShowAgentWindow = new JCheckBox("Show queries which agents run on background connections in a separate window");
+        chkShowAgentWindow = new JCheckBox("Run agent queries for servers in the AI agent queries window (as if you ran them)");
         chkShowAgentWindow.setSelected(CONFIG.getBoolean(Config.MCP_SHOW_AGENT_WINDOW));
+        chkSaveAgentWindow = new JCheckBox("Save the AI agent queries window in the workspace");
+        chkSaveAgentWindow.setSelected(CONFIG.getBoolean(Config.MCP_SAVE_AGENT_WINDOW));
+        txtAgentWindowMaxQueries = intField(1, 100_000, CONFIG.getInt(Config.MCP_AGENT_WINDOW_MAX_QUERIES));
 
         txtMaxRows = intField(1, 1_000_000, CONFIG.getInt(Config.MCP_MAX_ROWS));
         txtMaxChars = intField(1000, 10_000_000, CONFIG.getInt(Config.MCP_MAX_CHARS));
@@ -114,6 +119,9 @@ public class SettingsMcpTab extends SettingsTab {
         add(line(lblTokenNote));
         add(line(chkAllowAdHoc));
         add(line(chkShowAgentWindow));
+        add(line(new JLabel("     "), chkSaveAgentWindow));
+        add(line(new JLabel("     Keep the last"), txtAgentWindowMaxQueries,
+                new JLabel("agent queries in every server tab of the window")));
         add(line(new JLabel("Max rows returned:"), txtMaxRows, new JLabel("   Max characters returned:"), txtMaxChars));
         add(line(new JLabel("Query confirmation timeout:"), txtTimeout, new JLabel("seconds (unanswered queries are denied)")));
         add(line(btnConnect));
@@ -152,6 +160,8 @@ public class SettingsMcpTab extends SettingsTab {
         CONFIG.setString(Config.MCP_TOKEN, txtToken.getText());
         CONFIG.setBoolean(Config.MCP_ALLOW_ADHOC, chkAllowAdHoc.isSelected());
         CONFIG.setBoolean(Config.MCP_SHOW_AGENT_WINDOW, chkShowAgentWindow.isSelected());
+        CONFIG.setBoolean(Config.MCP_SAVE_AGENT_WINDOW, chkSaveAgentWindow.isSelected());
+        CONFIG.setInt(Config.MCP_AGENT_WINDOW_MAX_QUERIES, value(txtAgentWindowMaxQueries));
         CONFIG.setInt(Config.MCP_MAX_ROWS, value(txtMaxRows));
         CONFIG.setInt(Config.MCP_MAX_CHARS, value(txtMaxChars));
         CONFIG.setInt(Config.MCP_CONFIRMATION_TIMEOUT_SEC, value(txtTimeout));

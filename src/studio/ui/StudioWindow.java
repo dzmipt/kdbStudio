@@ -169,7 +169,7 @@ public class StudioWindow extends StudioFrame {
     }
 
     public boolean isQueryRunning() {
-        return editor.getQueryExecutor().running() || editor.isExternalQueryRunning();
+        return editor.getQueryExecutor().running();
     }
 
     public void refreshActionState() {
@@ -1277,7 +1277,11 @@ public class StudioWindow extends StudioFrame {
 
     public static void loadWorkspace(Workspace workspace) {
         for (Workspace.TopWindow window: workspace.getWindows()) {
-            WindowFactory.newStudioWindow(window);
+            if (window.isAgentWindow()) {
+                studio.mcp.ui.AgentQueriesWindow.attach(WindowFactory.newAgentWindow(window, true));
+            } else {
+                WindowFactory.newStudioWindow(window);
+            }
         }
 
         List<StudioWindow> windows = WindowFactory.allStudioWindows();
@@ -1458,9 +1462,10 @@ public class StudioWindow extends StudioFrame {
         Window activeWindow = KeyboardFocusManager.getCurrentKeyboardFocusManager().getActiveWindow();
 
         WindowFactory.forEach(window -> {
-            // the AI agent window is not restored after restart
-            if (window.isAgentWindow()) return;
+            // the AI agent window is saved only if configured
+            if (window.isAgentWindow() && !Config.getInstance().getBoolean(Config.MCP_SAVE_AGENT_WINDOW)) return;
             Workspace.TopWindow workspaceWindow = workspace.addWindow(window == activeWindow)
+                .setAgentWindow(window.isAgentWindow())
                 .setResultDividerLocation(Util.getDividerLocation(window.splitpane))
                 .setLocation(window.getBounds())
                 .setServerListBounds(window.getServerList().getBounds());

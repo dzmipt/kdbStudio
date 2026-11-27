@@ -6,30 +6,41 @@ import studio.ui.EditorTab;
 import studio.ui.EditorsPanel;
 import studio.ui.StudioWindow;
 import studio.ui.WindowFactory;
-import studio.ui.action.QueryResult;
 
 import javax.swing.*;
+import javax.swing.text.BadLocationException;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Objects;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
- * A Studio window which shows queries executed by AI agents on background connections:
- * one editor tab per server with the appended queries, and a result tab per query.
- * The window is not saved in the workspace. All methods should be called on the EDT.
+ * The Studio window where queries from AI agents (with a server or an ad-hoc connection) are executed
+ * as if the user ran them: one editor tab per server with the appended queries, and a result tab per query.
+ * The window can be saved in the workspace. All methods should be called on the EDT.
  */
 public class AgentQueriesWindow {
 
     private static final DateTimeFormatter TIME_FORMAT = DateTimeFormatter.ofPattern("yyyy.MM.dd HH:mm:ss");
+    // The header comment of every query added by Studio
+    private static final Pattern HEADER = Pattern.compile("^/ \\d{4}\\.\\d{2}\\.\\d{2} \\d{2}:\\d{2}:\\d{2} ", Pattern.MULTILINE);
 
     private static StudioWindow window = null;
-    private static final Map<String, EditorTab> tabs = new HashMap<>();
 
     public static boolean isOpen() {
         return window != null && window.isDisplayable();
+    }
+
+    /**
+     * Agent queries go through the window if it is open or it should be opened according to the settings
+     */
+    public static boolean isActive() {
+        return isOpen() || Config.getInstance().getBoolean(Config.MCP_SHOW_AGENT_WINDOW);
     }
 
     /**
@@ -40,20 +51,18 @@ public class AgentQueriesWindow {
             WindowFactory.activate(window);
             return;
         }
-        create(true);
+        attach(WindowFactory.newAgentWindow(true));
     }
 
-    private static void create(boolean focus) {
-        tabs.clear();
-        StudioWindow newWindow = WindowFactory.newAgentWindow(focus);
+    /**
+     * Registers the window (a new one or restored from the workspace)
+     */
+    public static void attach(StudioWindow newWindow) {
         newWindow.addWindowListener(new WindowAdapter() {
             @Override
             public void windowClosed(WindowEvent e) {
                 // release the window with its result tabs (they can hold large results)
-                if (window == newWindow) {
-                    window = null;
-                    tabs.clear();
-                }
+                if (window == newWindow) window = null;
             }
         });
         window = newWindow;
@@ -63,39 +72,50 @@ public class AgentQueriesWindow {
     private static StudioWindow getWindow() {
         if (isOpen()) return window;
         if (!Config.getInstance().getBoolean(Config.MCP_SHOW_AGENT_WINDOW)) return null;
-        create(false);
+        attach(WindowFactory.newAgentWindow(false));
         return window;
     }
 
-    private static String key(Server server) {
-        if (server.inServerTree()) return "server:" + server.getFullName();
-        return "adhoc:" + server.getHost() + ":" + server.getPort();
+    private static boolean sameServer(Server s1, Server s2) {
+        if (s1 == Server.NO_SERVER || s2 == Server.NO_SERVER) return false;
+        if (s1.inServerTree() || s2.inServerTree()) {
+            return s1.inServerTree() && s2.inServerTree() && s1.getFullName().equals(s2.getFullName());
+        }
+        return s1.getHost().equals(s2.getHost()) && s1.getPort() == s2.getPort()
+                && Objects.equals(s1.getUsername(), s2.getUsername())
+                && Objects.equals(s1.getAuthenticationMechanism(), s2.getAuthenticationMechanism());
     }
 
+    /**
+     * The tab of the window for the server: an existing tab with this server (even if it was opened by the user),
+     * or a new one
+     */
     private static EditorTab getTab(StudioWindow window, Server server) {
-        String key = key(server);
-        EditorTab tab = tabs.get(key);
-        if (tab != null && tab.isAddedToPanel() && tab.getStudioWindow() == window) return tab;
+        List<EditorTab> editors = window.getRootEditorsPanel().getAllEditors(false);
+        for (EditorTab editor: editors) {
+            if (sameServer(editor.getServer(), server)) {
+                // the connection details could be changed in the server list
+                if (!editor.getServer().equals(server) && !editor.getQueryExecutor().running()) {
+                    editor.setServer(server);
+                    EditorsPanel.refreshEditorTitle(editor);
+                }
+                return editor;
+            }
+        }
 
         EditorTab active = window.getActiveEditor();
-        tab = active.getEditorsPanel().addTab(server);
+        EditorTab tab = active.getEditorsPanel().addTab(server);
         tab.loadFile(null);
-        // drop the initial empty tab of the new window
-        if (active.getServer() == Server.NO_SERVER && !active.isModified()
+        // drop the initial empty tab of a new window
+        if (editors.size() == 1 && active.getServer() == Server.NO_SERVER && !active.isModified()
                 && active.getTextArea().getText().isEmpty() && active != tab) {
             active.getEditorsPanel().closeTabForced(active);
         }
         // the new tab is selected; make it the active editor of the window (title, server, actions)
         window.updateEditor(tab);
-        tabs.put(key, tab);
         return tab;
     }
 
-    private static void append(EditorTab tab, String text) {
-        append(tab, text, true);
-    }
-
-    // newBlock - separate the text from the previous one with an empty line
     private static void append(EditorTab tab, String text, boolean newBlock) {
         boolean modified = tab.isModified();
         JTextArea textArea = tab.getTextArea();
@@ -104,51 +124,50 @@ public class AgentQueriesWindow {
         if (newBlock) prefix = current.isEmpty() || current.endsWith("\n\n") ? "" : current.endsWith("\n") ? "\n" : "\n\n";
         else prefix = current.isEmpty() || current.endsWith("\n") ? "" : "\n";
         textArea.append(prefix + text + "\n");
+        trimHistory(textArea);
         textArea.setCaretPosition(textArea.getDocument().getLength());
         // appended by Studio, not changed by the user
         if (!modified) tab.setModified(false);
         EditorsPanel.refreshEditorTitle(tab);
     }
 
+    // Keeps the last N queries (added by Studio) in the tab
+    static void trimHistory(JTextArea textArea) {
+        int maxQueries = Math.max(1, Config.getInstance().getInt(Config.MCP_AGENT_WINDOW_MAX_QUERIES));
+        String text = textArea.getText();
+        List<Integer> headers = new ArrayList<>();
+        Matcher matcher = HEADER.matcher(text);
+        while (matcher.find()) headers.add(matcher.start());
+        if (headers.size() <= maxQueries) return;
+        int cut = headers.get(headers.size() - maxQueries);
+        try {
+            textArea.getDocument().remove(0, cut);
+        } catch (BadLocationException e) {
+            throw new IllegalStateException(e);
+        }
+    }
+
     private static String header(String agent, String outcome) {
         return "/ " + LocalDateTime.now().format(TIME_FORMAT) + " " + agent + ": " + outcome;
     }
 
-    // Tabs where running queries are shown (the window can be opened only after the query has started)
-    private static final Map<Object, EditorTab> runningTabs = new HashMap<>();
-
     /**
-     * A query is started; it is appended to the server's tab and the tab shows it as running
-     * @param handle identifies the query in queryFinished()
-     * @param cancel cancels the query (used by the Stop action of the tab)
+     * The tab for the server where an agent query is executed
+     * @return the tab (with the server) or null if the window is not active
      */
-    public static void queryStarted(Object handle, String agent, Server server, String query, String outcome, Runnable cancel) {
+    public static EditorTab getTab(Server server) {
         StudioWindow window = getWindow();
-        if (window == null) return;
-        EditorTab tab = getTab(window, server);
-        append(tab, header(agent, outcome) + "\n" + query);
-        tab.externalQueryStarted(cancel, "Executing (AI agent " + agent + "): " + query.replace('\n', ' '));
-        runningTabs.put(handle, tab);
+        if (window == null) return null;
+        return getTab(window, server);
     }
 
-    /**
-     * The query is completed (successfully, with an error, or cancelled)
-     */
-    public static void queryFinished(Object handle, Runnable cancel, String agent, Server server, QueryResult result,
-                                     boolean cancelled) {
-        EditorTab tab = runningTabs.remove(handle);
-        if (tab != null) {
-            String status = cancelled ? "Last AI agent query was cancelled"
-                    : "Last AI agent query execution time: " + result.getExecutionTimeInMS() + " ms";
-            tab.externalQueryFinished(cancel, status);
-        }
-        if (!isOpen()) return;
-        if (cancelled) {
-            if (tab != null && tab.isAddedToPanel()) append(tab, "/ ^ cancelled by the user", false);
-            return;
-        }
-        window.addResultTab(result, "Executed by AI agent " + PlainText.escape(agent) + " at server: " +
-                PlainText.escape(server.getDescription(true)));
+    // The query is about to be executed in the tab
+    public static void queryStarted(EditorTab tab, String agent, String query, String outcome) {
+        append(tab, header(agent, outcome) + "\n" + query, true);
+    }
+
+    public static void queryCancelled(EditorTab tab) {
+        if (tab.isAddedToPanel()) append(tab, "/ ^ cancelled by the user", false);
     }
 
     /**
@@ -164,6 +183,6 @@ public class AgentQueriesWindow {
             if (line.trim().isEmpty()) continue;
             text.append("\n/ ").append(line);
         }
-        append(tab, text.toString());
+        append(tab, text.toString(), true);
     }
 }

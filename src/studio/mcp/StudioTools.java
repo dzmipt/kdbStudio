@@ -57,6 +57,7 @@ public class StudioTools {
         final Session session;
         int users = 0; // queries using or waiting for the connection; guarded by StudioTools
         boolean retired = false; // replaced by a newer connection or closed
+        final Set<String> clients = java.util.concurrent.ConcurrentHashMap.newKeySet(); // MCP sessions which used it
 
         BackgroundSession(Server server, Session session) {
             this.server = server;
@@ -846,6 +847,27 @@ public class StudioTools {
         }
     }
 
+    /**
+     * An MCP client disconnected: closes background connections which are no longer used by any connected client
+     */
+    public synchronized void clientDisconnected(String sessionId) {
+        for (Iterator<Map.Entry<String, BackgroundSession>> it = backgroundSessions.entrySet().iterator(); it.hasNext();) {
+            BackgroundSession background = it.next().getValue();
+            if (!background.clients.remove(sessionId) || !background.clients.isEmpty()) continue;
+            McpLog.info("Closing the background connection to {}: the agent disconnected", grantLabel(background.server));
+            it.remove();
+            background.retired = true;
+            if (background.users == 0) closeSession(background.session);
+        }
+    }
+
+    // Background connections (for Connection Statistics)
+    public synchronized List<Session> getBackgroundSessions() {
+        List<Session> list = new ArrayList<>();
+        for (BackgroundSession background: backgroundSessions.values()) list.add(background.session);
+        return list;
+    }
+
     // Background connections are shared by queries with the same server and credentials
     private static String connectionKey(Server server) {
         if (server.inServerTree()) return McpGrants.serverKey(server.getFullName());
@@ -879,21 +901,98 @@ public class StudioTools {
         if (background.retired && background.users == 0) closeSession(background.session);
     }
 
+    /**
+     * A query with a server or an ad-hoc connection: executed in the AI agent queries window if it is active
+     * (as if the user ran it), otherwise on a background connection
+     */
     private String executeInBackground(McpCallContext context, Server server, String query, boolean json, int maxRows) throws Exception {
         String agent = context.getClientName();
+        boolean inWindow = onEdt(AgentQueriesWindow::isActive);
         String outcome;
         try {
-            outcome = confirm(context, server, "background connection", query);
+            outcome = confirm(context, server, inWindow ? "AI agent queries window" : "background connection", query);
         } catch (QueryDeniedException e) {
             SwingUtilities.invokeLater(() -> AgentQueriesWindow.queryDenied(agent, server, query, e.reason));
             throw e;
         }
 
+        if (inWindow) {
+            return executeInAgentWindow(context, server, query, outcome, json, maxRows);
+        }
+
         BackgroundSession background = acquireBackgroundSession(server);
         try {
+            if (context.getSession() != null) background.clients.add(context.getSession().getId());
             return executeInBackground(context, background, server, query, outcome, json, maxRows);
         } finally {
             releaseBackgroundSession(background);
+        }
+    }
+
+    // Agent queries in the same tab of the agent window are executed one after another
+    private final Map<String, java.util.concurrent.locks.ReentrantLock> agentTabLocks = new HashMap<>();
+
+    private synchronized java.util.concurrent.locks.ReentrantLock agentTabLock(Server server) {
+        return agentTabLocks.computeIfAbsent(connectionKey(server), k -> new java.util.concurrent.locks.ReentrantLock(true));
+    }
+
+    private String executeInAgentWindow(McpCallContext context, Server server, String query, String outcome,
+                                        boolean json, int maxRows) throws Exception {
+        String agent = context.getClientName();
+        CompletableFuture<Object[]> future = new CompletableFuture<>();
+        EditorTab.QueryCompletionListener listener =
+                (queryResult, resultTab) -> future.complete(new Object[] {queryResult, resultTab});
+        EditorTab[] tab = new EditorTab[1];
+        McpRunningQueries running = service.getRunningQueries();
+        // cancels only the query started by this call; a waiting query is not started
+        McpRunningQueries.RunningQuery runningQuery = running.start(agent, grantLabel(server), "AI agent queries window", query,
+                () -> SwingUtilities.invokeLater(() -> {
+                    if (tab[0] != null) tab[0].cancelQuery(listener);
+                }));
+        java.util.concurrent.locks.ReentrantLock lock = agentTabLock(server);
+        try {
+            lock.lockInterruptibly();
+            try {
+                // wait while the tab is busy (e.g. the user runs a query in it)
+                while (true) {
+                    Boolean started = onEdt(() -> {
+                        if (runningQuery.isCancelled()) throw new McpToolException("The query was cancelled by the user");
+                        EditorTab editor = AgentQueriesWindow.getTab(server);
+                        if (editor == null) throw new McpToolException("The AI agent queries window is closed");
+                        if (editor.getQueryExecutor().running()) return false;
+                        AgentQueriesWindow.queryStarted(editor, agent, query, outcome);
+                        McpLog.info("[{}] executing in the AI agent queries window on {}:\n{}", agent, grantLabel(server), query);
+                        tab[0] = editor;
+                        editor.executeQuery(QueryTask.query(editor.getStudioWindow(), query), listener);
+                        return true;
+                    });
+                    if (started) break;
+                    Thread.sleep(200);
+                }
+
+                Object[] completed = future.get();
+                QueryResult result = (QueryResult) completed[0];
+                ResultTab resultTab = (ResultTab) completed[1];
+                if (!result.isComplete()) {
+                    SwingUtilities.invokeLater(() -> AgentQueriesWindow.queryCancelled(tab[0]));
+                    McpLog.info("[{}] query in the AI agent queries window was cancelled", agent);
+                    throw new McpToolException("The query was cancelled by the user");
+                }
+                if (result.getError() != null) {
+                    String message = errorMessage(result.getError());
+                    McpLog.info("[{}] query in the AI agent queries window failed: {}", agent, message);
+                    throw new McpToolException("Error: " + message);
+                }
+                String resultId = resultTab == null ? null : onEdt(() -> idOf(resultTab, "r"));
+                McpLog.info("[{}] query in the AI agent queries window completed: type={}, count={}, time={} ms", agent,
+                        ResultRenderer.kind(result.getResult()), ResultRenderer.rowCount(result.getResult()),
+                        result.getExecutionTimeInMS());
+                return formatResult(grantLabel(server), query, result, resultId, json, maxRows);
+            } finally {
+                lock.unlock();
+            }
+        } finally {
+            running.finish(runningQuery);
         }
     }
 
@@ -915,8 +1014,6 @@ public class StudioTools {
                         if (executing[0]) session.close();
                     }
                 });
-        Runnable cancel = () -> running.cancel(runningQuery);
-        SwingUtilities.invokeLater(() -> AgentQueriesWindow.queryStarted(runningQuery, agent, server, query, outcome, cancel));
         try {
             synchronized (background) {
                 boolean execute;
@@ -948,7 +1045,6 @@ public class StudioTools {
             running.finish(runningQuery);
         }
         boolean cancelled = runningQuery.isCancelled();
-        SwingUtilities.invokeLater(() -> AgentQueriesWindow.queryFinished(runningQuery, cancel, agent, server, result, cancelled));
 
         if (cancelled) {
             queryLog.info("#mcp-{}: cancelled", index);

@@ -158,6 +158,8 @@ public class Workspace {
         private double resultDividerLocation = 0.5;
         private Rectangle location = new Rectangle();
         private Rectangle serverListBounds = new Rectangle();
+        // the window for queries from AI agents
+        private boolean agentWindow = false;
 
         public TopWindow() {}
 
@@ -185,6 +187,15 @@ public class Workspace {
             return this;
         }
 
+        public boolean isAgentWindow() {
+            return agentWindow;
+        }
+
+        public TopWindow setAgentWindow(boolean agentWindow) {
+            this.agentWindow = agentWindow;
+            return this;
+        }
+
         public Rectangle getServerListBounds() {
             return serverListBounds;
         }
@@ -201,12 +212,13 @@ public class Workspace {
 
             TopWindow topWindow = (TopWindow) o;
             return Double.compare(resultDividerLocation, topWindow.resultDividerLocation) == 0 &&
-                    location.equals(topWindow.location) && serverListBounds.equals(topWindow.serverListBounds);
+                    location.equals(topWindow.location) && serverListBounds.equals(topWindow.serverListBounds) &&
+                    agentWindow == topWindow.agentWindow;
         }
 
         @Override
         public int hashCode() {
-            return Objects.hash(super.hashCode(), resultDividerLocation, location, serverListBounds);
+            return Objects.hash(super.hashCode(), resultDividerLocation, location, serverListBounds, agentWindow);
         }
     }
 

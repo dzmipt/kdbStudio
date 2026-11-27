@@ -50,48 +50,32 @@ New Settings tab **"AI Agent (MCP)"**, stored in `studio.json`:
 
 ### Allowed servers
 
-* The user selects servers and/or folders. Stored as a list of paths: folder paths (e.g. `/Prod/EU`) and
-  server full names (e.g. `/Dev/hdb1`).
-* A server is permitted if its full name is selected, or **any of its ancestor folders** is selected
-  (direct or indirect parent, up to the root `/`). Therefore servers added into a selected folder (or any of
-  its sub-folders) after the permission was given are permitted automatically.
-* Example: `/a/b` is selected. `/a/b/Server` and `/a/b/x/y/Other` are permitted. If `/a/b/Server` is moved to
-  `/a/c/Server`, it is no longer permitted unless `/a/c`, `/a` or `/` is selected.
+* The user selects servers and/or folders in the server tree and can type a filter. Both are saved:
+  the selected nodes as paths (`folder:prod/EU`, `server:dev/hdb1`, the root is `folder:`) and the filter text.
+* A server is permitted if it, or **any of its ancestor folders**, is selected **and** it matches the filter.
+* The filter is the same as the filter of the server tree: words separated by spaces, case-insensitive;
+  every word should be found in a folder name on the path to the server or in `name (host:port)` of the server.
+* Everything is evaluated on the current server tree, so servers added later are covered by selected folders
+  and the filter. Example: filter `UAT` and the root selected permits every server with "uat" in its folder,
+  name or host, including servers added later.
 * Editing a server's connection details, auth method, colour etc. keeps the permission (the full name is
-  unchanged). Renaming or moving a server/folder changes its path and drops the permission (by design).
+  unchanged). Renaming or moving a server/folder changes its path, which can drop the permission.
 * Cleanup: whenever the server tree changes (`ServerConfig.setRoot`), stored paths that no longer exist in
   the tree are removed and the settings saved.
-
-## Tools
-
-Tab and result ids are short strings (e.g. `t3`, `r12`) assigned by Studio, valid while Studio runs.
-
-| Tool | Input | Returns |
-|---|---|---|
-| `list_servers` | optional `filter` | Allowed servers only: full name, folder, host, port, TLS, auth method. **Never user/password.** Also whether ad-hoc connections are allowed |
-| `list_tabs` | - | All editor tabs in all windows: id, window, title, file name, server, modified flag, active flag, running flag |
-| `get_tab` | `tab` | Text, selection (start/end/text), caret position, server |
-| `edit_tab` | `tab`, one of: `text` (replace all) / `range`+`text` (replace range) / `position`+`text` (insert) | New length; edit goes into the editor undo history as a single undoable edit |
-| `new_tab` | optional `text`, optional `server` (must be allowed), optional `window` | New tab id |
-| `set_tab_server` | `tab`, `server` (allowed) or ad-hoc connection | - |
-| `execute_query` | `query`; and either `tab` **or** `server` **or** ad-hoc `connection`; optional `format` (`text`/`json`), `maxRows` | Result (see below) |
-| `list_results` | optional `window` | Result tabs: id, window, title, server, query, execution time, type, row count, error flag |
-| `get_result` | `result`, optional `format`, `maxRows` | Result |
-
-`edit_tab` modes: only `text` replaces the whole text; `find` + `text` replaces the single exact occurrence of
-`find`; `start` (+ optional `end`) + `text` replaces a character range or inserts at `start`.
-
-Not available to agents: loading files from disk, saving tabs, closing tabs, closing windows.
 
 ### execute_query modes
 
 * `tab` - runs exactly as if the user pressed Execute in that tab, on the tab's current server (which must be
   permitted). The result appears in Studio's result pane and is also returned to the agent. Error if the tab is
   already running a query.
-* `server` - runs on a background connection (one cached connection per server, not tied to any editor tab).
-  Nothing is shown in the Studio UI except the confirmation dialog and the status widget.
-* `connection` (ad-hoc, only if allowed) - `{host, port, user, password, authMethod, tls}`; background
-  connection, like `server`.
+* `server` - if the AI agent queries window is active (see below), runs in the window's tab for the server,
+  exactly as if the user ran it there. Otherwise runs on a background connection (one cached connection per
+  server and credentials, not tied to any editor tab).
+* `connection` (ad-hoc, only if allowed) - `{host, port, user, password, authMethod, tls}`; the same as `server`.
+
+Background connections are listed in *Server > Connection Statistics* (marked `[AI agent]`). They are closed
+when the agents which used them disconnect (the MCP session ends or expires), when the MCP server stops, and
+when Studio exits.
 
 The HTTP request blocks until the user answers the confirmation and the query completes.
 The existing incoming message size limit (`kdbMessageSizeLimitMB`) applies.
@@ -106,23 +90,23 @@ The existing incoming message size limit (`kdbMessageSizeLimitMB`) applies.
 
 ## AI agent queries window
 
-Background (`server`) and ad-hoc (`connection`) queries can be shown in a separate Studio window,
-titled `[AI agent queries] ...`. Queries in `tab` mode are not shown there, since they already appear in the user's tab.
+Queries with `server` or `connection` are executed in a separate Studio window titled `[AI agent queries] ...`
+when the window is active: the setting *Run agent queries for servers in the AI agent queries window* is on
+(default on), or the window is open (*Show agent queries window* in the status bar widget).
+Queries in `tab` mode run in the user's tab as before.
 
-* Opened automatically on the first background query when the setting *Show queries which agents run on
-  background connections in a separate window* is on (default on), without taking the focus;
-  or on demand from the status bar widget (*Show agent queries window*), showing queries from then on.
-* One editor tab per server. Every query is appended with a header comment, e.g.
-  `/ 2026.11.18 14:02:31 claude-code: confirmed by the user`. Denied queries are added as comments
-  (`denied by the user (not executed)` / `not confirmed in time`).
-* While a query runs, its tab shows the *Executing* status with the clock, and the toolbar *Stop* cancels it
-  (the background connection is closed). A cancelled query gets the comment `/ ^ cancelled by the user`.
-* Every executed query adds a result tab with the full result (errors as error tabs); the usual result tab
-  limit applies. The query is not executed again.
-* The tabs are normal editors: the user can edit and run them (through the user's own connection).
-  Agents see them in `list_tabs` (flag `agentQueriesWindow`).
-* The window is not saved in the workspace and is not restored after restart. Closing the last regular
-  window exits Studio even if the agent window is open.
+* The window is opened on the first such query without taking the focus.
+* One editor tab per server. An existing tab of the window with the same server is reused, also a tab the user
+  opened. The query is appended with a header comment, e.g. `/ 2026.11.18 14:02:31 claude-code: confirmed by the user`,
+  and executed exactly as if the user ran it: status, clock, busy cursor, Stop, the download progress, the result
+  tab, and the tab's session (shared with the user's tabs when *Reuse kdb connection between tabs* is on).
+* Agent queries for the same tab run one after another; a query waits while the tab is busy.
+* Denied queries are added as comments (`denied by the user (not executed)` / `not confirmed in time`).
+  A cancelled query gets the comment `/ ^ cancelled by the user`.
+* Only the last N agent queries are kept in every tab (setting, default 200): older text is removed from the top.
+* The window is saved in the workspace and restored after restart (setting *Save the AI agent queries window
+  in the workspace*, default on). Results are not saved, as in other windows.
+* Closing the last regular window exits Studio even if the agent window is open.
 
 ## Query confirmation
 

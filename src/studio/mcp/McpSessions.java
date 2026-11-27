@@ -76,6 +76,18 @@ public class McpSessions {
     private final Clock clock;
     private final Map<String, Session> sessions = new ConcurrentHashMap<>();
     private final List<Listener> listeners = new CopyOnWriteArrayList<>();
+    private final List<java.util.function.Consumer<Session>> removalListeners = new CopyOnWriteArrayList<>();
+
+    // Notified when a session ends: the client disconnected or the session expired
+    public void addRemovalListener(java.util.function.Consumer<Session> listener) {
+        removalListeners.add(listener);
+    }
+
+    private void fireRemoved(List<Session> removed) {
+        for (Session session: removed) {
+            for (java.util.function.Consumer<Session> listener: removalListeners) listener.accept(session);
+        }
+    }
 
     public McpSessions() {
         this(Clock.systemUTC());
@@ -102,20 +114,32 @@ public class McpSessions {
     public Session create(String clientName, String clientVersion, String remoteAddress) {
         Session session = new Session(UUID.randomUUID().toString(), clientName, clientVersion, remoteAddress, clock.instant());
         sessions.put(session.getId(), session);
-        removeIdle();
+        List<Session> removed = removeIdle();
+        fireRemoved(removed);
         fire();
         return session;
     }
 
     // Removes sessions idle for longer than IDLE_TIMEOUT, and the least recently active ones above MAX_SESSIONS
-    private synchronized void removeIdle() {
+    private synchronized List<Session> removeIdle() {
         Instant now = clock.instant();
-        sessions.values().removeIf(s -> Duration.between(s.getLastActivity(), now).compareTo(IDLE_TIMEOUT) > 0);
+        List<Session> removed = new ArrayList<>();
+        for (Session s: new ArrayList<>(sessions.values())) {
+            if (Duration.between(s.getLastActivity(), now).compareTo(IDLE_TIMEOUT) > 0) {
+                sessions.remove(s.getId());
+                removed.add(s);
+            }
+        }
         int extra = sessions.size() - MAX_SESSIONS;
-        if (extra <= 0) return;
-        List<Session> list = new ArrayList<>(sessions.values());
-        list.sort((s1, s2) -> s1.getLastActivity().compareTo(s2.getLastActivity()));
-        for (int i = 0; i < extra; i++) sessions.remove(list.get(i).getId());
+        if (extra > 0) {
+            List<Session> list = new ArrayList<>(sessions.values());
+            list.sort((s1, s2) -> s1.getLastActivity().compareTo(s2.getLastActivity()));
+            for (int i = 0; i < extra; i++) {
+                sessions.remove(list.get(i).getId());
+                removed.add(list.get(i));
+            }
+        }
+        return removed;
     }
 
     public int size() {
@@ -134,8 +158,12 @@ public class McpSessions {
     }
 
     public Session remove(String id) {
+        if (id == null) return null;
         Session session = sessions.remove(id);
-        if (session != null) fire();
+        if (session != null) {
+            fireRemoved(List.of(session));
+            fire();
+        }
         return session;
     }
 

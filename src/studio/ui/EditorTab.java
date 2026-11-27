@@ -134,32 +134,6 @@ public class EditorTab implements FileWatcher.Listener, EditorStatusBarCallback 
 
     private QueryCompletionListener completionListener = null;
 
-    // Queries executed elsewhere (e.g. by AI agents on background connections) but shown in this tab;
-    // the Stop action cancels them
-    private final List<Runnable> externalQueries = new ArrayList<>();
-
-    public void externalQueryStarted(Runnable cancel, String status) {
-        externalQueries.add(cancel);
-        editorPane.setEditorStatus(status);
-        if (externalQueries.size() == 1) editorPane.startClock();
-        studioWindow.refreshActionState();
-    }
-
-    public void externalQueryFinished(Runnable cancel, String status) {
-        if (!externalQueries.remove(cancel)) return;
-        if (externalQueries.isEmpty()) editorPane.stopClock();
-        editorPane.setEditorStatus(status);
-        studioWindow.refreshActionState();
-    }
-
-    public boolean isExternalQueryRunning() {
-        return !externalQueries.isEmpty();
-    }
-
-    public void cancelExternalQueries() {
-        for (Runnable cancel: new ArrayList<>(externalQueries)) cancel.run();
-    }
-
     /**
      * Cancels the running query only if it was started with the listener
      * @return true if the query was cancelled

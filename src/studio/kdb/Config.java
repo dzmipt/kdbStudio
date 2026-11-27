@@ -111,6 +111,8 @@ public class Config  {
     public static final String MCP_MAX_ROWS = configDefault("mcpMaxRows", ConfigType.INT, 100);
     public static final String MCP_MAX_CHARS = configDefault("mcpMaxChars", ConfigType.INT, 20000);
     public static final String MCP_CONFIRMATION_TIMEOUT_SEC = configDefault("mcpConfirmationTimeoutSec", ConfigType.INT, 300);
+    public static final String MCP_SAVE_AGENT_WINDOW = configDefault("mcpSaveAgentWindow", ConfigType.BOOLEAN, true);
+    public static final String MCP_AGENT_WINDOW_MAX_QUERIES = configDefault("mcpAgentWindowMaxQueries", ConfigType.INT, 200);
     public static final String MCP_SHOW_AGENT_WINDOW = configDefault("mcpShowAgentWindow", ConfigType.BOOLEAN, true);
     public static final String MCP_GRANT_INTERVAL = configDefault("mcpGrantInterval", ConfigType.ENUM, McpGrantInterval.MIN_15);
 
